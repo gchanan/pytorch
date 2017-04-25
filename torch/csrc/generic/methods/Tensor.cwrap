@@ -425,6 +425,8 @@ PyObject * THPTensor_(stride)(PyObject *self, PyObject *args, PyObject *kwargs)
 ]]
 
 [[
+
+[[
   name: squeeze
   cpu_half: True
   with_stateless: True
@@ -518,6 +520,16 @@ PyObject * THPTensor_(stride)(PyObject *self, PyObject *args, PyObject *kwargs)
   name: view
   cname: newView
   auto_gpu: False
+  return: THTensor*
+  arguments:
+    - THTensor* self
+    - arg: THSize* size
+      long_args: True
+]]
+
+[[
+  name: expand
+  cname: newExpand
   return: THTensor*
   arguments:
     - THTensor* self

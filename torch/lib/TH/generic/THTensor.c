@@ -285,6 +285,52 @@ void THTensor_(resize5d)(THTensor *self, long size0, long size1, long size2, lon
   THTensor_(resizeNd)(self, 5, size, NULL);
 }
 
+THTensor* THTensor_(newExpand)(THTensor *tensor, THLongStorage *sizes) {
+  THArgCheck(THLongStorage_size(sizes) >= THTensor_(nDimension)(tensor), 1, "the number of sizes provided \
+      must be greater or equal to the number of dimensions in the tensor");
+  THArgCheck(THTensor_(nDimension)(tensor) > 0, 0, "can't expand an empty tensor");
+
+  ptrdiff_t ndim = THLongStorage_size(sizes);
+  long numUnsqueezed = ndim - THTensor_(nDimension)(tensor);
+
+  long *expandedSizes = THAlloc(sizeof(long)*ndim);
+  long *expandedStrides = THAlloc(sizeof(long)*ndim);
+
+  for (long i = numUnsqueezed; i < ndim; ++i) {
+    expandedSizes[i] = THTensor_(size)(tensor, i - numUnsqueezed);
+    expandedStrides[i] = THTensor_(stride)(tensor, i - numUnsqueezed);
+  }
+
+  for (long i = numUnsqueezed - 1; i > -1; --i) {
+    expandedSizes[i] = 1;
+    expandedStrides[i] = expandedSizes[i+1] * expandedStrides[i+1];
+  }
+
+  // create a new geometry for the tensor
+  for (long i = 0; i < ndim; ++i) {
+    long size = expandedSizes[i];
+    long targetSize = THLongStorage_data(sizes)[i];
+    if (size == 1) {
+      if (targetSize != 1) {
+        expandedSizes[i] = targetSize;
+        expandedStrides[i] = 0;
+      }
+    } else if (size != targetSize) {
+      THFree(expandedSizes);
+      THFree(expandedStrides);
+      THError("The expanded size of the tensor (%d) must match the existing size (%d) at \
+              non-singleton dimension %ld.", targetSize, size, i);
+    }
+  }
+
+  THTensor *result = THTensor_(new)();
+  THTensor_(setStorageNd)(result, THTensor_(storage)(tensor), THTensor_(storageOffset)(tensor), ndim, expandedSizes, expandedStrides);
+  THFree(expandedSizes);
+  THFree(expandedStrides);
+
+  return result;
+}
+
 void THTensor_(set)(THTensor *self, THTensor *src)
 {
   if(self != src)
