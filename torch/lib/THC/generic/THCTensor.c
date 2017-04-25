@@ -299,41 +299,17 @@ THCTensor* THCTensor_(newExpand)(THCState *state, THCTensor *tensor, THLongStora
       must be greater or equal to the number of dimensions in the tensor");
   THArgCheck(THCTensor_(nDimension)(state, tensor) > 0, 0, "can't expand an empty tensor");
 
-  ptrdiff_t ndim = THLongStorage_size(sizes);
-  long numUnsqueezed = ndim - THCTensor_(nDimension)(state, tensor);
-
-  long *expandedSizes = THAlloc(sizeof(long)*ndim);
-  long *expandedStrides = THAlloc(sizeof(long)*ndim);
-
-  for (long i = numUnsqueezed; i < ndim; ++i) {
-    expandedSizes[i] = THCTensor_(size)(state, tensor, i - numUnsqueezed);
-    expandedStrides[i] = THCTensor_(stride)(state, tensor, i - numUnsqueezed);
-  }
-
-  for (long i = numUnsqueezed - 1; i > -1; --i) {
-    expandedSizes[i] = 1;
-    expandedStrides[i] = expandedSizes[i+1] * expandedStrides[i+1];
-  }
-
-  // create a new geometry for the tensor
-  for (long i = 0; i < ndim; ++i) {
-    long size = expandedSizes[i];
-    long targetSize = THLongStorage_data(sizes)[i];
-    if (size == 1) {
-      if (targetSize != 1) {
-        expandedSizes[i] = targetSize;
-        expandedStrides[i] = 0;
-      }
-    } else if (size != targetSize) {
-      THFree(expandedSizes);
-      THFree(expandedStrides);
-      THError("The expanded size of the tensor (%d) must match the existing size (%d) at \
-              non-singleton dimension %ld.", targetSize, size, i);
-    }
-  }
+  long *expandedSizes;
+  long *expandedStrides;
+  THLongStorage_calculateExpandGeometry(tensor->size,
+                                        tensor->stride,
+                                        THCTensor_(nDimension)(state, tensor),
+                                        sizes,
+                                        &expandedSizes,
+                                        &expandedStrides);
 
   THCTensor *result = THCTensor_(new)(state);
-  THCTensor_(setStorageNd)(state, result, THCTensor_(storage)(state, tensor), THCTensor_(storageOffset)(state, tensor), ndim, expandedSizes, expandedStrides);
+  THCTensor_(setStorageNd)(state, result, THCTensor_(storage)(state, tensor), THCTensor_(storageOffset)(state, tensor), THLongStorage_size(sizes), expandedSizes, expandedStrides);
   THFree(expandedSizes);
   THFree(expandedStrides);
 
