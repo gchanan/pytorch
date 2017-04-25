@@ -68,7 +68,7 @@ THC_API THCTensor *THCTensor_(newTranspose)(THCState *state, THCTensor *tensor, 
 THC_API THCTensor *THCTensor_(newUnfold)(THCState *state, THCTensor *tensor, int dimension_, long size_, long step_);
 THC_API THCTensor *THCTensor_(newView)(THCState *state, THCTensor *tensor, THLongStorage *size);
 
-
+THC_API void THCTensor_(expandBinaryOp)(THCState *state, THCTensor *ra, THCTensor *rb, THCTensor *op1, THCTensor *op2);
 THC_API void THCTensor_(resize)(THCState *state, THCTensor *tensor, THLongStorage *size, THLongStorage *stride);
 THC_API void THCTensor_(resizeAs)(THCState *state, THCTensor *tensor, THCTensor *src);
 THC_API void THCTensor_(resize1d)(THCState *state, THCTensor *tensor, long size0_);
