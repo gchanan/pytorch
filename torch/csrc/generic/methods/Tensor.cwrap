@@ -425,8 +425,6 @@ PyObject * THPTensor_(stride)(PyObject *self, PyObject *args, PyObject *kwargs)
 ]]
 
 [[
-
-[[
   name: squeeze
   cpu_half: True
   with_stateless: True
