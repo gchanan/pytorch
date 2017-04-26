@@ -254,40 +254,48 @@ TH_API void THTensor_(expandBinaryOp)(THTensor *ra, THTensor *rb, THTensor *opa,
     long offset = ndim - 1 - i;
     long dimA = opa->nDimension - 1 - offset;
     long dimB = opb->nDimension - 1 - offset;
-    long sizeA = (opa->nDimension < offset) ? THTensor_(size)(opa, dimA) : 1;
-    long sizeB = (opb->nDimension < offset) ? THTensor_(size)(opb, dimB) : 1;
-    long strideA = (opa->nDimension < offset) ?
+    long sizeA = (dimA >= 0) ? THTensor_(size)(opa, dimA) : 1;
+    long sizeB = (dimB >= 0) ? THTensor_(size)(opb, dimB) : 1;
+    long strideA = (dimA >= 0) ?
         THTensor_(stride)(opa,dimA) : expandedSizesA[i + 1] * expandedStridesA[i+1];
-    long strideB = (opb->nDimension < offset) ?
-        THTensor_(size)(opb, dimB) : expandedSizesB[i + 1] * expandedStridesB[i+1];;
+    long strideB = (dimB >= 0)  ?
+        THTensor_(stride)(opb, dimB) : expandedSizesB[i + 1] * expandedStridesB[i+1];
     if (sizeA != sizeB) {
       if (sizeA == 1) {
-        expandedSizesA[ i ] = expandedSizesB[ i ];
-        expandedStridesA[ i ] = 0;
+        sizeA = sizeB;
+        strideA = 0;
       }
       else if (sizeB == 1) {
-        expandedSizesB[ i ] = expandedSizesA[ i ];
-        expandedStridesB[ i ] = 0;
+        sizeB = sizeA;
+        strideB = 0;
       }
       else {
         THFree(expandedSizesA);
         THFree(expandedStridesA);
         THFree(expandedSizesB);
         THFree(expandedStridesB);
-        THError("The size of tensor opa (%d) must match the size of tensor opb (%d) at \
+        THError("The size of tensor opa (%ld) must match the size of tensor opb (%ld) at \
                 non-singleton dimension %ld.", sizeA, sizeB, i);
         return;
       }
     }
-      
     expandedSizesA[ i ] = sizeA;
     expandedSizesB[ i ] = sizeB;
     expandedStridesA[ i ] = strideA;
     expandedStridesB[ i ] = strideB;
   }
 
-  THTensor_(setStorageNd)(ra, ra->storage, ra->storageOffset, ndim, expandedSizesA, expandedStridesA);
-  THTensor_(setStorageNd)(rb, rb->storage, rb->storageOffset, ndim, expandedSizesB, expandedStridesB);
+  printf("Sizes are:\n");
+  printf("A:\n");
+  for(int i =0; i < ndim; ++i) {
+    printf("%ld ", expandedSizesA[ i ] );
+  }
+  printf("B:\n");
+  for(int i =0; i < ndim; ++i) {
+    printf("%ld ", expandedSizesB[ i ] );
+  }
+  THTensor_(setStorageNd)(ra, opa->storage, opa->storageOffset, ndim, expandedSizesA, expandedStridesA);
+  THTensor_(setStorageNd)(rb, opb->storage, opb->storageOffset, ndim, expandedSizesB, expandedStridesB);
   THFree(expandedSizesA);
   THFree(expandedStridesA);
   THFree(expandedSizesB);

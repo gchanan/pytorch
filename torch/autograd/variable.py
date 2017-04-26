@@ -299,6 +299,7 @@ class Variable(_C._VariableBase):
         return self._sub(other, True)
 
     def mul(self, other):
+        print("in mul")
         if isinstance(other, Variable):
             return Mul()(self, other)
         else:
