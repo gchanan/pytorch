@@ -292,7 +292,7 @@ THTensor* THTensor_(newExpand)(THTensor *tensor, THLongStorage *sizes) {
 
   long *expandedSizes;
   long *expandedStrides;
-  THLongStorage_calculateExpandGeometry(tensor->size, tensor->stride, THTensor_(nDimension)(tensor), sizes, &expandedSizes, &expandedStrides);
+  THLongStorage_inferExpandGeometry(tensor->size, tensor->stride, THTensor_(nDimension)(tensor), sizes, &expandedSizes, &expandedStrides);
 
   THTensor *result = THTensor_(new)();
   THTensor_(setStorageNd)(result, THTensor_(storage)(tensor), THTensor_(storageOffset)(tensor), THLongStorage_size(sizes), expandedSizes, expandedStrides);
@@ -300,6 +300,40 @@ THTensor* THTensor_(newExpand)(THTensor *tensor, THLongStorage *sizes) {
   THFree(expandedStrides);
 
   return result;
+}
+
+THTensor_(expand2)(THTensor *ra, THTensor *rb, THTensor *opa, THTensor *opb) {
+  THArgCheck(THTensor_(nDimension)(opa) > 0, 0, "can't expand empty tensor opa");
+  THArgCheck(THTensor_(nDimension)(opb) > 0, 0, "can't expand empty tensor opb");
+
+  THLongStorage *sizes =
+      THLongStorage_newInferSize2(opa->size, THTensor_(nDimension)(opa),
+                                  opb->size, THTensor_(nDimension)(opb));
+  long *expandedSizes;
+  long *expandedStrides;
+  THLongStorage_inferExpandGeometry(opa->size, opa->stride,
+                                    THTensor_(nDimension)(opa), sizes,
+                                    &expandedSizes, &expandedStrides);
+  THTensor_(setStorageNd)(ra,
+                          THTensor_(storage)(opa),
+                          THTensor_(storageOffset)(opa),
+                          THLongStorage_size(sizes),
+                          &expandedSizes,
+                          &expandedStrides);
+  THFree(expandedSizes);
+  THFree(expandedStrides);
+
+  THLongStorage_inferExpandGeometry(opb->size, opb->stride,
+                                    THTensor_(nDimension)(opb), sizes,
+                                    &expandedSizes, &expandedStrides);
+  THTensor_(setStorageNd)(rb,
+                          THTensor_(storage)(opb),
+                          THTensor_(storageOffset)(opb),
+                          THLongStorage_size(sizes),
+                          &expandedSizes,
+                          &expandedStrides);
+  THFree(expandedSizes);
+  THFree(expandedStrides);
 }
 
 void THTensor_(set)(THTensor *self, THTensor *src)

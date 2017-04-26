@@ -301,12 +301,12 @@ THCTensor* THCTensor_(newExpand)(THCState *state, THCTensor *tensor, THLongStora
 
   long *expandedSizes;
   long *expandedStrides;
-  THLongStorage_calculateExpandGeometry(tensor->size,
-                                        tensor->stride,
-                                        THCTensor_(nDimension)(state, tensor),
-                                        sizes,
-                                        &expandedSizes,
-                                        &expandedStrides);
+  THLongStorage_inferExpandGeometry(tensor->size,
+                                    tensor->stride,
+                                    THCTensor_(nDimension)(state, tensor),
+                                    sizes,
+                                    &expandedSizes,
+                                    &expandedStrides);
 
   THCTensor *result = THCTensor_(new)(state);
   THCTensor_(setStorageNd)(state, result, THCTensor_(storage)(state, tensor), THCTensor_(storageOffset)(state, tensor), THLongStorage_size(sizes), expandedSizes, expandedStrides);
@@ -314,6 +314,42 @@ THCTensor* THCTensor_(newExpand)(THCState *state, THCTensor *tensor, THLongStora
   THFree(expandedStrides);
 
   return result;
+}
+
+void THCTensor_(expand2)(THCState *state, THCTensor *ra, THCTensor *rb, THCTensor *opa, THCTensor *opb) {
+  THArgCheck(THCTensor_(nDimension)(state, opa) > 0, 0, "can't expand empty tensor opa");
+  THArgCheck(THCTensor_(nDimension)(state, opb) > 0, 0, "can't expand empty tensor opb");
+
+  THLongStorage *sizes =
+      THLongStorage_newInferSize2(opa->size, THCTensor_(nDimension)(state, opa),
+                                  opb->size, THCTensor_(nDimension)(state, opb));
+  long *expandedSizes;
+  long *expandedStrides;
+  THLongStorage_inferExpandGeometry(opa->size, opa->stride,
+                                    THCTensor_(nDimension)(state, opa), sizes,
+                                    &expandedSizes, &expandedStrides);
+  THCTensor_(setStorageNd)(state,
+                           ra,
+                           THCTensor_(storage)(state, opa),
+                           THCTensor_(storageOffset)(state, opa),
+                           THLongStorage_size(sizes),
+                           &expandedSizes,
+                           &expandedStrides);
+  THFree(expandedSizes);
+  THFree(expandedStrides);
+
+  THLongStorage_inferExpandGeometry(opb->size, opb->stride,
+                                    THCTensor_(nDimension)(state, opb), sizes,
+                                    &expandedSizes, &expandedStrides);
+  THCTensor_(setStorageNd)(state,
+                          rb,
+                          THCTensor_(storage)(state, opb),
+                          THCTensor_(storageOffset)(state, opb),
+                          THLongStorage_size(sizes),
+                          &expandedSizes,
+                          &expandedStrides);
+  THFree(expandedSizes);
+  THFree(expandedStrides);
 }
 
 void THCTensor_(set)(THCState *state, THCTensor *self, THCTensor *src)
