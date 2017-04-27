@@ -309,31 +309,35 @@ THTensor_(expand2)(THTensor *ra, THTensor *rb, THTensor *opa, THTensor *opb) {
   THLongStorage *sizes =
       THLongStorage_newInferSize2(opa->size, THTensor_(nDimension)(opa),
                                   opb->size, THTensor_(nDimension)(opb));
+
   long *expandedSizes;
   long *expandedStrides;
   THLongStorage_inferExpandGeometry(opa->size, opa->stride,
                                     THTensor_(nDimension)(opa), sizes,
                                     &expandedSizes, &expandedStrides);
+
   THTensor_(setStorageNd)(ra,
                           THTensor_(storage)(opa),
                           THTensor_(storageOffset)(opa),
                           THLongStorage_size(sizes),
-                          &expandedSizes,
-                          &expandedStrides);
+                          expandedSizes,
+                          expandedStrides);
   THFree(expandedSizes);
   THFree(expandedStrides);
 
   THLongStorage_inferExpandGeometry(opb->size, opb->stride,
                                     THTensor_(nDimension)(opb), sizes,
                                     &expandedSizes, &expandedStrides);
+
   THTensor_(setStorageNd)(rb,
                           THTensor_(storage)(opb),
                           THTensor_(storageOffset)(opb),
                           THLongStorage_size(sizes),
-                          &expandedSizes,
-                          &expandedStrides);
+                          expandedSizes,
+                          expandedStrides);
   THFree(expandedSizes);
   THFree(expandedStrides);
+  THLongStorage_free(sizes);
 }
 
 void THTensor_(set)(THTensor *self, THTensor *src)
