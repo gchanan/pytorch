@@ -77,7 +77,7 @@ TH_API THLongStorage *THLongStorage_newInferSize2(long *sizesA, long dimsA, long
 
   for (long i = ndim - 1; i >= 0; --i) {
     long offset = ndim - 1 - i;
-    long dimA = dimsA- 1 - offset;
+    long dimA = dimsA - 1 - offset;
     long dimB = dimsB - 1 - offset;
     long sizeA = (dimA >= 0) ? sizesA[dimA] : 1;
     long sizeB = (dimB >= 0) ? sizesB[dimB] : 1;
@@ -89,8 +89,8 @@ TH_API THLongStorage *THLongStorage_newInferSize2(long *sizesA, long dimsA, long
       }
       else {
         THFree(expandedSizes);
-        THError("The size of tensor a (%ld) must match the size of tensor b (%ld) at \
-                non-singleton dimension %ld.", sizeA, sizeB, i);
+        THError("The size of tensor a (%ld) must match the size of tensor b (%ld) at "
+                "non-singleton dimension %ld.", sizeA, sizeB, i);
         return NULL;
       }
     }
@@ -116,17 +116,20 @@ TH_API void THLongStorage_inferExpandGeometry(long *tensorSizes, long *tensorStr
     long stride = (dim >= 0) ?
         tensorStrides[dim] : expandedSizes[i + 1] * expandedStrides[i+1];
     long targetSize = THLongStorage_data(sizes)[i];
-    if (size == 1) {
-      if (targetSize != 1) {
-        expandedSizes[i] = targetSize;
-        expandedStrides[i] = 0;
+    if (size != targetSize) {
+      if (size == 1) {
+        size = targetSize;
+        stride = 0;
+      } else {
+        THFree(expandedSizes);
+        THFree(expandedStrides);
+        THError("The expanded size of the tensor (%d) must match the existing size (%d) at "
+                "non-singleton dimension %ld.", targetSize, size, i);
+        return;
       }
-    } else if (size != targetSize) {
-      THFree(expandedSizes);
-      THFree(expandedStrides);
-      THError("The expanded size of the tensor (%d) must match the existing size (%d) at \
-              non-singleton dimension %ld.", targetSize, size, i);
     }
+    expandedSizes[i] = size;
+    expandedStrides[i] = stride;
   }
   *esz = expandedSizes;
   *est = expandedStrides;
