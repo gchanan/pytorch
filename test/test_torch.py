@@ -907,6 +907,87 @@ class TestTorch(TestCase):
         self.assertEqual(r1, r2, 0)
         self.assertEqual(r2, r3[:-1], 0)
 
+    def test_broadcast(self):
+        def select_broadcastable_dims():
+            # select full dimensionality
+            ndims = random.randint(1, 4)
+            dims_full = []
+            for _ in range(ndims):
+                dims_full = dims_full + [random.randint(1, 8)]
+
+            # select actual dimensions for ops:
+            # larger: full ndims, individual sizes may be reduced
+            # smaller: possibly reduced ndims, sizes may be reduced
+            smaller_ndims = random.randint(1, ndims)
+            dims_small = []
+            dims_large = []
+            for i in range(ndims - 1, -1, -1):
+                j = random.randint(1, 3)
+                if j == 1:  # no reduced singleton dimension
+                    ds = dims_full[i]
+                    dl = dims_full[i]
+                elif j == 2:  # larger may have reduced singleton dimension
+                    ds = dims_full[i]
+                    dl = 1 if len(dims_small) < smaller_ndims else dims_full[i]
+                elif j == 3:  # smaller may have reduced singleton dimension
+                    ds = 1
+                    dl = dims_full[i]
+                dims_large = [dl] + dims_large
+                if len(dims_small) < smaller_ndims:
+                    dims_small = [ds] + dims_small
+            return (dims_small, dims_large, dims_full)
+
+
+        # all out-of-place functions
+        fns = [
+            "dist", "atan2", "pow", "lerp", "add",
+            "sub", "mul", "div", "fmod", "remainder"
+        ]
+        # functions with no torch. equivalent
+        fns_no_torch = ["sub"]
+        # functions with no inplace equivalent
+        fns_no_inplace = ["dist"]
+
+        for fn in fns:
+            (dims_small, dims_large, dims_full) = select_broadcastable_dims()
+            small = torch.randn(*dims_small)
+            large = torch.randn(*dims_large)
+            smallExpanded = small.expand(*dims_full)
+            largeExpanded = large.expand(*dims_full)
+
+            # run through tensor versions of functions
+            # and verify fully expanded inputs give same results
+            fntensor_expanded = getattr(largeExpanded, fn)
+            fntensor_non_expanded = getattr(large, fn)
+
+            def tensorfn(myfn, t):
+                return myfn(t) if fn != "lerp" else myfn(t, 0.5)
+            r1 = tensorfn(fntensor_expanded, smallExpanded)
+            r2 = tensorfn(fntensor_non_expanded, small)
+            self.assertEqual(r1, r2)
+
+            # now for torch. versions of functions
+            if fn not in fns_no_torch:
+                fntorch = getattr(torch, fn)
+
+                def torchfn(t1, t2):
+                    return (fntorch(t1, t2) if fn != "lerp"
+                            else fntorch(t1, t2, 0.5))
+                r1 = torchfn(large, small)
+                r2 = torchfn(largeExpanded, smallExpanded)
+                self.assertEqual(r1, r2)
+
+            # now for in place functions
+            if fn not in fns_no_inplace:
+                fntensor_inplace_expanded = getattr(largeExpanded, fn + "_")
+
+                def tensorfn_inplace(t):
+                    return (fntensor_inplace_expanded(t) if fn != "lerp"
+                            else fntensor_inplace_expanded(t, 0.5))
+                r1 = tensorfn_inplace(smallExpanded)
+                r2 = tensorfn_inplace(small)
+                self.assertEqual(r1, r2)
+
     def test_randperm(self):
         _RNGState = torch.get_rng_state()
         res1 = torch.randperm(100)
