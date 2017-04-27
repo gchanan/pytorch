@@ -907,7 +907,8 @@ class TestTorch(TestCase):
         self.assertEqual(r1, r2, 0)
         self.assertEqual(r2, r3[:-1], 0)
 
-    def test_broadcast(self):
+    @staticmethod
+    def _test_broadcast(self, cast):
         def select_broadcastable_dims():
             # select full dimensionality
             ndims = random.randint(1, 4)
@@ -950,11 +951,12 @@ class TestTorch(TestCase):
 
         for fn in fns:
             (dims_small, dims_large, dims_full) = select_broadcastable_dims()
-            small = torch.randn(*dims_small)
-            large = torch.randn(*dims_large)
+            small = torch.randn(*dims_small).float()
+            small = cast(small)
+            large = torch.randn(*dims_large).float()
+            large = cast(large)
             smallExpanded = small.expand(*dims_full)
             largeExpanded = large.expand(*dims_full)
-
             # run through tensor versions of functions
             # and verify fully expanded inputs give same results
             fntensor_expanded = getattr(largeExpanded, fn)
@@ -987,6 +989,9 @@ class TestTorch(TestCase):
                 r1 = tensorfn_inplace(smallExpanded)
                 r2 = tensorfn_inplace(small)
                 self.assertEqual(r1, r2)
+
+    def test_broadcast(self):
+        self._test_broadcast(self, lambda t: t)
 
     def test_randperm(self):
         _RNGState = torch.get_rng_state()

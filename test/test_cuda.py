@@ -823,6 +823,9 @@ class TestCuda(TestCase):
         self.assertEqual(gpu_tensor1[0], 1)
         self.assertEqual(gpu_tensor0[0], 2)
 
+    def test_broadcast(self):
+        TestTorch._test_broadcast(self, lambda t: t.cuda())
+
     def test_btrifact(self):
         TestTorch._test_btrifact(self, lambda t: t.cuda())
 
