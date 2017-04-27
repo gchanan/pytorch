@@ -1421,7 +1421,7 @@ Subtracts a scalar or tensor from this tensor. If both :attr:`value` and
 :attr:`other` are specified, each element of :attr:`other` is scaled by
 :attr:`value` before being used.
 
-If :attr:`other` is a tensor, the shape of :attr:`other` must be broadcastable
+If :attr:`other` is a tensor, the shape of :attr:`other` must be :any:`broadcastable <numpy.doc.broadcasting>`.
 with the underlying tensor.
 
 """)
