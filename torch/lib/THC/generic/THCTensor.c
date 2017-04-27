@@ -333,8 +333,8 @@ void THCTensor_(expand2)(THCState *state, THCTensor *ra, THCTensor *rb, THCTenso
                            THCTensor_(storage)(state, opa),
                            THCTensor_(storageOffset)(state, opa),
                            THLongStorage_size(sizes),
-                           &expandedSizes,
-                           &expandedStrides);
+                           expandedSizes,
+                           expandedStrides);
   THFree(expandedSizes);
   THFree(expandedStrides);
 
@@ -346,8 +346,8 @@ void THCTensor_(expand2)(THCState *state, THCTensor *ra, THCTensor *rb, THCTenso
                           THCTensor_(storage)(state, opb),
                           THCTensor_(storageOffset)(state, opb),
                           THLongStorage_size(sizes),
-                          &expandedSizes,
-                          &expandedStrides);
+                          expandedSizes,
+                          expandedStrides);
   THFree(expandedSizes);
   THFree(expandedStrides);
 }
