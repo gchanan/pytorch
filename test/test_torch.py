@@ -948,6 +948,8 @@ class TestTorch(TestCase):
         fns_no_torch = ["sub"]
         # functions with no inplace equivalent
         fns_no_inplace = ["dist"]
+        # functions with fallback to equal nElem behavior
+        fns_fallback = ["add", "sub", "div", "mul"]
 
         for fn in fns:
             (dims_small, dims_large, dims_full) = select_broadcastable_dims()
@@ -959,13 +961,19 @@ class TestTorch(TestCase):
             largeExpanded = large.expand(*dims_full)
             # run through tensor versions of functions
             # and verify fully expanded inputs give same results
-            fntensor_expanded = getattr(largeExpanded, fn)
-            fntensor_non_expanded = getattr(large, fn)
+            fntensor_large_expanded = getattr(largeExpanded, fn)
+            fntensor_large_non_expanded = getattr(large, fn)
 
             def tensorfn(myfn, t):
                 return myfn(t) if fn != "lerp" else myfn(t, 0.5)
-            r1 = tensorfn(fntensor_expanded, smallExpanded)
-            r2 = tensorfn(fntensor_non_expanded, small)
+            r1 = tensorfn(fntensor_large_expanded, smallExpanded)
+            r2 = tensorfn(fntensor_large_non_expanded, small)
+            self.assertEqual(r1, r2)
+            # other order
+            fntensor_small_expanded = getattr(smallExpanded, fn)
+            fntensor_small_non_expanded = getattr(small, fn)
+            r1 = tensorfn(fntensor_small_expanded, largeExpanded)
+            r2 = tensorfn(fntensor_small_non_expanded, large)
             self.assertEqual(r1, r2)
 
             # now for torch. versions of functions
@@ -978,20 +986,76 @@ class TestTorch(TestCase):
                 r1 = torchfn(large, small)
                 r2 = torchfn(largeExpanded, smallExpanded)
                 self.assertEqual(r1, r2)
+                # other order
+                r1 = torchfn(small, large)
+                r2 = torchfn(smallExpanded, largeExpanded)
+                self.assertEqual(r1, r2)
 
             # now for in place functions
             if fn not in fns_no_inplace:
-                fntensor_inplace_expanded = getattr(largeExpanded, fn + "_")
-
-                def tensorfn_inplace(t):
-                    return (fntensor_inplace_expanded(t) if fn != "lerp"
-                            else fntensor_inplace_expanded(t, 0.5))
-                r1 = tensorfn_inplace(smallExpanded)
-                r2 = tensorfn_inplace(small)
+                # in-place tensor is not broadcastable; test only guaranteed
+                # to work by broadcasting other argument
+                def tensorfn_inplace(t0, t1):
+                    t0_fn = getattr(t0, fn + "_")
+                    return t0_fn(t1) if fn != "lerp" else t0_fn(t1, 0.5)
+                r1 = tensorfn_inplace(largeExpanded, smallExpanded)
+                r2 = tensorfn_inplace(largeExpanded, small)
                 self.assertEqual(r1, r2)
+
+                broadcastable = (dims_small == dims_full)
+                if not broadcastable:
+                    if (fn not in fns_fallback) or (fn in fns_fallback and small.numel() != largeExpanded.numel()):
+                        self.assertRaises(RuntimeError, lambda: tensorfn_inplace(small, largeExpanded))
+                    if (fn not in fns_fallback) or (fn in fns_fallback and small.numel() != large.numel()):
+                        self.assertRaises(RuntimeError, lambda: tensorfn_inplace(small, large))
 
     def test_broadcast(self):
         self._test_broadcast(self, lambda t: t)
+
+    @staticmethod
+    def _test_broadcast_fallback(self, cast):
+        fns_fallback = ["add", "sub", "div", "mul"]
+        for fn in fns_fallback:
+            # case 1: both broadcastable and nElems equal -- verify that we broadcast
+            t0 = torch.randn(1, 4).float()
+            t0 = cast(t0)
+            t1 = torch.randn(4, 1).float()
+            t1 = cast(t1)
+            broadcastSize = torch.Size([4, 4])
+            t0_fn = getattr(t0, fn)
+            t1_fn = getattr(t1, fn)
+
+            def tensorfn(myfn, t):
+                return myfn(t) if fn != "lerp" else myfn(t, 0.5)
+            r0 = tensorfn(t0_fn, t1)
+            r1 = tensorfn(t1_fn, t0)
+            self.assertEqual(broadcastSize, r0.size())
+            self.assertEqual(broadcastSize, r1.size())
+
+            # case 2: broadcastable and not nElemes equal -- tested by test_fallback
+            # case 3: not broadcastable nElems equal -- verify we fallback
+            t0 = torch.randn(1, 4).float()
+            t1 = torch.randn(2, 2).float()
+            t0_fn = getattr(t0, fn)
+            t1_fn = getattr(t1, fn)
+
+            def verifyFallbackWarnings(w):
+                self.assertEqual(len(w), 1)
+                self.assertTrue(issubclass(w[0].category, UserWarning))
+                self.assertTrue("Falling back" in str(w[0].message))
+            with warnings.catch_warnings(record=True) as w:
+                r0 = tensorfn(t0_fn, t1)
+                verifyFallbackWarnings(w)
+            with warnings.catch_warnings(record=True) as w:
+                r1 = tensorfn(t1_fn, t0)
+                verifyFallbackWarnings(w)
+            self.assertEqual(t0.size(), r0.size())
+            self.assertEqual(t1.size(), r1.size())
+
+            # case 4: not broadcastable and not nEleme equal -- tested by test_fallback
+
+    def test_broadcast_fallback(self):
+        self._test_broadcast_fallback(self, lambda t: t)
 
     def test_randperm(self):
         _RNGState = torch.get_rng_state()
