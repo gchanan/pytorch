@@ -692,7 +692,7 @@
           output: True
         - THTensor* self
         - arg: THTensor* exponent
-          broadcast: self
+          broadcast: self fallback
     - cname: tpow
       arguments:
         - arg: THTensor* destination
@@ -717,7 +717,7 @@
         - THTensor* self
         - THTensor* self
         - arg: THTensor* exponent
-          broadcast: self inplace
+          broadcast: self inplace fallback
 ]]
 
 [[
@@ -1105,7 +1105,7 @@
           output: True
         - THTensor* self
         - arg: THTensor* other
-          broadcast: self
+          broadcast: self fallback
 ]]
 
 [[
@@ -1122,7 +1122,7 @@
         - THTensor* self
         - THTensor* self
         - arg: THTensor* other
-          broadcast: self inplace
+          broadcast: self inplace fallback
 ]]
 
 
@@ -1143,7 +1143,7 @@
           output: True
         - THTensor* self
         - arg: THTensor* other
-          broadcast: self
+          broadcast: self fallback
 ]]
 
 [[
@@ -1160,7 +1160,7 @@
         - THTensor* self
         - THTensor* self
         - arg: THTensor* other
-          broadcast: self inplace
+          broadcast: self inplace fallback
 ]]
 
 [[
