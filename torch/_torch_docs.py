@@ -86,7 +86,7 @@ Each element of the Tensor :attr:`other` is multiplied by the scalar
 :attr:`value` and added to each element of the Tensor :attr:`input`.
 The resulting Tensor is returned.
 
-The shapes of :attr:`input` and :attr:`other` must be :any:`broadcastable <numpy.doc.broadcasting>`.
+The shapes of :attr:`input` and :attr:`other` must be :ref:`broadcastable <broadcasting-semantics>`.
 
 :math:`out = input + (other * value)`
 
@@ -412,7 +412,7 @@ atan2(input1, input2, out=None) -> Tensor
 Returns a new `Tensor` with the arctangent of the elements of :attr:`input1`
 and :attr:`input2`.
 
-The shapes of :attr:`input1` and :attr:`input2` must be :any:`broadcastable <numpy.doc.broadcasting>`.
+The shapes of :attr:`input1` and :attr:`input2` must be :ref:`broadcastable <broadcasting-semantics>`.
 
 Args:
     input1 (Tensor): the first input `Tensor`
@@ -1061,7 +1061,7 @@ dist(input, other, p=2, out=None) -> Tensor
 
 Returns the p-norm of (:attr:`input` - :attr:`other`)
 
-The shapes of :attr:`input` and :attr:`other` must be :any:`broadcastable <numpy.doc.broadcasting>`.
+The shapes of :attr:`input` and :attr:`other` must be :ref:`broadcastable <broadcasting-semantics>`.
 
 Args:
     input (Tensor): the input `Tensor`
@@ -1142,7 +1142,7 @@ Example::
 .. function:: div(input, other, out=None)
 
 Each element of the Tensor :attr:`input` is divided by each element of the Tensor :attr:`other`.
-The resulting Tensor is returned. The shapes of :attr:`input` and :attr:`other` must be :any:`broadcastable <numpy.doc.broadcasting>`.
+The resulting Tensor is returned. The shapes of :attr:`input` and :attr:`other` must be :ref:`broadcastable <broadcasting-semantics>`.
 
 :math:`out_i = input_i / other_i`
 
@@ -1335,7 +1335,7 @@ The dividend and divisor may contain both for integer and floating point
 numbers. The remainder has the same sign as the dividend `tensor`.
 
 When :attr:`divisor` is a Tensor, the shapes of :attr:`input` and :attr:`divisor`
-must be :any:`broadcastable <numpy.doc.broadcasting>`.
+must be :ref:`broadcastable <broadcasting-semantics>`.
 
 Args:
     input (Tensor): The dividend
@@ -1829,7 +1829,7 @@ on a scalar :attr:`weight`: and returns the resulting :attr:`out` Tensor.
 
 :math:`out_i = start_i + weight * (end_i - start_i)`
 
-The shapes of :attr:`start` and :attr:`end` must be :any:`broadcastable <numpy.doc.broadcasting>`.
+The shapes of :attr:`start` and :attr:`end` must be :ref:`broadcastable <broadcasting-semantics>`.
 
 Args:
     start (Tensor): the `Tensor` with the starting points
@@ -2533,7 +2533,7 @@ Example::
 Each element of the Tensor :attr:`input` is multiplied by each element of the Tensor :attr:`other`.
 The resulting Tensor is returned.
 
-The shapes of :attr:`input` and :attr:`other` must be :any:`broadcastable <numpy.doc.broadcasting>`.
+The shapes of :attr:`input` and :attr:`other` must be :ref:`broadcastable <broadcasting-semantics>`.
 
 :math:`out_i = input_i * other_i`
 
@@ -2978,7 +2978,7 @@ When :attr:`exponent` is a Tensor, the operation applied is:
 :math:`out_i = x_i ^ {exponent_i}`
 
 When :attr:`exponent` is a Tensor, the shapes of :attr:`input`
-and :attr:`exponent` must be :any:`broadcastable <numpy.doc.broadcasting>`.
+and :attr:`exponent` must be :ref:`broadcastable <broadcasting-semantics>`.
 
 Args:
     input (Tensor): the input `Tensor`
@@ -3337,8 +3337,8 @@ Computes the element-wise remainder of division.
 The divisor and dividend may contain both for integer and floating point
 numbers. The remainder has the same sign as the divisor.
 
-When :attr:`divisor is a Tensor, the shapes of :attr:`input` and :attr:`divisor`
-must be :any:`broadcastable <numpy.doc.broadcasting>`.
+When :attr:`divisor` is a Tensor, the shapes of :attr:`input` and :attr:`divisor`
+must be :ref:`broadcastable <broadcasting-semantics>`.
 
 Args:
     input (Tensor): The dividend
