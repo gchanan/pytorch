@@ -221,17 +221,19 @@ class Norm(Function):
                 scale = grad_output[0] / self.norm ** (self.norm_type - 1)
                 return input.mul(pow).mul(scale)
         else:
+            input, output = self.saved_tensors
+
             if self.keepdim is False:
                 grad_output = grad_output.unsqueeze(self.dim)
+                output = output.unsqueeze(self.dim)
 
-            input, output = self.saved_tensors
             big_grad_output = grad_output.expand_as(input)
             if self.norm_type == 2:
-                big_output = output.unsqueeze(self.dim).expand_as(input)
+                big_output = output.expand_as(input)
                 return input.mul(big_grad_output).div(big_output)
             else:
                 pow = input.abs().pow(self.norm_type - 2)
-                big_output = output.unsqueeze(self.dim).pow(self.norm_type - 1).expand_as(input)
+                big_output = output.pow(self.norm_type - 1).expand_as(input)
                 return input.mul(pow).mul(big_grad_output).div(big_output)
 
 
