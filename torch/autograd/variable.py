@@ -483,7 +483,8 @@ class Variable(_C._VariableBase):
     def cumsum(self, dim):
         return Cumsum(dim)(self)
 
-    def var(self, dim=None, unbiased=True, keepdim=False):
+    def var(self, dim=None, keepdim=False):
+        unbiased = 1 # making this a parameter means we can't pass keepdim from autograd tests
         mean = self.mean(dim, keepdim)
         if dim is None:
             mean = mean.view(*(1 for s in self.size()))
@@ -492,12 +493,13 @@ class Variable(_C._VariableBase):
             mean = mean.unsqueeze(dim)
         mean_expanded = mean.expand_as(self)
         zero_centered = self.sub(mean_expanded)
-        var = zero_centered.mul(zero_centered).sum(dim)
+        var = zero_centered.mul(zero_centered).sum(dim, keepdim)
         numel = self.numel() if dim is None else self.size(dim)
-        return var.div(numel - int(unbiased))
+        ret = var.div(numel - int(unbiased))
+        return ret
 
-    def std(self, dim=None, unbiased=True, keepdim=False):
-        return self.var(dim, unbiased, keepdim).sqrt()
+    def std(self, dim=None, keepdim=False):
+        return self.var(dim, keepdim).sqrt()
 
     def renorm(self, p, dim, maxnorm):
         t = self.transpose(dim, 0)
