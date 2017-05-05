@@ -19,14 +19,14 @@ class Sum(Function):
     @staticmethod
     def backward(ctx, grad_output):
         if ctx.dim is None:
-            return grad_output.expand(ctx.input_size), None
+            return grad_output.expand(ctx.input_size), None, None
         else:
             if ctx.keepdim is False:
                 grad_output = grad_output.unsqueeze(ctx.dim)
 
             repeats = [1 for _ in ctx.input_size]
             repeats[ctx.dim] = ctx.input_size[ctx.dim]
-            return grad_output.repeat(*repeats), None
+            return grad_output.repeat(*repeats), None, None
 
 
 class Prod(Function):
@@ -114,7 +114,7 @@ class Mean(Function):
     def backward(ctx, grad_output):
         if ctx.dim is None:
             grad_input_val = grad_output / reduce(lambda x, y: x * y, ctx.input_size, 1)
-            return grad_input_val.expand(ctx.input_size), None
+            return grad_input_val.expand(ctx.input_size), None, None
         else:
             if ctx.keepdim is False:
                 grad_output = grad_output.unsqueeze(ctx.dim)
@@ -122,7 +122,7 @@ class Mean(Function):
             repeats = [1 for _ in ctx.input_size]
             dim_size = ctx.input_size[ctx.dim]
             repeats[ctx.dim] = dim_size
-            return grad_output.repeat(*repeats).div_(dim_size), None
+            return grad_output.repeat(*repeats).div_(dim_size), None, None
 
 
 class _SelectionFunction(Function):
