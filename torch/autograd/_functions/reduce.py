@@ -23,7 +23,7 @@ class Sum(Function):
         else:
             if ctx.keepdim is False:
                 grad_output = grad_output.unsqueeze(ctx.dim)
- 
+
             repeats = [1 for _ in ctx.input_size]
             repeats[ctx.dim] = ctx.input_size[ctx.dim]
             return grad_output.repeat(*repeats), None
