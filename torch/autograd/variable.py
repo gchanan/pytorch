@@ -483,8 +483,7 @@ class Variable(_C._VariableBase):
     def cumsum(self, dim):
         return Cumsum(dim)(self)
 
-    def var(self, dim=None, keepdim=False):
-        unbiased = 1 # making this a parameter means we can't pass keepdim from autograd tests
+    def var(self, dim=None, keepdim=False, unbiased=True):
         mean = self.mean(dim, keepdim)
         if dim is None:
             mean = mean.view(*(1 for s in self.size()))
