@@ -494,8 +494,7 @@ class Variable(_C._VariableBase):
         zero_centered = self.sub(mean_expanded)
         var = zero_centered.mul(zero_centered).sum(dim, keepdim)
         numel = self.numel() if dim is None else self.size(dim)
-        ret = var.div(numel - int(unbiased))
-        return ret
+        return var.div(numel - int(unbiased))
 
     def std(self, dim=None, keepdim=False):
         return self.var(dim, keepdim).sqrt()
