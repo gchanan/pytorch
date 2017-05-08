@@ -837,7 +837,7 @@ class TestAutograd(TestCase):
         y = Variable(torch.randn(5, 5), requires_grad=True)
 
         a = x + y
-        b = torch.max(a, 1)[1].repeat(1, 5).double()
+        b = torch.max(a, 1, True)[1].repeat(1, 5).double()
         o = (b + a).sum()
         o.backward()
 
