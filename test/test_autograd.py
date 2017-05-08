@@ -4,6 +4,7 @@ import sys
 import math
 import torch
 import unittest
+import warnings
 from copy import deepcopy
 from collections import OrderedDict
 from itertools import product
@@ -312,7 +313,7 @@ class TestAutograd(TestCase):
         check_index(torch.rand(4, 4).bernoulli().byte())
         check_index((Ellipsis, slice(2, None)))
 
-    def test_basic_op_grad(self):
+    def test_basic_op_grad_fallback(self):
         """Grad output might need to be reshaped to match the second argument."""
         x = Variable(torch.randn(4, 6), requires_grad=True)
         b = Variable(torch.rand(12, 1) + 1e-2, requires_grad=True)
@@ -321,11 +322,13 @@ class TestAutograd(TestCase):
             # .mm() depends on the grad_output being of correct size
             return b.mm(Variable(torch.rand(1, 2) + 1e-2))
 
-        (x + y()).sum().backward()
-        (x - y()).sum().backward()
-        (x * y()).sum().backward()
-        (x / y()).sum().backward()
-        (x.abs() ** y()).sum().backward()
+        # suppress broadcastable warning
+        with warnings.catch_warnings(record=True):
+            (x + y()).sum().backward()
+            (x - y()).sum().backward()
+            (x * y()).sum().backward()
+            (x / y()).sum().backward()
+            (x.abs() ** y()).sum().backward()
 
     def test_requires_grad(self):
         x = Variable(torch.randn(5, 5))

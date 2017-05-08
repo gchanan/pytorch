@@ -1010,7 +1010,11 @@ class TestTorch(TestCase):
                     return t0_fn(t1) if fn != "lerp" else t0_fn(t1, 0.5)
                 r1 = tensorfn_inplace(largeExpanded, smallExpanded)
                 r2 = tensorfn_inplace(largeExpandedClone, small)
-                self.assertEqual(r1, r2)
+                # in-place pointwise operations don't actually work on 0-strided tensors
+                # (numpy has the same issue)
+                if (0 not in largeExpanded.stride() and 0 not in smallExpanded.stride()
+                    and 0 not in largeExpandedClone.stride() and 0 not in small.stride()):
+                    self.assertEqual(r1, r2)
 
                 broadcastable = (dims_small == dims_full)
                 if not broadcastable:
