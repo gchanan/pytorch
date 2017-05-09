@@ -558,9 +558,7 @@ class TestTorch(TestCase):
         self.assertEqual(res5, res.sum(0))
 
         res6 = torch.addbmm(.1, res2, .5, b1, b2)
-        # temporarily need to select to remove leading dimension,
-        # because addbmm does not currently broadcast
-        self.assertEqual(res6, res2 * .1 + (res.sum(0) * .5).select(0,0))
+        self.assertEqual(res6, res2 * .1 + (res.sum(0) * .5))
 
     def test_baddbmm(self):
         num_batches = 10
