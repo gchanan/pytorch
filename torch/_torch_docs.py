@@ -1224,8 +1224,8 @@ eq(input, other, out=None) -> Tensor
 
 Computes element-wise equality
 
-The second argument can be a number or a tensor of the same shape and
-type as the first argument.
+The second argument can be a number or a tensor whose shape is
+:ref:`broadcastable <broadcasting-semantics>` with the first argument.
 
 Args:
     input (Tensor): Tensor to compare
@@ -1421,8 +1421,8 @@ ge(input, other, out=None) -> Tensor
 
 Computes `tensor >= other` element-wise.
 
-The second argument can be a number or a tensor of the same shape and
-type as the first argument.
+The second argument can be a number or a tensor whose shape is
+:ref:`broadcastable <broadcasting-semantics>` with the first argument.
 
 Args:
     input (Tensor): Tensor to compare
@@ -1611,8 +1611,8 @@ gt(input, other, out=None) -> Tensor
 
 Computes `tensor > other` element-wise.
 
-The second argument can be a number or a tensor of the same shape and
-type as the first argument.
+The second argument can be a number or a tensor whose shape is
+:ref:`broadcastable <broadcasting-semantics>` with the first argument.
 
 Args:
     input (Tensor): Tensor to compare
@@ -1822,8 +1822,8 @@ le(input, other, out=None) -> Tensor
 
 Computes `tensor <= other` element-wise.
 
-The second argument can be a number or a tensor of the same shape and
-type as the first argument.
+The second argument can be a number or a tensor whose shape is
+:ref:`broadcastable <broadcasting-semantics>` with the first argument.
 
 Args:
     input (Tensor): Tensor to compare
@@ -2047,8 +2047,8 @@ lt(input, other, out=None) -> Tensor
 
 Computes `tensor < other` element-wise.
 
-The second argument can be a number or a tensor of the same shape and
-type as the first argument.
+The second argument can be a number or a tensor whose shape is
+:ref:`broadcastable <broadcasting-semantics>` with the first argument.
 
 Args:
     input (Tensor): Tensor to compare
@@ -2184,10 +2184,10 @@ Example::
 Each element of the Tensor :attr:`input` is compared with the corresponding element of the Tensor :attr:`other`
 and an element-wise `max` is taken.
 
-The shapes of :attr:`input` and :attr:`other` don't need to match.
-The total number of elements in each Tensor need to be the same.
+The shapes of :attr:`input` and :attr:`other` don't need to match,
+but they must be :ref:`broadcastable <broadcasting-semantics>`.
 
-.. note:: When the shapes do not match, the shape of :attr:`input` is used as the shape for the returned output Tensor
+.. note:: When the shapes do not match, the shape of the returned output tensor follows the :ref:`broadcasting rules <broadcasting-semantics>`.
 
 :math:`out_i = max(tensor_i, other_i)`
 
@@ -2419,10 +2419,10 @@ Example::
 Each element of the Tensor :attr:`input` is compared with the corresponding element of the Tensor :attr:`other`
 and an element-wise `min` is taken. The resulting Tensor is returned.
 
-The shapes of :attr:`input` and :attr:`other` don't need to match.
-The total number of elements in each Tensor need to be the same.
+The shapes of :attr:`input` and :attr:`other` don't need to match,
+but they must be :ref:`broadcastable <broadcasting-semantics>`.
 
-.. note:: When the shapes do not match, the shape of :attr:`input` is used as the shape for the returned output Tensor
+.. note:: When the shapes do not match, the shape of the returned output tensor follows the :ref:`broadcasting rules <broadcasting-semantics>`.
 
 :math:`out_i = min(tensor_i, other_i)`
 
@@ -2702,8 +2702,8 @@ ne(input, other, out=None) -> Tensor
 
 Computes `tensor != other` element-wise.
 
-The second argument can be a number or a tensor of the same shape and
-type as the first argument.
+The second argument can be a number or a tensor whose shape is
+:ref:`broadcastable <broadcasting-semantics>` with the first argument.
 
 Args:
     input (Tensor): Tensor to compare
