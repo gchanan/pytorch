@@ -29,7 +29,20 @@ class Broadcast(CWrapPlugin):
         """
         + POST_CODE_OUT_PLACE_TEMPLATE.template + "\n"
         + DEPRECATED_WARNING + "\n" +
-        """}""")
+        """}
+        bool same_size = ${arg_op_a}_save->nDimension == ${arg_op_b}_save->nDimension;
+        if (same_size) {
+          for(ptrdiff_t j = 0; j < ${arg_op_a}_save->nDimension; ++j) {
+            if (THTensor_(size)(LIBRARY_STATE ${arg_op_a}_save,j) != THTensor_(size)(LIBRARY_STATE ${arg_op_b}_save,j)) {
+              same_size = false;
+            }
+          }
+        }
+        if (!same_size && expanded_err == 0 && (${arg_op_a}_nElem == ${arg_op_b}_nElem) && !${raise_errors}) {
+          PyErr_WarnEx(PyExc_UserWarning, "${op_a} and ${op_b} ARE broadcastable, and have the same number of "
+                                          "elements.  Changing behavior.", 1);
+           }
+        """)
 
     POST_CODE_IN_PLACE_TEMPLATE = Template(
         """${arg_op_b} = ${arg_op_b}_save;""")
@@ -48,7 +61,20 @@ class Broadcast(CWrapPlugin):
         """
         + POST_CODE_IN_PLACE_TEMPLATE.template + "\n"
         + DEPRECATED_WARNING + "\n" +
-        """}""")
+        """}
+        bool same_size = ${arg_op_a}->nDimension == ${arg_op_b}_save->nDimension;
+        if (same_size) {
+          for(ptrdiff_t j = 0; j < ${arg_op_a}->nDimension; ++j) {
+            if (THTensor_(size)(LIBRARY_STATE ${arg_op_a},j) != THTensor_(size)(LIBRARY_STATE ${arg_op_b}_save,j)) {
+              same_size = false;
+            }
+          }
+        }
+        if (!same_size && expanded_err == 0 && (${arg_op_a}_nElem == ${arg_op_b}_nElem) && !${raise_errors}) {
+          PyErr_WarnEx(PyExc_UserWarning, "${op_a} and ${op_b} ARE broadcastable, and have the same number of "
+                                          "elements.  Changing behavior.", 1);
+           }
+        """)
 
     def initialize(self, cwrap):
         self.cwrap = cwrap
