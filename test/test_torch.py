@@ -976,54 +976,72 @@ class TestTorch(TestCase):
         fns = [
             "dist", "atan2", "pow", "lerp", "add",
             "sub", "mul", "div", "fmod", "remainder",
-            "eq", "ge", "gt", "le", "lt", "max", "min", "ne"
+            "eq", "ge", "gt", "le", "lt", "max", "min", "ne",
+            "addcdiv", "addcmul"
         ]
         # functions with no torch. equivalent
-        fns_no_torch = ["sub"]
+        fns_no_torch = ["sub", "addcdiv", "addcmul"]
         # functions with no inplace equivalent
         fns_no_inplace = ["dist", "max", "min"]
+        # functions with no out-of-place tensor version
+        fns_no_out_place = ["addcdiv", "addcmul"]
         # functions with fallback to equal nElem behavior
         fns_fallback = ["add", "sub", "div", "mul", "pow", "fmod", "remainder",
-                        "eq", "ge", "gt", "le", "lt", "max", "min", "ne"]
+                        "eq", "ge", "gt", "le", "lt", "max", "min", "ne",
+                        "addcdiv", "addcmul"]
 
         for fn in fns:
             (dims_small, dims_large, dims_full) = select_broadcastable_dims()
             small = torch.randn(*dims_small).float()
             small = cast(small)
+            small2 = torch.randn(*dims_small).float()
+            small2 = cast(small2)
             large = torch.randn(*dims_large).float()
             large = cast(large)
             smallExpanded = small.expand(*dims_full)
+            small2Expanded = small2.expand(*dims_full)
             largeExpanded = large.expand(*dims_full)
-            # run through tensor versions of functions
-            # and verify fully expanded inputs give same results
-            fntensor_large_expanded = getattr(largeExpanded, fn)
-            fntensor_large_non_expanded = getattr(large, fn)
 
-            def tensorfn(myfn, t):
-                return myfn(t) if fn != "lerp" else myfn(t, 0.5)
-            r1 = tensorfn(fntensor_large_expanded, smallExpanded)
-            r2 = tensorfn(fntensor_large_non_expanded, small)
-            self.assertEqual(r1, r2)
-            # other order
-            fntensor_small_expanded = getattr(smallExpanded, fn)
-            fntensor_small_non_expanded = getattr(small, fn)
-            r1 = tensorfn(fntensor_small_expanded, largeExpanded)
-            r2 = tensorfn(fntensor_small_non_expanded, large)
-            self.assertEqual(r1, r2)
+            if fn not in fns_no_out_place:
+                # run through tensor versions of functions
+                # and verify fully expanded inputs give same results
+                fntensor_large_expanded = getattr(largeExpanded, fn)
+                fntensor_large_non_expanded = getattr(large, fn)
+
+                def tensorfn(myfn, t1, t2):
+                    if fn == "lerp":
+                        return myfn(t1, 0.5)
+                    elif fn == "addcdiv" or fn == "addcmul":
+                        return myfn(1, t1, t2)
+                    else:
+                        return myfn(t1)
+                r1 = tensorfn(fntensor_large_expanded, smallExpanded, small2Expanded)
+                r2 = tensorfn(fntensor_large_non_expanded, small, small2)
+                self.assertEqual(r1, r2)
+                # other order
+                fntensor_small_expanded = getattr(smallExpanded, fn)
+                fntensor_small_non_expanded = getattr(small, fn)
+                r1 = tensorfn(fntensor_small_expanded, largeExpanded, small2Expanded)
+                r2 = tensorfn(fntensor_small_non_expanded, large, small2)
+                self.assertEqual(r1, r2)
 
             # now for torch. versions of functions
             if fn not in fns_no_torch:
                 fntorch = getattr(torch, fn)
 
-                def torchfn(t1, t2):
-                    return (fntorch(t1, t2) if fn != "lerp"
-                            else fntorch(t1, t2, 0.5))
-                r1 = torchfn(large, small)
-                r2 = torchfn(largeExpanded, smallExpanded)
+                def torchfn(t1, t2, t3):
+                    if fn == "lerp":
+                        return fntorch(t1, t2, 0.5)
+                    elif fn == "addcdiv" or fn == "addcmul":
+                        return fntorch(t1, 1, t2, t3)
+                    else:
+                        return fntorch(t1, t2)
+                r1 = torchfn(large, small, small2)
+                r2 = torchfn(largeExpanded, smallExpanded, small2Expanded)
                 self.assertEqual(r1, r2)
                 # other order
-                r1 = torchfn(small, large)
-                r2 = torchfn(smallExpanded, largeExpanded)
+                r1 = torchfn(small, large, small2)
+                r2 = torchfn(smallExpanded, largeExpanded, small2Expanded)
                 self.assertEqual(r1, r2)
 
             # now for in place functions
@@ -1034,11 +1052,16 @@ class TestTorch(TestCase):
                 # need to clone largeExpanded so we can reuse
                 largeExpandedClone = largeExpanded.clone()
 
-                def tensorfn_inplace(t0, t1):
+                def tensorfn_inplace(t0, t1, t2):
                     t0_fn = getattr(t0, fn + "_")
-                    return t0_fn(t1) if fn != "lerp" else t0_fn(t1, 0.5)
-                r1 = tensorfn_inplace(largeExpanded, smallExpanded)
-                r2 = tensorfn_inplace(largeExpandedClone, small)
+                    if fn == "lerp":
+                        return t0_fn(t1, 0.5)
+                    elif fn == "addcdiv" or fn == "addcmul":
+                        return t0_fn(1, t1, t2)
+                    else:
+                        return t0_fn(t1)
+                r1 = tensorfn_inplace(largeExpanded, smallExpanded, small2Expanded)
+                r2 = tensorfn_inplace(largeExpandedClone, small, small2)
                 # in-place pointwise operations don't actually work on 0-strided tensors
                 # (numpy has the same issue)
                 if (0 not in largeExpanded.stride() and 0 not in smallExpanded.stride()
@@ -1048,12 +1071,12 @@ class TestTorch(TestCase):
                 broadcastable = (dims_small == dims_full)
                 if not broadcastable:
                     if (fn not in fns_fallback) or (fn in fns_fallback and small.numel() != largeExpanded.numel()):
-                        self.assertRaises(RuntimeError, lambda: tensorfn_inplace(small, largeExpanded))
+                        self.assertRaises(RuntimeError, lambda: tensorfn_inplace(small, largeExpanded, small2Expanded))
                     if (fn not in fns_fallback) or (fn in fns_fallback and small.numel() != large.numel()):
-                        self.assertRaises(RuntimeError, lambda: tensorfn_inplace(small, large))
+                        self.assertRaises(RuntimeError, lambda: tensorfn_inplace(small, large, small2))
 
     def test_broadcast(self):
-        for i in range(100):
+        for _ in range(100):
             self._test_broadcast(self, lambda t: t)
 
     @staticmethod
