@@ -18,7 +18,7 @@ class Broadcast(CWrapPlugin):
            ptrdiff_t ${arg_op_other}_nElem = THTensor_(nElement)(LIBRARY_STATE ${arg_op_other}_save);
         """)
 
-    OUT_PLACE_PRE_EXPAND_TEMPLATE = Template(
+    OUT_PLACE_PRE_EXPAND2_TEMPLATE = Template(
         """bool ${arg_op_other}_raise = ${raise_errors} || (${arg_op_a}_nElem != ${arg_op_other}_nElem);
            int ${arg_op_other}_err =
              THTensor_(expand2)(LIBRARY_STATE ${arg_op_a}, ${arg_op_other}, ${arg_op_a}_save, ${arg_op_other}_save, ${arg_op_other}_raise);
@@ -27,9 +27,26 @@ class Broadcast(CWrapPlugin):
              + DEPRECATED_WARNING + "\n" +
         """}""")
 
+    DEPRECATED_WARNING3 = \
+        """PyErr_WarnEx(PyExc_UserWarning, "${op_a}, ${op_other1}, and ${op_other2}  not broadcastable, but have the same number of "
+                                           "elements.  Falling back to deprecated pointwise behavior.", 1);"""
+
+    OUT_PLACE_PRE_EXPAND3_TEMPLATE = Template(
+        """bool ${arg_op_other1}_raise = ${raise_errors} || (${arg_op_a}_nElem != ${arg_op_other1}_nElem);
+           bool ${arg_op_other2}_raise = ${raise_errors} || (${arg_op_a}_nElem != ${arg_op_other2}_nElem);
+           int ${arg_op_a}_err =
+             THTensor_(expand3)(LIBRARY_STATE ${arg_op_a}, ${arg_op_other1}, ${arg_op_other2},
+                                ${arg_op_a}_save, ${arg_op_other1}_save, ${arg_op_other2}_save,
+                                ${arg_op_other1}_raise || ${arg_op_other2}_raise);
+           if (${arg_op_a}_err != 0 && !${arg_op_other1}_raise && !${arg_op_other2}_raise) {
+             ${post_code}"""
+             + DEPRECATED_WARNING3 + "\n"
+        """}""")
+
     OUT_PLACE_PRE_TEMPLATE = Template(
         """${code_arg_op_a}
            ${code_arg_op_other1}
+           ${code_arg_op_other2}
            ${expand_code}
         """)
 
@@ -39,8 +56,7 @@ class Broadcast(CWrapPlugin):
              !skip_expand && THTensor_(expand)(LIBRARY_STATE ${arg_op_other}, ${arg_op_other}_save, ${arg_op_a}_size.get(), ${arg_op_other}_raise);
            if (${arg_op_other}_err != 0 && !${arg_op_other}_raise) {
              skip_expand = true; // don't do further expansions
-           """
-             + POST_TEMPLATE.template
+               ${post_code}"""
              + DEPRECATED_WARNING + "\n" +
         """}""")
 
@@ -101,8 +117,10 @@ class Broadcast(CWrapPlugin):
                 code_arg_op_other1 = self.PRE_ARG_OP_OTHER_TEMPLATE.substitute(op_b_mapping)
                 code_arg_op_other2 = self.PRE_ARG_OP_OTHER_TEMPLATE.substitute(op_c_mapping) if op_c else ""
 
-                expand_code_1 = self.IN_PLACE_PRE_EXPAND_TEMPLATE.substitute(op_b_mapping)
-                expand_code_2 = self.IN_PLACE_PRE_EXPAND_TEMPLATE.substitute(op_c_mapping) if op_c else ""
+                post_code_1 = self.POST_TEMPLATE.substitute(op_b_mapping)
+                expand_code_1 = self.IN_PLACE_PRE_EXPAND_TEMPLATE.substitute(op_b_mapping, post_code=post_code_1)
+                post_code_2 = self.POST_TEMPLATE.substitute(op_c_mapping) if op_c else ""
+                expand_code_2 = self.IN_PLACE_PRE_EXPAND_TEMPLATE.substitute(op_c_mapping, post_code=post_code_2) if op_c else ""
 
                 new_code_pre.append(self.IN_PLACE_PRE_TEMPLATE.substitute(
                     arg_op_a=arg_op_a,
@@ -121,13 +139,26 @@ class Broadcast(CWrapPlugin):
             else:
                 code_arg_op_a = self.PRE_ARG_OP_OTHER_TEMPLATE.substitute(arg_op_other=arg_op_a)
                 code_arg_op_other1 = self.PRE_ARG_OP_OTHER_TEMPLATE.substitute(op_b_mapping)
+                code_arg_op_other2 = self.PRE_ARG_OP_OTHER_TEMPLATE.substitute(op_c_mapping) if op_c else ""
 
                 post_code = self.POST_TEMPLATE.substitute(arg_op_other=arg_op_a)
                 post_code += self.POST_TEMPLATE.substitute(op_b_mapping)
-                expand_code = self.OUT_PLACE_PRE_EXPAND_TEMPLATE.substitute(op_b_mapping, post_code=post_code)
+                post_code += self.POST_TEMPLATE.substitute(op_c_mapping) if op_c else ""
+
+                if op_c:
+                    expand_code = self.OUT_PLACE_PRE_EXPAND3_TEMPLATE.substitute(
+                        op_b_mapping,
+                        op_other1=op_b,
+                        op_other2=op_c,
+                        arg_op_other1=arg_op_b,
+                        arg_op_other2=arg_op_c,
+                        post_code=post_code)
+                else:
+                    expand_code = self.OUT_PLACE_PRE_EXPAND2_TEMPLATE.substitute(op_b_mapping, post_code=post_code)
                 new_code_pre.append(self.OUT_PLACE_PRE_TEMPLATE.substitute(
                     code_arg_op_a=code_arg_op_a,
                     code_arg_op_other1=code_arg_op_other1,
+                    code_arg_op_other2=code_arg_op_other2,
                     expand_code=expand_code))
                 new_code_pre.append("")
 

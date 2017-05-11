@@ -1599,7 +1599,8 @@
   arguments:
     - arg: THTensor* result
       output: True
-    - THTensor* self
+    - arg: THTensor* self
+      broadcast: tensor1,tensor2 fallback
     - arg: real value
       default: AS_REAL(1)
     - THTensor* tensor1
@@ -1637,7 +1638,8 @@
   arguments:
     - arg: THTensor* result
       output: True
-    - THTensor* self
+    - arg: THTensor* self
+      broadcast: tensor1,tensor2 fallback
     - arg: real value
       default: AS_REAL(1)
     - THTensor* tensor1
