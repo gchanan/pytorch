@@ -50,14 +50,32 @@ class Broadcast(CWrapPlugin):
            ${expand_code}
         """)
 
-    IN_PLACE_PRE_EXPAND_TEMPLATE = Template(
+    IN_PLACE_PRE_EXPAND1_TEMPLATE = Template(
         """bool ${arg_op_other}_raise = ${raise_errors} || (${arg_op_a}_nElem != ${arg_op_other}_nElem);
            int ${arg_op_other}_err =
              !skip_expand && THTensor_(expand)(LIBRARY_STATE ${arg_op_other}, ${arg_op_other}_save, ${arg_op_a}_size.get(), ${arg_op_other}_raise);
            if (${arg_op_other}_err != 0 && !${arg_op_other}_raise) {
              skip_expand = true; // don't do further expansions
-               ${post_code}"""
-             + DEPRECATED_WARNING + "\n" +
+             ${post_code}"""
+            + DEPRECATED_WARNING + "\n" +
+        """}""")
+
+    IN_PLACE_PRE_EXPAND2_TEMPLATE = Template(
+        """bool ${arg_op_other1}_raise = ${raise_errors} || (${arg_op_a}_nElem != ${arg_op_other1}_nElem);
+           bool ${arg_op_other2}_raise = ${raise_errors} || (${arg_op_a}_nElem != ${arg_op_other2}_nElem);
+           int ${arg_op_other1}_err =
+             !skip_expand && THTensor_(expand)(LIBRARY_STATE ${arg_op_other1}, ${arg_op_other1}_save, ${arg_op_a}_size.get(), ${arg_op_other1}_raise || ${arg_op_other2}_raise);
+           if (${arg_op_other1}_err != 0 && !${arg_op_other1}_raise && ${arg_op_other2}_raise) {
+             skip_expand = true; // don't do further expansions
+             ${post_code}"""
+            + DEPRECATED_WARNING3 + "\n" +
+        """}
+          int ${arg_op_other2}_err =
+            !skip_expand && THTensor_(expand)(LIBRARY_STATE ${arg_op_other2}, ${arg_op_other2}_save, ${arg_op_a}_size.get(), ${arg_op_other1}_raise || ${arg_op_other2}_raise);
+           if (${arg_op_other2}_err != 0 && !${arg_op_other1}_raise && ${arg_op_other2}_raise) {
+             skip_expand = true; // don't do further expansions
+             ${post_code}"""
+         + DEPRECATED_WARNING3 + "\n" +
         """}""")
 
     IN_PLACE_PRE_TEMPLATE = Template(
@@ -66,8 +84,7 @@ class Broadcast(CWrapPlugin):
             bool skip_expand = false;
             ${code_arg_op_other1}
             ${code_arg_op_other2}
-            ${expand_code_1}
-            ${expand_code_2}
+            ${expand_code}
         """)
 
     def initialize(self, cwrap):
@@ -117,23 +134,30 @@ class Broadcast(CWrapPlugin):
                 code_arg_op_other1 = self.PRE_ARG_OP_OTHER_TEMPLATE.substitute(op_b_mapping)
                 code_arg_op_other2 = self.PRE_ARG_OP_OTHER_TEMPLATE.substitute(op_c_mapping) if op_c else ""
 
-                post_code_1 = self.POST_TEMPLATE.substitute(op_b_mapping)
-                expand_code_1 = self.IN_PLACE_PRE_EXPAND_TEMPLATE.substitute(op_b_mapping, post_code=post_code_1)
-                post_code_2 = self.POST_TEMPLATE.substitute(op_c_mapping) if op_c else ""
-                expand_code_2 = self.IN_PLACE_PRE_EXPAND_TEMPLATE.substitute(op_c_mapping, post_code=post_code_2) if op_c else ""
+
+                post_code = self.POST_TEMPLATE.substitute(op_b_mapping)
+                if op_c:
+                    post_code += self.POST_TEMPLATE.substitute(op_c_mapping)
+
+                if op_c:
+                    expand_code = self.IN_PLACE_PRE_EXPAND2_TEMPLATE.substitute(
+                        op_b_mapping,
+                        op_other1=op_b,
+                        op_other2=op_c,
+                        arg_op_other1=arg_op_b,
+                        arg_op_other2=arg_op_c,
+                        post_code=post_code)
+                else:
+                    expand_code = self.IN_PLACE_PRE_EXPAND1_TEMPLATE.substitute(op_b_mapping, post_code=post_code)
 
                 new_code_pre.append(self.IN_PLACE_PRE_TEMPLATE.substitute(
                     arg_op_a=arg_op_a,
                     code_arg_op_other1=code_arg_op_other1,
                     code_arg_op_other2=code_arg_op_other2,
-                    expand_code_1=expand_code_1,
-                    expand_code_2=expand_code_2,
+                    expand_code=expand_code,
                     raise_errors=raise_errors))
                 new_code_pre.append("")
 
-                post_code = self.POST_TEMPLATE.substitute(op_b_mapping)
-                if op_c:
-                    post_code += self.POST_TEMPLATE.substitute(op_c_mapping)
                 new_code_post.append(post_code)
                 new_code_post.append("")
             else:
@@ -155,6 +179,7 @@ class Broadcast(CWrapPlugin):
                         post_code=post_code)
                 else:
                     expand_code = self.OUT_PLACE_PRE_EXPAND2_TEMPLATE.substitute(op_b_mapping, post_code=post_code)
+
                 new_code_pre.append(self.OUT_PLACE_PRE_TEMPLATE.substitute(
                     code_arg_op_a=code_arg_op_a,
                     code_arg_op_other1=code_arg_op_other1,

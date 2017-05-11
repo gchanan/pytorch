@@ -292,12 +292,14 @@ THTensor* THTensor_(newExpand)(THTensor *tensor, THLongStorage *sizes, int raise
 }
 
 int THTensor_(expand)(THTensor *r, THTensor *tensor, THLongStorage *sizes, int raiseErrors) {
+  THArgCheck(THTensor_(nDimension)(tensor) > 0, 0, "can't expand an empty tensor");
   if (raiseErrors) {
     THArgCheck(THLongStorage_size(sizes) >= THTensor_(nDimension)(tensor), 1,
                "the number of sizes provided must be greater or equal to the "
                "number of dimensions in the tensor");
+  } else if (THLongStorage_size(sizes) < THTensor_(nDimension)(tensor)) {
+    return -1;
   }
-  THArgCheck(THTensor_(nDimension)(tensor) > 0, 0, "can't expand an empty tensor");
 
   long *expandedSizes;
   long *expandedStrides;
