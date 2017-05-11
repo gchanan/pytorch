@@ -1118,8 +1118,7 @@ class TestTorch(TestCase):
                     _test_in_place_broadcastable(small2, small, large)
 
     def test_broadcast(self):
-        for i in range(500):
-            self._test_broadcast(self, lambda t: t)
+        self._test_broadcast(self, lambda t: t)
 
     @staticmethod
     def _test_broadcast_fallback(self, cast):
