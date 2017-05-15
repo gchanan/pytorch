@@ -1139,6 +1139,7 @@ class TestTorch(TestCase):
             t1 = torch.randn(4, 1).float()
             t1 = cast(t1)
             t2 = torch.randn(4).float()
+            t2 = cast(t2)
             broadcastSize = torch.Size([4, 4])
             t0_fn = getattr(t0, fn)
             t1_fn = getattr(t1, fn)
