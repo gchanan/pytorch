@@ -1433,7 +1433,8 @@
       output: True
     - arg: real beta
       default: AS_REAL(1)
-    - THTensor* self
+    - arg: THTensor* self
+      broadcast: vec1,vec2 dims:vec1.dim0,vec2.dim0
     - arg: real alpha
       default: AS_REAL(1)
     - THTensor* vec1
@@ -1560,7 +1561,8 @@
       output: True
     - arg: real beta
       default: AS_REAL(1)
-    - THTensor* self
+    - arg: THTensor* self
+      broadcast: batch1,batch2 dims:batch1.dim1,batch2.dim2
     - arg: real alpha
       default: AS_REAL(1)
     - THTensor* batch1

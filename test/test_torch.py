@@ -1192,8 +1192,7 @@ class TestTorch(TestCase):
 
     @staticmethod
     def _test_broadcast_fused_matmul(self, cast):
-        fns = ["baddbmm", "addmm"]
-        batch_fns = ["baddbmm"]
+        fns = ["baddbmm", "addmm", "addr", "addbmm"]
 
         for fn in fns:
             batch_dim = random.randint(1, 8)
@@ -1204,8 +1203,14 @@ class TestTorch(TestCase):
             def dims_full_for_fn():
                 if fn == "baddbmm":
                     return ([batch_dim, n_dim, p_dim], [batch_dim, n_dim, m_dim], [batch_dim, m_dim, p_dim])
+                elif fn == "addbmm":
+                    return ([n_dim, p_dim], [batch_dim, n_dim, m_dim], [batch_dim, m_dim, p_dim])
                 elif fn == "addmm":
                     return ([n_dim, p_dim], [n_dim, m_dim], [m_dim, p_dim])
+                elif fn == "addr":
+                    return ([n_dim, m_dim], [n_dim], [m_dim])
+                else:
+                    raise AssertionError("unknown function")
 
             (t0_dims_full, t1_dims, t2_dims) = dims_full_for_fn()
             (t0_dims_small, _, _) = TestTorch._select_broadcastable_dims(self, t0_dims_full)
