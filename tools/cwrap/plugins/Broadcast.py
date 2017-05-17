@@ -85,6 +85,11 @@ class Broadcast(CWrapPlugin):
            long ${arg_op_a}_dim${idx}_size = THTensor_(size)(LIBRARY_STATE ${arg_op_dim}, ${arg_op_dim_value});
         """)
 
+    OUT_PLACE_PRE_EXPAND1_DIM_TEMPLATE = Template(
+        """THLongStoragePtr ${arg_op_a}_storage = THLongStorage_newWithSize1(${arg_op_a}_dim0_size);
+           THTensor_(expand)(LIBRARY_STATE ${arg_op_a}, ${arg_op_a}_save, ${arg_op_a}_storage, true);
+        """)
+
     OUT_PLACE_PRE_EXPAND2_DIM_TEMPLATE = Template(
         """THLongStoragePtr ${arg_op_a}_storage = THLongStorage_newWithSize2(${arg_op_a}_dim0_size, ${arg_op_a}_dim1_size);
            THTensor_(expand)(LIBRARY_STATE ${arg_op_a}, ${arg_op_a}_save, ${arg_op_a}_storage, true);
@@ -180,7 +185,7 @@ class Broadcast(CWrapPlugin):
                         dim_val = batchdim[1][len("dim"):]
                         dims_kvs.append( {"op":batchdim[0], "arg_op":"arg_" + batchdim[0], "val":dim_val} )
 
-            assert len(dims_kvs) == 0 or len(dims_kvs) == 2 or len(dims_kvs) == 3
+            assert len(dims_kvs) <= 3
             for p in params[1:]:
                 if p != "inplace" and p != "fallback" and not p.startswith("dims:"):
                     raise ValueError("invalid parameter {}".format(p))
@@ -244,7 +249,11 @@ class Broadcast(CWrapPlugin):
                             arg_op_dim_value=kv["val"],
                             idx=idx)
 
-                    if len(dims_kvs) == 2:
+                    if len(dims_kvs) == 1:
+                        expand_code += self.OUT_PLACE_PRE_EXPAND1_DIM_TEMPLATE.substitute(
+                            arg_op_a=arg_op_a,
+                            arg_op_dim0=dims_kvs[0]["arg_op"])
+                    elif len(dims_kvs) == 2:
                         expand_code += self.OUT_PLACE_PRE_EXPAND2_DIM_TEMPLATE.substitute(
                             arg_op_a=arg_op_a,
                             arg_op_dim0=dims_kvs[0]["arg_op"],

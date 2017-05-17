@@ -1192,7 +1192,7 @@ class TestTorch(TestCase):
 
     @staticmethod
     def _test_broadcast_fused_matmul(self, cast):
-        fns = ["baddbmm", "addmm", "addr", "addbmm"]
+        fns = ["baddbmm", "addbmm", "addmm", "addmv", "addr"]
 
         for fn in fns:
             batch_dim = random.randint(1, 8)
@@ -1207,6 +1207,8 @@ class TestTorch(TestCase):
                     return ([n_dim, p_dim], [batch_dim, n_dim, m_dim], [batch_dim, m_dim, p_dim])
                 elif fn == "addmm":
                     return ([n_dim, p_dim], [n_dim, m_dim], [m_dim, p_dim])
+                elif fn == "addmv":
+                    return ([n_dim], [n_dim, m_dim], [m_dim])
                 elif fn == "addr":
                     return ([n_dim, m_dim], [n_dim], [m_dim])
                 else:
