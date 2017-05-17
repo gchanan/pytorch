@@ -1346,7 +1346,8 @@
         output: True
       - arg: real beta
         default: AS_REAL(1)
-      - THTensor* self
+      - arg: THTensor* self
+        broadcast: mat1,mat2 dims:mat1.dim0,mat2.dim1
       - arg: real alpha
         default: AS_REAL(1)
       - THTensor* mat1

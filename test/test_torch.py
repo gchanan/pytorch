@@ -1191,30 +1191,42 @@ class TestTorch(TestCase):
         self._test_broadcast_fallback(self, lambda t: t)
 
     @staticmethod
-    def _test_broadcast_baddbmm(self, cast):
-        batch_dim = random.randint(1, 8)
-        m_dim = random.randint(1, 8)
-        n_dim = random.randint(1, 8)
-        p_dim = random.randint(1, 8)
-        dims_full = [batch_dim, n_dim, p_dim]
-        (dims_small, _, _) = TestTorch._select_broadcastable_dims(self, dims_full)
+    def _test_broadcast_fused_matmul(self, cast):
+        fns = ["baddbmm", "addmm"]
+        batch_fns = ["baddbmm"]
 
-        t0_small = torch.randn(*dims_small).float()
-        t0_small = cast(t0_small)
-        t1 = torch.randn(batch_dim, n_dim, m_dim).float()
-        t1 = cast(t1)
-        t2 = torch.randn(batch_dim, m_dim, p_dim).float()
-        t2 = cast(t2)
+        for fn in fns:
+            batch_dim = random.randint(1, 8)
+            m_dim = random.randint(1, 8)
+            n_dim = random.randint(1, 8)
+            p_dim = random.randint(1, 8)
 
-        t0_full = t0_small.expand(*dims_full)
-        t0_full = cast(t0_full)
+            def dims_full_for_fn():
+                if fn == "baddbmm":
+                    return ([batch_dim, n_dim, p_dim], [batch_dim, n_dim, m_dim], [batch_dim, m_dim, p_dim])
+                elif fn == "addmm":
+                    return ([n_dim, p_dim], [n_dim, m_dim], [m_dim, p_dim])
 
-        r0 = torch.baddbmm(t0_small, t1, t2)
-        r1 = torch.baddbmm(t0_full, t1, t2)
-        self.assertEqual(r0, r1)
+            (t0_dims_full, t1_dims, t2_dims) = dims_full_for_fn()
+            (t0_dims_small, _, _) = TestTorch._select_broadcastable_dims(self, t0_dims_full)
 
-    def test_broadcast_baddbmm(self):
-        self._test_broadcast_baddbmm(self, lambda t: t)
+            t0_small = torch.randn(*t0_dims_small).float()
+            t0_small = cast(t0_small)
+            t1 = torch.randn(*t1_dims).float()
+            t1 = cast(t1)
+            t2 = torch.randn(*t2_dims).float()
+            t2 = cast(t2)
+
+            t0_full = t0_small.expand(*t0_dims_full)
+            t0_full = cast(t0_full)
+
+            fntorch = getattr(torch, fn)
+            r0 = fntorch(t0_small, t1, t2)
+            r1 = fntorch(t0_full, t1, t2)
+            self.assertEqual(r0, r1)
+
+    def test_broadcast_fused_matmul(self):
+        self._test_broadcast_fused_matmul(self, lambda t: t)
 
     def test_randperm(self):
         _RNGState = torch.get_rng_state()
