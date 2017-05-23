@@ -35,8 +35,8 @@ class GRUFused(Function):
             self.backend.library_state,
             igc, hgc, gradOutput, gradInput)
         if bias is not None:
-            gb1 = igc.sum(0).squeeze()
-            gb2 = hgc.sum(0).squeeze()
+            gb1 = igc.sum(0, keepdim=True).squeeze()
+            gb2 = hgc.sum(0, keepdim=True).squeeze()
 
             return igc, hgc, gradInput, gb1, gb2
         else:
@@ -79,8 +79,8 @@ class LSTMFused(Function):
             gradOutput[0], gradOutput[1], gradInput)
 
         if bias is not None:
-            gb1 = lgo_clone.sum(0).squeeze()
-            gb2 = lgo_clone.sum(0).squeeze()
+            gb1 = lgo_clone.sum(0, keepdim=True).squeeze()
+            gb2 = lgo_clone.sum(0, keepdim=True).squeeze()
 
             return lgo_clone, lgo_clone, gradInput, gb1, gb2
         else:
