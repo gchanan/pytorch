@@ -898,7 +898,7 @@
         - bool keepdim
     - cname: sum
       return: argument 0
-      before_call: maybeThrowBackCompatKeepdimWarn("mean");
+      before_call: maybeThrowBackCompatKeepdimWarn("sum");
       arguments:
         - arg: THTensor* result
           output: True
