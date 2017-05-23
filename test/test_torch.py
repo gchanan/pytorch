@@ -1133,6 +1133,8 @@ class TestTorch(TestCase):
                         "addcdiv", "addcmul"]
         # functions with three tensor arguments
         fns_3_args = ["addcdiv", "addcmul"]
+        # functions with no inplace equivalent
+        fns_no_inplace = ["dist", "max", "min"]
 
         for fn in fns_fallback:
             # case 1: both broadcastable and nElems equal -- verify that we broadcast
@@ -1158,34 +1160,41 @@ class TestTorch(TestCase):
             self.assertEqual(broadcastSize, r0.size())
             self.assertEqual(broadcastSize, r1.size())
 
-            # case 2: broadcastable and not nElemes equal -- tested by test_fallback
+            # case 2: broadcastable and not nElemes equal -- tested by test_broadcast
 
             # case 3: not broadcastable nElems equal -- verify we fallback
-            t0 = torch.randn(1, 6).float()
-            t1 = torch.randn(2, 3).float()
-            t2 = torch.randn(3, 2).float()
-            t0_fn = getattr(t0, fn)
-            t1_fn = getattr(t1, fn)
-            t2_fn = getattr(t2, fn)
-
             def verifyFallbackWarnings(w):
                 self.assertEqual(len(w), 1)
                 self.assertTrue(issubclass(w[0].category, UserWarning))
                 self.assertTrue("Falling back" in str(w[0].message))
-            with warnings.catch_warnings(record=True) as w:
-                r0 = tensorfn(t0_fn, t1, t2)
-                verifyFallbackWarnings(w)
-            with warnings.catch_warnings(record=True) as w:
-                r1 = tensorfn(t1_fn, t0, t2)
-                verifyFallbackWarnings(w)
-            with warnings.catch_warnings(record=True) as w:
-                r2 = tensorfn(t2_fn, t0, t1)
-                verifyFallbackWarnings(w)
-            self.assertEqual(t0.size(), r0.size())
-            self.assertEqual(t1.size(), r1.size())
-            self.assertEqual(t2.size(), r2.size())
 
-            # case 4: not broadcastable and not nEleme equal -- tested by test_fallback
+            def verify_no_broadcast_nelem_equal(inplace):
+                if not inplace or fn not in fns_no_inplace:
+                    t0 = torch.randn(1, 6).float()
+                    t1 = torch.randn(2, 3).float()
+                    t2 = torch.randn(3, 2).float()
+                    t0_fn = getattr(t0, fn if not inplace else fn + "_")
+                    t1_fn = getattr(t1, fn if not inplace else fn + "_")
+                    t2_fn = getattr(t2, fn if not inplace else fn + "_")
+
+                    with warnings.catch_warnings(record=True) as w:
+                        r0 = tensorfn(t0_fn, t1, t2)
+                        verifyFallbackWarnings(w)
+                    with warnings.catch_warnings(record=True) as w:
+                        r1 = tensorfn(t1_fn, t0, t2)
+                        verifyFallbackWarnings(w)
+                    with warnings.catch_warnings(record=True) as w:
+                        r2 = tensorfn(t2_fn, t0, t1)
+                        verifyFallbackWarnings(w)
+
+                    self.assertEqual(t0.size(), r0.size())
+                    self.assertEqual(t1.size(), r1.size())
+                    self.assertEqual(t2.size(), r2.size())
+
+            verify_no_broadcast_nelem_equal(False)
+            verify_no_broadcast_nelem_equal(True)
+
+            # case 4: not broadcastable and not nEleme equal -- tested by test_broadcast
 
     def test_broadcast_fallback(self):
         self._test_broadcast_fallback(self, lambda t: t)
