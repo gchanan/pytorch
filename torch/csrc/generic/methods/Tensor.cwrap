@@ -340,7 +340,8 @@ PyObject * THPTensor_(stride)(PyObject *self, PyObject *args, PyObject *kwargs)
   python_name: masked_copy_
   return: self
   arguments:
-    - THTensor* self
+    - arg: THTensor* self
+      broadcast: mask inplace fallback types:Byte
     - THBoolTensor* mask
     - THTensor* source
 ]]

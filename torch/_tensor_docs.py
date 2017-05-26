@@ -822,8 +822,8 @@ add_docstr(torch._C.FloatTensorBase.masked_fill_,
 masked_fill_(mask, value)
 
 Fills elements of this tensor with :attr:`value` where :attr:`mask` is one.
-The :attr:`mask` should have the same number of elements as this tensor, but
-the shape may differ.
+The shape of :attr:`mask` must be :ref:`broadcastable <broadcasting-semantics>`
+with the shape of the underlying tensor.
 
 Args:
     mask (ByteTensor): The binary mask
