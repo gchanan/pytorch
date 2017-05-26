@@ -55,7 +55,8 @@ class Broadcast(CWrapPlugin):
         if type == None:
             ret = """THTensor *${arg_op_other}_save = ${arg_op_other};
                      THTensorPtr ${arg_op_other}_guard = THTensor_(new)(LIBRARY_STATE_NOARGS);
-                     ${arg_op_other}=${arg_op_other}_guard.get();"""
+                     ${arg_op_other}=${arg_op_other}_guard.get();
+                  """
             if includeElementCount:
                 ret += "ptrdiff_t ${arg_op_other}_nElem = THTensor_(nElement)(LIBRARY_STATE ${arg_op_other}_save);"
         else:
@@ -165,9 +166,11 @@ class Broadcast(CWrapPlugin):
         ret = """bool ${arg_op_other}_raise = ${raise_errors} || (${arg_op_a}_nElem != ${arg_op_other}_nElem);
                  int ${arg_op_other}_err ="""
         if type == None:
-            ret += """!skip_expand && THTensor_(expand)(LIBRARY_STATE"""
+            ret += """!skip_expand && THTensor_(expand)(LIBRARY_STATE
+                   """
         else:
-            ret += """!skip_expand && THBroadcastTensor_(expand)(LIBRARY_STATE"""
+            ret += """!skip_expand && THBroadcastTensor_(expand)(LIBRARY_STATE
+                   """
 
         ret += """                                               ${arg_op_other},
                                                                  ${arg_op_other}_save,
@@ -187,9 +190,11 @@ class Broadcast(CWrapPlugin):
                  bool ${arg_op_other2}_raise = ${raise_errors} || (${arg_op_a}_nElem != ${arg_op_other2}_nElem);
                  int ${arg_op_other1}_err ="""
         if type1 is None:
-            ret += """!skip_expand && THTensor_(expand)(LIBRARY_STATE"""
+            ret += """!skip_expand && THTensor_(expand)(LIBRARY_STATE
+                   """
         else:
-            ret += """!skip_expand && THBroadcastTensor_(expand)(LIBRARY_STATE"""
+            ret += """!skip_expand && THBroadcastTensor_(expand)(LIBRARY_STATE
+                   """
 
         ret += """                                              ${arg_op_other1},
                                                                 ${arg_op_other1}_save,
