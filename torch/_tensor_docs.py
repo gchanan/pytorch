@@ -803,8 +803,9 @@ add_docstr(torch._C.FloatTensorBase.masked_copy_,
 masked_copy_(mask, source)
 
 Copies elements from :attr:`source` into this tensor at positions where the
-:attr:`mask` is one. The :attr:`mask` should have the same number of elements
-as this tensor. The :attr:`source` should have at least as many elements as the
+:attr:`mask` is one.
+The shape of :attr:`mask` must be :ref:`broadcastable <broadcasting-semantics>`
+with the shape of the underlying tensor. The :attr:`source` should have at least as many elements as the
 number of ones in :attr:`mask`
 
 Args:
