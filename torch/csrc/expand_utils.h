@@ -56,8 +56,8 @@ int expand_inplace2(LIBRARY_STATE_TYPE TensorType *r1, TensorType *r2,
   bool skip_expand = false;
   ptrdiff_t to_expand1_nElem = THSize_nElement(to_expand1->nDimension, to_expand1->size);
   ptrdiff_t to_expand2_nElem = THSize_nElement(to_expand2->nDimension, to_expand2->size);
-  bool to_expand1_raise = false || (tensor_nElem != to_expand1_nElem);
-  bool to_expand2_raise = false || (tensor_nElem != to_expand2_nElem);
+  bool to_expand1_raise = !fallback || (tensor_nElem != to_expand1_nElem);
+  bool to_expand2_raise = !fallback || (tensor_nElem != to_expand2_nElem);
   int ret = 0;
 
   int to_expand1_err = !skip_expand && expand<TensorType>(LIBRARY_STATE r1, to_expand1, tensor_size.get(),
@@ -95,8 +95,8 @@ int expand_inplace2(LIBRARY_STATE_TYPE TensorType *r1, TensorType *r2,
   }
   if (fallback && getBackCompatBroadcastWarn()) {
     bool same_shape = THSize_isSameSizeAs(tensor->size, tensor->nDimension,
-        to_expand1->size, to_expand1->nDimension);
-    if (!same_shape && to_expand1_err == 0 && (tensor_nElem == to_expand1_nElem) && fallback) {
+        to_expand2->size, to_expand2->nDimension);
+    if (!same_shape && to_expand1_err == 0 && (tensor_nElem == to_expand2_nElem) && fallback) {
       std::ostringstream warn;
       warn << tensor_name << " and " << to_expand2_name << " do not have the same shape, but are "
            << "broadcastable, and have the same number of elements.  Changing behavior in a backwards incompatible "
