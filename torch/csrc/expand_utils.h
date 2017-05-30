@@ -3,19 +3,12 @@
 
 #include <sstream>
 #include <Python.h>
-#include <THP.h>
 
 template <typename ExpandType>
-ExpandType *newForExpand();
-
-template <typename ExpandType>
-ExpandType *newForExpand(THCState *s);
+ExpandType *newForExpand(LIBRARY_STATE_TYPE_NOARGS);
 
 template <typename TensorType>
-int expand(TensorType *r, TensorType *tensor, THLongStorage *sizes, int raiseErrors);
-
-template <typename TensorType>
-int expand(THCState *s, TensorType *r, TensorType *tensor, THLongStorage *sizes, int raiseErrors);
+int expand(LIBRARY_STATE_TYPE TensorType *r, TensorType *tensor, THLongStorage *sizes, int raiseErrors);
 
 template <typename ExpandType, typename TensorType>
 int expand_inplace(LIBRARY_STATE_TYPE ExpandType *r, ExpandType *to_expand, TensorType *tensor,

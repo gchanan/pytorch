@@ -11,7 +11,6 @@
 
 #include "torch/csrc/THP.h"
 #include "torch/csrc/copy_utils.h"
-#include "torch/csrc/expand_utils.h"
 #include "torch/csrc/DynamicTypes.h"
 
 //generic_include TH torch/csrc/generic/Tensor.cpp
