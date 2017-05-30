@@ -61,7 +61,7 @@ static PyObject * THPTensor_(map)(THPTensor *self, PyObject *args)
   THTensor *src_save = src;
   THTensorPtr src_guard = THTensor_(new)(LIBRARY_STATE_NOARGS);
 
-  int ret = expand_inplace<THTensor, THTensor>(src_guard.get(), src, tensor, "src", "tensor", true);
+  int ret = expand_inplace1<THTensor, THTensor>(src_guard.get(), src, tensor, "src", "tensor", true);
   if (ret == 0) {
     src = src_guard.get();
   }

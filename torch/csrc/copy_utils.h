@@ -98,7 +98,7 @@ void THPInsertTensorCopyFunction(
     TensorSrc *src_save = src;
     THPPointer<TensorSrc> src_guard = newForExpand<TensorSrc>(LIBRARY_STATE_NOARGS);
 
-    int ret = expand_inplace<TensorSrc, TensorDst>(LIBRARY_STATE src_guard.get(), src, dst, "src", "dst", true);
+    int ret = expand_inplace1<TensorSrc, TensorDst>(LIBRARY_STATE src_guard.get(), src, dst, "src", "dst", true);
     if (ret == 0) {
       src = src_guard.get();
     }
