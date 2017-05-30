@@ -10,6 +10,14 @@ ExpandType *newForExpand(LIBRARY_STATE_TYPE_NOARGS);
 template <typename TensorType>
 int expand(LIBRARY_STATE_TYPE TensorType *r, TensorType *tensor, THLongStorage *sizes, int raiseErrors);
 
+template <typename TensorType>
+int expand2(LIBRARY_STATE_TYPE TensorType *r1, TensorType *r2,
+            TensorType *e1, TensorType *e2, int raiseErrors);
+
+template <typename TensorType>
+int expand3(LIBRARY_STATE_TYPE TensorType *r1, TensorType *r2, TensorType *r3,
+            TensorType *e1, TensorType *e2, TensorType *e3, int raiseErrors);
+
 template <typename ExpandType, typename TensorType>
 void check_fallback(ExpandType *to_expand, TensorType *tensor,
                     char *to_expand_name, char *tensor_name, bool fallback,
@@ -90,6 +98,58 @@ int expand_inplace2(LIBRARY_STATE_TYPE TensorType *r1, TensorType *r2,
                                          to_expand2_nElem, tensor_nElem, ret2);
 
   return ret == 0 && ret2 == 0 ? 0 : -1;
+}
+
+template <typename TensorType>
+int expand_outplace2(LIBRARY_STATE_TYPE TensorType *r1, TensorType *r2,
+                    TensorType *to_expand1, TensorType *to_expand2,
+                    char *to_expand1_name, char *to_expand2_name, bool fallback) {
+  ptrdiff_t to_expand1_nElem = THSize_nElement(to_expand1->nDimension, to_expand1->size);
+  ptrdiff_t to_expand2_nElem = THSize_nElement(to_expand2->nDimension, to_expand2->size);
+  bool raise = !fallback || (to_expand1_nElem != to_expand2_nElem);
+
+  int ret = 0;
+  int err = expand2<TensorType>(LIBRARY_STATE r1, r2, to_expand1, to_expand2, raise);
+  if (err != 0 && !raise) {
+    ret = err;
+    std::ostringstream warn;
+    warn << to_expand1_name << " and " << to_expand2_name << " not broadcastable, but have the same number of "
+        "elements.  Falling back to deprecated pointwise behavior.";
+    PyErr_WarnEx(PyExc_UserWarning, warn.str().c_str(), 1);
+  }
+  check_fallback<TensorType, TensorType>(to_expand1, to_expand2, to_expand1_name, to_expand2_name, fallback,
+                                         to_expand1_nElem, to_expand2_nElem, ret);
+  return ret;
+}
+
+template <typename TensorType>
+int expand_outplace3(LIBRARY_STATE_TYPE TensorType *r1, TensorType *r2, TensorType *r3,
+                    TensorType *to_expand1, TensorType *to_expand2, TensorType *to_expand3,
+                    char *to_expand1_name, char *to_expand2_name, char *to_expand3_name, bool fallback) {
+  ptrdiff_t to_expand1_nElem = THSize_nElement(to_expand1->nDimension, to_expand1->size);
+  ptrdiff_t to_expand2_nElem = THSize_nElement(to_expand2->nDimension, to_expand2->size);
+  ptrdiff_t to_expand3_nElem = THSize_nElement(to_expand3->nDimension, to_expand3->size);
+  bool to_expand2_raise = !fallback || (to_expand1_nElem != to_expand2_nElem);
+  bool to_expand3_raise = !fallback || (to_expand1_nElem != to_expand2_nElem);
+
+  int ret = 0;
+  int err = expand3<TensorType>(LIBRARY_STATE r1, r2, r3,
+                                to_expand1, to_expand2, to_expand3,
+                                to_expand2_raise || to_expand3_raise);
+
+  if (err != 0 && !to_expand2_raise && !to_expand3_raise) {
+    ret = err;
+    std::ostringstream warn;
+    warn << to_expand1_name << ", " << to_expand2_name << ", and " << to_expand3_name << " not broadcastable,"
+         << " but have the same number of elements.  Falling back to deprecated pointwise behavior.";
+    PyErr_WarnEx(PyExc_UserWarning, warn.str().c_str(), 1);
+  }
+
+  check_fallback<TensorType, TensorType>(to_expand1, to_expand2, to_expand1_name, to_expand2_name, fallback,
+                                         to_expand1_nElem, to_expand2_nElem, ret);
+  check_fallback<TensorType, TensorType>(to_expand1, to_expand3, to_expand1_name, to_expand3_name, fallback,
+                                         to_expand1_nElem, to_expand3_nElem, ret);
+  return ret;
 }
 
 #endif

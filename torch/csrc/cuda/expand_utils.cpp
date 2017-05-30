@@ -86,3 +86,99 @@ template<>
 int expand(THCState *s, THCudaLongTensor *r, THCudaLongTensor *tensor, THLongStorage *sizes, int raiseErrors) {
   return THCudaLongTensor_expand(s, r, tensor, sizes, raiseErrors);
 }
+
+template <>
+int expand2(THCState *s, THCudaTensor *r1, THCudaTensor *r2,
+            THCudaTensor *e1, THCudaTensor *e2, int raiseErrors) {
+  return THCudaTensor_expand2(s, r1, r2, e1, e2, raiseErrors);
+}
+
+template <>
+int expand2(THCState *s, THCudaDoubleTensor *r1, THCudaDoubleTensor *r2,
+            THCudaDoubleTensor *e1, THCudaDoubleTensor *e2, int raiseErrors) {
+  return THCudaDoubleTensor_expand2(s, r1, r2, e1, e2, raiseErrors);
+}
+
+template <>
+int expand2(THCState *s, THCudaHalfTensor *r1, THCudaHalfTensor *r2,
+            THCudaHalfTensor *e1, THCudaHalfTensor *e2, int raiseErrors) {
+  return THCudaHalfTensor_expand2(s, r1, r2, e1, e2, raiseErrors);
+}
+
+template <>
+int expand2(THCState *s, THCudaByteTensor *r1, THCudaByteTensor *r2,
+            THCudaByteTensor *e1, THCudaByteTensor *e2, int raiseErrors) {
+  return THCudaByteTensor_expand2(s, r1, r2, e1, e2, raiseErrors);
+}
+
+template <>
+int expand2(THCState *s, THCudaCharTensor *r1, THCudaCharTensor *r2,
+            THCudaCharTensor *e1, THCudaCharTensor *e2, int raiseErrors) {
+  return THCudaCharTensor_expand2(s, r1, r2, e1, e2, raiseErrors);
+}
+
+template <>
+int expand2(THCState *s, THCudaShortTensor *r1, THCudaShortTensor *r2,
+            THCudaShortTensor *e1, THCudaShortTensor *e2, int raiseErrors) {
+  return THCudaShortTensor_expand2(s, r1, r2, e1, e2, raiseErrors);
+}
+
+template <>
+int expand2(THCState *s, THCudaIntTensor *r1, THCudaIntTensor *r2,
+            THCudaIntTensor *e1, THCudaIntTensor *e2, int raiseErrors) {
+  return THCudaIntTensor_expand2(s, r1, r2, e1, e2, raiseErrors);
+}
+
+template <>
+int expand2(THCState *s, THCudaLongTensor *r1, THCudaLongTensor *r2,
+            THCudaLongTensor *e1, THCudaLongTensor *e2, int raiseErrors) {
+  return THCudaLongTensor_expand2(s, r1, r2, e1, e2, raiseErrors);
+}
+
+template <>
+int expand3(THCState *s, THCudaTensor *r1, THCudaTensor *r2, THCudaTensor *r3,
+            THCudaTensor *e1, THCudaTensor *e2, THCudaTensor *e3, int raiseErrors) {
+  return THCudaTensor_expand3(s, r1, r2, r3, e1, e2, e3, raiseErrors);
+}
+
+template <>
+int expand3(THCState *s, THCudaDoubleTensor *r1, THCudaDoubleTensor *r2, THCudaDoubleTensor *r3,
+            THCudaDoubleTensor *e1, THCudaDoubleTensor *e2, THCudaDoubleTensor *e3, int raiseErrors) {
+  return THCudaDoubleTensor_expand3(s, r1, r2, r3, e1, e2, e3, raiseErrors);
+}
+
+template <>
+int expand3(THCState *s, THCudaHalfTensor *r1, THCudaHalfTensor *r2, THCudaHalfTensor *r3,
+            THCudaHalfTensor *e1, THCudaHalfTensor *e2, THCudaHalfTensor *e3, int raiseErrors) {
+  return THCudaHalfTensor_expand3(s, r1, r2, r3, e1, e2, e3, raiseErrors);
+}
+
+template <>
+int expand3(THCState *s, THCudaByteTensor *r1, THCudaByteTensor *r2, THCudaByteTensor *r3,
+            THCudaByteTensor *e1, THCudaByteTensor *e2, THCudaByteTensor *e3, int raiseErrors) {
+  return THCudaByteTensor_expand3(s, r1, r2, r3, e1, e2, e3, raiseErrors);
+}
+
+template <>
+int expand3(THCState *s, THCudaCharTensor *r1, THCudaCharTensor *r2, THCudaCharTensor *r3,
+            THCudaCharTensor *e1, THCudaCharTensor *e2, THCudaCharTensor *e3, int raiseErrors) {
+  return THCudaCharTensor_expand3(s, r1, r2, r3, e1, e2, e3, raiseErrors);
+}
+
+template <>
+int expand3(THCState *s, THCudaShortTensor *r1, THCudaShortTensor *r2, THCudaShortTensor *r3,
+            THCudaShortTensor *e1, THCudaShortTensor *e2, THCudaShortTensor *e3, int raiseErrors) {
+  return THCudaShortTensor_expand3(s, r1, r2, r3, e1, e2, e3, raiseErrors);
+}
+
+template <>
+int expand3(THCState *s, THCudaIntTensor *r1, THCudaIntTensor *r2, THCudaIntTensor *r3,
+            THCudaIntTensor *e1, THCudaIntTensor *e2, THCudaIntTensor *e3, int raiseErrors) {
+  return THCudaIntTensor_expand3(s, r1, r2, r3, e1, e2, e3, raiseErrors);
+}
+
+template <>
+int expand3(THCState *s, THCudaLongTensor *r1, THCudaLongTensor *r2, THCudaLongTensor *r3,
+            THCudaLongTensor *e1, THCudaLongTensor *e2, THCudaLongTensor *e3, int raiseErrors) {
+  return THCudaLongTensor_expand3(s, r1, r2, r3, e1, e2, e3, raiseErrors);
+}
