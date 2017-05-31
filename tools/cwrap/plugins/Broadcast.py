@@ -39,13 +39,6 @@ from string import Template
 #             = e(i,a) * e(j,a)
 
 class Broadcast(CWrapPlugin):
-    OUT_PLACE_DEPRECATED_WARNING = \
-        """PyErr_WarnEx(PyExc_UserWarning, "${op_a} and ${op_other} not broadcastable, but have the same number of "
-                                           "elements.  Falling back to deprecated pointwise behavior.", 1);"""
-
-    OUT_PLACE_DEPRECATED_WARNING3 = \
-        """PyErr_WarnEx(PyExc_UserWarning, "${op_a}, ${op_other1}, and ${op_other2}  not broadcastable, but have the same number of "
-                                           "elements.  Falling back to deprecated pointwise behavior.", 1);"""
 
     # Save and restore passed in arguments in case later plugins use
     POST_TEMPLATE = Template(
@@ -54,7 +47,7 @@ class Broadcast(CWrapPlugin):
     def getPreArgStringTemplatev2(self, type=None):
         if type == None:
             ret = """THTensor *${arg_op_other}_save = ${arg_op_other};
-                     THTensorPtr ${arg_op_other}_guard = THTensor_(new)(LIBRARY_STATE_NOARGS);"""
+                     THTensorPtr ${arg_op_other}_guard = THTensor_(new)(LIBRARY_STATE_NOARGS);\n"""
         else:
             tensor_type = "TH" + type + "Tensor"
             cuda_tensor_type = "THCuda" + type + "Tensor"
@@ -67,25 +60,12 @@ class Broadcast(CWrapPlugin):
                   "#endif\n")
         return Template(ret)
 
-    def getPreArgStringTemplate(self, includeElementCount=True):
+    def getPreArgStringTemplate(self):
         ret = """THTensor *${arg_op_other}_save = ${arg_op_other};
                  THTensorPtr ${arg_op_other}_guard = THTensor_(new)(LIBRARY_STATE_NOARGS);
                  ${arg_op_other}=${arg_op_other}_guard.get();
               """
-        if includeElementCount:
-            ret += "ptrdiff_t ${arg_op_other}_nElem = THTensor_(nElement)(LIBRARY_STATE ${arg_op_other}_save);"
         return Template(ret)
-
-    OUT_PLACE_BACK_COMPAT_WARN_TEMPLATE = Template(
-        """if (getBackCompatBroadcastWarn()) {
-             bool same_shape = THSize_isSameSizeAs(${arg_op_a}_save->size, ${arg_op_a}_save->nDimension,
-                 ${arg_op_other}_save->size, ${arg_op_other}_save->nDimension);
-             if (!same_shape && ${arg_op_other}_err == 0 && (${arg_op_a}_nElem == ${arg_op_other}_nElem) && !${raise_errors}) {
-               PyErr_WarnEx(PyExc_UserWarning, "${op_a} and ${op_other} do not have the same shape, but are broadcastable, and have the same number of "
-                                               "elements.  Changing behavior in a backwards incompatible manner to broadcasting rather than viewing as 1-dimensional.", 1);
-             }
-           }
-        """)
 
     OUT_PLACE_PRE_EXPAND2_TEMPLATE = Template(
         """int ret = expand_outplace2(LIBRARY_STATE ${arg_op_a}_guard.get(), ${arg_op_other}_guard.get(),
@@ -94,8 +74,7 @@ class Broadcast(CWrapPlugin):
            if (ret == 0) {
              ${arg_op_a} = ${arg_op_a}_guard.get();
              ${arg_op_other} = ${arg_op_other}_guard.get();
-           }
-           """)
+           }""")
 
     OUT_PLACE_PRE_EXPAND3_TEMPLATE = Template(
         """int ret = expand_outplace3(LIBRARY_STATE ${arg_op_a}_guard.get(), ${arg_op_other1}_guard.get(), ${arg_op_other2}_guard.get(),
@@ -105,8 +84,7 @@ class Broadcast(CWrapPlugin):
              ${arg_op_a} = ${arg_op_a}_guard.get();
              ${arg_op_other1} = ${arg_op_other1}_guard.get();
              ${arg_op_other2} = ${arg_op_other2}_guard.get();
-           }
-           """)
+           }""")
 
     OUT_PLACE_EXPAND_DIM_SINGLE_TEMPLATE = Template(
         """if(THTensor_(nDimension)(LIBRARY_STATE ${arg_op_dim}) <= ${arg_op_dim_value}) {
@@ -132,19 +110,15 @@ class Broadcast(CWrapPlugin):
         """)
 
     OUT_PLACE_PRE_TEMPLATE = Template(
-        """${code_arg_op_a}
-           ${code_arg_op_other1}
-           ${code_arg_op_other2}
-           ${expand_code}
-        """)
+        """${code_arg_op_a}${code_arg_op_other1}${code_arg_op_other2}
+           ${expand_code}""")
 
     IN_PLACE_PRE_EXPAND1_TEMPLATE = Template(
         """int ret = expand_inplace1(LIBRARY_STATE ${arg_op_other}_guard.get(), ${arg_op_other}, ${arg_op_a},
                                      \"${op_other}\", \"${op_a}\", !${raise_errors});
             if (ret == 0) {
               ${arg_op_other} = ${arg_op_other}_guard.get();
-            }
-        """)
+            }""")
 
     IN_PLACE_PRE_EXPAND2_TEMPLATE = Template(
         """int ret = expand_inplace2(LIBRARY_STATE ${arg_op_other1}_guard.get(), ${arg_op_other2}_guard.get(),
@@ -153,14 +127,11 @@ class Broadcast(CWrapPlugin):
            if (ret == 0) {
              ${arg_op_other1} = ${arg_op_other1}_guard.get();
              ${arg_op_other2} = ${arg_op_other2}_guard.get();
-           }
-           """)
+           }""")
 
     IN_PLACE_PRE_TEMPLATE = Template(
-        """ ${code_arg_op_other1}
-            ${code_arg_op_other2}
-            ${expand_code}
-        """)
+        """${code_arg_op_other1}${code_arg_op_other2}
+           ${expand_code}""")
 
     def initialize(self, cwrap):
         self.cwrap = cwrap
@@ -265,7 +236,7 @@ class Broadcast(CWrapPlugin):
                 new_code_post.append("")
             else:
                 if len(dims_kvs) != 0:
-                    code_arg_op_a = self.getPreArgStringTemplate(False).substitute(arg_op_other=arg_op_a)
+                    code_arg_op_a = self.getPreArgStringTemplate().substitute(arg_op_other=arg_op_a)
                     code_arg_op_other1 = ""
                     code_arg_op_other2 = ""
                     expand_code = ""
