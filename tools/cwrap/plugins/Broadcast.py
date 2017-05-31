@@ -44,7 +44,7 @@ class Broadcast(CWrapPlugin):
     POST_TEMPLATE = Template(
         """${arg_op_other} = ${arg_op_other}_save;\n""")
 
-    def getPreArgStringTemplatev2(self, type=None):
+    def getPreArgStringTemplate(self, type=None):
         if type == None:
             ret = """THTensor *${arg_op_other}_save = ${arg_op_other};
                      THTensorPtr ${arg_op_other}_guard = THTensor_(new)(LIBRARY_STATE_NOARGS);\n"""
@@ -60,71 +60,58 @@ class Broadcast(CWrapPlugin):
                   "#endif\n")
         return Template(ret)
 
-    def getPreArgStringTemplate(self):
-        ret = """THTensor *${arg_op_other}_save = ${arg_op_other};
-                 THTensorPtr ${arg_op_other}_guard = THTensor_(new)(LIBRARY_STATE_NOARGS);
-                 ${arg_op_other}=${arg_op_other}_guard.get();
-              """
-        return Template(ret)
-
     OUT_PLACE_PRE_EXPAND2_TEMPLATE = Template(
-        """int ret = expand_outplace2(LIBRARY_STATE ${arg_op_a}_guard.get(), ${arg_op_other}_guard.get(),
+        """if (!expand_outplace2(LIBRARY_STATE ${arg_op_a}_guard.get(), ${arg_op_other}_guard.get(),
                                      ${arg_op_a}, ${arg_op_other},
-                                     \"${op_a}\", \"${op_other}\", !${raise_errors});
-           if (ret == 0) {
+                                     \"${op_a}\", \"${op_other}\", !${raise_errors})) {
              ${arg_op_a} = ${arg_op_a}_guard.get();
              ${arg_op_other} = ${arg_op_other}_guard.get();
            }""")
 
     OUT_PLACE_PRE_EXPAND3_TEMPLATE = Template(
-        """int ret = expand_outplace3(LIBRARY_STATE ${arg_op_a}_guard.get(), ${arg_op_other1}_guard.get(), ${arg_op_other2}_guard.get(),
+        """if (!expand_outplace3(LIBRARY_STATE ${arg_op_a}_guard.get(), ${arg_op_other1}_guard.get(), ${arg_op_other2}_guard.get(),
                                      ${arg_op_a}, ${arg_op_other1}, ${arg_op_other2},
-                                     \"${op_a}\", \"${op_other1}\", \"${op_other2}\", !${raise_errors});
-           if (ret == 0) {
+                                     \"${op_a}\", \"${op_other1}\", \"${op_other2}\", !${raise_errors})) {
              ${arg_op_a} = ${arg_op_a}_guard.get();
              ${arg_op_other1} = ${arg_op_other1}_guard.get();
              ${arg_op_other2} = ${arg_op_other2}_guard.get();
            }""")
 
-    OUT_PLACE_EXPAND_DIM_SINGLE_TEMPLATE = Template(
+    OUT_PLACE_PRE_EXPAND_PRE_DIM_TEMPLATE = Template(
         """if(THTensor_(nDimension)(LIBRARY_STATE ${arg_op_dim}) <= ${arg_op_dim_value}) {
              THError("Argument %s requires at least %d dimensions, but only has %d",
                      "${op_dim}", ${arg_op_dim_value} + 1, THTensor_(nDimension)(LIBRARY_STATE ${arg_op_dim}));
            }
-           long ${arg_op_a}_dim${idx}_size = THTensor_(size)(LIBRARY_STATE ${arg_op_dim}, ${arg_op_dim_value});
-        """)
+           long ${arg_op_a}_dim${idx}_size = THTensor_(size)(LIBRARY_STATE ${arg_op_dim}, ${arg_op_dim_value});\n""")
 
     OUT_PLACE_PRE_EXPAND1_DIM_TEMPLATE = Template(
-        """THLongStoragePtr ${arg_op_a}_storage = THLongStorage_newWithSize1(${arg_op_a}_dim0_size);
-           THTensor_(expand)(LIBRARY_STATE ${arg_op_a}, ${arg_op_a}_save, ${arg_op_a}_storage, true);
-        """)
+        """THLongStoragePtr ${arg_op_a}_storage = THLongStorage_newWithSize1(${arg_op_a}_dim0_size);\n""")
 
     OUT_PLACE_PRE_EXPAND2_DIM_TEMPLATE = Template(
-        """THLongStoragePtr ${arg_op_a}_storage = THLongStorage_newWithSize2(${arg_op_a}_dim0_size, ${arg_op_a}_dim1_size);
-           THTensor_(expand)(LIBRARY_STATE ${arg_op_a}, ${arg_op_a}_save, ${arg_op_a}_storage, true);
-        """)
+        """THLongStoragePtr ${arg_op_a}_storage = THLongStorage_newWithSize2(${arg_op_a}_dim0_size, ${arg_op_a}_dim1_size);\n""")
 
     OUT_PLACE_PRE_EXPAND3_DIM_TEMPLATE = Template(
-        """THLongStoragePtr ${arg_op_a}_storage = THLongStorage_newWithSize3(${arg_op_a}_dim0_size, ${arg_op_a}_dim1_size, ${arg_op_a}_dim2_size);
-           THTensor_(expand)(LIBRARY_STATE ${arg_op_a}, ${arg_op_a}_save, ${arg_op_a}_storage, true);
-        """)
+        """THLongStoragePtr ${arg_op_a}_storage = THLongStorage_newWithSize3(${arg_op_a}_dim0_size, ${arg_op_a}_dim1_size, ${arg_op_a}_dim2_size);\n""")
+
+    OUT_PLACE_PRE_EXPAND_POST_DIM_TEMPLATE = Template(
+        """if (!THTensor_(expand)(LIBRARY_STATE ${arg_op_a}_guard.get(), ${arg_op_a}, ${arg_op_a}_storage, ${raise_errors})) {
+             ${arg_op_a} = ${arg_op_a}_guard.get();
+           }""")
 
     OUT_PLACE_PRE_TEMPLATE = Template(
         """${code_arg_op_a}${code_arg_op_other1}${code_arg_op_other2}
            ${expand_code}""")
 
     IN_PLACE_PRE_EXPAND1_TEMPLATE = Template(
-        """int ret = expand_inplace1(LIBRARY_STATE ${arg_op_other}_guard.get(), ${arg_op_other}, ${arg_op_a},
-                                     \"${op_other}\", \"${op_a}\", !${raise_errors});
-            if (ret == 0) {
+        """if (!expand_inplace1(LIBRARY_STATE ${arg_op_other}_guard.get(), ${arg_op_other}, ${arg_op_a},
+                                     \"${op_other}\", \"${op_a}\", !${raise_errors})) {
               ${arg_op_other} = ${arg_op_other}_guard.get();
             }""")
 
     IN_PLACE_PRE_EXPAND2_TEMPLATE = Template(
-        """int ret = expand_inplace2(LIBRARY_STATE ${arg_op_other1}_guard.get(), ${arg_op_other2}_guard.get(),
+        """if (!expand_inplace2(LIBRARY_STATE ${arg_op_other1}_guard.get(), ${arg_op_other2}_guard.get(),
                                            ${arg_op_other1}, ${arg_op_other2}, ${arg_op_a},
-                                           \"${op_other1}\", \"${op_other2}\", \"${op_a}\", !${raise_errors});
-           if (ret == 0) {
+                                           \"${op_other1}\", \"${op_other2}\", \"${op_a}\", !${raise_errors})) {
              ${arg_op_other1} = ${arg_op_other1}_guard.get();
              ${arg_op_other2} = ${arg_op_other2}_guard.get();
            }""")
@@ -207,8 +194,8 @@ class Broadcast(CWrapPlugin):
             }
 
             if in_place:
-                code_arg_op_other1 = self.getPreArgStringTemplatev2(type=type_op_b).substitute(op_b_mapping)
-                code_arg_op_other2 = self.getPreArgStringTemplatev2(type=type_op_c).substitute(op_c_mapping) if op_c else ""
+                code_arg_op_other1 = self.getPreArgStringTemplate(type=type_op_b).substitute(op_b_mapping)
+                code_arg_op_other2 = self.getPreArgStringTemplate(type=type_op_c).substitute(op_c_mapping) if op_c else ""
 
                 if op_c:
                     expand_code = self.IN_PLACE_PRE_EXPAND2_TEMPLATE.substitute(
@@ -241,7 +228,7 @@ class Broadcast(CWrapPlugin):
                     code_arg_op_other2 = ""
                     expand_code = ""
                     for idx,kv in enumerate(dims_kvs):
-                        expand_code += self.OUT_PLACE_EXPAND_DIM_SINGLE_TEMPLATE.substitute(
+                        expand_code += self.OUT_PLACE_PRE_EXPAND_PRE_DIM_TEMPLATE.substitute(
                             arg_op_a=arg_op_a,
                             op_dim=kv["op"],
                             arg_op_dim=kv["arg_op"],
@@ -263,12 +250,15 @@ class Broadcast(CWrapPlugin):
                             arg_op_dim0=dims_kvs[0]["arg_op"],
                             arg_op_dim1=dims_kvs[1]["arg_op"],
                             arg_op_dim2=dims_kvs[2]["arg_op"])
+                    expand_code += self.OUT_PLACE_PRE_EXPAND_POST_DIM_TEMPLATE.substitute(
+                        arg_op_a=arg_op_a,
+                        raise_errors=raise_errors)
                     post_code = self.POST_TEMPLATE.substitute(arg_op_other=arg_op_a)
 
                 else:
-                    code_arg_op_a = self.getPreArgStringTemplatev2().substitute(arg_op_other=arg_op_a)
-                    code_arg_op_other1 = self.getPreArgStringTemplatev2().substitute(op_b_mapping)
-                    code_arg_op_other2 = self.getPreArgStringTemplatev2().substitute(op_c_mapping) if op_c else ""
+                    code_arg_op_a = self.getPreArgStringTemplate().substitute(arg_op_other=arg_op_a)
+                    code_arg_op_other1 = self.getPreArgStringTemplate().substitute(op_b_mapping)
+                    code_arg_op_other2 = self.getPreArgStringTemplate().substitute(op_c_mapping) if op_c else ""
 
                     if op_c:
                         expand_code = self.OUT_PLACE_PRE_EXPAND3_TEMPLATE.substitute(
