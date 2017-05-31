@@ -99,11 +99,13 @@ int expand2(THCState *s, THCudaDoubleTensor *r1, THCudaDoubleTensor *r2,
   return THCudaDoubleTensor_expand2(s, r1, r2, e1, e2, raiseErrors);
 }
 
+#ifdef CUDA_HALF_TENSOR
 template <>
 int expand2(THCState *s, THCudaHalfTensor *r1, THCudaHalfTensor *r2,
             THCudaHalfTensor *e1, THCudaHalfTensor *e2, int raiseErrors) {
   return THCudaHalfTensor_expand2(s, r1, r2, e1, e2, raiseErrors);
 }
+#endif // CUDA_HALF_TENSOR
 
 template <>
 int expand2(THCState *s, THCudaByteTensor *r1, THCudaByteTensor *r2,
@@ -147,11 +149,13 @@ int expand3(THCState *s, THCudaDoubleTensor *r1, THCudaDoubleTensor *r2, THCudaD
   return THCudaDoubleTensor_expand3(s, r1, r2, r3, e1, e2, e3, raiseErrors);
 }
 
+#ifdef CUDA_HALF_TENSOR
 template <>
 int expand3(THCState *s, THCudaHalfTensor *r1, THCudaHalfTensor *r2, THCudaHalfTensor *r3,
             THCudaHalfTensor *e1, THCudaHalfTensor *e2, THCudaHalfTensor *e3, int raiseErrors) {
   return THCudaHalfTensor_expand3(s, r1, r2, r3, e1, e2, e3, raiseErrors);
 }
+#endif // CUDA_HALF_TENSOR
 
 template <>
 int expand3(THCState *s, THCudaByteTensor *r1, THCudaByteTensor *r2, THCudaByteTensor *r3,
