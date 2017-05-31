@@ -118,16 +118,12 @@ class TestAutograd(TestCase):
                         grad_output * ctx.scalar + grad_output * t1)
 
         x, y = self._function_test(MyFunction)
-        x_grad_desc = graph_desc(x.grad.grad_fn)
-        y_grad_desc = graph_desc(y.grad.grad_fn)
         self.assertEqual(graph_desc(x.grad.grad_fn),
                          'Identity(Error(AccumulateGrad(), None, AccumulateGrad()))')
         self.assertEqual(graph_desc(y.grad.grad_fn),
                          'Identity(Error(AccumulateGrad(), None, AccumulateGrad()))')
 
     def test_accumulate_grad(self):
-        import sys
-
         grad_output = Variable(torch.ones(5, 5))
         for start_volatile, end_volatile in product((True, False), repeat=2):
             go1 = grad_output.data if start_volatile else grad_output
@@ -249,6 +245,20 @@ class TestAutograd(TestCase):
         self.assertFalse(hook_called[0])
         self.assertIsNone(x.grad)
 
+    def test_grad_badcalls(self):
+        x = Variable(torch.ones(1))
+        y = x ** 2
+        with self.assertRaisesRegex(RuntimeError, 'does not require grad'):
+            torch.autograd.grad(x, y)
+        with self.assertRaisesRegex(RuntimeError, 'not have been used in the graph'):
+            torch.autograd.grad(y, x)
+
+        x = Variable(torch.ones(1), requires_grad=True)
+        y = x ** 2
+        torch.autograd.grad(y, x)  # this should succeed now
+        with self.assertRaisesRegex(RuntimeError, 'unreachable'):
+            torch.autograd.grad(x, y)
+
     def test_hooks(self):
         x = Variable(torch.ones(5, 5), requires_grad=True)
         y = Variable(torch.ones(5, 5) * 4, requires_grad=True)
@@ -363,7 +373,7 @@ class TestAutograd(TestCase):
         sum(fn(x, y)).sum().backward()
         self.assertTrue(was_called[0])
 
-    def _test_backward(self):
+    def test_backward(self):
         v_t = torch.randn(5, 5)
         x_t = torch.randn(5, 5)
         y_t = torch.rand(5, 5) + 0.1
@@ -385,9 +395,6 @@ class TestAutograd(TestCase):
         self.assertEqual(x.grad.data, x_grad * grad_output)
         self.assertEqual(y.grad.data, y_grad * grad_output)
         self.assertEqual(z.grad.data, z_grad * grad_output)
-
-    def test_backward(self):
-        self._test_backward()
 
     def test_sparse_backward(self):
         class FixedGradientFunction(Function):
@@ -432,11 +439,6 @@ class TestAutograd(TestCase):
         (sparse_fn1(x) + sparse_fn2(x)).sum().backward()
         self.assertEqual(x.grad.data, sparse_grad1 + sparse_grad2)
 
-    @unittest.skip("BasicEngine is out of date")
-    def test_backward_basic_engine(self):
-        with backward_engine(torch.autograd.engine.BasicEngine):
-            self._test_backward()
-
     def test_multi_backward(self):
         x = Variable(torch.randn(5, 5), requires_grad=True)
         y = Variable(torch.randn(5, 5), requires_grad=True)
@@ -478,6 +480,18 @@ class TestAutograd(TestCase):
 
         torch.autograd.backward([z, q], [torch.ones(5, 5), torch.ones(5, 5)])
         self.assertEqual(x.grad.data, torch.ones(5, 5))
+
+    def test_dependent_backward(self):
+        x = Variable(torch.randn(10), requires_grad=True)
+        y = x ** 2
+        z = y ** 3
+
+        go_y = torch.randn(10)
+        go_z = torch.randn(10)
+        torch.autograd.backward([y, z], [go_y, go_z])
+
+        xd = x.data
+        self.assertEqual(x.grad.data, 2 * xd * go_y + 6 * xd.pow(5) * go_z)
 
     def test_volatile(self):
         x = Variable(torch.ones(5, 5), requires_grad=True)
@@ -1225,7 +1239,7 @@ def index_variable(shape, max_indices):
     return Variable(index, requires_grad=False)
 
 
-def gather_variable(shape, index_dim, max_indices):
+def gather_variable(shape, index_dim, max_indices, duplicate=False):
     assert len(shape) == 2
     assert index_dim < 2
     batch_dim = 1 - index_dim
@@ -1233,6 +1247,8 @@ def gather_variable(shape, index_dim, max_indices):
     for i in range(shape[index_dim]):
         index.select(index_dim, i).copy_(
             torch.randperm(max_indices)[:shape[batch_dim]])
+    if duplicate:
+        index.select(batch_dim, 0).copy_(index.select(batch_dim, 1))
     return Variable(index, requires_grad=False)
 
 
@@ -1382,9 +1398,9 @@ function_tests = [
     # (IndexCopy,     (0,),               ((S, S), index_variable(2, S), (2, S))      ),
     (IndexFill, (), ((S, S), 0, index_variable(2, S), 2)),
     (IndexSelect, (), ((S, S), 0, index_variable(2, S))),
-    (Gather, (), ((M, S), 0, gather_variable((S, S), 1, M))),
+    (Gather, (), ((M, S), 0, gather_variable((S, S), 1, M, True))),
     # TODO: enable neg dim checks
-    (Gather, (), ((M, S), 1, gather_variable((M, S // 2), 0, S)), 'dim1'),
+    (Gather, (), ((M, S), 1, gather_variable((M, S // 2), 0, S, True)), 'dim1'),
     (Scatter, (), ((M, S), 0, gather_variable((S, S), 1, M), (S, S))),
     (Scatter, (), ((M, S), 1, gather_variable((M, S // 2), 0, S), (M, S // 2)), 'dim1'),
     (Concat, (), (0, (1, S, S), (2, S, S), (3, S, S))),

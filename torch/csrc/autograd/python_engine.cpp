@@ -37,7 +37,6 @@ static PythonEngine engine;
 PyObject *THPEngineClass = NULL;
 
 struct CallbackContext {
-  std::mutex mutex;
   std::string error;
   THPObjectPtr outputs;
   // Used to determine which callback arguments should be used to
@@ -107,6 +106,7 @@ void compute_partial_exec_callbacks(const function_list& roots,
 
 PyObject *THPEngine_run_backward(THPEngine *self, PyObject *args, PyObject *kwargs)
 {
+  HANDLE_TH_ERRORS
   PyObject *variables = NULL;
   PyObject *grad_variables = NULL;
   unsigned char keep_graph = 0;
@@ -138,6 +138,7 @@ PyObject *THPEngine_run_backward(THPEngine *self, PyObject *args, PyObject *kwar
     THPUtils_assert(!variable->is_volatile,
         "element %d of variables tuple is volatile", i);
     auto grad_fn = variable->grad_fn ? variable->grad_fn : variable->get_grad_accumulator();
+    THPUtils_assert(grad_fn, "element %d of variables tuple does not require grad", i);
     int output_nr = variable->grad_fn ? variable->output_nr : 0;
     roots[i] = std::make_pair<>(std::move(grad_fn), output_nr);
 
@@ -182,7 +183,7 @@ PyObject *THPEngine_run_backward(THPEngine *self, PyObject *args, PyObject *kwar
       callbacks.emplace(entry.first.get(), [&ctx, &fn_info](Function* _unused, variable_list& grads) {
         auto& saved_outputs = fn_info.first;
         bool is_leaf = fn_info.second;
-        std::lock_guard<std::mutex> guard(ctx.mutex);
+        AutoGIL gil;
         for (auto& saved_out : saved_outputs) {
           PyTuple_SET_ITEM(ctx.outputs.get(), saved_out.second,
             THPVariable_Wrap(grads[saved_out.first]));
@@ -202,9 +203,6 @@ PyObject *THPEngine_run_backward(THPEngine *self, PyObject *args, PyObject *kwar
   } catch (python_error &e) {
     e.restore();
     return nullptr;
-  } catch (const std::exception &e) {
-    PyErr_SetString(PyExc_RuntimeError, e.what());
-    return nullptr;
   }
 
   if (ctx.outputs) {
@@ -212,6 +210,7 @@ PyObject *THPEngine_run_backward(THPEngine *self, PyObject *args, PyObject *kwar
   } else {
     Py_RETURN_NONE;
   }
+  END_HANDLE_TH_ERRORS
 }
 
 PyObject *THPEngine_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)

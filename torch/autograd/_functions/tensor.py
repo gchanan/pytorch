@@ -135,7 +135,7 @@ class CudaTransfer(Function):
     def forward(ctx, i, device_id=None, async=False):
         ctx.source_device = -1 if not i.is_cuda else i.get_device()
         ctx.source_was_cuda = i.is_cuda
-        if device_id:
+        if device_id is not None:
             return i.cuda(device_id, async=async)
         else:
             return i.cuda(async=async)
@@ -508,7 +508,7 @@ class Gather(Function):
     def backward(ctx, grad_output):
         index, = ctx.saved_tensors
         grad_input = grad_output.new(ctx.input_size).zero_()
-        return grad_input.scatter_(ctx.dim, index, grad_output), None, None
+        return grad_input.scatter_add_(ctx.dim, index, grad_output), None, None
 
 
 class Scatter(InplaceFunction):
