@@ -451,21 +451,21 @@ class Variable(_C._VariableBase):
     def max(self, dim=None, keepdim=False):
         if isinstance(dim, Variable):
             return Cmax.apply(self, dim)
-        return Max(dim, keepdim)(self)
+        return Max.apply(self, dim, keepdim)
 
     def min(self, dim=None, keepdim=False):
         if isinstance(dim, Variable):
             return Cmin.apply(self, dim)
-        return Min(dim, keepdim)(self)
+        return Min.apply(self, dim, keepdim)
 
-    def mode(self, dim, keepdim=False):
-        return Mode(dim, keepdim)(self)
+    def mode(self, dim=None, keepdim=False):
+        return Mode.apply(self, dim, keepdim)
 
-    def median(self, dim, keepdim=False):
-        return Median(dim, keepdim)(self)
+    def median(self, dim=None, keepdim=False):
+        return Median.apply(self, dim, keepdim)
 
-    def kthvalue(self, dim, keepdim=False):
-        return Kthvalue(dim, keepdim)(self)
+    def kthvalue(self, k, dim=None, keepdim=False):
+        return Kthvalue.apply(self, k, dim, keepdim)
 
     def sort(self, dim=None, descending=False):
         return Sort.apply(self, dim, descending, True)
@@ -702,19 +702,22 @@ class Variable(_C._VariableBase):
         return Permute.apply(self, permutation)
 
     def diag(self, diagonal_idx=0):
-        return Diag(diagonal_idx)(self)
+        return Diag.apply(self, diagonal_idx)
 
     def tril(self, diagonal_idx=0):
-        return Tril(diagonal_idx)(self)
+        return Tril.apply(self, diagonal_idx)
 
     def triu(self, diagonal_idx=0):
-        return Triu(diagonal_idx)(self)
+        return Triu.apply(self, diagonal_idx)
 
     def trace(self):
-        return Trace()(self)
+        return Trace.apply(self)
 
     def cross(self, other, dim=-1):
-        return Cross(dim)(self, other)
+        return Cross.apply(self, other)
+
+    def inverse(self):
+        return Inverse.apply(self)
 
     def multinomial(self, num_samples=1, with_replacement=False):
         return Multinomial(num_samples, with_replacement)(self)

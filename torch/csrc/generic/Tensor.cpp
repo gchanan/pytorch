@@ -294,7 +294,7 @@ static PyObject * THPTensor_(pynew)(PyTypeObject *type, PyObject *args, PyObject
 #define load_real float
 #define UNPACK_REAL(item) THPFloatUtils_unpackReal(item)
 #endif
-#ifndef THC_GENERIC_FILE
+#if !defined(THC_GENERIC_FILE) && !defined(THD_GENERIC_FILE)
     real *data = tensor->storage->data;
 #else
     size_t numel = THTensor_(numel)(LIBRARY_STATE tensor);
@@ -416,11 +416,16 @@ static PyObject * THPTensor_(pynew)(PyTypeObject *type, PyObject *args, PyObject
 #define UNPACK_SCALAR(IDX_VARIABLE) idx = THPUtils_unpackLong(IDX_VARIABLE);
 #endif
 
-#ifdef THC_GENERIC_FILE
+#if defined(THC_GENERIC_FILE)
 #define THIndexTensor THCudaLongTensor
 #define THIndexTensor_(NAME) TH_CONCAT_2(THCudaLongTensor_,NAME)
 #define THPIndexTensor THCPLongTensor
 #define THPIndexTensor_Check THCPLongTensor_Check
+#elif defined(THD_GENERIC_FILE)
+#define THIndexTensor THDLongTensor
+#define THIndexTensor_(NAME) TH_CONCAT_2(THDLongTensor_,NAME)
+#define THPIndexTensor THDPLongTensor
+#define THPIndexTensor_Check THDPLongTensor_Check
 #else
 #define THIndexTensor THLongTensor
 #define THIndexTensor_(NAME) TH_CONCAT_2(THLongTensor_,NAME)
@@ -567,11 +572,13 @@ static PyObject * THPTensor_(getValue)(THPTensor *self, PyObject *index)
   HANDLE_TH_ERRORS
 
 #ifndef TH_REAL_IS_HALF
-#ifndef THC_GENERIC_FILE
-  THPByteTensor *mask = THPByteTensor_Check(index) ? (THPByteTensor*)index : NULL;
-#else
+#if defined(THC_GENERIC_FILE)
   THCPByteTensor *mask = THCPByteTensor_Check(index) ? (THCPByteTensor*)index : NULL;
   THCPAutoGPU __gpu_guard(NULL, (PyObject*)self);
+#elif defined(THD_GENERIC_FILE)
+  THDPByteTensor *mask = THDPByteTensor_Check(index) ? (THDPByteTensor*)index : NULL;
+#else
+  THPByteTensor *mask = THPByteTensor_Check(index) ? (THPByteTensor*)index : NULL;
 #endif
   if (mask) {
     THTensorPtr t(THTensor_(new)(LIBRARY_STATE_NOARGS));
@@ -613,11 +620,13 @@ static int THPTensor_(setValue)(THPTensor *self, PyObject *index, PyObject *valu
   HANDLE_TH_ERRORS
 
 #ifndef TH_REAL_IS_HALF
-#ifndef THC_GENERIC_FILE
-  THPByteTensor *mask = THPByteTensor_Check(index) ? (THPByteTensor*)index : NULL;
-#else
+#if defined(THC_GENERIC_FILE)
   THCPByteTensor *mask = THCPByteTensor_Check(index) ? (THCPByteTensor*)index : NULL;
   THCPAutoGPU __gpu_guard(NULL, (PyObject*)self);
+#elif defined(THD_GENERIC_FILE)
+  THDPByteTensor *mask = THDPByteTensor_Check(index) ? (THDPByteTensor*)index : NULL;
+#else
+  THPByteTensor *mask = THPByteTensor_Check(index) ? (THPByteTensor*)index : NULL;
 #endif
   if (mask) {
     if (THPUtils_(checkReal)(value)) {
@@ -809,10 +818,11 @@ PyTypeObject THPTensorStatelessType = {
   0,                                     /* tp_weaklist */
 };
 
-#ifndef TH_REAL_IS_HALF
+#if !defined(TH_REAL_IS_HALF) && !defined(THD_GENERIC_FILE)
 #include "SparseTensor.cpp"
 #endif
 
+#ifndef THD_GENERIC_FILE
 void THPTensor_(initCopyMethods)()
 {
   auto& h = THTensor_(copy_functions);
@@ -858,6 +868,27 @@ void THPTensor_(initCopyMethods)()
   #undef THCpuTensor_
 #endif
 }
+#else
+void THPTensor_(initCopyMethods)()
+{
+  // TODO: cross type copies
+  auto& h = THTensor_(copy_functions);
+  THPInsertCopyFunction(h, &THDTensor_(copy));
+
+  #define THCpuTensor_(name) TH_CONCAT_4(TH, Real, Tensor_, name)
+  #define THCpuTensor TH_CONCAT_3(TH, Real, Tensor)
+  #define THPCpuTensorType TH_CONCAT_3(THP, Real, TensorType)
+  extern THPCopyList THCpuTensor_(copy_functions);
+  auto& b = THCpuTensor_(copy_functions);
+
+  THDPInsertCopyFunctionFromMaster(h, &THDTensor_(copyFromMaster), &THPCpuTensorType);
+  THDPInsertCopyFunctionFromWorker(b, THDTensor_(copyFromWorker));
+
+  #undef THCpuTensor
+  #undef THCpuTensor_
+  #undef THPCpuTensorType
+}
+#endif // !defined(THD_GENERIC_FILE)
 
 bool THPTensor_(init)(PyObject *module)
 {

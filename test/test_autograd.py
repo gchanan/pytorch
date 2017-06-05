@@ -11,7 +11,7 @@ from itertools import product
 from torch.autograd import gradcheck
 from torch.autograd.function import once_differentiable
 
-from common import TestCase, run_tests
+from common import TestCase, run_tests, skipIfNoLapack
 from torch.autograd._functions import *
 from torch.autograd import Variable, Function
 
@@ -1371,16 +1371,19 @@ function_tests = [
     (Unfold, (), ((S, S, S), 1, 3, 1)),
     (Unfold, (), ((S, S, S), 2, 3, 2), 'lastdim'),
     (Min, (), ((S, S, S),),),
-    (Max, (1,), ((S, S, S),), 'dim', [0]),
-    (Min, (1,), ((S, S, S),), 'dim', [0]),
-    (Max, (1, True), ((S, S, S),), 'keepdim_dim', [0]),
-    (Min, (1, True), ((S, S, S),), 'keepdim_dim', [0]),
-    (Mode, (1,), ((S, S, S),), 'dim', [0]),
-    (Mode, (1, True,), ((S, S, S),), 'keepdim_dim', [0]),
-    (Kthvalue, (2, 0), ((S, S, S),),),
-    (Kthvalue, (2, 0, True), ((S, S, S),), "keepdim"),
-    (Median, (0,), ((S, S, S),),),
-    (Median, (0, True, ), ((S, S, S),), "keepdim"),
+    (Max, (), ((S, S, S), 1), 'dim', [0]),
+    (Min, (), ((S, S, S), 1), 'dim', [0]),
+    (Max, (), ((S, S, S), 1, True), 'keepdim_dim', [0]),
+    (Min, (), ((S, S, S), 1, True), 'keepdim_dim', [0]),
+    (Mode, (), ((S, S, S),),),
+    (Mode, (), ((S, S, S), 1), 'dim', [0]),
+    (Mode, (), ((S, S, S), 1, True), 'keepdim_dim', [0]),
+    (Kthvalue, (), ((S, S, S), 2),),
+    (Kthvalue, (), ((S, S, S), 2, 0), 'dim0'),
+    (Kthvalue, (), ((S, S, S), 2, 0, True), "keepdim"),
+    (Median, (), ((S, S, S),),),
+    (Median, (), ((S, S, S), 0), 'dim0'),
+    (Median, (), ((S, S, S), 0, True), "keepdim"),
     (Norm, (1.5,), (torch.rand(S, S, S),), '1_5'),
     (Norm, (), ((S, S, S),), '2'),
     (Norm, (3,), ((S, S, S),), '3'),
@@ -1409,15 +1412,16 @@ function_tests = [
     (Resize, (), ((S, S, S), torch.Size([S * S, S]))),
     (Diag, (), ((S, S),), '2d'),
     (Diag, (), ((S,),), '1d'),
-    (Diag, (1,), ((S, S),), '2d_1'),
-    (Diag, (2,), ((S, S),), '2d_2'),
+    (Diag, (), ((S, S), 1), '2d_1'),
+    (Diag, (), ((S, S), 2), '2d_2'),
     (Tril, (), ((S, S),)),
-    (Tril, (2,), ((S, S),), 'idx'),
+    (Tril, (), ((S, S), 2), 'idx'),
     (Triu, (), ((S, S),)),
-    (Triu, (2,), ((S, S),), 'idx'),
+    (Triu, (), ((S, S), 2), 'idx'),
     (Trace, (), ((S, S),)),
     (Cross, (), ((S, 3), (S, 3))),
-    (Cross, (1,), ((S, 3, S), (S, 3, S)), 'dim'),
+    (Cross, (), ((S, 3, S), (S, 3, S), 1), 'dim'),
+    (Inverse, (), ((S, S),), '', (), [skipIfNoLapack]),
     (Clone, (), ((S, M, S),)),
     (Squeeze, (), ((S, 1, M, 1),)),
     # TODO: enable neg dim checks
@@ -1494,8 +1498,13 @@ method_tests = [
     ('mean', (S, S, S), ()),
     ('mean', (S, S, S), (1,), 'dim', [0]),
     ('mean', (S, S, S), (1, True,), 'keepdim_dim', [0]),
+    ('kthvalue', (S, S, S), (2,)),
+    ('kthvalue', (S, S, S), (2, 1,), 'dim', [1]),
+    ('kthvalue', (S, S, S), (2, 1, True,), 'keepdim_dim', [1]),
+    ('median', (S, S, S), ()),
     ('median', (S, S, S), (1,), 'dim', [0]),
     ('median', (S, S, S), (1, True,), 'keepdim_dim', [0]),
+    ('mode', (S, S, S), ()),
     ('mode', (S, S, S), (1,), 'dim', [0]),
     ('mode', (S, S, S), (1, True,), 'keepdim_dim', [0]),
     ('sum', (S, S, S), ()),
@@ -1545,6 +1554,7 @@ method_tests = [
     ('trace', (M, M), ()),
     ('cross', (S, 3), ((S, 3),)),
     ('cross', (S, 3, S), ((S, 3, S), 1), 'dim'),
+    ('inverse', (S, S), (), '', (), [skipIfNoLapack]),
     ('clone', (S, M, S), ()),
     ('eq', (S, S, S), ((S, S, S),)),
     ('ne', (S, S, S), ((S, S, S),)),
@@ -1620,6 +1630,8 @@ for test in function_tests:
 
     dim_args_idx = test[4] if len(test) == 5 else []
 
+    skipTestIf = test[5] if len(test) == 6 else []
+
     for dim_perm in product([-1, 1], repeat=len(dim_args_idx)):
         test_name = basic_test_name
         new_constructor_args = [arg * dim_perm[dim_args_idx.index(i)] if i in dim_args_idx else arg
@@ -1674,6 +1686,10 @@ for test in function_tests:
                     self.assertEqual(inp_i.grad, i.grad)
 
         assert not hasattr(TestAutograd, test_name), 'Two tests have the same name: ' + test_name
+
+        for skip in skipTestIf:
+            do_test = skip(do_test)
+
         setattr(TestAutograd, test_name, do_test)
 
 
@@ -1689,6 +1705,8 @@ for test in method_tests:
     basic_test_name = 'test_' + name + ('_' + test[3] if len(test) >= 4 else '')
 
     dim_args_idx = test[4] if len(test) == 5 else []
+
+    skipTestIf = test[5] if len(test) == 6 else []
 
     for dim_perm in product([-1, 1], repeat=len(dim_args_idx)):
         test_name = basic_test_name
@@ -1729,6 +1747,10 @@ for test in method_tests:
                         raise
 
         assert not hasattr(TestAutograd, test_name), 'Two tests have the same name: ' + test_name
+
+        for skip in skipTestIf:
+            do_test = skip(do_test)
+
         setattr(TestAutograd, test_name, do_test)
 
 
