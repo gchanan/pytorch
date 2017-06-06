@@ -679,7 +679,7 @@ class TestTorch(TestCase):
         sm1 = m1[:, 4]
         sm2 = m2[:, 4]
         # view as sm1.size()
-        sm2.set_(sm2.storage(), sm2.storage_offset(), sm1.size(), (sm2.stride()[0]*10, sm2.stride()[0]))
+        sm2.set_(sm2.storage(), sm2.storage_offset(), sm1.size(), (sm2.stride()[0] * 10, sm2.stride()[0]))
         res1 = torchfn(sm1, sm2)
         # reference_implementation assumes 1-d sm2
         sm2.set_(sm2.storage(), sm2.storage_offset(), m2[:, 4].size(), m2[:, 4].stride())
@@ -1012,7 +1012,7 @@ class TestTorch(TestCase):
             if hasattr(large_expanded, fn):
                 # run through tensor versions of functions
                 # and verify fully expanded inputs give same results
-                expanded = { large: large_expanded, small: small_expanded, small2: small2_expanded }
+                expanded = {large: large_expanded, small: small_expanded, small2: small2_expanded}
 
                 def tensorfn(myfn, t1, t2):
                     if fn == "lerp":
@@ -1023,8 +1023,10 @@ class TestTorch(TestCase):
                         return myfn(t1)
 
                 # test various orders
-                for first, second, third in [(large, small, small2), (small, large, small2), (small2, small, large), (small2, large, small)]:
-                    if first is None: break  # ignore last iter when small2 is None
+                for first, second, third in [(large, small, small2), (small, large, small2),
+                                             (small2, small, large), (small2, large, small)]:
+                    if first is None:
+                        break  # ignore last iter when small2 is None
                     method_expanded = getattr(expanded[first], fn)
                     method = getattr(first, fn)
                     r1 = tensorfn(method_expanded, expanded[second], expanded[third])
@@ -1034,7 +1036,7 @@ class TestTorch(TestCase):
             # now for torch. versions of functions
             if hasattr(torch, fn):
                 fntorch = getattr(torch, fn)
-                expanded = { large: large_expanded, small: small_expanded, small2: small2_expanded }
+                expanded = {large: large_expanded, small: small_expanded, small2: small2_expanded}
 
                 def torchfn(t1, t2, t3):
                     if fn == "lerp":
@@ -1045,8 +1047,10 @@ class TestTorch(TestCase):
                         return fntorch(t1, t2)
 
                 # test various orders
-                for first, second, third in [(large, small, small2), (small, large, small2), (small2, small, large), (small2, large, small)]:
-                    if first is None: break  # ignore last iter when small2 is None
+                for first, second, third in [(large, small, small2), (small, large, small2),
+                                             (small2, small, large), (small2, large, small)]:
+                    if first is None:
+                        break  # ignore last iter when small2 is None
                     r1 = torchfn(expanded[first], expanded[second], expanded[third])
                     r2 = torchfn(first, second, third)
                     self.assertEqual(r1, r2)
