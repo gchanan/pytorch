@@ -1380,7 +1380,9 @@ function_tests = [
     (Addmv, (), ((S,), (S, M), (M,)),),
     (Addmv, (), ((S,), (S, M), (M,), 0.1, 0.4), 'coef'),
     (Addr, (), ((S, M), (S,), (M,)),),
+    (Addr, (), ((1,), (S,), (M,)), 'broadcast_lhs'),
     (Addr, (), ((S, M), (S,), (M,), 0.1, 0.4), 'coef'),
+    (Addr, (), ((1,), (S,), (M,), 0.1, 0.4), 'broadcast_lhs_coef'),
     (Dot, (), ((L,), (L,)),),
     (Max, (), ((S, S, S),),),
     (Repeat, (), ((S, S, S, S), torch.Size([2, 3, 1, 2]))),
@@ -1581,7 +1583,9 @@ method_tests = [
     ('addmv', (S,), ((S, M), (M,)),),
     ('addmv', (S,), (0.2, 0.6, (S, M), (M,)), 'coef'),
     ('addr', (S, M), ((S,), (M,)),),
+    ('addr', (1,), ((S,), (M,)), 'broadcast_lhs'),
     ('addr', (S, M), (0.2, 0.6, (S,), (M,)), 'coef'),
+    ('addr', (1,), (0.2, 0.6, (S,), (M,)), 'broadcast_lhs_coef'),
     ('dot', (L,), ((L,),),),
     ('addcmul', (S, S), ((S, S), (S, S))),
     ('addcmul', (S, S), ((S, 1), (1, S)), 'broadcast_rhs'),
@@ -1683,6 +1687,8 @@ ignore_inplace = set((
     'test_AddcmulFunction_broadcast_all_scale',
     'test_AddcdivFunction_broadcast_all',
     'test_AddcdivFunction_broadcast_all_scale',
+    'test_AddrFunction_broadcast_lhs',
+    'test_AddrFunction_broadcast_lhs_coef'
 ))
 
 
@@ -1784,6 +1790,8 @@ ignore_method_inplace = set((
     'test_addcdiv_broadcast_all_scale',
     'test_addcmul_broadcast_all',
     'test_addcmul_broadcast_all_scale',
+    'test_addr_broadcast_lhs',
+    'test_addr_broadcast_lhs_coef',
 ))
 
 EXCLUDE_FUNCTIONAL = {
