@@ -4,7 +4,7 @@ from torch._utils import _accumulate
 
 from ..function import Function, InplaceFunction, once_differentiable
 from ..variable import Variable
-from .utils import maybe_unexpand, variable_expandable
+from .utils import maybe_unexpand, variable_strictly_expandable
 
 
 class Index(Function):
@@ -393,7 +393,8 @@ class MaskedScatter(InplaceFunction):
         if ctx.needs_input_grad[2]:
             grad_tensor2 = grad_output.new(ctx.tensor2_size).zero_()
             # mask is potentially expanded against tensor1
-            mask_expanded = mask.expand(ctx.tensor1_size) if variable_expandable(mask, ctx.tensor1_size) else mask
+            mask_expanded = (mask.expand(ctx.tensor1_size) if variable_strictly_expandable(mask, ctx.tensor1_size)
+                             else mask)
             grad_output.masked_select(mask_expanded, out=grad_tensor2.view(-1))
             grad_tensor2 = maybe_unexpand(grad_tensor2, ctx.tensor2_size)
         return grad_tensor1, None, grad_tensor2, None

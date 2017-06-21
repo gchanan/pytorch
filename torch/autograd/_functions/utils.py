@@ -20,6 +20,14 @@ def maybe_unexpand(variable, old_size):
     return variable
 
 
+def variable_strictly_expandable(variable, old_size):
+    try:
+        new_size = torch._C._infer_size(variable.size(), old_size)
+    except RuntimeError:
+        return False
+    return new_size != variable.size()
+
+
 def variable_expandable(variable, old_size):
     try:
         torch._C._infer_size(variable.size(), old_size)
