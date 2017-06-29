@@ -539,11 +539,11 @@ def linear(input, weight, bias=None):
 
 
 def bilinear(input1, input2, weight, bias=None):
-    state = _functions.linear.Bilinear()
+    state = _functions.linear.Bilinear
     if bias is None:
-        return state(input1, input2, weight)
+        return state.apply(input1, input2, weight)
     else:
-        return state(input1, input2, weight, bias)
+        return state.apply(input1, input2, weight, bias)
 
 
 def batch_norm(input, running_mean, running_var, weight=None, bias=None,
