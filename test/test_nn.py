@@ -2380,7 +2380,7 @@ class TestNN(NNTestCase):
         self.assertTrue(gradcheck(lambda x1, x2: F.bilinear(x1, x2, module.weight, module.bias), (input1_1, input2_1)))
 
     def run_conv_double_back_test(self, kern, stride, padding, chan_in, chan_out, batch_size,
-                                  inp_size, dilation, no_weight, use_cuda=False, use_bias=True):
+                                  inp_size, dilation, no_weight, groups=1, use_cuda=False, use_bias=True):
         tensor = torch.Tensor(1)
         if use_cuda:
             tensor = tensor.cuda()
@@ -2411,7 +2411,7 @@ class TestNN(NNTestCase):
                     lbias = None
             # We disable cudnn during forward to avoid finite difference imprecision issues
             with use_cudnn(False):
-                out = F.conv2d(lx, lweight, lbias, stride, padding, dilation)
+                out = F.conv2d(lx, lweight, lbias, stride, padding, dilation, groups)
             return out
 
         if no_weight:
@@ -2431,12 +2431,12 @@ class TestNN(NNTestCase):
     def test_conv_double_backward(self):
         batch_size = 2
         for kern, inp_size, dilations in [(3, 6, [1, 2]), (3, 7, [1, 2]), (4, 9, [1, 2]), (4, 10, [1, 2])]:
-            for stride, padding, chan_in, chan_out, dilation in product([1, 2], [0, 2], [1], [2, 3], dilations):
+            for stride, padding, chan_in, chan_out, dilation in product([1, 2], [0, 2], [1, 2], [2, 3], dilations):
                 no_weight = stride == 2
                 result = self.run_conv_double_back_test(kern, stride,
                                                         padding, chan_in, chan_out,
                                                         batch_size, inp_size, dilation,
-                                                        no_weight)
+                                                        no_weight, groups = chan_in)
                 self.assertTrue(result,
                                 "Conv double backward test failed with parameters:" +
                                 "\nkern: " + str(kern) +
