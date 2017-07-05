@@ -7,52 +7,95 @@ from . import _all_functions
 
 
 class PReLU(Function):
-
-    def forward(self, input, weight):
-        self._backend = type2backend[type(input)]
+    times_through = 0
+    @staticmethod
+    def forward(ctx, input, weight):
+        #print("input type", type(input), input, type(input[0]))
+        ctx._backend = type2backend[type(input)]
         output = input.new()
-        self.num_parameters = weight.numel()
-        if self.num_parameters == 1:
-            self.num_parameters = 0
-        self._backend.PReLU_updateOutput(
-            self._backend.library_state,
+        ctx.num_parameters = weight.numel()
+        if ctx.num_parameters == 1:
+            ctx.num_parameters = 0
+        ctx._backend.PReLU_updateOutput(
+            ctx._backend.library_state,
             input,
             output,
             weight,
-            self.num_parameters
+            ctx.num_parameters
         )
-        self.save_for_backward(input, weight)
+        ctx.save_for_backward(input, weight)
         return output
 
-    def backward(self, grad_output):
-        input, weight = self.saved_tensors
-        # TODO: check if requires grad
-        grad_input = input.new()
-        self._backend.PReLU_updateGradInput(
-            self._backend.library_state,
-            input,
-            grad_output,
-            grad_input,
-            weight,
-            self.num_parameters
-        )
+    @staticmethod
+    def backward(ctx, grad_output):
+        input, weight = ctx.saved_variables
+        print("times through", PReLU.times_through)
+        PReLU.times_through = PReLU.times_through + 1
+        #if grad_output.volatile:
+        if False:
+            # TODO: check if requires grad
+            grad_input = Variable(input.data.new())
+            ctx._backend.PReLU_updateGradInput(
+                ctx._backend.library_state,
+                input.data,
+                grad_output.data,
+                grad_input.data,
+                weight.data,
+                ctx.num_parameters
+            )
 
-        buf = weight.new()
-        buf2 = weight.new()
-        # TODO: this won't have to be zeroed in the future
-        grad_weight = weight.new().resize_as_(weight).zero_()
-        self._backend.PReLU_accGradParameters(
-            self._backend.library_state,
-            input,
-            grad_output,
-            grad_input,
-            weight,
-            grad_weight,
-            buf,
-            buf2,
-            self.num_parameters,
-            1
-        )
+            buf = Variable(weight.data.new())
+            buf2 = Variable(weight.data.new())
+            # TODO: this won't have to be zeroed in the future
+            grad_weight = Variable(weight.data.new(weight.size()).zero_())
+            ctx._backend.PReLU_accGradParameters(
+                ctx._backend.library_state,
+                input.data,
+                grad_output.data,
+                grad_input.data,
+                weight.data,
+                grad_weight.data,
+                buf.data,
+                buf2.data,
+                ctx.num_parameters,
+                1
+            )
+            return grad_input, grad_weight
+        else:
+            positive_mask = input > 0
+            negative_mask = input <= 0
+            if ctx.num_parameters == 0:
+                mask = positive_mask.type_as(grad_output) + negative_mask.type_as(grad_output) * weight
+                grad_input = mask * grad_output
+                grad_weight = ((negative_mask.type_as(grad_output) * input) * grad_output).sum()
+            else:
+                dims_to_unsqueeze = max(input.dim() - 2, 0)
+                weight_expanded = weight
+                for _ in range(dims_to_unsqueeze):
+                    weight_expanded = weight_expanded.unsqueeze(1)
+                weight_expanded = weight_expanded.expand_as(grad_output)
+                mask = positive_mask.type_as(grad_output) + negative_mask.type_as(grad_output) * weight_expanded
+                grad_input = mask * grad_output
+
+                grad_weight = ((negative_mask.type_as(grad_output) * input) * grad_output)
+                if input.dim() > 1:
+                    grad_weight = grad_weight.sum(0)
+                while grad_weight.dim() > 1:
+                    grad_weight = grad_weight.sum(1)
+            
+            if PReLU.times_through == 1:
+                print("messing up grads")
+                grad_input = input * input * grad_output
+                grad_weight = grad_weight * grad_weight
+                #grad_weight = Variable(grad_weight.data.clone())
+                #grad_input = Variable(grad_input.data, requires_grad=True)
+                #grad_weight = Variable(grad_weight.data, requires_grad=True)
+            print("requires_grad?", grad_weight.requires_grad, grad_input.requires_grad, grad_input, grad_weight)
+            #if grad_input.requires_grad:
+            #    print("messing up the grad input for double backwards!")
+            #    grad_input = grad_input + 0.5
+            #    grad_weight = grad_weight + 0.5
+        print("returning", grad_input, grad_weight, grad_input.requires_grad, grad_weight.requires_grad, grad_input.volatile, grad_weight.volatile)
         return grad_input, grad_weight
 
 
