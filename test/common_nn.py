@@ -53,29 +53,33 @@ module_tests = [
     dict(
         module_name='ReLU',
         input_size=(2, 3, 4, 5),
-        check_inplace=True
+        check_inplace=True,
     ),
     dict(
         module_name='ReLU6',
         input_size=(2, 3, 4, 5),
-        check_inplace=True
+        check_inplace=True,
+        check_gradgrad=False,
     ),
     dict(
         module_name='RReLU',
         input_size=(1, 2, 2),
-        test_cuda=False
+        test_cuda=False,
+        check_gradgrad=False,
     ),
     dict(
         module_name='RReLU',
         constructor_args=(0.1, 0.9),
         input_size=(4, 4, 5),
         desc='with_up_down',
-        test_cuda=False
+        test_cuda=False,
+        check_gradgrad=False,
     ),
     dict(
         module_name='Hardtanh',
         input_size=(3, 2, 5),
-        reference_fn=lambda i, _: i.clamp(-1, 1)
+        reference_fn=lambda i, _: i.clamp(-1, 1),
+        check_gradgrad=False,
     ),
     dict(
         module_name='Sigmoid',
@@ -88,35 +92,40 @@ module_tests = [
     dict(
         module_name='Softmax',
         input_size=(10, 20),
-        reference_fn=lambda i, _: torch.exp(i).div(torch.exp(i).sum(1, True).expand(10, 20))
+        reference_fn=lambda i, _: torch.exp(i).div(torch.exp(i).sum(1, True).expand(10, 20)),
+        check_gradgrad=False,
     ),
     dict(
         module_name='Softmax2d',
         input_size=(1, 3, 10, 20),
-        reference_fn=lambda i, _: torch.exp(i).div(torch.exp(i).sum(1, False))
+        reference_fn=lambda i, _: torch.exp(i).div(torch.exp(i).sum(1, False)),
+        check_gradgrad=False,
     ),
     dict(
         module_name='LogSoftmax',
         input_size=(10, 20),
-        reference_fn=lambda i, _: torch.exp(i).div_(torch.exp(i).sum(1, True).expand(10, 20)).log_()
+        reference_fn=lambda i, _: torch.exp(i).div_(torch.exp(i).sum(1, True).expand(10, 20)).log_(),
+        check_gradgrad=False,
     ),
     dict(
         module_name='LogSoftmax',
         input_size=(1, 3, 10, 20),
         reference_fn=lambda i, _: torch.exp(i).div_(torch.exp(i).sum(1, False)).log_(),
-        desc='multiparam'
+        desc='multiparam',
+        check_gradgrad=False,
     ),
     dict(
         module_name='ELU',
         constructor_args=(2.,),
         input_size=(3, 2, 5),
-        check_inplace=True
+        check_gradgrad=False,
     ),
     # TODO: reference function
     dict(
         module_name='Hardshrink',
         constructor_args=(2.,),
-        input_size=(4, 3, 2, 4)
+        input_size=(4, 3, 2, 4),
+        check_gradgrad=False,
     ),
     dict(
         module_name='LeakyReLU',
@@ -133,40 +142,47 @@ module_tests = [
     dict(
         module_name='LogSigmoid',
         input_size=(2, 3, 4),
-        reference_fn=lambda i, _: i.sigmoid().log()
+        reference_fn=lambda i, _: i.sigmoid().log(),
+        check_gradgrad=False,
     ),
     dict(
         module_name='Softplus',
         input_size=(10, 20),
-        reference_fn=lambda i, _: torch.log(1 + torch.exp(i))
+        reference_fn=lambda i, _: torch.log(1 + torch.exp(i)),
+        check_gradgrad=False,
     ),
     dict(
         module_name='Softplus',
         constructor_args=(2,),
         input_size=(10, 20),
         reference_fn=lambda i, _: 1. / 2. * torch.log(1 + torch.exp(2 * i)),
-        desc='beta'
+        desc='beta',
+        check_gradgrad=False,
     ),
     dict(
         module_name='Softshrink',
-        input_size=(3, 2, 5)
+        input_size=(3, 2, 5),
+        check_gradgrad=False,
     ),
     dict(
         module_name='Softshrink',
         constructor_args=(1,),
         input_size=(3, 2, 5),
-        desc='lambda'
+        desc='lambda',
+        check_gradgrad=False,
     ),
     dict(
         module_name='CrossMapLRN2d',
         constructor_args=(5, 5e-3, 1e-3, 2),
-        input_size=(2, 3, 6, 6)
+        input_size=(2, 3, 6, 6),
+        check_gradgrad=False,
     ),
     dict(
         module_name='PReLU',
         input_size=(2, 3, 4),
         reference_fn=lambda i, p: torch.clamp(i, min=0) + torch.clamp(i, max=0) * p[0][0],
         desc='1d',
+        check_gradgrad=False,
     ),
     dict(
         module_name='PReLU',
@@ -174,12 +190,14 @@ module_tests = [
         input_size=(2, 3, 4),
         desc='1d_multiparam',
         reference_fn=lambda i, p: torch.clamp(i, min=0) + torch.clamp(i, max=0) * p[0][0],
+        check_gradgrad=False,
     ),
     dict(
         module_name='PReLU',
         input_size=(2, 3, 4, 5),
         desc='2d',
         reference_fn=lambda i, p: torch.clamp(i, min=0) + torch.clamp(i, max=0) * p[0][0],
+        check_gradgrad=False,
     ),
     dict(
         module_name='PReLU',
@@ -187,12 +205,14 @@ module_tests = [
         input_size=(2, 3, 4, 5),
         desc='2d_multiparam',
         reference_fn=lambda i, p: torch.clamp(i, min=0) + torch.clamp(i, max=0) * p[0][0],
+        check_gradgrad=False,
     ),
     dict(
         module_name='PReLU',
         input_size=(2, 3, 4, 5, 6),
         reference_fn=lambda i, p: torch.clamp(i, min=0) + torch.clamp(i, max=0) * p[0][0],
         desc='3d',
+        check_gradgrad=False,
     ),
     dict(
         module_name='PReLU',
@@ -200,15 +220,18 @@ module_tests = [
         input_size=(2, 3, 4, 5, 6),
         desc='3d_multiparam',
         reference_fn=lambda i, p: torch.clamp(i, min=0) + torch.clamp(i, max=0) * p[0][0],
+        check_gradgrad=False,
     ),
     dict(
         module_name='Softsign',
         input_size=(3, 2, 5),
-        reference_fn=lambda i, _: i.div(1 + torch.abs(i))
+        reference_fn=lambda i, _: i.div(1 + torch.abs(i)),
+        check_gradgrad=False,
     ),
     dict(
         module_name='Softmin',
-        input_size=(10, 20)
+        input_size=(10, 20),
+        check_gradgrad=False,
     ),
     dict(
         module_name='Tanhshrink',
@@ -458,6 +481,33 @@ class NNTestCase(TestCase):
             max(a.add(-1, n).abs().max() for a, n in zip(analytical_t, numerical_t)),
             PRECISION
         )
+
+    def check_jacobian_grad(self, module, input, jacobian_input=True):
+        # make a fake module that returns parameters.grad as parameters; this is as
+        # minimal as possible so will fail early if the tests exercise more of Module's methods.
+        class GradModule(object):
+            def __init__(self, module):
+                self._module = module
+
+            def __call__(self, *input, **kwargs):
+                outputs = self._module(*input, **kwargs)
+                if isinstance(outputs, tuple):
+                    grad_y = tuple(Variable(torch.randn(x.size()), requires_grad=x.requires_grad)
+                                   for x in outputs if isinstance(x, Variable))
+                else:
+                    grad_y = (Variable(torch.randn(outputs.size()), requires_grad=outputs.requires_grad),)
+                inputs = tuple(x for x in input if isinstance(x, Variable) if x.requires_grad)
+                grad_inputs = torch.autograd.grad(outputs, inputs, grad_y, only_inputs=True)
+                assert isinstance(grad_inputs, tuple)
+                assert len(grad_inputs) == 1
+                return grad_inputs[0]
+
+            def parameters(self):
+                for param in self._module.parameters():
+                    yield param.grad
+
+        grad_module = GradModule(module)
+        self.check_jacobian(grad_module, input, jacobian_input)
 
     def check_criterion_jacobian(self, criterion, input, target):
         eps = 1e-6

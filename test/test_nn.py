@@ -3051,7 +3051,8 @@ new_module_tests = [
         constructor_args=(4, 5, 3, 2),
         input_size=(2, 4, 10),
         cudnn=True,
-        desc='stride'
+        desc='stride',
+        check_gradgrad=False,
     ),
     dict(
         module_name='Conv1d',
@@ -3119,13 +3120,15 @@ new_module_tests = [
     dict(
         module_name='MaxPool1d',
         constructor_args=(4,),
-        input_size=(2, 10, 4)
+        input_size=(2, 10, 4),
+        check_gradgrad=False,
     ),
     dict(
         module_name='MaxPool1d',
         constructor_args=(4, 4),
         input_size=(2, 10, 4),
-        desc='stride'
+        desc='stride',
+        check_gradgrad=False,
     ),
     dict(
         module_name='Conv2d',
@@ -3194,18 +3197,21 @@ new_module_tests = [
         constructor_args=(3, 4, 3, (2, 3), 1, (1, 1), 1, False),
         input_size=(1, 3, 6, 7),
         cudnn=True,
-        desc='no_bias'
+        desc='no_bias',
+        check_gradgrad=False,
     ),
     dict(
         fullname='ConvTranspose2d_groups',
         constructor=lambda: nn.ConvTranspose2d(2, 4, (2, 3), groups=2),
         input_size=(1, 2, 4, 5),
         cudnn=True,
+        check_gradgrad=False,
     ),
     dict(
         module_name='MaxPool2d',
         constructor_args=((3, 3), (2, 2), (1, 1)),
-        input_size=(1, 3, 7, 7)
+        input_size=(1, 3, 7, 7),
+        check_gradgrad=False,
     ),
     dict(
         module_name='AvgPool1d',
@@ -3250,23 +3256,27 @@ new_module_tests = [
     dict(
         module_name='LPPool2d',
         constructor_args=(2, (2, 2), 2),
-        input_size=(1, 3, 7, 7)
+        input_size=(1, 3, 7, 7),
+        check_gradgrad=False,
     ),
     dict(
         module_name='LPPool2d',
         constructor_args=(1.5, 2),
         input=torch.rand(1, 3, 7, 7),
-        desc='norm'
+        desc='norm',
+        check_gradgrad=False,
     ),
     dict(
         module_name='ReflectionPad2d',
         constructor_args=((1, 2, 3, 4),),
-        input_size=(2, 3, 8, 8)
+        input_size=(2, 3, 8, 8),
+        check_gradgrad=False,
     ),
     dict(
         module_name='ReplicationPad2d',
         constructor_args=((1, 2, 3, 4),),
-        input_size=(2, 3, 4, 4)
+        input_size=(2, 3, 4, 4),
+        check_gradgrad=False,
     ),
     dict(
         module_name='ZeroPad2d',
@@ -3310,6 +3320,7 @@ new_module_tests = [
         constructor=lambda: nn.Conv3d(4, 6, kernel_size=3, groups=2),
         input_size=(2, 4, 4, 5, 4),
         cudnn=True,
+        check_gradgrad=False,
     ),
     dict(
         fullname='Conv3d_dilated',
@@ -3368,33 +3379,37 @@ new_module_tests = [
         module_name='ReplicationPad3d',
         constructor_args=((1, 2, 3, 4, 5, 6),),
         input_size=(2, 3, 5, 5, 5),
-        gradgradcheck=False,
+        check_gradgrad=False,
     ),
     dict(
         module_name='Embedding',
         constructor_args=(4, 3),
         input=Variable(torch.randperm(2).repeat(1, 2)),
-        jacobian_input=False
+        jacobian_input=False,
+        check_gradgrad=False,
     ),
     dict(
         constructor=lambda: nn.Embedding(4, 3, sparse=True),
         input=Variable(torch.randperm(2).repeat(1, 2)),
         jacobian_input=False,
-        fullname='Embedding_sparse'
+        fullname='Embedding_sparse',
+        check_gradgrad=False,
     ),
     dict(
         constructor=lambda: nn.FractionalMaxPool2d(
             2, output_ratio=0.5, _random_samples=torch.DoubleTensor(1, 3, 2).uniform_()),
         input_size=(1, 3, 5, 5),
         fullname='FractionalMaxPool2d_ratio',
-        test_cuda=False
+        test_cuda=False,
+        check_gradgrad=False,
     ),
     dict(
         constructor=lambda: nn.FractionalMaxPool2d((2, 2), output_size=(
             4, 4), _random_samples=torch.DoubleTensor(1, 3, 2).uniform_()),
         input_size=(1, 3, 7, 7),
         fullname='FractionalMaxPool2d_size',
-        test_cuda=False
+        test_cuda=False,
+        check_gradgrad=False,
     ),
     dict(
         module_name='PixelShuffle',
@@ -3455,47 +3470,49 @@ new_module_tests = [
         constructor_args=(None, (2, 1), 'bilinear'),
         input_size=(1, 2, 4, 4),
         desc='bilinear_scale_tuple_skewed_2d',
-        gradgradcheck=False,
+        check_gradgrad=False,
     ),
     dict(
         module_name='Upsample',
         constructor_args=(12, None, 'nearest'),
         input_size=(1, 2, 4, 4, 4),
         desc='nearest_3d',
-        gradgradcheck=False,
+        check_gradgrad=False,
     ),
     dict(
         module_name='Upsample',
         constructor_args=((12, 16, 16), None, 'nearest'),
         input_size=(1, 2, 3, 4, 4),
         desc='nearest_tuple_3d',
-        gradgradcheck=False,
+        check_gradgrad=False,
     ),
     dict(
         module_name='Upsample',
         constructor_args=(None, 4, 'nearest'),
         input_size=(1, 2, 4, 4, 4),
-        desc='nearest_scale_3d'
+        desc='nearest_scale_3d',
+        check_gradgrad=False,
     ),
     dict(
         module_name='Upsample',
         constructor_args=(12, None, 'trilinear'),
         input_size=(1, 2, 4, 4, 4),
         desc='trilinear_3d',
-        gradgradcheck=False,
+        check_gradgrad=False,
     ),
     dict(
         module_name='Upsample',
         constructor_args=((4, 6, 6), None, 'trilinear'),
         input_size=(1, 2, 2, 3, 3),
         desc='trilinear_tuple_3d',
-        gradgradcheck=False,
+        check_gradgrad=False,
     ),
     dict(
         module_name='Upsample',
         constructor_args=(None, 4, 'trilinear'),
         input_size=(1, 2, 4, 4, 4),
-        desc='trilinear_scale_3d'
+        desc='trilinear_scale_3d',
+        check_gradgrad=False
     ),
     dict(
         module_name='AdaptiveMaxPool1d',
@@ -3545,6 +3562,7 @@ new_module_tests = [
     dict(
         module_name='GLU',
         input_size=(5, 6),
+        check_gradgrad=False,
     ),
 ]
 
@@ -3595,19 +3613,22 @@ add_test(NewModuleTest(
         nn.MaxPool1d(2, return_indices=True),
         nn.MaxUnpool1d(2)),
     input_size=(1, 1, 4),
-    fullname='MaxUnpool1d_net'))
+    fullname='MaxUnpool1d_net',
+    check_gradgrad=False,))
 add_test(NewModuleTest(
     constructor=lambda: UnpoolingNet(
         nn.MaxPool2d(2, return_indices=True),
         nn.MaxUnpool2d(2)),
     input_size=(1, 1, 2, 4),
-    fullname='MaxUnpool2d_net'))
+    fullname='MaxUnpool2d_net',
+    check_gradgrad=False,))
 add_test(NewModuleTest(
     constructor=lambda: UnpoolingNet(
         nn.MaxPool3d(2, return_indices=True),
         nn.MaxUnpool3d(2)),
     input_size=(1, 1, 2, 4, 6),
-    fullname='MaxUnpool3d_net'))
+    fullname='MaxUnpool3d_net',
+    check_gradgrad=False,))
 
 if __name__ == '__main__':
     run_tests()
