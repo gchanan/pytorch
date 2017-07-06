@@ -27,58 +27,47 @@ class PReLU(Function):
     @staticmethod
     def backward(ctx, grad_output):
         input, weight = ctx.saved_variables
-        if grad_output.volatile:
-            # TODO: check if requires grad
-            grad_input = Variable(input.data.new())
-            ctx._backend.PReLU_updateGradInput(
-                ctx._backend.library_state,
-                input.data,
-                grad_output.data,
-                grad_input.data,
-                weight.data,
-                ctx.num_parameters
-            )
+        # alternatively, we could recalculate _backend, num_parameters
+        return PReLUBackward.apply(input, weight, ctx._backend, ctx.num_parameters, grad_output)
 
-            buf = Variable(weight.data.new())
-            buf2 = Variable(weight.data.new())
-            # TODO: this won't have to be zeroed in the future
-            grad_weight = Variable(weight.data.new(weight.size()).zero_())
-            ctx._backend.PReLU_accGradParameters(
-                ctx._backend.library_state,
-                input.data,
-                grad_output.data,
-                grad_input.data,
-                weight.data,
-                grad_weight.data,
-                buf.data,
-                buf2.data,
-                ctx.num_parameters,
-                1
-            )
-            return grad_input, grad_weight
-        else:
-            positive_mask = input > 0
-            negative_mask = input <= 0
-            if ctx.num_parameters == 0:
-                mask = positive_mask.type_as(grad_output) + negative_mask.type_as(grad_output) * weight
-                grad_input = mask * grad_output
-                grad_weight = ((negative_mask.type_as(grad_output) * input) * grad_output).sum()
-            else:
-                dims_to_unsqueeze = max(input.dim() - 2, 0)
-                weight_expanded = weight
-                for _ in range(dims_to_unsqueeze):
-                    weight_expanded = weight_expanded.unsqueeze(1)
-                weight_expanded = weight_expanded.expand_as(grad_output)
-                mask = positive_mask.type_as(grad_output) + negative_mask.type_as(grad_output) * weight_expanded
-                grad_input = mask * grad_output
 
-                grad_weight = ((negative_mask.type_as(grad_output) * input) * grad_output)
-                if input.dim() > 1:
-                    grad_weight = grad_weight.sum(0)
-                while grad_weight.dim() > 1:
-                    grad_weight = grad_weight.sum(1)
+class PReLUBackward(Function):
+    @staticmethod
+    def forward(ctx, input, weight, backend, num_parameters, grad_output):
+        grad_input = input.new()
+        backend.PReLU_updateGradInput(
+            backend.library_state,
+            input,
+            grad_output,
+            grad_input,
+            weight,
+            num_parameters
+        )
 
+        buf = weight.new()
+        buf2 = weight.new()
+        # TODO: this won't have to be zeroed in the future
+        grad_weight = weight.new().resize_as_(weight).zero_()
+        backend.PReLU_accGradParameters(
+            backend.library_state,
+            input,
+            grad_output,
+            grad_input,
+            weight,
+            grad_weight,
+            buf,
+            buf2,
+            num_parameters,
+            1
+        )
         return grad_input, grad_weight
+
+    @staticmethod
+    def backward(ctx, grad_input, grad_weight):
+        gradgrad_input = Variable(grad_input.data.new(grad_input.size()).zero_())
+        gradgrad_weight = Variable(grad_weight.data.new(grad_weight.size()).zero_())
+
+        return gradgrad_input, gradgrad_weight, None, None, None
 
 
 class RReLU(InplaceFunction):
