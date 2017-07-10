@@ -4,7 +4,7 @@ from collections import defaultdict
 import torch
 from torch._thnn.utils import parse_header, THNN_H_PATH
 from torch.autograd import Variable
-from torch.autograd.function import Function, InplaceFunction
+from torch.autograd.function import Function, InplaceFunction, once_differentiable
 from torch._thnn import type2backend
 
 from . import _all_functions
@@ -154,8 +154,9 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
         return output
 
     @staticmethod
+    @once_differentiable
     def backward(ctx, grad_output):
-        t = ctx.saved_variables
+        t = ctx.saved_tensors
         if save_output:
             input, output, params = t[0], t[1], t[2:]
         else:
@@ -173,16 +174,16 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
                 tmp_args = list(additional_args)
                 tmp_args[-1] = False
                 additional_args = tuple(tmp_args)
-            grad_input = Variable(input.data.new(input.size()))
+            grad_input = input.new(input.size())
             params_without_bias = params if len(params) < 2 else params[:1]
             update_grad_input_fn = getattr(ctx._backend, update_grad_input.name)
-            gi_args = (x.data if isinstance(x, Variable) else x for x in params_without_bias + additional_args)
-            update_grad_input_fn(ctx._backend.library_state, input.data, grad_output.data, grad_input.data, *gi_args)
+            gi_args = params_without_bias + additional_args
+            update_grad_input_fn(ctx._backend.library_state, input, grad_output, grad_input, *gi_args)
             grad_input_tuple = (grad_input,)
 
         if acc_grad_parameters and any(ctx.needs_input_grad[1:]):
             additional_args = _initialize_buffers.__func__(ctx, 'acc_grad_parameters')
-            grad_params = tuple(p.data.new(p.size()).zero_() for p in params)
+            grad_params = tuple(p.new(p.size()).zero_() for p in params)
             appended_grads = len(expected_params) - len(grad_params)
             grad_params += (None,) * appended_grads
             acc_grad_parameters_fn = getattr(ctx._backend, acc_grad_parameters.name)
