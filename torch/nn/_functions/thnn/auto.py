@@ -181,7 +181,7 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
             grad_input_tuple = (grad_input,)
 
         if acc_grad_parameters and any(ctx.needs_input_grad[1:]):
-            additional_args = ctx._initialize_buffers('acc_grad_parameters')
+            additional_args = _initialize_buffers.__func__(ctx, 'acc_grad_parameters')
             grad_params = tuple(p.data.new(p.size()).zero_() for p in params)
             appended_grads = len(expected_params) - len(grad_params)
             grad_params += (None,) * appended_grads
