@@ -210,6 +210,7 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
     def backward(ctx, grad_output):
         t = ctx.saved_variables
         input, params = t[0], t[1:]
+        # it may be simpler to recalculate some of these parameters in the Backward function's forward?
         return (backward_cls.apply(input, grad_output, ctx.additional_args, ctx._backend, ctx.buffers, *params) +
                 (None,) * len(ctx.needs_input_grad[1:]))
 
