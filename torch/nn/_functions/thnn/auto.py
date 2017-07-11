@@ -67,7 +67,8 @@ def _make_function_class_criterion(class_name, update_output, update_grad_input,
     @staticmethod
     def backward(ctx, grad_output):
         input, target = ctx.saved_variables
-        return (backward_cls.apply(input, target, grad_output, ctx.additional_args, ctx._backend),) + (None,) * (ctx.forward_args_count + 1)
+        return ((backward_cls.apply(input, target, grad_output, ctx.additional_args, ctx._backend),) +
+                (None,) * (ctx.forward_args_count + 1))
 
     return type(class_name, (Function,), dict(forward=forward, backward=backward)), backward_cls
 
@@ -308,7 +309,7 @@ def _generate_function_classes(scope_dict):
         is_criterion_fn = 'Criterion' in fn
         if is_criterion_fn:
             cls, backward_cls = _make_function_class_criterion(class_name, update_output,
-                                                 update_grad_input, acc_grad_parameters)
+                                                               update_grad_input, acc_grad_parameters)
         else:
             cls, backward_cls = _make_function_class(class_name, update_output,
                                                      update_grad_input, acc_grad_parameters)
