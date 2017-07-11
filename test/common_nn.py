@@ -238,12 +238,14 @@ criterion_tests = [
          input_size=(2, 3, 4),
          target=torch.randn(2, 3, 4),
          reference_fn=lambda i, t, _: 1. / i.numel() *
-         sum((a - b).abs().sum() for a, b in zip(i, t))
+         sum((a - b).abs().sum() for a, b in zip(i, t)),
+         check_gradgrad=False,
          ),
     dict(
         module_name='NLLLoss',
         input=torch.rand(15, 10).log(),
         target=torch.Tensor(15).uniform_().mul(10).floor().long(),
+        check_gradgrad=False,
     ),
     dict(
         module_name='NLLLoss',
@@ -251,121 +253,142 @@ criterion_tests = [
         input=torch.rand(15, 10).add(1e-2).log(),
         target=torch.Tensor(15).uniform_().mul(10).floor().long(),
         desc='weights',
+        check_gradgrad=False,
     ),
     dict(
         module_name='KLDivLoss',
         input=torch.rand(10, 10).log(),
-        target=torch.rand(10, 10)
+        target=torch.rand(10, 10),
+        check_gradgrad=False,
     ),
     dict(
         module_name='MSELoss',
         input=torch.randn(2, 3, 4, 5),
         target=torch.randn(2, 3, 4, 5),
-        reference_fn=lambda i, t, _: (i - t).abs().pow(2).sum() / i.numel()
+        reference_fn=lambda i, t, _: (i - t).abs().pow(2).sum() / i.numel(),
+        check_gradgrad=False,
     ),
     dict(
         module_name='BCELoss',
         input=torch.rand(15, 10).clamp_(1e-2, 1 - 1e-2),
-        target=torch.randn(15, 10).gt(0).double()
+        target=torch.randn(15, 10).gt(0).double(),
+        check_gradgrad=False,
     ),
     dict(
         module_name='BCELoss',
         constructor_args=(torch.rand(10),),
         input=torch.rand(15, 10).clamp_(1e-2, 1 - 1e-2),
         target=torch.randn(15, 10).gt(0).double(),
-        desc='weights'
+        desc='weights',
+        check_gradgrad=False,
     ),
     dict(
         module_name='CrossEntropyLoss',
         input=torch.randn(15, 10),
-        target=torch.Tensor(15).uniform_().mul(10).floor().long()
+        target=torch.Tensor(15).uniform_().mul(10).floor().long(),
+        check_gradgrad=False,
     ),
     dict(
         module_name='CrossEntropyLoss',
         constructor_args=(torch.rand(10),),
         input=torch.randn(15, 10),
         target=torch.Tensor(15).uniform_().mul(10).floor().long(),
-        desc='weights'
+        desc='weights',
+        check_gradgrad=False,
     ),
     dict(
         module_name='NLLLoss2d',
         input_size=(2, 3, 5, 5),
-        target=torch.rand(2, 5, 5).mul(3).floor().long()
+        target=torch.rand(2, 5, 5).mul(3).floor().long(),
+        check_gradgrad=False,
     ),
     dict(
         module_name='NLLLoss2d',
         constructor_args=(torch.rand(3),),
         input_size=(2, 3, 5, 5),
         target=torch.rand(2, 5, 5).mul(3).floor().long(),
-        desc='weights'
+        desc='weights',
+        check_gradgrad=False,
     ),
     dict(
         module_name='HingeEmbeddingLoss',
         input=torch.rand(10),
-        target=torch.randn(10).gt(0).double().mul_(2).sub(1)
+        target=torch.randn(10).gt(0).double().mul_(2).sub(1),
+        check_gradgrad=False,
     ),
     dict(
         module_name='HingeEmbeddingLoss',
         constructor_args=(0.5,),
         input=torch.rand(10),
         target=torch.randn(10).gt(0).double().mul_(2).sub(1),
-        desc='margin'
+        desc='margin',
+        check_gradgrad=False,
     ),
     dict(
         module_name='MultiLabelMarginLoss',
         input_size=(5, 10),
-        target=torch.rand(5, 10).mul(10).floor().long()
+        target=torch.rand(5, 10).mul(10).floor().long(),
+        check_gradgrad=False,
     ),
     dict(
         module_name='MultiLabelSoftMarginLoss',
         input_size=(5, 10),
-        target=torch.rand(5, 10).mul(2).floor()
+        target=torch.rand(5, 10).mul(2).floor(),
+        check_gradgrad=False,
     ),
     dict(
         module_name='MultiLabelSoftMarginLoss',
         constructor_args=(torch.rand(10),),
         input_size=(5, 10),
         target=torch.rand(5, 10).mul(2).floor(),
-        desc='weights'
+        desc='weights',
+        check_gradgrad=False,
     ),
     dict(
         module_name='MultiMarginLoss',
         input_size=(5, 10),
-        target=torch.rand(5).mul(8).floor().long()
+        target=torch.rand(5).mul(8).floor().long(),
+        check_gradgrad=False,
     ),
     dict(
         module_name='SmoothL1Loss',
         input_size=(5, 10),
-        target=torch.randn(5, 10)
+        target=torch.randn(5, 10),
+        check_gradgrad=False,
     ),
     dict(
         module_name='SoftMarginLoss',
         input_size=(5, 5),
-        target=torch.randn(5, 5).sign()
+        target=torch.randn(5, 5).sign(),
+        check_gradgrad=False,
     ),
     dict(
         module_name='CosineEmbeddingLoss',
         input=(torch.rand(15, 10), torch.rand(15, 10)),
-        target=torch.randn(15).sign()
+        target=torch.randn(15).sign(),
+        check_gradgrad=False,
     ),
     dict(
         module_name='CosineEmbeddingLoss',
         constructor_args=(0.7,),
         input=(torch.rand(15, 10), torch.rand(15, 10)),
         target=torch.randn(15).sign(),
-        desc='margin'
+        desc='margin',
+        check_gradgrad=False,
     ),
     dict(
         module_name='MarginRankingLoss',
         input=(torch.randn(50).mul(10), torch.randn(50).mul(10)),
-        target=torch.randn(50).sign()
+        target=torch.randn(50).sign(),
+        check_gradgrad=False,
     ),
     dict(
         module_name='MarginRankingLoss',
         constructor_args=(2,),
         input=(torch.randn(50).mul(10), torch.randn(50).mul(10)),
         target=torch.randn(50).sign(),
-        desc='margin'
+        desc='margin',
+        check_gradgrad=False,
     ),
 ]
 
@@ -734,6 +757,7 @@ class CriterionTest(TestBase):
             test_case.assertEqual(out, expected_out)
 
         test_case.check_criterion_jacobian(module, input, self.target)
+        self._do_extra_tests(test_case, module, input, self.target)
 
     def test_cuda(self, test_case):
         if not TEST_CUDA or not self.should_test_cuda:

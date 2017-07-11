@@ -57,6 +57,18 @@ def default_tensor_type(type):
     return decorator
 
 
+def _assertGradAndGradgradChecks(assertTrue, apply_fn, inputs):
+    assertTrue(gradcheck(apply_fn, inputs))
+    dummy_out = apply_fn(*inputs)
+    if isinstance(dummy_out, tuple):
+        grad_y = tuple(Variable(torch.randn(x.size()), requires_grad=x.requires_grad)
+                       for x in dummy_out if isinstance(x, Variable))
+    else:
+        grad_y = (Variable(torch.randn(dummy_out.size()), requires_grad=dummy_out.requires_grad),)
+
+    assertTrue(gradgradcheck(apply_fn, inputs, grad_y,))
+
+
 class InputVariableMixin(object):
     def _get_input(self):
         input = TestBase._get_input(self)
@@ -83,7 +95,8 @@ class NewModuleTest(InputVariableMixin, ModuleTest):
         test_case.check_jacobian(module, input, self.jacobian_input)
 
         if self.check_gradgrad:
-            test_case.check_jacobian_grad(module, input, self.jacobian_input)
+            params = tuple(x for x in module.parameters())
+            _assertGradAndGradgradChecks(test_case.assertTrue, lambda x, *args, **kw: module(x), (input,) + params)
 
         # check if module can be printed
         module.__repr__()
@@ -189,6 +202,15 @@ class NewModuleTest(InputVariableMixin, ModuleTest):
 
 class NewCriterionTest(InputVariableMixin, CriterionTest):
     # TODO: check that criterions don't ignore grad_output
+
+    def __init__(self, *args, **kwargs):
+        super(NewCriterionTest, self).__init__(*args, **kwargs)
+        self.check_gradgrad = kwargs.get('check_gradgrad', True)
+
+    def _do_extra_tests(self, test_case, module, input, target):
+        if self.check_gradgrad:
+            params = tuple(x for x in module.parameters())
+            _assertGradAndGradgradChecks(test_case.assertTrue, lambda x, y, *args, **kw: module(x, y), (input, target) + params)
 
     def _get_target(self, target):
         return Variable(target, requires_grad=False)
@@ -985,9 +1007,9 @@ class TestNN(NNTestCase):
 
     def test_pad(self):
         inputs = Variable(torch.randn(1, 3, 4, 4), requires_grad=True)
-        self._assertGradAndGradgradChecks(lambda x: F.pad(x, (1, 1, 1, 1)), (inputs,))
-        self._assertGradAndGradgradChecks(lambda x: F.pad(x, (-1, 1, -2, 1)), (inputs,))
-        self._assertGradAndGradgradChecks(lambda x: F.pad(x, (-1, 1, -2, 1), value=2), (inputs,))
+        _assertGradAndGradgradChecks(self.assertTrue, lambda x: F.pad(x, (1, 1, 1, 1)), (inputs,))
+        _assertGradAndGradgradChecks(self.assertTrue, lambda x: F.pad(x, (-1, 1, -2, 1)), (inputs,))
+        _assertGradAndGradgradChecks(self.assertTrue, lambda x: F.pad(x, (-1, 1, -2, 1), value=2), (inputs,))
         self.assertTrue(gradcheck(lambda x: F.pad(x, (-1, 1, -2, 1), mode='replicate'), (inputs,)))
         self.assertTrue(gradcheck(lambda x: F.pad(x, (-1, 1, -2, 1), mode='reflect'), (inputs,)))
 
@@ -2426,8 +2448,8 @@ class TestNN(NNTestCase):
         self.assertEqual(module.weight.grad.data, module_legacy.gradWeight)
         self.assertEqual(module.bias.grad.data, module_legacy.gradBias)
 
-        self._assertGradAndGradgradChecks(lambda x1, x2: F.bilinear(x1, x2, module.weight, module.bias),
-                                          (input1_1, input2_1))
+        _assertGradAndGradgradChecks(self.assertTrue, lambda x1, x2: F.bilinear(x1, x2, module.weight, module.bias),
+                                     (input1_1, input2_1))
 
     def run_conv_double_back_test(self, kern, stride, padding, chan_in, chan_out, batch_size,
                                   inp_size, dilation, no_weight, use_cuda=False, use_bias=True):
@@ -3141,21 +3163,24 @@ new_module_tests = [
         constructor_args=(3, 4, (3, 3), (2, 2)),
         input_size=(2, 3, 6, 6),
         cudnn=True,
-        desc='strided'
+        desc='strided',
+        check_gradgrad=False
     ),
     dict(
         module_name='Conv2d',
         constructor_args=(3, 4, (3, 3), (2, 2), (1, 1)),
         input_size=(2, 3, 6, 6),
         cudnn=True,
-        desc='padding'
+        desc='padding',
+        check_gradgrad=False
     ),
     dict(
         module_name='Conv2d',
         constructor_args=(3, 2, (3, 3), (2, 2), (1, 1), (2, 2)),
         input_size=(2, 3, 8, 8),
         cudnn=True,
-        desc='dilated'
+        desc='dilated',
+        check_gradgrad=False,
     ),
     dict(
         module_name='Conv2d',
@@ -3293,27 +3318,31 @@ new_module_tests = [
         constructor_args=(3, 4, (2, 3, 4)),
         input_size=(2, 3, 3, 4, 5),
         cudnn=True,
+        check_gradgrad=False,
     ),
     dict(
         module_name='Conv3d',
         constructor_args=(3, 4, (2, 3, 4), 1, 0, 1, 1, False),
         input_size=(2, 3, 3, 4, 5),
         cudnn=True,
-        desc='no_bias'
+        desc='no_bias',
+        check_gradgrad=False,
     ),
     dict(
         module_name='Conv3d',
         constructor_args=(3, 4, 2, 2),
         input_size=(2, 3, 5, 5, 5),
         cudnn=True,
-        desc='stride'
+        desc='stride',
+        check_gradgrad=False,
     ),
     dict(
         module_name='Conv3d',
         constructor_args=(3, 4, 2, 2, 1),
         input_size=(2, 3, 5, 5, 5),
         cudnn=True,
-        desc='stride_padding'
+        desc='stride_padding',
+        check_gradgrad=False,
     ),
     dict(
         fullname='Conv3d_groups',
@@ -3326,6 +3355,7 @@ new_module_tests = [
         fullname='Conv3d_dilated',
         constructor=lambda: nn.Conv3d(3, 4, kernel_size=2, dilation=2),
         input_size=(2, 3, 5, 5, 5),
+        check_gradgrad=False
     ),
     dict(
         module_name='ConvTranspose3d',
