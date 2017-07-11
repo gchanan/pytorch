@@ -31,7 +31,7 @@ class _WeightedLoss(_Loss):
     def forward(self, input, target):
         _assert_no_grad(target)
         backend_fn = getattr(self._backend, type(self).__name__)
-        return backend_fn(self.size_average, weight=self.weight)(input, target)
+        return backend_fn.apply(input, target, self.weight, self.size_average)
 
 
 class L1Loss(_Loss):
@@ -537,8 +537,7 @@ class MultiMarginLoss(Module):
         self.weight = weight
 
     def forward(self, input, target):
-        return self._backend.MultiMarginLoss(self.size_average, self.p,
-                                             self.margin, weight=self.weight)(input, target)
+        return self._backend.MultiMarginLoss.apply(input, target, self.weight, self.size_average, self.p, self.margin)
 
 
 class TripletMarginLoss(Module):
