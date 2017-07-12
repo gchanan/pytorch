@@ -1494,6 +1494,8 @@ function_tests = [
     (Remainder, (), ((S, 1, S), Variable(torch.rand(S, S) + 1.5, requires_grad=False)), 'tensor_broadcast_all'),
     (CmaxConstant, (), ((S, S, S), 0.5)),
     (CminConstant, (), ((S, S, S), 0.5)),
+    (Squared, (), ((S, S, S), ), 'something'),
+    (X2Y3, (), ((S, S, S), (S, S, S)), 'something'),
     (Mean, (), ((S, S, S),)),
     (Mean, (), ((S, S, S), 1), 'dim', [1]),
     (Mean, (), ((S, S, S), 1, True), 'keepdim_dim', [1]),

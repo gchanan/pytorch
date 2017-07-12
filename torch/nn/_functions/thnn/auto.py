@@ -85,7 +85,7 @@ def _find_buffers(args, ignored_args):
     return buffers
 
 
-def _make_function_class(class_name, update_output, update_grad_input, acc_grad_parameters):
+def _make_function_class(class_name, update_output, update_grad_input, acc_grad_parameters, double_backwards_function):
     def has_argument(fn, name):
         for arg in fn.arguments:
             if arg.name == name:
@@ -110,6 +110,7 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
     # an inplace flag
     is_inplace = update_output.arguments[-1].name == 'inplace'
 
+
     @staticmethod
     def _initialize_buffers(ctx, fn_name):
         additional_args = ctx.additional_args
@@ -125,6 +126,7 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
         ctx.additional_args = additional_args_ctx
         ctx.buffers = buffers_ctx
         ctx._backend = backend_ctx
+        ctx.save_for_backward(input, grad_output)
         if save_output:
             output = params[0]
             params = params[1:]
@@ -166,7 +168,15 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
 
     @staticmethod
     def backward_cls_backward(ctx, *grad_params):
-        raise ValueError(class_name + " can only be differentiated once.")
+        if double_backwards_function is None:
+            raise ValueError(class_name + " can only be differentiated once.")
+        else:
+            input, grad_output = ctx.saved_variables
+            #print("comparing grad outputs", grad_output, *grad_params)
+            return double_backwards_function(input, *grad_params, *ctx.additional_args), None, None, None, None
+            #raise ValueError("would use function here")
+            
+            #double_backwards_function()
 
     base_class = Function if not is_inplace else InplaceFunction
     backward_cls = type(class_name + "Backward", (base_class,), dict(forward=backward_cls_forward,
@@ -233,8 +243,21 @@ def _make_function_class(class_name, update_output, update_grad_input, acc_grad_
         return (backward_cls.apply(input, grad_output, ctx.additional_args, ctx._backend, ctx.buffers, *params) +
                 (None,) * len(ctx.needs_input_grad[1:]))
 
+    @staticmethod
+    def backward_hardtanh(ctx, grad_output):
+        t = ctx.saved_variables
+        input, params = t[0], t[1:]
+        max_mask = input <= 1
+        min_mask = input <= -1
+        ret = grad_output * (max_mask - min_mask).type_as(grad_output)
+        return ret, None, None, None
+
+    #if class_name != 'Hardtanh':
     return type(class_name, (base_class,), dict(forward=forward, backward=backward,
                                                 _initialize_buffers=_initialize_buffers)), backward_cls
+    #else:
+    #return type(class_name, (base_class,), dict(forward=forward, backward=backward_hardtanh,
+    #                                                _initialize_buffers=_initialize_buffers)), None
 
 
 def _generate_function_classes(scope_dict):
@@ -298,6 +321,19 @@ def _generate_function_classes(scope_dict):
         'SmoothL1Criterion': 'SmoothL1Loss',
         'SoftMarginCriterion': 'SoftMarginLoss',
     }
+    def hardtanh(input, grad_output, *args, **kwargs):
+        print("args to hardtanh", *args)
+        max_mask = input <= 1
+        min_mask = input <= -1
+        print("max_mask", max_mask - min_mask)
+        ret = grad_output * (max_mask - min_mask).type_as(grad_output)
+        print("return from double backwards", ret)
+        return ret
+
+    double_backwards_function = {
+        #'ReLU6': lambda x: x,
+        'Hardtanh': hardtanh  #lambda x: (Variable(x.data.new(x.size())), None, None, None, None)
+    }
 
     classes_to_generate -= exceptions
     for fn in classes_to_generate:
@@ -305,6 +341,7 @@ def _generate_function_classes(scope_dict):
         update_grad_input = function_by_name[fn + '_updateGradInput']
         acc_grad_parameters = function_by_name.get(fn + '_accGradParameters')
         class_name = name_remap.get(fn, fn)
+        print("class_name is", class_name)
         # This has to call a function to retain correct references to functions
         is_criterion_fn = 'Criterion' in fn
         if is_criterion_fn:
@@ -312,12 +349,15 @@ def _generate_function_classes(scope_dict):
                                                                update_grad_input, acc_grad_parameters)
         else:
             cls, backward_cls = _make_function_class(class_name, update_output,
-                                                     update_grad_input, acc_grad_parameters)
+                                                     update_grad_input, acc_grad_parameters,
+                                                     double_backwards_function.get(class_name))
         scope_dict[class_name] = cls
-        scope_dict[class_name + 'Backward'] = backward_cls
+        if backward_cls != None:
+            scope_dict[class_name + 'Backward'] = backward_cls
         if not class_name.startswith('_'):
             _all_functions.append(cls)
-            _all_functions.append(backward_cls)
+            if backward_cls != None:
+                _all_functions.append(backward_cls)
 
 
 _generate_function_classes(locals())

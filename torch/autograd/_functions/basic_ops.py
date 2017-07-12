@@ -213,6 +213,75 @@ class PowConstant(Function):
             return None, grad_output.mul(var_result).mul_(math.log(ctx.constant))
 
 
+class Squared(Function):
+    
+    @staticmethod
+    def forward(ctx, a):
+        ctx.save_for_backward(a)
+        return a.pow(2)
+    
+    @staticmethod
+    def backward(ctx, grad_output):
+        a, = ctx.saved_variables
+        #return grad_output.mul(2).mul(a)
+        return SquaredBackward.apply(a, grad_output)
+
+class SquaredBackward(Function):
+    @staticmethod
+    def forward(ctx, a, go):
+        ctx.save_for_backward(a, go)
+        return go.mul(2).mul(a)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        a, go = ctx.saved_variables
+        #return go.mul(grad_output).mul(2), None
+        return go.mul(grad_output).mul(2)
+
+class X2Y3(Function):
+    @staticmethod
+    def forward(ctx, x, y):
+        ctx.save_for_backward(x, y)
+        ans = x.pow(2).mul(y.pow(3))
+        #print("ans", ans)
+        return ans
+    @staticmethod
+    def backward(ctx, grad_output):
+        x, y = ctx.saved_variables
+        #ans_x = x.pow(2)
+        #ans_y = y.pow(3)
+        #dfdx = x.mul(2).mul(ans_y)
+        #dfdy = y.pow(2).mul(3).mul(ans_x)
+        #return grad_output * dfdx, grad_output * dfdy
+        return X2Y3Backward.apply(x, y, grad_output)
+
+class X2Y3Backward(Function):
+    @staticmethod
+    def forward(ctx, x, y, go):
+        ctx.save_for_backward(x,y,go)
+        ans_x = x.pow(2)
+        ans_y = y.pow(3)
+        dfdx = x.mul(2).mul(ans_y)
+        dfdy = y.pow(2).mul(3).mul(ans_x)
+        return go * dfdx, go * dfdy
+
+    @staticmethod
+    def backward(ctx, ggx, ggy):
+        x,y,go = ctx.saved_variables
+        #dfdx = y.pow(3).mul(2)
+        #dfdy = x.pow(2).mul(y).mul(6)
+        #dfdx = dfdx.mul(go)
+        #dfdx = dfdy.mul(go)
+        #return ggx.mul(dfdx), ggy.mul(dfdy), None
+        #return ggx * dfdx, ggy * dfdy, 
+        dfdx = ggx * 2 * y.pow(3) * go + ggy * 2 * x * 3 * y.pow(2) * go
+        dfdy = ggx * 2 * x * 3 * y.pow(2) * go + ggy * x.pow(2)*6*y * go
+        return dfdx, dfdy, None
+
+#class SquaredFunction(Function):
+#    @staticmethod
+    
+
 class Negate(InplaceFunction):
 
     @staticmethod
