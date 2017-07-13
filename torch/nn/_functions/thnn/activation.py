@@ -28,12 +28,14 @@ class PReLU(Function):
     def backward(ctx, grad_output):
         input, weight = ctx.saved_variables
         # alternatively, we could recalculate _backend, num_parameters
-        return PReLUBackward.apply(input, weight, ctx._backend, ctx.num_parameters, grad_output)
+        return PReLUBackward.apply(input, weight, grad_output, ctx._backend, ctx.num_parameters)
 
 
 class PReLUBackward(Function):
     @staticmethod
-    def forward(ctx, input, weight, backend, num_parameters, grad_output):
+    def forward(ctx, input, weight, grad_output,backend, num_parameters):
+        ctx.save_for_backward(input, weight, grad_output)
+        ctx.num_parameters = num_parameters
         grad_input = input.new()
         backend.PReLU_updateGradInput(
             backend.library_state,
@@ -63,11 +65,44 @@ class PReLUBackward(Function):
         return grad_input, grad_weight
 
     @staticmethod
-    def backward(ctx, grad_input, grad_weight):
-        gradgrad_input = Variable(grad_input.data.new(grad_input.size()).zero_())
-        gradgrad_weight = Variable(grad_weight.data.new(grad_weight.size()).zero_())
+    def backward(ctx, ggI, ggW):
+        input, weight, gO = ctx.saved_variables
+        positive_mask = (input > 0).type_as(ggI)
+        nonpositive_mask = (input <= 0).type_as(ggW)
+        # Explanation: Let input be i, weight be w, grad_output be gO.
+        # f(i, w) = i  if i > 0
+        #         = wi if i <= 0
+        # df/dx * gO  = gO      if i > 0      df/dw * g0 = 0      if i > 0
+        #             = g0 * w  if i <= 0                = g0 * i  if i <= 0
+        # The rest is taking derivatives of these wrt i, w, gO and summing/expanding properly.
+        if ctx.num_parameters == 0:
+            mask = positive_mask + nonpositive_mask * weight.expand_as(input)
+            ggO = ggI * mask + ggW.expand_as(gO) * (nonpositive_mask * input)
+            return ggW.expand_as(gO) * gO * nonpositive_mask, (ggI * gO * nonpositive_mask).sum(), ggO, None, None
+        else:
+            # Expand ggW to match size of ggI and weight to the size of input;
+            # a simple expand doesn't work because ggW/weight is the size of the
+            # input channel (dim==1 unless there is only 1 dimension)
+            dims_to_unsqueeze = max(input.dim() - 2, 0)
+            ggW_expanded = ggW
+            weight_expanded = weight
+            for _ in range(dims_to_unsqueeze):
+                ggW_expanded = ggW_expanded.unsqueeze(1)
+                weight_expanded = weight_expanded.unsqueeze(1)
+            ggW_expanded = ggW_expanded.expand_as(ggI)
+            weight_expanded = weight_expanded.expand_as(input)
 
-        return gradgrad_input, gradgrad_weight, None, None, None
+            gI = ggW_expanded * gO * nonpositive_mask
+
+            gW = ggI * gO * nonpositive_mask
+            if input.dim() > 1:
+                gW = gW.sum(0)
+            while gW.dim() > 1:
+                gW = gW.sum(1)
+
+            mask = positive_mask + nonpositive_mask * weight_expanded
+            ggO = ggI * mask + ggW_expanded * nonpositive_mask * input
+            return gI, gW, ggO, None, None
 
 
 class RReLU(InplaceFunction):
@@ -288,6 +323,7 @@ class LeakyReLU(Function):
         return grad_input, None, None
 
 _all_functions.append(PReLU)
+_all_functions.append(PReLUBackward)
 _all_functions.append(RReLU)
 _all_functions.append(SELU)
 _all_functions.append(Softmin)
