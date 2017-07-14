@@ -754,3 +754,6 @@ class CriterionTest(TestBase):
             test_case.assertEqual(cpu_gradInput, gpu_gradInput, 4e-4)
         except NotImplementedError:
             pass
+
+    def _do_extra_tests(self, test_case, module, input, target):
+        pass
