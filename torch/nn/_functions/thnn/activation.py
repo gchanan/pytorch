@@ -13,7 +13,7 @@ class PReLU(Function):
         output = input.new()
         ctx.num_parameters = weight.numel()
         if ctx.num_parameters == 1:
-            # num_parameters == 0 is used indicate that a single weight is shared among all features.
+            # num_parameters == 0 is used indicate that a single weight is shared among all input channels.
             ctx.num_parameters = 0
         ctx._backend.PReLU_updateOutput(
             ctx._backend.library_state,
@@ -78,7 +78,7 @@ class PReLUBackward(Function):
         # The rest is taking derivatives of these wrt i, w, gO and summing/expanding properly.
         if ctx.num_parameters == 0:
             # from PReLU.forward: num_parameters == 0 is used indicate that a
-            # single weight is shared among all features.
+            # single weight is shared among all input channels.
             mask = positive_mask + nonpositive_mask * weight.expand_as(input)
             ggO = ggI * mask + ggW.expand_as(gO) * (nonpositive_mask * input)
             return ggW.expand_as(gO) * gO * nonpositive_mask, (ggI * gO * nonpositive_mask).sum(), ggO, None, None
