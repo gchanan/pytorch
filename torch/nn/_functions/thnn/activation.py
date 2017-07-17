@@ -84,7 +84,9 @@ class PReLUBackward(Function):
             return ggW.expand_as(gO) * gO * nonpositive_mask, (ggI * gO * nonpositive_mask).sum(), ggO, None, None
         else:
             # Expand ggW to match size of ggI; a simple expand doesn't work because
-            # ggW is the size of the input channel (dim==1 unless there is only 1 dimension).
+            # ggW is the size of the input channel (dim==1 unless there is only 1 dimension).  For example,
+            # let ggI be size (3,4,5,6,7) and ggW be size (4).  Then we unsqueeze ggW to be size (4,1,1,1)
+            # so the expand succeeds.
             dims_to_unsqueeze = max(input.dim() - 2, 0)
             ggW_expanded = ggW
             for _ in range(dims_to_unsqueeze):
