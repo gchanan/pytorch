@@ -150,7 +150,7 @@ class MaxPool2dBackward(Function):
         return grad_input
 
     @staticmethod
-    def backward(ctx, ggI, ggIndices=None):
+    def backward(ctx, ggI, _ggIndices=None):
         raise ValueError("MaxPool2d cannot be differentiated twice")
 
 
@@ -184,13 +184,28 @@ class MaxPool3d(Function):
             return output
 
     @staticmethod
-    @once_differentiable
     def backward(ctx, grad_output, _indices_grad=None):
         if ctx.return_indices:
-            input, indices = ctx.saved_tensors
+            input, indices = ctx.saved_variables
         else:
-            input, = ctx.saved_tensors
+            input, = ctx.saved_variables
             indices = ctx.indices
+        grad_input = MaxPool3dBackward.apply(input, indices, grad_output, ctx.kernel_size, ctx.stride,
+                                             ctx.padding, ctx.dilation, ctx.return_indices, ctx.ceil_mode)
+        return grad_input, None, None, None, None, None, None
+
+
+class MaxPool3dBackward(Function):
+
+    @staticmethod
+    def forward(ctx, input, indices, grad_output, kernel_size, stride, padding, dilation,
+                return_indices, ceil_mode):
+        ctx.kernel_size = kernel_size
+        ctx.stride = stride
+        ctx.padding = padding
+        ctx.dilation = dilation
+        ctx.return_indices = return_indices
+        ctx.ceil_mode = ceil_mode
         grad_input = grad_output.new()
         backend = type2backend[type(input)]
         backend.VolumetricDilatedMaxPooling_updateGradInput(backend.library_state,
@@ -201,7 +216,11 @@ class MaxPool3d(Function):
                                                             ctx.padding[0], ctx.padding[2], ctx.padding[1],
                                                             ctx.dilation[0], ctx.dilation[2], ctx.dilation[1],
                                                             ctx.ceil_mode)
-        return grad_input, None, None, None, None, None, None
+        return grad_input
+
+    @staticmethod
+    def backward(ctx, ggI, _ggIndices=None):
+        raise ValueError("MaxPool3d cannot be differentiated twice")
 
 
 class MaxUnpool2d(Function):
@@ -598,6 +617,7 @@ _all_functions.append(MaxPool1dBackward)
 _all_functions.append(MaxPool2d)
 _all_functions.append(MaxPool2dBackward)
 _all_functions.append(MaxPool3d)
+_all_functions.append(MaxPool3dBackward)
 _all_functions.append(MaxUnpool2d)
 _all_functions.append(MaxUnpool3d)
 _all_functions.append(FractionalMaxPool2d)
