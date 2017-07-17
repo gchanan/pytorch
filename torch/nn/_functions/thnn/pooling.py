@@ -50,12 +50,12 @@ class MaxPool1d(Function):
             input, = ctx.saved_variables
             indices = ctx.indices
 
-        grad_input = MaxPool1dBackwards.apply(input, indices, grad_output, ctx.kernel_size, ctx.stride, ctx.pad,
-                                              ctx.dilation, ctx.return_indices, ctx.ceil_mode)
+        grad_input = MaxPool1dBackward.apply(input, indices, grad_output, ctx.kernel_size, ctx.stride, ctx.pad,
+                                             ctx.dilation, ctx.return_indices, ctx.ceil_mode)
         return grad_input, None, None, None, None, None, None
 
 
-class MaxPool1dBackwards(Function):
+class MaxPool1dBackward(Function):
 
     @staticmethod
     def forward(ctx, input, indices, grad_output, kernel_size, stride, padding, dilation, return_indices, ceil_mode):
@@ -81,7 +81,7 @@ class MaxPool1dBackwards(Function):
         return grad_input
 
     @staticmethod
-    def backward(ctx, ggI):
+    def backward(ctx, ggI, ggIndices=None):
         raise ValueError("MaxPool1d cannot be differentiated twice")
 
 
@@ -115,13 +115,29 @@ class MaxPool2d(Function):
             return output
 
     @staticmethod
-    @once_differentiable
     def backward(ctx, grad_output, _indices_grad=None):
         if ctx.return_indices:
-            input, indices = ctx.saved_tensors
+            input, indices = ctx.saved_variables
         else:
-            input, = ctx.saved_tensors
+            input, = ctx.saved_variables
             indices = ctx.indices
+        grad_input = MaxPool2dBackward.apply(input, indices, grad_output, ctx.kernel_size, ctx.stride, ctx.padding,
+                                             ctx.dilation, ctx.return_indices, ctx.ceil_mode)
+        return grad_input, None, None, None, None, None, None
+
+
+class MaxPool2dBackward(Function):
+
+    @staticmethod
+    def forward(ctx, input, indices, grad_output, kernel_size, stride, padding, dilation,
+                return_indices, ceil_mode):
+        ctx.kernel_size = kernel_size
+        ctx.stride = stride
+        ctx.padding = padding
+        ctx.dilation = dilation
+        ctx.return_indices = return_indices
+        ctx.ceil_mode = ceil_mode
+
         grad_input = grad_output.new()
         backend = type2backend[type(input)]
         backend.SpatialDilatedMaxPooling_updateGradInput(backend.library_state,
@@ -131,7 +147,11 @@ class MaxPool2d(Function):
                                                          ctx.padding[1], ctx.padding[0],
                                                          ctx.dilation[1], ctx.dilation[0],
                                                          ctx.ceil_mode)
-        return grad_input, None, None, None, None, None, None
+        return grad_input
+
+    @staticmethod
+    def backward(ctx, ggI, ggIndices=None):
+        raise ValueError("MaxPool2d cannot be differentiated twice")
 
 
 class MaxPool3d(Function):
@@ -400,11 +420,11 @@ class AvgPool3d(Function):
     @staticmethod
     def backward(ctx, grad_output):
         input, = ctx.saved_variables
-        grad_input = AvgPool3dBackwards.apply(input, grad_output, ctx.kernel_size, ctx.stride)
+        grad_input = AvgPool3dBackward.apply(input, grad_output, ctx.kernel_size, ctx.stride)
         return grad_input, None, None
 
 
-class AvgPool3dBackwards(Function):
+class AvgPool3dBackward(Function):
 
     @staticmethod
     def forward(ctx, input, grad_output, kernel_size, stride):
@@ -572,8 +592,11 @@ class AdaptiveAvgPool2d(Function):
 _all_functions.append(AvgPool2d)
 _all_functions.append(AvgPool2dBackward)
 _all_functions.append(AvgPool3d)
+_all_functions.append(AvgPool3dBackward)
 _all_functions.append(MaxPool1d)
+_all_functions.append(MaxPool1dBackward)
 _all_functions.append(MaxPool2d)
+_all_functions.append(MaxPool2dBackward)
 _all_functions.append(MaxPool3d)
 _all_functions.append(MaxUnpool2d)
 _all_functions.append(MaxUnpool3d)
