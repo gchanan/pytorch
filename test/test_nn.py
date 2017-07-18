@@ -3137,7 +3137,7 @@ new_module_tests = [
         input_size=(4, 10),
         cudnn=True,
         desc='affine',
-        check_gradgrad=False,
+        #check_gradgrad=False,
     ),
     dict(
         module_name='BatchNorm1d',
@@ -3153,7 +3153,7 @@ new_module_tests = [
         input_size=(4, 10),
         cudnn=True,
         desc='not_affine',
-        check_gradgrad=False,
+        #check_gradgrad=False,
     ),
     dict(
         module_name='BatchNorm2d',

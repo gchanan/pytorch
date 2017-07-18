@@ -213,11 +213,41 @@ auto BatchNormBackward::releaseVariables() -> void {
 
 
 auto BatchNormBackwardBackward::apply(const variable_list& grad_grad_inputs) -> variable_list {
+  check_input_variables("BatchNormBackwardBackward", grad_grad_inputs, 3, 0);
   auto ggI = grad_grad_inputs[0];
   auto ggW = grad_grad_inputs[1];
   auto ggb = grad_grad_inputs[2];
 
-  throw std::runtime_error("BatchNormBackwardBackward not implemented yet.");
+  auto gO = grad_output_.unpack();
+  auto input_var = input_.unpack();
+  auto weight_var = weight_.unpack();
+  auto bias_var = bias_.unpack();
+
+  std::unique_ptr<thpp::Tensor> input {input_var->data->clone_shallow()};
+  std::unique_ptr<thpp::Tensor> weight {weight_var ? weight_var->data->clone_shallow() : nullptr};
+  std::unique_ptr<thpp::Tensor> bias {bias_var ? bias_var->data->clone_shallow() : nullptr};
+  //printf("Got inputs: input %p weight %p bias %p\n", input.get(), weight.get(), bias.get() );
+
+  if (weight.get() != nullptr || bias.get() != nullptr) {
+    throw std::runtime_error("BatchNormBackwardBackward does not currently support affine parameters");
+  }
+  //throw std::runtime_error("BatchNormBackwardBackward not implemented yet.");
+  // need to return derivative wrt input and wrt grad output
+  printf("ndim input: %ld, save_mean: %ld, save_std% ld\n", input->nDim(), save_mean_->nDim(), save_std_->nDim());
+  for (long i = 0; i < input->nDim(); ++i) {
+    printf("%ld ", input->sizes()[i]);
+  }
+  printf("\n");
+  for (long i = 0; i < save_mean_->nDim(); ++i) {
+    printf("%ld ", save_mean_->sizes()[i]);
+  }
+  printf("\n");
+  for (long i = 0; i < save_std_->nDim(); ++i) {
+    printf("%ld ", save_std_->sizes()[i]);
+  }
+  printf("\n");
+  //auto gI = 
+  return {ggI, ggW};
 };
 
 auto BatchNormBackwardBackward::releaseVariables() -> void {
