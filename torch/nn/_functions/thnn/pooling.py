@@ -136,7 +136,7 @@ class MaxPool2dBackward(Function):
         indices, = ctx.saved_variables
 
         gI = Variable(ggI.data.new(ggI.size()).zero_())
-        # ggO is equivalent to the 1d case, but the indices are given wrt the last two dimensions combined
+        # ggO is equivalent to the 1d case, but the indices are given wrt the last three dimensions flattened
         indices_view = indices.view(indices.size()[:-2] + (-1,))
         ggO = ggI.contiguous().view(ggI.size()[:-2] + (-1,)).gather(dim=2, index=indices_view).view_as(indices)
         return gI, None, ggO, None, None, None, None, None, None
@@ -184,6 +184,7 @@ class MaxPool3dBackward(Function):
         ctx.dilation = dilation
         ctx.ceil_mode = ceil_mode
         grad_input = grad_output.new()
+        ctx.save_for_backward(indices)
         backend = type2backend[type(input)]
         backend.VolumetricDilatedMaxPooling_updateGradInput(backend.library_state,
                                                             input, grad_output, grad_input, indices,
@@ -197,7 +198,14 @@ class MaxPool3dBackward(Function):
 
     @staticmethod
     def backward(ctx, ggI, _ggIndices=None):
-        raise ValueError("MaxPool3d cannot be differentiated twice")
+        indices, = ctx.saved_variables
+
+        gI = Variable(ggI.data.new(ggI.size()).zero_())
+        # ggO is equivalent to the 1d case, but the indices are given wrt the last two dimensions flattened
+        indices_view = indices.view(indices.size()[:-3] + (-1,))
+        ggI_view = ggI.contiguous().view(ggI.size()[:-3] + (-1,))
+        ggO = ggI_view.gather(dim=2, index=indices_view).view_as(indices)
+        return gI, None, ggO, None, None, None, None, None, None
 
 
 class MaxUnpool2d(Function):
