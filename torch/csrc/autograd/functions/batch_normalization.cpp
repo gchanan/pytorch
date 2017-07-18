@@ -111,9 +111,14 @@ auto BatchNormForward::apply(const variable_list& inputs) -> variable_list {
 
 auto BatchNormBackward::apply(const variable_list& grad_outputs) -> variable_list {
   check_input_variables("BatchNormBackward", grad_outputs, 1);
-  auto input = this->input.unpack_data();
-  auto weight = this->weight.unpack_data();
-  auto bias = this->bias.unpack_data();
+  auto input_var = input_.unpack();
+  auto weight_var = weight_.unpack();
+  auto bias_var = bias_.unpack();
+
+  std::unique_ptr<thpp::Tensor> input {input_var->data->clone_shallow()};
+  std::unique_ptr<thpp::Tensor> weight {weight_var ? weight_var->data->clone_shallow() : nullptr};
+  std::unique_ptr<thpp::Tensor> bias {bias_var ? bias_var->data->clone_shallow() : nullptr};
+
   AutoGPU guard(input->getDevice());
 
   bool use_cudnn = false;
@@ -164,8 +169,8 @@ auto BatchNormBackward::apply(const variable_list& grad_outputs) -> variable_lis
         (THVoidTensor*)weight->cdata(),
         (THVoidTensor*)running_mean->cdata(),
         (THVoidTensor*)running_var->cdata(),
-        (THVoidTensor*)save_mean->cdata(),
-        (THVoidTensor*)save_std->cdata(),
+        (THVoidTensor*)save_mean_->cdata(),
+        (THVoidTensor*)save_std_->cdata(),
         training,
         eps);
 #endif
@@ -179,25 +184,48 @@ auto BatchNormBackward::apply(const variable_list& grad_outputs) -> variable_lis
         weight.get(),
         running_mean.get(),
         running_var.get(),
-        save_mean.get(),
-        save_std.get(),
+        save_mean_.get(),
+        save_std_.get(),
         training,
         1.0,
         eps);
   }
 
+  // Add saved variables used out of the pure autograd to inputs
+  variable_list all_inputs(grad_outputs);
+  all_inputs.push_back(input_var);
   auto outputs =  as_tensor_list(std::move(grad_input),
                                  std::move(grad_weight),
                                  std::move(grad_bias));
-  return wrap_outputs(grad_outputs, std::move(outputs), [&](FunctionFlags f) {
-    return std::make_shared<Error>("BatchNormBackward is not differentiable", std::move(f));
+  return wrap_outputs(all_inputs, std::move(outputs), [&](FunctionFlags f) {
+    return std::make_shared<BatchNormBackwardBackward>(
+      f, *this, std::move(save_mean_), std::move(save_std_),
+      input_var->save(this), Variable::save_opt(weight_var.get(), this),
+      Variable::save_opt(bias_var.get(), this), grad_outputs[0]->save(this));
   });
 };
 
 auto BatchNormBackward::releaseVariables() -> void {
-  input.data.reset();
-  weight.data.reset();
-  bias.data.reset();
+  input_.data.reset();
+  weight_.data.reset();
+  bias_.data.reset();
 }
+
+
+auto BatchNormBackwardBackward::apply(const variable_list& grad_grad_inputs) -> variable_list {
+  auto ggI = grad_grad_inputs[0];
+  auto ggW = grad_grad_inputs[1];
+  auto ggb = grad_grad_inputs[2];
+
+  throw std::runtime_error("BatchNormBackwardBackward not implemented yet.");
+};
+
+auto BatchNormBackwardBackward::releaseVariables() -> void {
+  input_.data.reset();
+  weight_.data.reset();
+  bias_.data.reset();
+  grad_output_.data.reset();
+}
+
 
 }} // namespace torch::autograd
