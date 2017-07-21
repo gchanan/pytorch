@@ -248,23 +248,28 @@ def backback_not_affine(input, gamma, ggI, ggG, ggB, gO, eps):
 
     if affine:
         gI_gamma = 0
-        first_term = gO * (sigma2 + eps).pow(-3 / 2)
-        second_term = - 1 / M * gO * ((sigma2 + eps).pow(-1/2)).sum(dim=0)
+        first_term = gO * (sigma2 + eps).pow(-1 / 2)
+        second_term = - 1 / M * (sigma2 + eps).pow(-1/2) * (gO).sum(dim=0)
         third_term = -1 / M * (input - mu) * (sigma2 + eps).pow(-3 / 2) * (gO * (input - mu)).sum(dim=0)
         ggG_expanded = ggG
         while len(ggG_expanded.size()) < len(input.size()) - 1:
             ggG_expanded = ggG_expanded.unsqueeze(1)
+        ggB_expanded = ggB
+        while len(ggB_expanded.size()) < len(input.size()) - 1:
+            ggB_expanded = ggB_expanded.unsqueeze(1)
         print("sizes", first_term.size(), second_term.size(), third_term.size())
         gI_gamma = ggG_expanded * (first_term + second_term + third_term)
         gI = gI + gI_gamma
+
 
 
     gG = None
     if affine:
         my_first_half = (1 / (sigma2 + eps).sqrt()).div(M).expand_as(gO)
         my_second_half = M * gO - gO.sum(dim=0).expand_as(gO) - (input - mu).div((sigma2 + eps).expand_as(gO)) * (gO * (input - mu)).sum(dim =0).expand_as(gO)
-        gG = my_first_half * my_second_half
+        gG = ggI * my_first_half * my_second_half
         # sum gG over all non-1 dimensions
+        #print("before sum", gG.size(), ggG.size())
         gG = gG.sum(dim=0)
         while len(gG.size()) > 1:
             gG =  gG.sum(dim=1)

@@ -144,6 +144,8 @@ def gradcheck(func, inputs, eps=1e-6, atol=1e-5, rtol=1e-3):
     output = func(*inputs)
     output = _as_tuple(output)
 
+    print("outputs", output)
+    outer_count = 0
     for i, o in enumerate(output):
         if not o.requires_grad:
             continue
@@ -151,17 +153,25 @@ def gradcheck(func, inputs, eps=1e-6, atol=1e-5, rtol=1e-3):
         def fn(input):
             return _as_tuple(func(*input))[i].data
 
+        outer_count = outer_count + 1
         analytical = get_analytical_jacobian(_as_tuple(inputs), o)
-        print("analytical", analytical, type(analytical), analytical[1])
+        print("analytical", analytical)
         numerical = get_numerical_jacobian(fn, inputs, inputs, eps)
         print("numerical", numerical)
 
-        analytical = (analytical[0],)
-        numerical = (numerical[0],)
-        i = 0
+        analytical_sizes = tuple(x.size() for x in analytical)
+        numerical_sizes = tuple(y.size() for y in numerical)
+        analytical_max = tuple(x.abs().max() for x in analytical)
+        numerical_max = tuple(x.abs().max() for x in numerical)
+        print("sizes of analytical", len(analytical), len(numerical), analytical_sizes, numerical_sizes, analytical_max, numerical_max)
+        #analytical = (analytical[2],)
+        #numerical = (numerical[2],)
+        print("new analytical", analytical)
+        print("new numerical", numerical)
+        count = 0
         for a, n in zip(analytical, numerical):
             print("checking i", i)
-            i=i+1
+            count=count+1
             #diff = a - n
             #for k in range(0,40):
             #    print("k is", k)
@@ -169,7 +179,7 @@ def gradcheck(func, inputs, eps=1e-6, atol=1e-5, rtol=1e-3):
             #    print(a[0])
             #    print(n[0])
             if not ((a - n).abs() <= (atol + rtol * n.abs())).all():
-                print("returning false because", i - 1, (a-n).abs().max())
+                print("returning false because", count - 1, outer_count - 1, (a-n).abs().max())
                 return False
 
     # check if the backward multiplies by grad_output
@@ -213,12 +223,12 @@ def gradgradcheck(func, inputs, grad_outputs, eps=1e-6, atol=1e-5, rtol=1e-3):
         True if all differences satisfy allclose condition
     """
     def new_func(*input_args):
-        input_args = input_args[:-len(grad_outputs)]
+        #input_args = input_args[:-len(grad_outputs)]
         outputs = func(*input_args)
         outputs = _as_tuple(outputs)
         input_args = tuple(x for x in input_args if isinstance(x, Variable) if x.requires_grad)
         #input_args = tuple()
-        grad_inputs = torch.autograd.grad(outputs, input_args, grad_outputs)
+        grad_inputs = torch.autograd.grad(outputs, input_args, grad_outputs, only_inputs=True)
         return grad_inputs
 
-    return gradcheck(new_func, inputs + grad_outputs, eps, atol, rtol)
+    return gradcheck(new_func, inputs, eps, atol, rtol)
