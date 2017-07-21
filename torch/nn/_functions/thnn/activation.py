@@ -94,6 +94,7 @@ class PReLUBackward(Function):
             ggW_expanded = ggW_expanded.expand_as(ggI)
 
             gI = ggW_expanded * gO * nonpositive_mask
+            #gI =
 
             gW = ggI * gO * nonpositive_mask
             if input.dim() > 1:
@@ -113,6 +114,233 @@ class PReLUBackward(Function):
                 ggO = ggI * mask + ggW_expanded * nonpositive_mask * input
             return gI, gW, ggO, None, None
 
+class BatchNorm2(Function):
+    @staticmethod
+    def forward(ctx, input, gamma, beta, eps):
+        M = input.size(0)
+        mu = input.sum(dim=0).div(M)
+        sigma2 = (input-mu).pow(2).sum(dim=0).div(M)
+        normalized = (input - mu).div((sigma2 + eps).sqrt())
+        if gamma is not None:
+            ctx.save_for_backward(input, gamma, beta)
+        else:
+            ctx.save_for_backward(input)
+        ctx.eps = eps
+        ctx.affine = gamma is not None
+        
+        if gamma is not None:
+            gamma_expanded = gamma
+            while len(gamma_expanded.size()) < len(input.size()) - 1:
+                gamma_expanded = gamma_expanded.unsqueeze(1)
+            beta_expanded = beta
+            while len(beta_expanded.size()) < len(input.size()) - 1:
+                beta_expanded = beta_expanded.unsqueeze(1)
+            return gamma_expanded * normalized + beta_expanded
+        else:
+            return normalized
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        print("ctx.affine is", ctx.affine)
+        if ctx.affine:
+            input, gamma, beta = ctx.saved_variables
+        else:
+            input, = ctx.saved_variables
+            gamma = beta = None
+
+        print("trying to apply", input, gamma, beta, grad_output, ctx.eps)
+        if ctx.affine:
+            ret = BatchNorm2Backward.apply(input, gamma, beta, grad_output, ctx.eps)
+        else:
+            print("in ret")
+            ret = BatchNorm2BackwardNotAffine.apply(input, grad_output, ctx.eps)
+            ret = (ret,) + (None, None, None)
+            print("done ret")
+        print("ret is", ret)
+        return ret + (None,)
+
+
+def back(input, gamma, beta, grad_output, eps):
+    affine = gamma is not None
+    M = input.size(0)
+    mu = input.sum(dim=0).div(M).expand_as(input)
+    sigma2 = (input - mu).pow(2).sum(dim=0).div(M)
+
+    if not affine:
+        gamma_expanded = 1
+    else:
+        gamma_expanded = gamma
+        while len(gamma_expanded.size()) < len(input.size()) - 1:
+            gamma_expanded = gamma_expanded.unsqueeze(1)
+        
+        
+    first_half = (gamma_expanded / (sigma2 + eps).sqrt()).div(M).expand_as(grad_output)
+    second_half = M * grad_output - grad_output.sum(dim=0).expand_as(grad_output) - (input - mu).div((sigma2 + eps).expand_as(grad_output)) * (grad_output * (input - mu)).sum(dim =0).expand_as(grad_output)
+    grad_input = first_half * second_half
+
+    if affine:
+        grad_beta = grad_output.sum(dim=0)
+        while len(grad_beta.size()) > 1:
+            grad_beta = grad_beta.sum(dim=1)
+    else:
+        grad_beta = None
+    if affine:
+        grad_gamma = ((input - mu) / (sigma2 + eps).sqrt().expand_as(grad_output) * grad_output).sum(dim = 0)
+        while len(grad_gamma.size()) > 1:
+            grad_gamma =  grad_gamma.sum(dim=1)
+    else:
+        grad_gamma = None
+
+    return grad_input, grad_gamma, grad_beta
+
+
+#def backback_affine(input, ggI, ggG, ggB, ggO, eps):
+    
+
+def back_not_affine(input, grad_output, eps):
+    M = input.size(0)
+    mu = input.sum(dim=0).div(M).expand_as(input)
+    sigma2 = (input - mu).pow(2).sum(dim=0).div(M)
+
+
+    first_half = (1 / (sigma2 + eps).sqrt()).div(M).expand_as(grad_output)
+    second_half = M * grad_output - grad_output.sum(dim=0).expand_as(grad_output) - (input - mu).div((sigma2 + eps).expand_as(grad_output)) * (grad_output * (input - mu)).sum(dim =0).expand_as(grad_output)
+    grad_input = first_half * second_half
+
+    grad_beta = None
+    grad_gamma = None
+
+    return grad_input, grad_gamma, grad_beta
+
+def indicator(a, b):
+    return 1 if a==b else 0
+
+def backback_not_affine(input, gamma, ggI, ggG, ggB, gO, eps):
+    M = input.size(0)
+    mu = input.sum(dim=0).div(M)
+    sigma2 = (input - mu).pow(2).sum(dim=0).div(M)
+
+    affine = gamma is not None
+    if not affine:
+        gamma_expanded = 1
+    else:
+        gamma_expanded = gamma
+        while len(gamma_expanded.size()) < len(input.size()) - 1:
+            gamma_expanded = gamma_expanded.unsqueeze(1)
+
+    first_half = (gamma_expanded / (sigma2 + eps).sqrt()).div(M).expand_as(ggI)
+    grad_second_half = M * ggI - ggI.sum(dim=0).expand_as(ggI) - (input - mu).div((sigma2 + eps).expand_as(ggI)) * (ggI * (input - mu)).sum(dim =0).expand_as(ggI)
+    ggO = first_half * grad_second_half
+
+    sig2_neg_3_2 = (sigma2 + eps).pow(-3 / 2)
+    insig32 = (input - mu) * sig2_neg_3_2
+    gOinmu_sum = (gO * (input - mu)).sum(dim=0)
+    ggIinmu_sum = (ggI * (input - mu)).sum(dim=0)
+
+    grad_terms = (1 / M * ggI.sum(dim=0) * gO.sum(dim=0) - (gO * ggI).sum(dim=0) +
+        3 / M * (sigma2 + eps).pow(-1) * gOinmu_sum * ggIinmu_sum)
+    combined_term = 1 / M * insig32 * (grad_terms)
+    ggI_sum_terms = 1 / M * ggIinmu_sum * sig2_neg_3_2 * (1 / M * gO.sum(dim=0) - gO)
+    ggO_sum_terms = 1 / M * gOinmu_sum * sig2_neg_3_2 * (1 / M * ggI.sum(dim=0) - ggI)
+
+    gI = combined_term + ggI_sum_terms + ggO_sum_terms
+    gI = gamma_expanded * gI
+
+    if affine:
+        gI_gamma = 0
+        first_term = gO * (sigma2 + eps).pow(-3 / 2)
+        second_term = - 1 / M * gO * ((sigma2 + eps).pow(-1/2)).sum(dim=0)
+        third_term = -1 / M * (input - mu) * (sigma2 + eps).pow(-3 / 2) * (gO * (input - mu)).sum(dim=0)
+        ggG_expanded = ggG
+        while len(ggG_expanded.size()) < len(input.size()) - 1:
+            ggG_expanded = ggG_expanded.unsqueeze(1)
+        print("sizes", first_term.size(), second_term.size(), third_term.size())
+        gI_gamma = ggG_expanded * (first_term + second_term + third_term)
+        gI = gI + gI_gamma
+
+
+    gG = None
+    if affine:
+        my_first_half = (1 / (sigma2 + eps).sqrt()).div(M).expand_as(gO)
+        my_second_half = M * gO - gO.sum(dim=0).expand_as(gO) - (input - mu).div((sigma2 + eps).expand_as(gO)) * (gO * (input - mu)).sum(dim =0).expand_as(gO)
+        gG = my_first_half * my_second_half
+        # sum gG over all non-1 dimensions
+        gG = gG.sum(dim=0)
+        while len(gG.size()) > 1:
+            gG =  gG.sum(dim=1)
+
+    #print("returning sizes", gI.size(), gG.size(), ggO.size(), "gamma_size", gamma.size())
+    return gI, gG, ggO
+
+class BatchNorm2Backward(Function):
+    @staticmethod
+    def forward(ctx, input, gamma, beta, grad_output, eps):
+        #assert gamma.dim() == 0
+        #assert beta.dim() == 0
+        #gamma = None
+        #beta = None
+        print("in batchnorm2backward")
+        ctx.save_for_backward(input, gamma, grad_output)
+        ctx.eps = eps
+        return back(input, gamma, beta, grad_output, eps)
+        """ctx.affine = gamma is not None
+        M = input.size(0)
+        mu = input.sum(dim=0).div(M).expand_as(input)
+        sigma2 = (input - mu).pow(2).sum(dim=0).div(M)
+
+        if not ctx.affine:
+            gamma_expanded = 1
+        else:
+            gamma_expanded = gamma
+            while len(gamma_expanded.size()) < len(input.size()) - 1:
+                gamma_expanded = gamma_expanded.unsqueeze(1)
+        
+        
+        first_half = (gamma_expanded / (sigma2 + eps).sqrt()).div(M).expand_as(grad_output)
+        second_half = M * grad_output - grad_output.sum(dim=0).expand_as(grad_output) - (input - mu).div((sigma2 + eps).expand_as(grad_output)) * (grad_output * (input - mu)).sum(dim =0).expand_as(grad_output)
+        grad_input = first_half * second_half
+
+        if ctx.affine:
+            grad_beta = grad_output.sum(dim=0)
+            while len(grad_beta.size()) > 1:
+                grad_beta =  grad_beta.sum(dim=1)
+        else:
+            grad_beta = None
+        if ctx.affine:
+            grad_gamma = ((input - mu) / (sigma2 + eps).sqrt().expand_as(grad_output) * grad_output).sum(dim = 0)
+            while len(grad_gamma.size()) > 1:
+                grad_gamma =  grad_gamma.sum(dim=1)
+        else:
+            grad_gamma = None
+
+        return grad_input, grad_gamma, grad_beta"""
+
+    @staticmethod
+    def backward(ctx, ggI, ggG, ggB):
+        input, gamma, gO = ctx.saved_variables
+        ret = backback_not_affine(input, gamma, ggI, ggG, ggB, gO, ctx.eps)
+        return ret[0], ret[1], None, ret[2], None
+        #raise ValueError("BacktchNorm2BackwardBackward not implemented yet")
+        #assert
+
+
+class BatchNorm2BackwardNotAffine(Function):
+    @staticmethod
+    def forward(ctx, input, grad_output, eps):
+        print("in batchnorm2backwardnotaffine")
+        ret = back_not_affine(input, grad_output, eps)
+        ctx.save_for_backward(input, grad_output)
+        ctx.eps = eps
+        ret2 = ret[0]
+        print("ret2", ret2)
+        return ret2
+
+    @staticmethod
+    def backward(ctx, ggI):
+        input, grad_output = ctx.saved_variables
+        ret = backback_not_affine(input, None, ggI, None, None, grad_output, ctx.eps)
+        return ret[0], ret[2], None
+        #raise ValueError("BacktchNorm2BackwardNotAffineBackward not implemented yet")
 
 class RReLU(InplaceFunction):
 
@@ -236,6 +464,9 @@ class Softmin(Function):
 
 _all_functions.append(PReLU)
 _all_functions.append(PReLUBackward)
+_all_functions.append(BatchNorm2)
+_all_functions.append(BatchNorm2Backward)
+_all_functions.append(BatchNorm2BackwardNotAffine)
 _all_functions.append(RReLU)
 _all_functions.append(SELU)
 _all_functions.append(Softmin)

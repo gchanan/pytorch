@@ -562,6 +562,13 @@ def batch_norm(input, running_mean, running_var, weight=None, bias=None,
     return f(input, weight, bias)
 
 
+def batch_norm2(input, running_mean, running_var, weight=None, bias=None,
+               training=False, momentum=0.1, eps=1e-5):
+    print("what is this for batch_norm2?", running_mean, running_var, weight, bias, training, momentum, eps)
+    return _functions.thnn.BatchNorm2.apply(input, weight, bias, eps)
+    #f = torch._C._functions.BatchNorm(running_mean, running_var, training, momentum, eps)
+    #return f(input, weight, bias)
+
 # loss
 
 def nll_loss(input, target, weight=None, size_average=True, ignore_index=-100):

@@ -332,10 +332,10 @@ static void _mark_dirty(THPFunction *self, t2var_type &t2var,
           "argument %d isn't one", i);
     }
     auto &v_counter = *variable->cdata->version_counter;
-    THPFunction_assert(v_counter.var_refcnt() == 1, "in-place operations can be "
-        "only used on variables that don't share storage with any other "
-        "variables, but detected that there are %d objects sharing it",
-        v_counter.var_refcnt());
+    //THPFunction_assert(v_counter.var_refcnt() == 1, "in-place operations can be "
+    //    "only used on variables that don't share storage with any other "
+    //    "variables, but detected that there are %d objects sharing it",
+    //    v_counter.var_refcnt());
     v_counter++;
   }
   // We're not going to ever need this so let's remove references now

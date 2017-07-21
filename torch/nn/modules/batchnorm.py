@@ -32,9 +32,14 @@ class _BatchNorm(Module):
             self.bias.data.zero_()
 
     def forward(self, input):
-        return F.batch_norm(
+        ret = F.batch_norm2(
             input, self.running_mean, self.running_var, self.weight, self.bias,
             self.training, self.momentum, self.eps)
+        ret2 = F.batch_norm(
+            input, self.running_mean, self.running_var, self.weight, self.bias,
+            self.training, self.momentum, self.eps)
+        print("comparing rets", ret, ret2)
+        return ret
 
     def __repr__(self):
         return ('{name}({num_features}, eps={eps}, momentum={momentum},'

@@ -152,10 +152,24 @@ def gradcheck(func, inputs, eps=1e-6, atol=1e-5, rtol=1e-3):
             return _as_tuple(func(*input))[i].data
 
         analytical = get_analytical_jacobian(_as_tuple(inputs), o)
+        print("analytical", analytical, type(analytical), analytical[1])
         numerical = get_numerical_jacobian(fn, inputs, inputs, eps)
+        print("numerical", numerical)
 
+        analytical = (analytical[0],)
+        numerical = (numerical[0],)
+        i = 0
         for a, n in zip(analytical, numerical):
+            print("checking i", i)
+            i=i+1
+            #diff = a - n
+            #for k in range(0,40):
+            #    print("k is", k)
+            #    print(diff[k])
+            #    print(a[0])
+            #    print(n[0])
             if not ((a - n).abs() <= (atol + rtol * n.abs())).all():
+                print("returning false because", i - 1, (a-n).abs().max())
                 return False
 
     # check if the backward multiplies by grad_output
@@ -203,6 +217,7 @@ def gradgradcheck(func, inputs, grad_outputs, eps=1e-6, atol=1e-5, rtol=1e-3):
         outputs = func(*input_args)
         outputs = _as_tuple(outputs)
         input_args = tuple(x for x in input_args if isinstance(x, Variable) if x.requires_grad)
+        #input_args = tuple()
         grad_inputs = torch.autograd.grad(outputs, input_args, grad_outputs)
         return grad_inputs
 
