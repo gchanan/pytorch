@@ -219,8 +219,16 @@ def backback_not_affine(input, gamma, ggI, ggG, ggB, gO, eps):
     M = input.size(0)
     mu = input.sum(dim=0).div(M)
     sigma2 = (input - mu).pow(2).sum(dim=0).div(M)
-
     affine = gamma is not None
+
+    if affine:
+        ggG_expanded = ggG
+        while len(ggG_expanded.size()) < len(input.size()) - 1:
+            ggG_expanded = ggG_expanded.unsqueeze(1)
+        ggB_expanded = ggB
+        while len(ggB_expanded.size()) < len(input.size()) - 1:
+            ggB_expanded = ggB_expanded.unsqueeze(1)
+
     if not affine:
         gamma_expanded = 1
     else:
@@ -228,9 +236,21 @@ def backback_not_affine(input, gamma, ggI, ggG, ggB, gO, eps):
         while len(gamma_expanded.size()) < len(input.size()) - 1:
             gamma_expanded = gamma_expanded.unsqueeze(1)
 
+
     first_half = (gamma_expanded / (sigma2 + eps).sqrt()).div(M).expand_as(ggI)
     grad_second_half = M * ggI - ggI.sum(dim=0).expand_as(ggI) - (input - mu).div((sigma2 + eps).expand_as(ggI)) * (ggI * (input - mu)).sum(dim =0).expand_as(ggI)
     ggO = first_half * grad_second_half
+    
+    if affine:
+        #something = (input-mu).sum(dim=0) * (sigma2 + eps).pow(-1/2)
+        #ggO_G_term = ggG_expanded * something
+        #ggO_B_term = ggB_expanded.sum(dim=0)
+        #while len(ggO_B_term.size()) > 1:
+        #    ggO_B_term =  ggO_B_term.sum(dim=1)
+        ggO_G_term = ggG_expanded * (input - mu) * (sigma2 + eps).pow(-1/2)
+        ggO_B_term = ggB_expanded
+        
+        ggO = ggO + ggO_G_term + ggO_B_term
 
     sig2_neg_3_2 = (sigma2 + eps).pow(-3 / 2)
     insig32 = (input - mu) * sig2_neg_3_2
