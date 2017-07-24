@@ -37,11 +37,11 @@ struct BatchNormBackward : public Function, public BatchNormParams {
     : Function(std::move(flags))
     , BatchNormParams(std::move(params)) {
       if (is_executable) {
-        this->save_mean = std::move(save_mean);
-        this->save_std = std::move(save_std);
-        this->input = std::move(input);
-        this->weight = std::move(weight);
-        this->bias = std::move(bias);
+        this->save_mean_ = std::move(save_mean);
+        this->save_std_ = std::move(save_std);
+        this->input_ = std::move(input);
+        this->weight_ = std::move(weight);
+        this->bias_ = std::move(bias);
       }
     }
 
@@ -49,11 +49,45 @@ struct BatchNormBackward : public Function, public BatchNormParams {
 
   virtual void releaseVariables() override;
 
-  std::unique_ptr<thpp::Tensor> save_mean;
-  std::unique_ptr<thpp::Tensor> save_std;
-  SavedVariable input;
-  SavedVariable weight;
-  SavedVariable bias;
+  std::unique_ptr<thpp::Tensor> save_mean_;
+  std::unique_ptr<thpp::Tensor> save_std_;
+  SavedVariable input_;
+  SavedVariable weight_;
+  SavedVariable bias_;
+};
+
+struct BatchNormBackwardBackward : public Function, public BatchNormParams {
+  BatchNormBackwardBackward(
+      FunctionFlags flags,
+      BatchNormParams params,
+      std::unique_ptr<thpp::Tensor> save_mean,
+      std::unique_ptr<thpp::Tensor> save_std,
+      SavedVariable input,
+      SavedVariable weight,
+      SavedVariable bias,
+      SavedVariable grad_output)
+    : Function(std::move(flags))
+    , BatchNormParams(std::move(params)) {
+      if (is_executable) {
+        this->save_mean_ = std::move(save_mean);
+        this->save_std_ = std::move(save_std);
+        this->input_ = std::move(input);
+        this->weight_ = std::move(weight);
+        this->bias_ = std::move(bias);
+        this->grad_output_ = std::move(grad_output);
+      }
+    }
+
+  virtual variable_list apply(const variable_list& grad_grad_inputs) override;
+
+  virtual void releaseVariables() override;
+
+  std::unique_ptr<thpp::Tensor> save_mean_;
+  std::unique_ptr<thpp::Tensor> save_std_;
+  SavedVariable input_;
+  SavedVariable weight_;
+  SavedVariable bias_;
+  SavedVariable grad_output_;
 };
 
 }}

@@ -17,6 +17,7 @@
 using namespace torch::autograd;
 
 PyObject *THPVariableClass = NULL;
+PyObject *THPBatchNormBackwardBackwardFn = NULL;
 
 static PyObject* THPVariable_NewWithVar(PyTypeObject* type, std::shared_ptr<Variable> var)
 {

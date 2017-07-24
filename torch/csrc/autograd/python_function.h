@@ -68,6 +68,7 @@ bool THPFunction_initModule(PyObject *module);
 extern PyTypeObject THPFunctionType;
 extern PyObject *THPFunctionClass;
 extern PyObject *THPStochasticFunctionClass;
+extern PyObject *THPBatchNormBackwardBackwardFn;
 
 // XXX: this function requires the GIL (it can have side effects).
 std::shared_ptr<torch::autograd::PyFunction> THPFunction_asFunction(THPFunction* self);

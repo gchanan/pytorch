@@ -6,6 +6,7 @@
 #include "torch/csrc/autograd/functions/utils.h"
 #include "torch/csrc/autograd/functions/basic_ops.h"
 #include "torch/csrc/autograd/functions/tensor.h"
+#include "torch/csrc/autograd/python_function.h"
 #include "torch/csrc/nn/THNN_generic.h"
 #include "torch/csrc/utils/auto_gpu.h"
 
@@ -402,6 +403,7 @@ auto ConvBackwardBackward::apply(const variable_list& grad_grad_inputs) -> varia
   auto ggI = grad_grad_inputs[0];
   auto ggW = grad_grad_inputs[1];
   auto ggb = grad_grad_inputs[2];
+  printf("IN CONVBACKBACKWARD %p %p %p\n", ggI.get(), ggW.get(), ggb.get());
 
   auto gO = grad_output_.unpack();
   auto weight = weight_.unpack();
