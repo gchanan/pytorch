@@ -10,6 +10,9 @@
 #pragma once
 
 #include <string>
+#include <vector>
+
+#include "gloo/config.h"
 
 namespace gloo {
 namespace benchmark {
@@ -23,15 +26,16 @@ struct options {
   int redisPort = 6379;
   std::string prefix = "prefix";
 
-#ifdef GLOO_USE_MPI
+#if GLOO_USE_MPI
   bool mpi = false;
 #endif
 
   // Transport
   std::string transport;
-  std::string ibverbsDevice = "mlx5_0";
+  std::vector<std::string> tcpDevice;
+  std::vector<std::string> ibverbsDevice;
   int ibverbsPort = 1;
-  int ibverbsIndex = 1;
+  int ibverbsIndex = 0;
   bool sync = false;
   bool busyPoll = false;
 
@@ -47,6 +51,7 @@ struct options {
   bool gpuDirect = false;
   bool halfPrecision = false;
   int destinations  = 1;
+  int threads = 1;
 };
 
 struct options parseOptions(int argc, char** argv);

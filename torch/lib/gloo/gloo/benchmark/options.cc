@@ -43,12 +43,29 @@ static void usage(int status, const char* argv0) {
   X("      --sync=BOOL           Switch pairs to sync mode (default: false)");
   X("      --busy-poll=BOOL      Busy-poll in sync mode (default: false)");
   X("");
+  X("Transport configuration for \"tcp\":");
+  X("");
+  X("  Note: if the device argument is not specified, Gloo uses the");
+  X("  network device associated with the machine's hostname.");
+  X("");
+  X("      --tcp-device=DEV[,DEV...]  Network interface(s) to use (default: empty)");
+  X("");
+  X("Transport configuration for \"ibverbs\":");
+  X("");
+  X("  Note: the same port and index are used across all devices,");
+  X("  in case multiple are specified.");
+  X("");
+  X("      --ib-device=DEV[,DEV...]  InfiniBand device(s) to use (default: mlx5_0)");
+  X("      --ib-port=PORT            InfiniBand port to use (default: 1)");
+  X("      --ib-index=INDEX          InfiniBand index to use (default: 0)");
+  X("");
   X("Benchmark parameters:");
   X("      --verify           Verify result first iteration (if applicable)");
   X("      --inputs           Number of input buffers");
   X("      --elements         Number of floats to use per input buffer");
   X("      --iteration-count  Number of iterations to run benchmark for");
   X("      --iteration-time   Time to run benchmark for (default: 2s)");
+  X("      --threads          Number of threads to spawn (default: 1)");
   X("      --nanos            Display timing data in nanos instead of micros");
   X("      --gpudirect        Use GPUDirect (CUDA only)");
   X("      --halfprecision    Use 16-bit floating point values");
@@ -84,6 +101,24 @@ static long argToNanos(char** argv, const char* arg) {
   return -1;
 }
 
+// Splits a const char* into a vector of strings.
+static std::vector<std::string> split(const char* in, char c) {
+  std::vector<std::string> result;
+  const auto* start = in;
+  for (;;) {
+    const auto* pos = strchr(start, c);
+    if (pos == nullptr) {
+      result.push_back(start);
+      break;
+    }
+    if (pos - start > 1) {
+      result.push_back(std::string(start, pos - start));
+    }
+    start = pos + 1;
+  }
+  return result;
+}
+
 struct options parseOptions(int argc, char** argv) {
   struct options result;
 
@@ -105,6 +140,11 @@ struct options parseOptions(int argc, char** argv) {
       {"gpudirect", no_argument, nullptr, 0x1009},
       {"halfprecision", no_argument, nullptr, 0x100a},
       {"destinations", required_argument, nullptr, 0x100b},
+      {"threads", required_argument, nullptr, 0x100c},
+      {"ib-device", required_argument, nullptr, 0x100d},
+      {"ib-index", required_argument, nullptr, 0x100e},
+      {"ib-port", required_argument, nullptr, 0x100f},
+      {"tcp-device", required_argument, nullptr, 0x1010},
       {"help", no_argument, nullptr, 0xffff},
       {nullptr, 0, nullptr, 0}};
 
@@ -202,6 +242,31 @@ struct options parseOptions(int argc, char** argv) {
         result.destinations = atoi(optarg);
         break;
       }
+      case 0x100c: // --threads
+      {
+        result.threads = atoi(optarg);
+        break;
+      }
+      case 0x100d: // --ib-device
+      {
+        result.ibverbsDevice = split(optarg, ',');
+        break;
+      }
+      case 0x100e: // --ib-index
+      {
+        result.ibverbsIndex = atoi(optarg);
+        break;
+      }
+      case 0x100f: // --ib-port
+      {
+        result.ibverbsPort = atoi(optarg);
+        break;
+      }
+      case 0x1010: // --tcp-device
+      {
+        result.tcpDevice = split(optarg, ',');
+        break;
+      }
       case 0xffff: // --help
       {
         usage(EXIT_SUCCESS, argv[0]);
@@ -214,10 +279,17 @@ struct options parseOptions(int argc, char** argv) {
     }
   }
 
-#ifdef GLOO_USE_MPI
+#if GLOO_USE_MPI
   // Use MPI if started through mpirun
   result.mpi = (getenv("OMPI_UNIVERSE_SIZE") != nullptr);
 #endif
+
+  // Initialize default ibverbs device
+  if (result.transport == "ibverbs") {
+    if (result.ibverbsDevice.empty()) {
+      result.ibverbsDevice.push_back("mlx5_0");
+    }
+  }
 
   if (result.busyPoll && !result.sync) {
     fprintf(stderr, "%s: busy poll can only be used with sync mode\n", argv[0]);
