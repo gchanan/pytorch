@@ -6,6 +6,8 @@ import time
 import unittest
 from functools import wraps, reduce
 from contextlib import contextmanager
+import socket
+import struct
 
 import torch
 import torch.distributed as dist
@@ -16,7 +18,54 @@ TEMP_DIR = os.environ['TEMP_DIR']
 INIT_METHOD = os.getenv('INIT_METHOD', 'env://')
 MASTER_PORT = '29500'
 MASTER_ADDR = '127.0.0.1'
+#MASTER_ADDR = 'localhost'
 
+MASTER_PORT2='29501'
+s = None
+for res in socket.getaddrinfo(None, MASTER_PORT2, socket.AF_UNSPEC,
+                              socket.SOCK_STREAM, 0, socket.AI_PASSIVE | socket.AI_ADDRCONFIG):
+    af, socktype, proto, canonname, sa = res
+    try:
+        s = socket.socket(af, socktype, proto)
+    except socket.error as msg:
+        s = None
+        continue
+    try:
+        s.bind(sa)
+        s.listen(1)
+    except socket.error as msg:
+        print("socket error", msg)
+        s.close()
+        s = None
+        continue
+    break
+if s is None:
+    print('could not open socket')
+    sys.exit(1)
+
+s.close()
+#import socket,struct
+#import ipaddress
+#packed_value = struct.pack('!I', 167772160)
+#ipaddress.ip_address('192.168.0.1')
+#addr = ipaddress.ip_address('127.0.0.1')
+#addr = socket.inet_ntoa(packed_value)
+#assert addr == '10.0.0.0'
+#packed_addr = socket.inet_pton(socket.AF_INET, '127.0.0.1')
+#ret = socket.inet_ntop(af, packed_addr)
+#print("ret", ret)
+#conn, addr = s.accept()
+#print 'Connected by', addr
+#while 1:
+#    data = conn.recv(1024)
+#    if not data: break
+#    conn.send(data)
+#conn.close()
+if af == socket.AF_INET6:
+    print("INET6!")
+    #MASTER_ADDR = '::ffff:127.0.0.1'
+
+print("MASTER ADDR!", MASTER_ADDR)
 
 if not dist.is_available():
     print('Distributed not available, skipping tests')

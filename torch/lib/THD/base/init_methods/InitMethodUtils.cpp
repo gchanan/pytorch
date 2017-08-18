@@ -7,6 +7,7 @@
 #include <ifaddrs.h>
 
 #include <tuple>
+#include <iostream>
 
 namespace thd {
 
@@ -18,6 +19,7 @@ void sendPeerName(int socket) {
   SYSCHECK(getpeername(socket, reinterpret_cast<struct sockaddr*>(&master_addr), &master_addr_len));
 
   std::string addr_str = sockaddrToString(reinterpret_cast<struct sockaddr*>(&master_addr));
+  std::cerr << "sending addr_str " << addr_str << std::endl;
   send_string(socket, addr_str);
 }
 
@@ -54,6 +56,7 @@ std::string discoverWorkers(int listen_socket, rank_type world_size) {
 
   std::string public_addr;
   for (auto socket : sockets) {
+    std::cerr << "Sending name from master to workers" << std::endl;
     sendPeerName(socket);
     public_addr = recv_string(socket);
     ::close(socket);
@@ -67,6 +70,7 @@ std::pair<std::string, std::string> discoverMaster(std::vector<std::string> addr
   int socket;
   for (const auto& address : addresses) {
     try {
+      std::cerr << "trying to connect with address " << address << std::endl;
       socket = connect(address, port, true, 2000);
       master_address = address;
       break;
@@ -77,8 +81,10 @@ std::pair<std::string, std::string> discoverMaster(std::vector<std::string> addr
     throw std::runtime_error("could not establish connection with other processes");
   }
   ResourceGuard socket_guard([socket]() { ::close(socket); });
+  std::cerr << "Sending name from worker to master" << std::endl;
   sendPeerName(socket);
   std::string my_address = recv_string(socket);
+  std::cerr << "master address " << master_address << " my address: " << my_address << std::endl;
 
   return std::make_pair(master_address, my_address);
 }

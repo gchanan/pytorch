@@ -1,5 +1,6 @@
 #include "InitMethod.hpp"
 #include "InitMethodUtils.hpp"
+#include <iostream>
 
 namespace thd {
 namespace init {
@@ -55,13 +56,16 @@ InitMethod::Config initEnv(int world_size, std::string group_name, int rank) {
 
   if (config.rank == 0) {
     config.master.listen_port = convertToPort(std::stoul(mustGetEnv(MASTER_PORT_ENV)));
+    std::cerr << "my listen port " << config.master.listen_port << std::endl;
     std::tie(config.master.listen_socket, std::ignore) = listen(config.master.listen_port);
     config.public_address = discoverWorkers(config.master.listen_socket,
                                             config.world_size);
+    printf("public address for workers? %s\n", config.public_address.c_str());
   } else {
     std::tie(config.worker.master_addr, config.worker.master_port) = loadWorkerEnv();
     std::tie(std::ignore, config.public_address) =
       discoverMaster({config.worker.master_addr}, config.worker.master_port);
+    printf("public address for master in worker %s\n", config.public_address.c_str());
   }
   return config;
 }

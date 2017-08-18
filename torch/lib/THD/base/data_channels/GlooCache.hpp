@@ -28,6 +28,9 @@
 #include <tuple>
 #include <vector>
 #include <type_traits>
+#include <iostream>
+#include <sys/types.h>
+#include <unistd.h>
 
 namespace thd {
 namespace gloo_cache {
@@ -116,7 +119,9 @@ struct GlooCache {
     auto context = std::make_shared<context_type>(
         group.mustGetGroupRank(_rank), group.size());
     prefix_store_type prefix_store(prefix, *group._store);
+    std::cerr << "Connecting full mesh" << _device->str() << " " << getpid() << std::endl;
     context->connectFullMesh(prefix_store, _device);
+    std::cerr << "done connecting full mesh" << std::endl;
     return context;
   }
 

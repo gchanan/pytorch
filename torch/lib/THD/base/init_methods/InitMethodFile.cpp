@@ -226,6 +226,7 @@ InitMethod::Config initFile(std::string file_path, rank_type world_size,
       .listen_socket = listen_socket,
       .listen_port = master_port,
     };
+    printf("public address from discoverWorkers %s\n", config.public_address.c_str());
   } else {
     ::close(listen_socket);
 
@@ -235,6 +236,7 @@ InitMethod::Config initFile(std::string file_path, rank_type world_size,
       .master_addr = master_address,
       .master_port = master_port,
     };
+    printf("config.public_address from master_address %s\n", config.public_address.c_str());
   }
 
   return config;

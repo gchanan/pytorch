@@ -12,6 +12,7 @@
 #include <string>
 #include <thread>
 #include <algorithm>
+#include <iostream>
 
 namespace thd {
 namespace {
@@ -108,12 +109,20 @@ std::pair<int, port_type> listen(port_type port) {
   int socket;
   while (true) {
     try {
+      std::cerr << "address is " << next_addr << std::endl;
+      std::cerr << "Trying address " << next_addr->ai_family << std::endl;
+      //if (next_addr->ai_family == AF_INET6) {
+      //  next_addr = next_addr->ai_next;
+      //  continue;
+        //throw std::system_err("no socket");
+      //}
       SYSCHECK(socket = ::socket(next_addr->ai_family, next_addr->ai_socktype, next_addr->ai_protocol))
 
       int optval = 1;
       SYSCHECK(::setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(int)))
       SYSCHECK(::bind(socket, next_addr->ai_addr, next_addr->ai_addrlen))
       SYSCHECK(::listen(socket, LISTEN_QUEUE_SIZE))
+      std::cerr << "WAS SUCCESSFUL!" << std::endl;
       break;
     } catch (const std::system_error& e) {
       ::close(socket);
@@ -196,6 +205,7 @@ int connect(const std::string& address, port_type port, bool wait, int timeout) 
       SYSCHECK(flags = ::fcntl(socket, F_GETFL));
       SYSCHECK(::fcntl(socket, F_SETFL, flags & (~O_NONBLOCK)));
       socket_guard.release();
+      std::cerr << "connect was successful with address " << address << "got ai family" << next_addr->ai_family << std::endl;
       break;
     } catch (std::exception& e) {
       if (errno == ECONNREFUSED) any_refused = true;
@@ -241,16 +251,25 @@ std::tuple<int, std::string> accept(int listen_socket, int timeout) {
   }
 
   int socket;
-  SYSCHECK(socket = ::accept(listen_socket, NULL, NULL))
-
   // Get address of the connecting process
   struct sockaddr_storage addr;
   socklen_t addr_len = sizeof(addr);
+  SYSCHECK(socket = ::accept(listen_socket, reinterpret_cast<struct sockaddr*>(&addr), &addr_len))
+
+
   SYSCHECK(::getpeername(socket, reinterpret_cast<struct sockaddr*>(&addr), &addr_len))
 
   setSocketNoDelay(socket);
 
-  return std::make_tuple(socket, sockaddrToString(reinterpret_cast<struct sockaddr*>(&addr)));
+  //peer_addr_len = sizeof(struct sockaddr_storage);
+// struct sockaddr_storage peer_addr;
+  char host[NI_MAXHOST], service[NI_MAXSERV];
+  getnameinfo((struct sockaddr *) &addr,
+                  addr_len, host, NI_MAXHOST,
+                  service, NI_MAXSERV, NI_NUMERICSERV);
+  printf("hostname !!! %s", host);
+  //return std::make_tuple(socket, sockaddrToString(reinterpret_cast<struct sockaddr*>(&addr)));
+  return std::make_tuple(socket, host);
 }
 
 } // namespace thd

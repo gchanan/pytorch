@@ -27,6 +27,9 @@
 #include "gloo/common/error.h"
 #include "gloo/common/logging.h"
 #include "gloo/transport/tcp/buffer.h"
+#include <iostream>
+#include <sys/types.h>
+#include <unistd.h>
 
 #define FD_INVALID (-1)
 
@@ -159,13 +162,28 @@ void Pair::connect(const Address& peer) {
   checkErrorState();
 
   peer_ = peer;
+  std::cerr << "Actually trying to connect " << self_.str() << " to " << peer.str() << " pid: " << getpid() << std::endl;
 
   // Addresses have to have same family
   if (self_.ss_.ss_family != peer_.ss_.ss_family) {
-    GLOO_THROW_INVALID_OPERATION_EXCEPTION("address family mismatch");
+    //GLOO_THROW_INVALID_OPERATION_EXCEPTION("address family mismatch");
+    if (self_.ss_.ss_family == AF_INET) {
+      struct sockaddr_in* sa = (struct sockaddr_in*)&self_.ss_;
+      auto ports = sa->sin_port;
+      struct sockaddr_in6* sb = (struct sockaddr_in6*)&peer_.ss_;
+      auto portp = sb->sin6_port;
+      rv = ports - portp;
+      addrlen = sizeof(struct sockaddr_in6);
+    } else if(self_.ss_.ss_family == AF_INET6) {
+        struct sockaddr_in6* sa = (struct sockaddr_in6*)&self_.ss_;
+        auto ports = sa->sin6_port;
+        struct sockaddr_in* sb = (struct sockaddr_in*)&peer_.ss_;
+        auto portp = sb->sin_port;
+        rv = ports - portp;
+        addrlen = sizeof(struct sockaddr_in);
+    }
   }
-
-  if (self_.ss_.ss_family == AF_INET) {
+  else if (self_.ss_.ss_family == AF_INET) {
     struct sockaddr_in* sa = (struct sockaddr_in*)&self_.ss_;
     struct sockaddr_in* sb = (struct sockaddr_in*)&peer_.ss_;
     addrlen = sizeof(struct sockaddr_in);
@@ -183,6 +201,7 @@ void Pair::connect(const Address& peer) {
     }
   } else {
     GLOO_THROW_INVALID_OPERATION_EXCEPTION("unknown sa_family");
+    
   }
 
   if (rv == 0) {

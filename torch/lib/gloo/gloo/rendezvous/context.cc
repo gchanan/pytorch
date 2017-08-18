@@ -11,6 +11,9 @@
 
 #include "gloo/common/logging.h"
 #include "gloo/transport/address.h"
+#include <iostream>
+       #include <sys/types.h>
+       #include <unistd.h>
 
 namespace gloo {
 namespace rendezvous {
@@ -35,6 +38,7 @@ std::vector<char> Context::extractAddress(
 void Context::connectFullMesh(
     rendezvous::Store& store,
     std::shared_ptr<transport::Device>& dev) {
+  printf("IN CONNEcT FULL MESH!\n");
   std::vector<std::unique_ptr<transport::Pair>> pairs(size);
 
   // Create pair to connect to every other node in the collective
@@ -47,6 +51,7 @@ void Context::connectFullMesh(
     auto pair = dev->createPair();
     pairs[i] = std::move(pair);
     auto addrBytes = pairs[i]->address().bytes();
+    std::cerr << "Address: " << pairs[i]->address().str() << " " << getpid() << std::endl;
     allBytes.insert(allBytes.end(), addrBytes.begin(), addrBytes.end());
   }
 
@@ -68,6 +73,8 @@ void Context::connectFullMesh(
     // Connect to other side of this pair
     auto allAddrs = store.get(key.str());
     auto addr = extractAddress(allAddrs, i);
+    //auto actual_address = Address(addr);
+    //std::cerr << "Trying to connect: " << pairs[i]->address().str() << " to " << actual_address.str()  << " " << getpid() << std::endl;
     pairs[i]->connect(addr);
   }
 

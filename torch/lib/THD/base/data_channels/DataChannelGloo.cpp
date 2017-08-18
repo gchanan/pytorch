@@ -83,6 +83,7 @@ DataChannelGloo::DataChannelGloo(InitMethod::Config config)
   // NOTE: when hostname has bad configuration in `/etc/hosts` processes
   // will not connect to each other.
   ::gloo::transport::tcp::attr attr(config.public_address.c_str());
+  printf("CREATING DEVICE: %s\n", config.public_address.c_str());
   _device = ::gloo::transport::tcp::CreateDevice(attr);
 
   if (_rank == 0) {

@@ -23,6 +23,8 @@
 #include "gloo/common/logging.h"
 #include "gloo/common/error.h"
 #include "gloo/transport/tcp/pair.h"
+#include <iostream>
+#include <arpa/inet.h>
 
 namespace gloo {
 namespace transport {
@@ -30,7 +32,29 @@ namespace tcp {
 
 static const std::chrono::seconds kTimeoutDefault = std::chrono::seconds(30);
 
+char *get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen)
+{
+    switch(sa->sa_family) {
+        case AF_INET:
+            inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr),
+                    s, maxlen);
+            break;
+
+        case AF_INET6:
+            inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr),
+                    s, maxlen);
+            break;
+
+        default:
+            strncpy(s, "Unknown AF", maxlen);
+            return NULL;
+    }
+
+    return s;
+}
+
 static void lookupAddrForIface(struct attr& attr) {
+  printf("in loopAddrForIFace\n");
   struct ifaddrs* ifap;
   auto rv = getifaddrs(&ifap);
   GLOO_ENFORCE_NE(rv, -1, strerror(errno));
@@ -47,6 +71,7 @@ static void lookupAddrForIface(struct attr& attr) {
     // Match on address family
     switch (attr.ai_family) {
       case AF_INET:
+        printf("in case AF_INET\n");
         if (ifa->ifa_addr->sa_family != AF_INET) {
           continue;
         }
@@ -54,6 +79,7 @@ static void lookupAddrForIface(struct attr& attr) {
         memcpy(&attr.ai_addr, ifa->ifa_addr, attr.ai_addrlen);
         break;
       case AF_INET6:
+        printf("in case AF_INET6\n");
         if (ifa->ifa_addr->sa_family != AF_INET6) {
           continue;
         }
@@ -61,11 +87,12 @@ static void lookupAddrForIface(struct attr& attr) {
         memcpy(&attr.ai_addr, ifa->ifa_addr, attr.ai_addrlen);
         break;
       case AF_UNSPEC:
+        printf("in case AF_UNSPEC\n");
         switch (ifa->ifa_addr->sa_family) {
-          case AF_INET:
-            attr.ai_family = AF_INET;
-            attr.ai_addrlen = sizeof(struct sockaddr_in);
-            break;
+          //case AF_INET:
+          //  attr.ai_family = AF_INET;
+          //  attr.ai_addrlen = sizeof(struct sockaddr_in);
+          //  break;
           case AF_INET6:
             attr.ai_family = AF_INET6;
             attr.ai_addrlen = sizeof(struct sockaddr_in6);
@@ -133,19 +160,23 @@ static void lookupAddrForHostname(struct attr& attr) {
 
 std::shared_ptr<transport::Device> CreateDevice(const struct attr& src) {
   struct attr attr = src;
+  //attr.iface = "lo";
 
   if (attr.iface.size() > 0) {
     // Initialize attributes using network interface name
+    printf("doing lookupaddr for iface\n");
     lookupAddrForIface(attr);
   } else {
     // Initialize attributes using hostname/IP address
     // If not already specified, use this machine's hostname
+        printf("NOT doing lookupaddr for iface\n");
     if (attr.hostname.size() == 0) {
       std::array<char, HOST_NAME_MAX> hostname;
       auto rv = gethostname(hostname.data(), hostname.size());
       GLOO_ENFORCE_EQ(rv, 0);
       attr.hostname = hostname.data();
     }
+    printf("but doing lockupaddrforsthostname!\n");
     lookupAddrForHostname(attr);
   }
 
@@ -160,6 +191,23 @@ bool isLocalhostAddr(const struct sockaddr* addr) {
     auto mask = htonl(IN_CLASSA_NET);
     auto subnet = htonl(INADDR_LOOPBACK) & mask;
     return (in->sin_addr.s_addr & mask) == subnet;
+  } else if (addr->sa_family == AF_INET6) {
+    //return false;
+    auto in = (struct sockaddr_in6*)addr;
+    bool is_ipv6_loopback = memcmp(&in6addr_loopback,  &in->sin6_addr, sizeof(in6addr_loopback));
+    if (is_ipv6_loopback) return true;
+    const unsigned char mapped_ipv4_localhost[] =
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff};
+    bool is_mapped_ipv6 = memcmp(in->sin6_addr.s6_addr, mapped_ipv4_localhost, sizeof(mapped_ipv4_localhost)) == 0;
+    if (is_mapped_ipv6) {
+      const unsigned char *addr_bytes = in->sin6_addr.s6_addr;
+      addr_bytes += 12;
+      uint32_t addr_bytes_as_long = *(const uint32_t *)(addr_bytes);
+      addr_bytes_as_long = htonl(addr_bytes_as_long);
+      auto mask = htonl(IN_CLASSA_NET);
+      auto subnet = htonl(INADDR_LOOPBACK) & mask;
+      return  (addr_bytes_as_long & mask) == subnet;
+    }
   }
   return false;
 }
@@ -169,11 +217,16 @@ const std::string sockaddrToInterfaceName(const struct attr& attr) {
   std::string iface;
   auto rv = getifaddrs(&ifap);
   GLOO_ENFORCE_NE(rv, -1, strerror(errno));
+  //auto ai_sockaddr = (struct sockaddr*)(&attr.ai_addr);
   auto addrIsLocalhost = isLocalhostAddr((struct sockaddr*)&attr.ai_addr);
   struct ifaddrs *ifa;
   for (ifa = ifap; ifa != nullptr; ifa = ifa->ifa_next) {
     // Skip entry if ifa_addr is NULL (see getifaddrs(3))
     if (ifa->ifa_addr == nullptr) {
+      continue;
+    }
+    // Skip incompatible address families
+    if (ifa->ifa_addr->sa_family != attr.ai_addr.ss_family) {
       continue;
     }
     if (ifa->ifa_addr->sa_family == AF_INET) {
@@ -188,7 +241,8 @@ const std::string sockaddrToInterfaceName(const struct attr& attr) {
       }
     } else if (ifa->ifa_addr->sa_family == AF_INET6) {
       auto sz = sizeof(struct sockaddr_in6);
-      if (memcmp(&attr.ai_addr, ifa->ifa_addr, sz) == 0) {
+      if ((memcmp(&attr.ai_addr, ifa->ifa_addr, sz) == 0) ||
+        (addrIsLocalhost && isLocalhostAddr(ifa->ifa_addr))) {
         iface = ifa->ifa_name;
         break;
       }
@@ -199,6 +253,10 @@ const std::string sockaddrToInterfaceName(const struct attr& attr) {
     "Unable to find interface for: ",
     Address(attr.ai_addr).str());
   freeifaddrs(ifap);
+  //char chars[128];
+  //get_ip_str(attr, chars, 128);
+  iface = "lo";
+  std::cerr << "Returning interface " << iface  << "for " << attr.hostname  << std::endl;
   return iface;
 }
 
