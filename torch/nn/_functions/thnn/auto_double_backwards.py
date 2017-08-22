@@ -106,6 +106,13 @@ def logsoftmax_double_backwards(ctx, ggI):
     return gI, ggO, None, None, None, None
 
 
+def reflectionpad2d_double_backwards(ctx, ggI):
+    gI = None
+    ggO = auto.ReflectionPad2d.apply(ggI, *ctx.additional_args)
+
+    return gI, ggO, None, None, None, None
+
+
 def replicationpad2d_double_backwards(ctx, ggI):
     gI = None
     ggO = auto.ReplicationPad2d.apply(ggI, *ctx.additional_args)
@@ -289,6 +296,7 @@ double_backwards_fns = {
     'LeakyReLU': leakyrelu_double_backwards,
     'LogSigmoid': logsigmoid_double_backwards,
     'LogSoftmax': logsoftmax_double_backwards,
+    'ReflectionPad2d': reflectionpad2d_double_backwards,
     'ReplicationPad2d': replicationpad2d_double_backwards,
     'ReplicationPad3d': replicationpad3d_double_backwards,
     'Softmax': softmax_double_backwards,
