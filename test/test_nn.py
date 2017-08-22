@@ -3608,7 +3608,6 @@ new_module_tests = [
         module_name='ReplicationPad2d',
         constructor_args=((1, 2, 3, 4),),
         input_size=(2, 3, 4, 4),
-        check_gradgrad=False,
     ),
     dict(
         module_name='ZeroPad2d',
