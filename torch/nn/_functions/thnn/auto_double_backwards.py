@@ -113,6 +113,13 @@ def replicationpad2d_double_backwards(ctx, ggI):
     return gI, ggO, None, None, None, None
 
 
+def replicationpad3d_double_backwards(ctx, ggI):
+    gI = None
+    ggO = auto.ReplicationPad3d.apply(ggI, *ctx.additional_args)
+
+    return gI, ggO, None, None, None, None
+
+
 def softmax_double_backwards(ctx, ggI):
     t = ctx.saved_variables
     gO, output = t[1], t[2]
@@ -283,6 +290,7 @@ double_backwards_fns = {
     'LogSigmoid': logsigmoid_double_backwards,
     'LogSoftmax': logsoftmax_double_backwards,
     'ReplicationPad2d': replicationpad2d_double_backwards,
+    'ReplicationPad3d': replicationpad3d_double_backwards,
     'Softmax': softmax_double_backwards,
     'Softplus': softplus_double_backwards,
     'Softshrink': softshrink_double_backwards,
