@@ -258,7 +258,7 @@ class FractionalMaxPool2d(Function):
 
     @staticmethod
     def forward(ctx, input, kh, kw, output_size=None, output_ratio=None,
-                return_indices=False, _random_samples=None):
+                _random_samples=None):
         # Pool size (how wide the pooling for each output unit is)
         ctx.kw, ctx.kh = kw, kh
 
@@ -267,8 +267,6 @@ class FractionalMaxPool2d(Function):
         # the 2d "pseudorandom" overlapping pooling regions for each
         # (batch element x input plane).
         ctx.random_samples = _random_samples
-
-        ctx.return_indices = return_indices
 
         if output_size is not None:
             ctx.oh, ctx.ow = output_size
@@ -307,22 +305,13 @@ class FractionalMaxPool2d(Function):
         )
 
         ctx.random_samples = None  # Free unnecessary buffers
-        if ctx.return_indices:
-            ctx.save_for_backward(input, indices)
-            return output, indices
-        else:
-            ctx.indices = indices
-            ctx.save_for_backward(input)
-            return output
+        ctx.save_for_backward(input, indices)
+        return output, indices
 
     @staticmethod
     @once_differentiable
     def backward(ctx, grad_output, _grad_indices=None):
-        if ctx.return_indices:
-            input, indices = ctx.saved_tensors
-        else:
-            input, = ctx.saved_tensors
-            indices = ctx.indices
+        input, indices = ctx.saved_tensors
 
         grad_input = grad_output.new()
         ctx._backend.SpatialFractionalMaxPooling_updateGradInput(
