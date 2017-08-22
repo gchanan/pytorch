@@ -107,11 +107,11 @@ def logsoftmax_double_backwards(ctx, ggI):
 
 
 def replicationpad2d_double_backwards(ctx, ggI):
-    from .auto import ReplicationPad2d
     gI = None
-    ggO = ReplicationPad2d.apply(ggI, *ctx.additional_args)
+    ggO = auto.ReplicationPad2d.apply(ggI, *ctx.additional_args)
 
     return gI, ggO, None, None, None, None
+
 
 def softmax_double_backwards(ctx, ggI):
     t = ctx.saved_variables
@@ -295,3 +295,5 @@ double_backwards_fns = {
     'SmoothL1Loss': smoothl1loss_double_backwards,
     'SoftMarginLoss': softmarginloss_double_backwards,
 }
+
+from . import auto
