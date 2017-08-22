@@ -306,12 +306,27 @@ class FractionalMaxPool2d(Function):
 
         ctx.random_samples = None  # Free unnecessary buffers
         ctx.save_for_backward(input, indices)
+        ctx.mark_non_differentiable(indices)
         return output, indices
 
     @staticmethod
-    @once_differentiable
     def backward(ctx, grad_output, _grad_indices=None):
-        input, indices = ctx.saved_tensors
+        input, indices = ctx.saved_variables
+
+        return (FractionalMaxPool2dBackward.apply(input, indices, grad_output, ctx.oh, ctx.ow, ctx.kh, ctx.kw),
+                None, None, None, None, None, None)
+
+
+class FractionalMaxPool2dBackward(Function):
+
+    @staticmethod
+    def forward(ctx, input, indices, grad_output, oh, ow, kh, kw):
+        ctx._backend = type2backend[type(input)]
+        ctx.oh = oh
+        ctx.ow = ow
+        ctx.kh = kh
+        ctx.kw = kw
+        ctx.save_for_backward(indices)
 
         grad_input = grad_output.new()
         ctx._backend.SpatialFractionalMaxPooling_updateGradInput(
@@ -323,7 +338,17 @@ class FractionalMaxPool2d(Function):
             ctx.kw, ctx.kh,
             indices)
 
-        return grad_input, None, None, None, None, None, None
+        return grad_input
+
+    @staticmethod
+    def backward(ctx, ggI):
+        indices, = ctx.saved_variables
+
+        gI = Variable(ggI.data.new(ggI.size()).zero_())
+        # ggO is equivalent to the 1d case, but the indices are given wrt the last two dimensions combined
+        indices_view = indices.view(indices.size()[:-2] + (-1,))
+        ggO = ggI.contiguous().view(ggI.size()[:-2] + (-1,)).gather(dim=2, index=indices_view).view_as(indices)
+        return gI, None, ggO, None, None, None, None, None, None
 
 
 class AvgPool2d(Function):
@@ -613,6 +638,7 @@ _all_functions.append(MaxPool3dBackward)
 _all_functions.append(MaxUnpool2d)
 _all_functions.append(MaxUnpool3d)
 _all_functions.append(FractionalMaxPool2d)
+_all_functions.append(FractionalMaxPool2dBackward)
 _all_functions.append(AdaptiveMaxPool1d)
 _all_functions.append(AdaptiveMaxPool2d)
 _all_functions.append(AdaptiveAvgPool1d)
