@@ -478,13 +478,12 @@ class AvgPool3dBackward(Function):
 class AdaptiveMaxPool1d(Function):
 
     @staticmethod
-    def forward(ctx, input, output_size, return_indices=False):
+    def forward(ctx, input, output_size):
         if input.dim() != 3:
             raise ValueError('expected 3D input (got {}D input)'
                              .format(input.dim()))
 
         ctx.output_size = _single(output_size)
-        ctx.return_indices = return_indices
         input2d = input.unsqueeze(2)    # size = N*C*1*L
         backend = type2backend[type(input)]
         indices, output = input2d.new().long(), input2d.new()
@@ -493,23 +492,14 @@ class AdaptiveMaxPool1d(Function):
                                                        ctx.output_size[0], 1)
         indices = indices.squeeze(2)
         output = output.squeeze(2)
-        if ctx.return_indices:
-            ctx.save_for_backward(input, indices)
-            ctx.mark_non_differentiable(indices)
-            return output, indices
-        else:
-            ctx.save_for_backward(input)
-            ctx.indices = indices
-            return output
+        ctx.save_for_backward(input, indices)
+        ctx.mark_non_differentiable(indices)
+        return output, indices
 
     @staticmethod
     @once_differentiable
     def backward(ctx, grad_output, _indices_grad=None):
-        if ctx.return_indices:
-            input, indices = ctx.saved_tensors
-        else:
-            input, = ctx.saved_tensors
-            indices = ctx.indices
+        input, indices = ctx.saved_tensors
 
         input2d = input.unsqueeze(2)
         indices2d = indices.unsqueeze(2)
@@ -525,31 +515,21 @@ class AdaptiveMaxPool1d(Function):
 class AdaptiveMaxPool2d(Function):
 
     @staticmethod
-    def forward(ctx, input, output_size, return_indices=False):
+    def forward(ctx, input, output_size):
         ctx.output_size = _pair(output_size)
-        ctx.return_indices = return_indices
         backend = type2backend[type(input)]
         indices, output = input.new().long(), input.new()
         backend.SpatialAdaptiveMaxPooling_updateOutput(backend.library_state,
                                                        input, output, indices,
                                                        ctx.output_size[1], ctx.output_size[0])
-        if ctx.return_indices:
-            ctx.save_for_backward(input, indices)
-            ctx.mark_non_differentiable(indices)
-            return output, indices
-        else:
-            ctx.save_for_backward(input)
-            ctx.indices = indices
-            return output
+        ctx.save_for_backward(input, indices)
+        ctx.mark_non_differentiable(indices)
+        return output, indices
 
     @staticmethod
     @once_differentiable
     def backward(ctx, grad_output, _indices_grad=None):
-        if ctx.return_indices:
-            input, indices = ctx.saved_tensors
-        else:
-            input, = ctx.saved_tensors
-            indices = ctx.indices
+        input, indices = ctx.saved_tensors
         grad_input = grad_output.new()
         backend = type2backend[type(input)]
         backend.SpatialAdaptiveMaxPooling_updateGradInput(backend.library_state,
