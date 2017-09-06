@@ -15,6 +15,7 @@ class Add(InplaceFunction):
             return a.add_(b)
         else:
             return a.add(b)
+        return a.add(b)
 
     @staticmethod
     def backward(ctx, grad_output):

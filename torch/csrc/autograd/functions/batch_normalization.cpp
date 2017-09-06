@@ -34,6 +34,16 @@ namespace torch { namespace autograd {
 #define CUDNN_BN_MIN_EPSILON 0
 #endif
 
+auto BatchNormAddForward::apply(const variable_list& inputs) -> variable_list {
+  auto& input1 = inputs[0];
+  auto& input2 = inputs[1];
+  auto output = input1->data.add(input2->data);
+  auto outputs = as_tensor_list(std::move(output));
+  return wrap_outputs(inputs, std::move(outputs), [&](FunctionFlags f) {
+    return std::make_shared<Error>("BatchNormAddForward is not differentiable", std::move(f));
+  });
+}
+
 auto BatchNormForward::apply(const variable_list& inputs) -> variable_list {
   check_input_variables("BatchNorm", inputs, 3, 1);
 

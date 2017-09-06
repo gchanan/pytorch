@@ -18,6 +18,10 @@ struct BatchNormParams {
   bool cudnn_enabled;
 };
 
+struct BatchNormAddForward : public Function {
+  virtual variable_list apply(const variable_list& inputs) override;
+};
+
 struct BatchNormForward : public Function, public BatchNormParams {
   BatchNormForward(BatchNormParams params)
     : BatchNormParams(std::move(params)) {}

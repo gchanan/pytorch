@@ -12,6 +12,13 @@
 using namespace torch::autograd;
 using torch::TupleParser;
 
+
+struct BatchNormAddCtor {
+    BatchNormAddForward* operator()(PyObject *args) {
+      return new BatchNormAddForward();
+    }
+};
+
 struct BatchNormCtor {
   BatchNormForward* operator()(PyObject* args) {
     BatchNormParams params;
@@ -117,6 +124,11 @@ PyObject* getTensorAttr(PyObject* obj, void* _unused)
   return py_tensor.release();
   END_HANDLE_TH_ERRORS
 }
+
+static struct PyGetSetDef batch_norm_forward_add_properties[] = {
+  THP_FUNCTION_DEFAULT_PROPERTIES,
+  {NULL}
+};
 
 static struct PyGetSetDef batch_norm_forward_properties[] = {
   THP_FUNCTION_DEFAULT_PROPERTIES,
@@ -240,7 +252,8 @@ bool THPAutograd_initFunctions(PyObject* _unused)
   THPObjectPtr module(PyModule_New("torch._C._functions"));
   if (!module) return false;
 
-  static PyTypeObject BatchNormClass, BatchNormBackwardClass, BatchNormBackwardBackwardClass;
+  static PyTypeObject BatchNormAddClass, BatchNormClass, BatchNormBackwardClass, BatchNormBackwardBackwardClass;
+  addClass<BatchNormAddForward, BatchNormAddCtor>(module, BatchNormAddClass, "BatchNormAdd", batch_norm_forward_add_properties);
   addClass<BatchNormForward, BatchNormCtor>(module, BatchNormClass, "BatchNorm", batch_norm_forward_properties);
   addClass<BatchNormBackward, NoCtor>(module, BatchNormBackwardClass, "BatchNormBackward", batch_norm_backward_properties);
   addClass<BatchNormBackwardBackward, NoCtor>(module, BatchNormBackwardBackwardClass, "BatchNormBackwardBackward", batch_norm_backward_backward_properties);
