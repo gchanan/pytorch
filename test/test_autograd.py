@@ -1842,7 +1842,7 @@ method_tests = [
     ('div', torch.rand(S, S, S) + 1e-1, (3.14,), 'constant'),
     ('__rdiv__', torch.rand(S, S, S) + 1e-1, (3.14,), 'constant'),
     ('pow', torch.rand(S, S, S) + 1e-3, (torch.rand(S, S, S) + 0.1,)),
-    ('pow', torch.rand(S, S, S)  + 1e-3, (torch.rand(1,) + 0.1,), 'broadcast_rhs'),
+    ('pow', torch.rand(S, S, S) + 1e-3, (torch.rand(1,) + 0.1,), 'broadcast_rhs'),
     ('pow', torch.rand(1,) + 1e-3, (torch.rand(S, S, S) + 0.1,), 'broadcast_lhs'),
     ('pow', torch.rand(S, 1, S) + 1e-3, (torch.rand(1, S, 1) + 0.1,), 'broadcast_all'),
     ('pow', torch.rand(S, S, S) + 1e-3, (3.14,), 'constant'),
@@ -2279,6 +2279,8 @@ EXCLUDE_FUNCTIONAL = {
 EXCLUDE_GRADCHECK = {
     'potrf'
 }
+
+
 def gradgradcheck_method_precision_override(test_name):
     # these are just empirical observations, we should improve
     gradgradcheck_precision_override = {
@@ -2325,20 +2327,24 @@ for test in method_tests:
                 self.assertEqual(unpack_variables(output_variable), output_tensor)
                 # TODO: check that both have changed after adding all inplace ops
 
+                def apply_method(*inputs):
+                    return getattr(inputs[0], name)(*inputs[1:])
+
                 if not is_inplace and name not in EXCLUDE_GRADCHECK:
-                    self.assertTrue(gradcheck(lambda *inputs: getattr(inputs[0], name)(*inputs[1:]),
-                                             (self_variable,) + args_variable,
-                                             eps=1e-6, atol=PRECISION))
+                    self.assertTrue(gradcheck(apply_method,
+                                              (self_variable,) + args_variable,
+                                              eps=1e-6, atol=PRECISION))
 
                     grad_y = generate_gradoutput(output_variable, non_contiguous=True)
                     gradgradcheck_precision_override = gradgradcheck_method_precision_override(test_name)
                     if gradgradcheck_precision_override is not None:
                         atol = gradgradcheck_precision_override['atol']
                         rtol = gradgradcheck_precision_override['rtol']
-                        self.assertTrue(gradgradcheck(lambda *inputs: getattr(inputs[0], name)(*inputs[1:]), (self_variable,) + args_variable, grad_y, atol=atol, rtol=rtol))
+                        self.assertTrue(gradgradcheck(apply_method,
+                                        (self_variable,) + args_variable, grad_y, atol=atol, rtol=rtol))
                     else:
-                        self.assertTrue(gradgradcheck(lambda *inputs: getattr(inputs[0], name)(*inputs[1:]), (self_variable,) + args_variable, grad_y,))
-
+                        self.assertTrue(gradgradcheck(apply_method,
+                                                      (self_variable,) + args_variable, grad_y,))
 
                 # functional interface tests
                 if hasattr(torch, name) and name not in EXCLUDE_FUNCTIONAL:
@@ -2359,6 +2365,51 @@ for test in method_tests:
                         output_variable.backward(torch.randn(*output_variable.size()).type_as(output_variable.data))
                         self.assertTrue(type(self_variable.data) == type(self_variable.grad.data))
                         self.assertTrue(self_variable.size() == self_variable.grad.size())
+
+                    # compare grads to inplace grads
+                    inplace_name = name + '_'
+                    # can't broadcast inplace to left hand side
+                    broadcast_skip_inplace = 'broadcast_lhs' in test_name or 'broadcast_all' in test_name
+                    if hasattr(Variable(torch.ones(1)), inplace_name) and not broadcast_skip_inplace:
+                        output_variable = getattr(self_variable, name)(*args_variable)
+                        if not isinstance(output_variable, tuple):
+                            output_variable = (output_variable,)
+                        inplace_self_variable = deepcopy(self_variable)
+                        inplace_self_variable_copy = tuple(i + 0 if i is not None else None
+                                                           for i in (inplace_self_variable,))
+                        inplace_args_variable = deepcopy(args_variable)
+                        inplace_args_variable_copy = tuple(i + 0 if i is not None else None
+                                                           for i in inplace_args_variable)
+
+                        try:
+                            inplace_output_variable = (
+                                getattr(*inplace_self_variable_copy, inplace_name)(*inplace_args_variable_copy))
+                        except RuntimeError as err:
+                            if 'only supports scalar multiplication' in str(err):
+                                return
+                            raise
+                        if not isinstance(inplace_output_variable, tuple):
+                            inplace_output_variable = (inplace_output_variable,)
+                        self.assertEqual(inplace_output_variable, output_variable)
+                        # Check that gradient is the same
+                        for inp_i, i in zip((inplace_self_variable,) + inplace_args_variable,
+                                            (self_variable,) + args_variable):
+                            if not isinstance(inp_i, Variable):
+                                assert not isinstance(i, Variable)
+                                continue
+                            if inp_i.grad is not None:
+                                inp_i.grad.data.zero_()
+                            if i.grad is not None:
+                                i.grad.data.zero_()
+                        for io, o in zip(inplace_output_variable, output_variable):
+                            grad = torch.randn(*io.size()).double()
+                            io.backward(grad)
+                            o.backward(grad)
+                        for inp_i, i in zip((inplace_self_variable,) + inplace_args_variable,
+                                            (self_variable,) + args_variable):
+                            if not isinstance(inp_i, Variable):
+                                continue
+                            self.assertEqual(inp_i.grad, i.grad)
 
             check(name)
             inplace_name = name + '_'
