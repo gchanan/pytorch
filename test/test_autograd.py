@@ -1850,7 +1850,7 @@ method_tests = [
     ('transpose', (1, 2, 3), (1, 2), 'dim', [0, 1]),
     ('t', (1, 2), ()),
     ('view', (S, S, S), (S * S, S),),
-    ('view_as', (S, S, S), ((S * S, S),)),
+    ('view_as', (S, S, S), (Variable(torch.rand(S * S, S), requires_grad=False),)),
     ('expand', (S, 1, 1), (S, S, S)),
     ('expand', (torch.Size([S, 1, S]),), (S, S, S), 'size'),
     ('expand', (S, 1), (S, S, S), 'new_dim'),
@@ -2276,6 +2276,25 @@ EXCLUDE_FUNCTIONAL = {
     'addmv',
     'addr',
 }
+EXCLUDE_GRADCHECK = {
+    'potrf'
+}
+def gradgradcheck_method_precision_override(test_name):
+    # these are just empirical observations, we should improve
+    gradgradcheck_precision_override = {
+        'test_norm': {'atol': 2e-2, 'rtol': 1e-2},
+        'test_dist': {'atol': 5e-2, 'rtol': 1e-2},
+        'test_dist_4': {'atol': 8e-2, 'rtol': 1e-2},
+    }
+    non_broadcasted_test_name = test_name.split("_broadcast")[0]
+    override = gradgradcheck_precision_override.get(non_broadcasted_test_name)
+    if override:
+        if 'broadcast_lhs' in test_name or 'broadcast_rhs' in test_name:
+            override = {'atol': override['atol'] * S, 'rtol': override['atol'] * S}
+        elif 'broadcast_all' in test_name:
+            override = {'atol': override['atol'] * S * S, 'rtol': override['atol'] * S * S}
+    return override
+
 for test in method_tests:
     name, self_size, args = test[:3]
     basic_test_name = 'test_' + name + ('_' + test[3] if len(test) >= 4 else '')
@@ -2292,8 +2311,11 @@ for test in method_tests:
 
         def do_test(self, name=name, self_size=self_size, args=new_args, test_name=test_name):
             def check(name):
-                self_variable = create_input((self_size,), requires_grad=False)[0]
-                args_variable = create_input(args, requires_grad=False)
+                is_rhs_operator = name[:3] == "__r" and name[-2:] == "__"
+                is_inplace = name[-1] == "_" and not is_rhs_operator
+                requires_grad = False if is_inplace else True
+                self_variable = create_input((self_size,), requires_grad=requires_grad)[0]
+                args_variable = create_input(args, requires_grad=requires_grad)
                 self_tensor = deepcopy(self_variable.data)
                 args_tensor = deepcopy(unpack_variables(args_variable))
                 output_variable = getattr(self_variable, name)(*args_variable)
@@ -2302,6 +2324,21 @@ for test in method_tests:
                     output_tensor = torch.DoubleTensor((output_tensor,))
                 self.assertEqual(unpack_variables(output_variable), output_tensor)
                 # TODO: check that both have changed after adding all inplace ops
+
+                if not is_inplace and name not in EXCLUDE_GRADCHECK:
+                    self.assertTrue(gradcheck(lambda *inputs: getattr(inputs[0], name)(*inputs[1:]),
+                                             (self_variable,) + args_variable,
+                                             eps=1e-6, atol=PRECISION))
+
+                    grad_y = generate_gradoutput(output_variable, non_contiguous=True)
+                    gradgradcheck_precision_override = gradgradcheck_method_precision_override(test_name)
+                    if gradgradcheck_precision_override is not None:
+                        atol = gradgradcheck_precision_override['atol']
+                        rtol = gradgradcheck_precision_override['rtol']
+                        self.assertTrue(gradgradcheck(lambda *inputs: getattr(inputs[0], name)(*inputs[1:]), (self_variable,) + args_variable, grad_y, atol=atol, rtol=rtol))
+                    else:
+                        self.assertTrue(gradgradcheck(lambda *inputs: getattr(inputs[0], name)(*inputs[1:]), (self_variable,) + args_variable, grad_y,))
+
 
                 # functional interface tests
                 if hasattr(torch, name) and name not in EXCLUDE_FUNCTIONAL:
@@ -2314,8 +2351,7 @@ for test in method_tests:
                     self.assertEqual(unpack_variables(output_variable), output_tensor)
 
                 # check for correct type of input.data and input.grad.data
-                is_rhs_operator = name[:3] == "__r" and name[-2:] == "__"
-                if name[-1] != "_" and not is_rhs_operator:
+                if not is_inplace:
                     self_variable = create_input((self_size,), requires_grad=True)[0]
                     args_variable = create_input(args, requires_grad=False)
                     output_variable = getattr(self_variable, name)(*args_variable)
