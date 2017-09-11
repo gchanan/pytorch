@@ -1822,26 +1822,31 @@ method_tests = [
     ('add', (S, S), ((S, S, S),), 'broadcast_lhs'),
     ('add', (S, 1, S), ((M, S),), 'broadcast_all'),
     ('add', (S, S, S), (3.14,), 'constant'),
+    ('__radd__', (S, S, S), (3.14,), 'constant'),
     ('sub', (S, S, S), ((S, S, S),)),
     ('sub', (S, S, S), ((S, S),), 'broadcast_rhs'),
     ('sub', (S, S), ((S, S, S),), 'broadcast_lhs'),
     ('sub', (S, 1, S), ((M, S),), 'broadcast_all'),
     ('sub', (S, S, S), (3.14,), 'constant'),
+    ('__rsub__', (S, S, S), (3.14,), 'constant'),
     ('mul', (S, S, S), ((S, S, S),)),
     ('mul', (S, S, S), ((S, S),), 'broadcast_rhs'),
     ('mul', (S, S), ((S, S, S),), 'broadcast_lhs'),
     ('mul', (S, 1, S), ((M, S),), 'broadcast_all'),
     ('mul', (S, S, S), (3.14,), 'constant'),
-    ('div', (S, S, S), ((S, S, S),)),
-    ('div', (S, S, S), ((S, S),), 'broadcast_rhs'),
-    ('div', (S, S), ((S, S, S),), 'broadcast_lhs'),
-    ('div', (S, 1, S), ((M, S),), 'broadcast_all'),
-    ('div', (S, S, S), (3.14,), 'constant'),
+    ('__rmul__', (S, S, S), (3.14,), 'constant'),
+    ('div', (S, S, S), (torch.rand(S, S, S) + 0.1,)),
+    ('div', (S, S, S), (torch.rand(S, S) + 0.1,), 'broadcast_rhs'),
+    ('div', (S, S), (torch.rand(S, S, S) + 0.1,), 'broadcast_lhs'),
+    ('div', (S, 1, S), (torch.rand(M, S) + 0.1,), 'broadcast_all'),
+    ('div', torch.rand(S, S, S) + 1e-1, (3.14,), 'constant'),
+    ('__rdiv__', torch.rand(S, S, S) + 1e-1, (3.14,), 'constant'),
     ('pow', torch.rand(S, S, S) + 1e-3, (torch.rand(S, S, S) + 0.1,)),
     ('pow', torch.rand(S, S, S)  + 1e-3, (torch.rand(1,) + 0.1,), 'broadcast_rhs'),
     ('pow', torch.rand(1,) + 1e-3, (torch.rand(S, S, S) + 0.1,), 'broadcast_lhs'),
     ('pow', torch.rand(S, 1, S) + 1e-3, (torch.rand(1, S, 1) + 0.1,), 'broadcast_all'),
     ('pow', torch.rand(S, S, S) + 1e-3, (3.14,), 'constant'),
+    ('__rpow__', torch.rand(S, S, S) + 1e-3, (3.14,), 'constant'),
     ('transpose', (1, 2, 3), (1, 2), 'dim', [0, 1]),
     ('t', (1, 2), ()),
     ('view', (S, S, S), (S * S, S),),
@@ -2309,7 +2314,8 @@ for test in method_tests:
                     self.assertEqual(unpack_variables(output_variable), output_tensor)
 
                 # check for correct type of input.data and input.grad.data
-                if name[-1] != '_':
+                is_rhs_operator = name[:3] == "__r" and name[-2:] == "__"
+                if name[-1] != "_" and not is_rhs_operator:
                     self_variable = create_input((self_size,), requires_grad=True)[0]
                     args_variable = create_input(args, requires_grad=False)
                     output_variable = getattr(self_variable, name)(*args_variable)
