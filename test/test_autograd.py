@@ -1553,13 +1553,6 @@ function_tests = [
     (Transpose, (), (torch.rand(L, L), 0, 1)),
     (Transpose, (), (torch.rand(S, S, S), 2, 0), '3d'),
     (Tan, (), (torch.randn(S, S, S).clamp(-1, 1),)),
-    (Gather, (), ((M, S), 0, gather_variable((S, S), 1, M, True))),
-    # TODO: enable neg dim checks
-    (Gather, (), ((M, S), 1, gather_variable((M, S // 2), 0, S, True)), 'dim1'),
-    (Scatter, (), ((M, S), 0, gather_variable((S, S), 1, M), (S, S))),
-    (Scatter, (), ((M, S), 1, gather_variable((M, S // 2), 0, S), (M, S // 2)), 'dim1'),
-    (ScatterAdd, (), ((M, S), 0, gather_variable((S, S), 1, M), (S, S))),
-    (ScatterAdd, (), ((M, S), 1, gather_variable((M, S // 2), 0, S), (M, S // 2)), 'dim1'),
     (Concat, (), (0, (1, S, S), (2, S, S), (3, S, S))),
     (Concat, (), (-1, (S, S, 1), (S, S, 2), (S, S, 3)), 'negdim-1'),
     (Concat, (), (-2, (S, 1, S), (S, 2, S), (S, 3, S)), 'negdim-2'),
@@ -1866,6 +1859,12 @@ method_tests = [
     ('__getitem__', torch.randn(S, S, S), (dont_convert([[0, 3], ]),), 'adv_index_sub'),
     ('__getitem__', torch.randn(S, S, S), (dont_convert([[0, 3], slice(None)]),), 'adv_index_sub_2'),
     ('__getitem__', torch.randn(S, S, S), (dont_convert([[0, 3], Ellipsis]),), 'adv_index_sub_3'),
+    ('gather', (M, S), (0, gather_variable((S, S), 1, M, True)), 'dim0', [0]),
+    ('gather', (M, S), (1, gather_variable((M, S // 2), 0, S, True)), 'dim1', [0]),
+    ('scatter', (M, S), (0, gather_variable((S, S), 1, M), (S, S)), 'dim0', [0]),
+    ('scatter', (M, S), (1, gather_variable((M, S // 2), 0, S), (M, S // 2)), 'dim1', [0]),
+    ('scatter_add', (M, S), (0, gather_variable((S, S), 1, M), (S, S)), 'dim0', [0]),
+    ('scatter_add', (M, S), (1, gather_variable((M, S // 2), 0, S), (M, S // 2)), 'dim1', [0]),
     ('masked_select', (M, M), (Variable(mask_not_all_zeros((M, M)), requires_grad=False),)),
     ('masked_select', (M, M), (Variable(mask_not_all_zeros((M,)), requires_grad=False),), 'broadcast_rhs'),
     ('masked_select', (M,), (Variable(mask_not_all_zeros((M, M)), requires_grad=False),), 'broadcast_lhs'),
@@ -2098,6 +2097,8 @@ def exclude_tensor_method(name, test_name):
         'index_add',
         'index_copy',
         'index_fill',
+        'scatter',
+        'scatter_add',
     }
     if test_name in exclude_all_tensor_method_by_test_name:
         return True
