@@ -1491,7 +1491,7 @@ class TestAutograd(TestCase):
                            Variable(torch.randn(3, S, S), requires_grad=True),
                            0)
         f_args_tensor = deepcopy(unpack_variables(f_args_variable))
-        run_functional_checks(self, "test_cat",
+        run_functional_checks(self, "test_cat", "cat",
                               lambda a, b, c, dim: torch.cat((a, b, c), dim),
                               True, f_args_variable, f_args_tensor)
 
@@ -1501,7 +1501,7 @@ class TestAutograd(TestCase):
                            Variable(torch.randn(S, S, 3), requires_grad=True),
                            -1)
         f_args_tensor = deepcopy(unpack_variables(f_args_variable))
-        run_functional_checks(self, "test_cat_negdim_1",
+        run_functional_checks(self, "test_cat_negdim_1", "cat",
                               lambda a, b, c, dim: torch.cat((a, b, c), dim),
                               True, f_args_variable, f_args_tensor)
 
@@ -1511,7 +1511,7 @@ class TestAutograd(TestCase):
                            Variable(torch.randn(S, 3, S), requires_grad=True),
                            -2)
         f_args_tensor = deepcopy(unpack_variables(f_args_variable))
-        run_functional_checks(self, "test_cat_negdim_2",
+        run_functional_checks(self, "test_cat_negdim_2", "cat",
                               lambda a, b, c, dim: torch.cat((a, b, c), dim),
                               True, f_args_variable, f_args_tensor)
 
@@ -2032,8 +2032,10 @@ def gradgradcheck_method_precision_override(test_name):
     override = gradgradcheck_precision_override.get(non_broadcasted_test_name)
     if override:
         if 'broadcast_lhs' in test_name or 'broadcast_rhs' in test_name:
+            # errors accumulated across 1 dimension
             override = {'atol': override['atol'] * S, 'rtol': override['atol'] * S}
         elif 'broadcast_all' in test_name:
+            # errors accumulated across multiple dimensions
             override = {'atol': override['atol'] * S * S, 'rtol': override['atol'] * S * S}
     return override
 
@@ -2051,13 +2053,14 @@ def run_grad_and_gradgrad_checks(test_case, test_name, apply_method, output_vari
         test_case.assertTrue(gradgradcheck(apply_method, input_variables, grad_y,))
 
 
-def run_functional_checks(test_case, test_name, apply_fn, run_grad_checks,
+def run_functional_checks(test_case, test_name, name, apply_fn, run_grad_checks,
                           f_args_variable, f_args_tensor):
     output_variable = apply_fn(*f_args_variable)
-    output_tensor = apply_fn(*f_args_tensor)
-    if not torch.is_tensor(output_tensor) and not isinstance(output_tensor, tuple):
-        output_tensor = torch.DoubleTensor((output_tensor,))
-    test_case.assertEqual(unpack_variables(output_variable), output_tensor)
+    if not exclude_tensor_method(name, test_name):
+        output_tensor = apply_fn(*f_args_tensor)
+        if not torch.is_tensor(output_tensor) and not isinstance(output_tensor, tuple):
+            output_tensor = torch.DoubleTensor((output_tensor,))
+        test_case.assertEqual(unpack_variables(output_variable), output_tensor)
 
     if run_grad_checks:
         run_grad_and_gradgrad_checks(test_case, test_name, apply_fn,
@@ -2087,9 +2090,8 @@ for test in method_tests:
             def check(name):
                 is_rhs_operator = name[:3] == "__r" and name[-2:] == "__"
                 is_inplace = name[-1] == "_" and not is_rhs_operator
-                requires_grad = False if is_inplace else True
-                self_variable = create_input((self_size,), requires_grad=requires_grad)[0]
-                args_variable = create_input(args, requires_grad=requires_grad)
+                self_variable = create_input((self_size,), requires_grad=not is_inplace)[0]
+                args_variable = create_input(args, requires_grad=not is_inplace)
                 self_tensor = deepcopy(self_variable.data)
                 args_tensor = deepcopy(unpack_variables(args_variable))
                 output_variable = getattr(self_variable, name)(*args_variable)
@@ -2106,13 +2108,13 @@ for test in method_tests:
                                                  output_variable, (self_variable,) + args_variable)
 
                 # functional interface tests
-                if (hasattr(torch, name) and name not in EXCLUDE_FUNCTIONAL and
-                        not exclude_tensor_method(name, test_name)):
+                if hasattr(torch, name) and name not in EXCLUDE_FUNCTIONAL:
                     f_args_variable = (self_variable,) + args_variable
                     f_args_tensor = (self_tensor,) + args_tensor
-                    run_functional_checks(self, test_name,
+                    # could run the gradchecks again, but skip since we did it for the methods above.
+                    run_functional_checks(self, test_name, name,
                                           lambda *inputs: getattr(torch, name)(*inputs),
-                                          name not in EXCLUDE_GRADCHECK, f_args_variable, f_args_tensor)
+                                          False, f_args_variable, f_args_tensor)
 
                 # check for correct type of input.data and input.grad.data
                 if not is_inplace:
@@ -2141,7 +2143,7 @@ for test in method_tests:
 
                         try:
                             inplace_output_variable = (
-                                getattr(*inplace_self_variable_copy, inplace_name)(*inplace_args_variable_copy))
+                                getattr(*inplace_self_variable_copy, name=inplace_name)(*inplace_args_variable_copy))
                         except RuntimeError as err:
                             if 'only supports scalar multiplication' in str(err):
                                 return
