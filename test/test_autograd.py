@@ -1553,16 +1553,6 @@ function_tests = [
     (Transpose, (), (torch.rand(L, L), 0, 1)),
     (Transpose, (), (torch.rand(S, S, S), 2, 0), '3d'),
     (Tan, (), (torch.randn(S, S, S).clamp(-1, 1),)),
-    (Reciprocal, (), (torch.rand(S, S, S) + 0.1,)),
-    (CmaxConstant, (), ((S, S, S), 0.5)),
-    (CminConstant, (), ((S, S, S), 0.5)),
-    (Repeat, (), ((S, S, S, S), torch.Size([2, 2, 1, 3, 1, 2])), 'unsqueeze'),
-    (Cumsum, (), ((S, S, S), 0), 'dim0', [1]),
-    (Cumsum, (), ((S, S, S), 1), 'dim1', [1]),
-    (Cumsum, (), ((S,), 0), '1d', [1]),
-    (IndexAdd, (), ((S, S), 0, index_variable(2, S), (2, S))),
-    (IndexCopy, (), ((S, S), 0, index_perm_variable(2, S), (2, S))),
-    (IndexFill, (), ((S, S), 0, index_variable(2, S), 2)),
     (Gather, (), ((M, S), 0, gather_variable((S, S), 1, M, True))),
     # TODO: enable neg dim checks
     (Gather, (), ((M, S), 1, gather_variable((M, S // 2), 0, S, True)), 'dim1'),
@@ -1627,6 +1617,8 @@ method_tests = [
     ('cosh', (S, S, S), ()),
     ('abs', (S, S, S), ()),
     ('clamp', (S, S, S), (0, 1)),
+    ('clamp', (S, S, S), (None, 0.5), 'min'),
+    ('clamp', (S, S, S), (0.5, None), 'max'),
     ('sqrt', torch.rand(S, S, S) + 5e-4, ()),
     ('sin', (S, S, S), ()),
     ('cos', (S, S, S), ()),
@@ -1635,7 +1627,7 @@ method_tests = [
     ('acos', torch.randn(S, S, S).clamp(-0.9, 0.9), ()),
     ('atan', (S, S, S), ()),
     ('atan2', (S, S, S), ((S, S, S),)),
-    ('reciprocal', (S, S, S), ()),
+    ('reciprocal', torch.rand(S, S, S) + 0.1, ()),
     ('round', (S, S, S), ()),
     ('sign', (S, S, S), ()),
     ('trunc', (S, S, S), ()),
@@ -1727,8 +1719,10 @@ method_tests = [
     ('renorm', (S, S, S), (2, 1, 0.5), 'dim', [1]),
     ('renorm', (S, S, S), (1, 2, 3), 'norm_1'),
     ('repeat', (S, S, S, S), (2, 3, 1, 4)),
-    ('cumsum', (S, S, S), (1,)),
-    ('cumsum', (S,), (0,), '1d'),
+    ('repeat', (S, S, S, S), (2, 2, 1, 3, 1, 2), 'unsqueeze'),
+    ('cumsum', (S, S, S), (1,), 'dim0', [0]),
+    ('cumsum', (S, S, S), (1,), 'dim1', [0]),
+    ('cumsum', (S,), (0,), '1d', [0]),
     ('cumprod', (S, S, S), (0,)),
     ('cumprod', (S, S, S), (1,), 'dim1', [0]),
     ('cumprod', (S,), (0,), '1d'),
@@ -1803,6 +1797,9 @@ method_tests = [
     ('dist', (S,), ((S, S, S), 4), '4_broadcast_lhs'),
     ('dist', (S, 1, S), ((S, S), 4), '4_broadcast_all'),
     ('index_select', (S, S, S), (0, index_variable(2, S)), 'dim', [0]),
+    ('index_add', (S, S), (0, index_variable(2, S), (2, S)), 'dim', [0]),
+    ('index_copy', (S, S), (0, index_perm_variable(2, S), (2, S)), 'dim', [0]),
+    ('index_fill', (S, S), (0, index_variable(2, S), 2), 'dim', [0]),
     ('diag', (M, M), (), '2d'),
     ('diag', (M,), (), '1d'),
     ('diag', (M, M), (1,), '2d_1'),
@@ -2090,6 +2087,27 @@ EXCLUDE_GRADCHECK = {
 }
 
 
+def exclude_tensor_method(name, test_name):
+    # there are no tensor equivalents for these (inplace or out)
+    exclude_all_tensor_method_by_test_name = {
+        'test_clamp_min',
+        'test_clamp_max',
+    }
+    # there are no out-of-place tensor equivalents for these
+    exclude_outplace_tensor_method = {
+        'index_add',
+        'index_copy',
+        'index_fill',
+    }
+    if test_name in exclude_all_tensor_method_by_test_name:
+        return True
+    is_rhs_operator = name[:3] == "__r" and name[-2:] == "__"
+    is_inplace = name[-1] == "_" and not is_rhs_operator
+    if not is_inplace and name in exclude_outplace_tensor_method:
+        return True
+    return False
+
+
 def gradgradcheck_method_precision_override(test_name):
     # these are just empirical observations, we should improve
     gradgradcheck_precision_override = {
@@ -2132,11 +2150,12 @@ for test in method_tests:
                 self_tensor = deepcopy(self_variable.data)
                 args_tensor = deepcopy(unpack_variables(args_variable))
                 output_variable = getattr(self_variable, name)(*args_variable)
-                output_tensor = getattr(self_tensor, name)(*args_tensor)
-                if not torch.is_tensor(output_tensor) and not isinstance(output_tensor, tuple):
-                    output_tensor = torch.DoubleTensor((output_tensor,))
-                self.assertEqual(unpack_variables(output_variable), output_tensor)
-                # TODO: check that both have changed after adding all inplace ops
+                if not exclude_tensor_method(name, test_name):
+                    output_tensor = getattr(self_tensor, name)(*args_tensor)
+                    if not torch.is_tensor(output_tensor) and not isinstance(output_tensor, tuple):
+                        output_tensor = torch.DoubleTensor((output_tensor,))
+                    self.assertEqual(unpack_variables(output_variable), output_tensor)
+                    # TODO: check that both have changed after adding all inplace ops
 
                 def apply_method(*inputs):
                     return getattr(inputs[0], name)(*inputs[1:])
@@ -2158,7 +2177,7 @@ for test in method_tests:
                                                       (self_variable,) + args_variable, grad_y,))
 
                 # functional interface tests
-                if hasattr(torch, name) and name not in EXCLUDE_FUNCTIONAL:
+                if hasattr(torch, name) and not exclude_tensor_method(name, test_name):
                     f_args_variable = (self_variable,) + args_variable
                     f_args_tensor = (self_tensor,) + args_tensor
                     output_variable = getattr(torch, name)(*f_args_variable)
