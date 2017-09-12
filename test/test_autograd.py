@@ -1553,7 +1553,6 @@ function_tests = [
     (Concat, (), (0, (1, S, S), (2, S, S), (3, S, S))),
     (Concat, (), (-1, (S, S, 1), (S, S, 2), (S, S, 3)), 'negdim-1'),
     (Concat, (), (-2, (S, 1, S), (S, 2, S), (S, 3, S)), 'negdim-2'),
-    (Resize, (), ((S, S, S), torch.Size([S * S, S]))),
 ]
 
 
@@ -1875,6 +1874,8 @@ method_tests = [
     ('masked_scatter_', (M, M), (Variable(torch.ByteTensor(M, M).bernoulli_(), requires_grad=False), (M, M))),
     ('masked_scatter_', (M, M), (Variable(torch.ByteTensor(M,).bernoulli_(), requires_grad=False), (M, M)),
      'broadcast_rhs'),
+    ('resize', (S, S, S), (torch.Size([S * S, S])), 'fewer_dims'),
+    ('resize_as', (S, S, S), (Variable(torch.randn((S * S, S)), requires_grad=False),)),
     ('sort', (S, M, S), ()),
     ('sort', (S, M, S), (1,), 'dim'),
     ('sort', (S, M, S), (1, True), 'dim_desc'),
@@ -1883,10 +1884,6 @@ method_tests = [
     ('topk', (S, M, S), (3, 1, True), 'dim_desc'),
     ('topk', (S, M, S), (3, 1, True, True), 'dim_desc_sort'),
 ]
-# TODO: mm, bmm, mv, ger
-# TODO: sort, (problem with indices)
-# TODO: indexAdd, indexCopy, indexFill
-# TODO: resize, resize_as (tensors only have resize_ and resize_as_)
 # TODO: clamp with min/max
 
 
@@ -2096,6 +2093,8 @@ def exclude_tensor_method(name, test_name):
         'index_add',
         'index_copy',
         'index_fill',
+        'resize',
+        'resize_as',
         'scatter',
         'scatter_add',
     }
