@@ -2143,7 +2143,7 @@ for test in method_tests:
 
                         try:
                             inplace_output_variable = (
-                                getattr(*inplace_self_variable_copy, name=inplace_name)(*inplace_args_variable_copy))
+                                getattr(inplace_self_variable_copy[0], inplace_name)(*inplace_args_variable_copy))
                         except RuntimeError as err:
                             if 'only supports scalar multiplication' in str(err):
                                 return
