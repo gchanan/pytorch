@@ -2125,6 +2125,19 @@ def gradgradcheck_method_precision_override(test_name):
             override = {'atol': override['atol'] * S * S, 'rtol': override['atol'] * S * S}
     return override
 
+
+def run_grad_and_gradgrad_checks(test_case, test_name, apply_method, output_variable, input_variables):
+    test_case.assertTrue(gradcheck(apply_method, input_variables, eps=1e-6, atol=PRECISION))
+
+    grad_y = generate_gradoutput(output_variable, non_contiguous=True)
+    gradgradcheck_precision_override = gradgradcheck_method_precision_override(test_name)
+    if gradgradcheck_precision_override is not None:
+        atol = gradgradcheck_precision_override['atol']
+        rtol = gradgradcheck_precision_override['rtol']
+        test_case.assertTrue(gradgradcheck(apply_method, input_variables, grad_y, atol=atol, rtol=rtol))
+    else:
+        test_case.assertTrue(gradgradcheck(apply_method, input_variables, grad_y,))
+
 for test in method_tests:
     name, self_size, args = test[:3]
     basic_test_name = 'test_' + name + ('_' + test[3] if len(test) >= 4 else '')
@@ -2156,28 +2169,14 @@ for test in method_tests:
                     self.assertEqual(unpack_variables(output_variable), output_tensor)
                     # TODO: check that both have changed after adding all inplace ops
 
-                def apply_method(*inputs):
-                    return getattr(inputs[0], name)(*inputs[1:])
-
                 if not is_inplace and name not in EXCLUDE_GRADCHECK:
-                    self.assertTrue(gradcheck(apply_method,
-                                              (self_variable,) + args_variable,
-                                              eps=1e-6, atol=PRECISION))
-
-                    grad_y = generate_gradoutput(output_variable, non_contiguous=True)
-                    gradgradcheck_precision_override = gradgradcheck_method_precision_override(test_name)
-                    if gradgradcheck_precision_override is not None:
-                        atol = gradgradcheck_precision_override['atol']
-                        rtol = gradgradcheck_precision_override['rtol']
-                        self.assertTrue(gradgradcheck(apply_method,
-                                        (self_variable,) + args_variable, grad_y, atol=atol, rtol=rtol))
-                    else:
-                        self.assertTrue(gradgradcheck(apply_method,
-                                                      (self_variable,) + args_variable, grad_y,))
+                    run_grad_and_gradgrad_checks(self, test_name,
+                                                 lambda *inputs: getattr(inputs[0], name)(*inputs[1:]),
+                                                 output_variable, (self_variable,) + args_variable)
 
                 # functional interface tests
-                if (hasattr(torch, name) and name not in EXCLUDE_FUNCTIONAL
-                        and not exclude_tensor_method(name, test_name)):
+                if (hasattr(torch, name) and name not in EXCLUDE_FUNCTIONAL and
+                        not exclude_tensor_method(name, test_name)):
                     f_args_variable = (self_variable,) + args_variable
                     f_args_tensor = (self_tensor,) + args_tensor
                     output_variable = getattr(torch, name)(*f_args_variable)
@@ -2185,6 +2184,14 @@ for test in method_tests:
                     if not torch.is_tensor(output_tensor) and not isinstance(output_tensor, tuple):
                         output_tensor = torch.DoubleTensor((output_tensor,))
                     self.assertEqual(unpack_variables(output_variable), output_tensor)
+
+                    if name not in EXCLUDE_GRADCHECK:
+                        run_grad_and_gradgrad_checks(self, test_name, lambda *inputs: getattr(torch, name)(*inputs),
+                                                     output_variable, f_args_variable)
+                    if isinstance(output_variable, torch.autograd.Variable):
+                        output_variable.backward(torch.randn(*output_variable.size()).type_as(output_variable.data))
+                        self.assertTrue(type(self_variable.data) == type(self_variable.grad.data))
+                        self.assertTrue(self_variable.size() == self_variable.grad.size())
 
                 # check for correct type of input.data and input.grad.data
                 if not is_inplace:
