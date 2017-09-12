@@ -1982,18 +1982,6 @@ def generate_gradoutput(dummy_out, non_contiguous=False):
 
     return grad_y
 
-ignore_inplace = set((
-    'test_DivConstantFunction_by_tensor',
-
-))
-
-# these are just empirical observations, we should improve
-gradgradcheck_precision_override = {
-    'test_NormFunction_1_5': {'atol': 1.5e-2, 'rtol': 1e-2},
-    'test_NormFunction_2': {'atol': 2e-2, 'rtol': 1e-2},
-    'test_NormFunction_3': {'atol': 5e-2, 'rtol': 1e-2},
-}
-
 EXCLUDE_FUNCTIONAL = {
     'addmm',
     'addbmm',
