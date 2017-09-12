@@ -2177,7 +2177,8 @@ for test in method_tests:
                                                       (self_variable,) + args_variable, grad_y,))
 
                 # functional interface tests
-                if hasattr(torch, name) and not exclude_tensor_method(name, test_name):
+                if (hasattr(torch, name) and name not in EXCLUDE_FUNCTIONAL
+                        and not exclude_tensor_method(name, test_name)):
                     f_args_variable = (self_variable,) + args_variable
                     f_args_tensor = (self_tensor,) + args_tensor
                     output_variable = getattr(torch, name)(*f_args_variable)
