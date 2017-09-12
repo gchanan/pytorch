@@ -1550,9 +1550,6 @@ L = 20
 M = 10
 S = 5
 function_tests = [
-    (Transpose, (), (torch.rand(L, L), 0, 1)),
-    (Transpose, (), (torch.rand(S, S, S), 2, 0), '3d'),
-    (Tan, (), (torch.randn(S, S, S).clamp(-1, 1),)),
     (Concat, (), (0, (1, S, S), (2, S, S), (3, S, S))),
     (Concat, (), (-1, (S, S, 1), (S, S, 2), (S, S, 3)), 'negdim-1'),
     (Concat, (), (-2, (S, 1, S), (S, 2, S), (S, 3, S)), 'negdim-2'),
@@ -1593,6 +1590,8 @@ method_tests = [
     ('pow', torch.rand(S, S, S) + 1e-3, (3.14,), 'constant'),
     ('__rpow__', torch.rand(S, S, S) + 1e-3, (3.14,), 'constant'),
     ('transpose', (1, 2, 3), (1, 2), 'dim', [0, 1]),
+    ('transpose', torch.rand(L, L), (0, 1), '2d'),
+    ('transpose', torch.rand(S, S, S), (2, 0), '3d'),
     ('t', (1, 2), ()),
     ('view', (S, S, S), (S * S, S),),
     ('view_as', (S, S, S), (Variable(torch.rand(S * S, S), requires_grad=False),)),
@@ -1615,7 +1614,7 @@ method_tests = [
     ('sqrt', torch.rand(S, S, S) + 5e-4, ()),
     ('sin', (S, S, S), ()),
     ('cos', (S, S, S), ()),
-    ('tan', (S, S, S), ()),
+    ('tan', torch.randn(S, S, S).clamp(-1, 1), ()),
     ('asin', torch.randn(S, S, S).clamp(-0.9, 0.9), ()),
     ('acos', torch.randn(S, S, S).clamp(-0.9, 0.9), ()),
     ('atan', (S, S, S), ()),
