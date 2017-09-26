@@ -89,7 +89,9 @@
 
 - name: btrifact
 - name: btrisolve
-- name: cat
+- name: cat(TensorList tensors, int64_t dim=0)
+  tensors: grad
+
 - name: cauchy
 - name: ceil
 

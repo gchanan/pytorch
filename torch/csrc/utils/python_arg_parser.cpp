@@ -21,7 +21,7 @@ static std::unordered_map<std::string, ParameterType> type_map = {
   {"IntList", ParameterType::INT_LIST},
   {"Generator", ParameterType::GENERATOR},
   {"bool", ParameterType::BOOL},
-  {"Storage", ParameterType::STORAGE}
+  {"Storage", ParameterType::STORAGE},
 };
 
 FunctionParameter::FunctionParameter(const std::string& fmt, bool keyword_only)

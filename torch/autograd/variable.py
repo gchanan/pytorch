@@ -310,18 +310,18 @@ class Variable(_C._VariableBase):
     def is_same_size(self, other_var):
         return self.data.is_same_size(other_var.data)
 
-    def _add(self, other, inplace):
-        if isinstance(other, Variable):
-            return Add.apply(self, other, inplace)
-        else:
-            assert not torch.is_tensor(other)
-            return AddConstant.apply(self, other, inplace)
+    #def _add(self, other, inplace):
+    #    if isinstance(other, Variable):
+    #        return Add.apply(self, other, inplace)
+    #    else:
+    #        assert not torch.is_tensor(other)
+    #        return AddConstant.apply(self, other, inplace)
 
-    def add(self, other):
-        return self._add(other, False)
+    #def add(self, other):
+    #    return self._add(other, False)
 
-    def add_(self, other):
-        return self._add(other, True)
+    #def add_(self, other):
+    #    return self._add(other, True)
 
     def _sub(self, other, inplace):
         if isinstance(other, Variable):
@@ -576,9 +576,9 @@ class Variable(_C._VariableBase):
     def _blas(self, cls, args, inplace):
         return self._static_blas(cls, (self,) + args, inplace)
 
-    def mm(self, matrix):
-        output = Variable(self.data.new(self.data.size(0), matrix.data.size(1)))
-        return Addmm.apply(output, self, matrix, 0, 1, True)
+    #def mm(self, matrix):
+    #    output = Variable(self.data.new(self.data.size(0), matrix.data.size(1)))
+    #    return Addmm.apply(output, self, matrix, 0, 1, True)
 
     def bmm(self, batch):
         output = Variable(self.data.new(self.data.size(0), self.data.size(1),
@@ -599,11 +599,11 @@ class Variable(_C._VariableBase):
     def resize_as(self, variable):
         return Resize.apply(self, variable.size())
 
-    def addmm(self, *args):
-        return self._blas(Addmm, args, False)
+    #def addmm(self, *args):
+    #    return self._blas(Addmm, args, False)
 
-    def addmm_(self, *args):
-        return self._blas(Addmm, args, True)
+    #def addmm_(self, *args):
+    #    return self._blas(Addmm, args, True)
 
     def addbmm(self, *args):
         return self._blas(Addbmm, args, False)
@@ -731,8 +731,8 @@ class Variable(_C._VariableBase):
             raise RuntimeError("t() expects a 2D Variable, but self is {}D".format(self.dim()))
         return Transpose.apply(self, 0, 1)
 
-    def transpose(self, dim1, dim2):
-        return Transpose.apply(self, dim1, dim2)
+    #def transpose(self, dim1, dim2):
+    #    return Transpose.apply(self, dim1, dim2)
 
     def select(self, dim, _index):
         dim = dim if dim >= 0 else dim + self.dim()
@@ -903,9 +903,9 @@ class Variable(_C._VariableBase):
 
     class _torch(object):
 
-        @staticmethod
-        def cat(iterable, dim=0):
-            return Concat.apply(dim, *iterable)
+        #@staticmethod
+        #def cat(iterable, dim=0):
+        #    return Concat.apply(dim, *iterable)
 
         @staticmethod
         def normal(means, std=1):
@@ -930,9 +930,9 @@ class Variable(_C._VariableBase):
                 tensors = args
             return cls.apply(*(tensors + (alpha, beta, inplace)))
 
-        @classmethod
-        def addmm(cls, *args):
-            return cls._blas(Addmm, args, False)
+        #@classmethod
+        #def addmm(cls, *args):
+        #    return cls._blas(Addmm, args, False)
 
         @classmethod
         def addbmm(cls, *args):

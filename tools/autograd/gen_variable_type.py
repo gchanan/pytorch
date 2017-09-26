@@ -52,6 +52,9 @@ return make_variable(baseType->${method_prefix}${api_name}(${unpacked_args}));""
 UNWRAP_TENSOR = CodeTemplate("""\
 auto& ${arg_name}_ = checked_unpack(${arg_name}, "${arg_name}", ${arg_pos});""")
 
+UNWRAP_TENSORLIST = CodeTemplate("""\
+auto ${arg_name}_ = checked_unpack_list(${arg_name}, "${arg_name}", ${arg_pos});""")
+
 FUNCTION_DECLARATION = CodeTemplate("""\
 struct ${op} : public Function {
   using Function::Function;
@@ -123,16 +126,37 @@ static PyObject * THPVariable_${name}(PyObject* self, PyObject* args, PyObject* 
 }
 """)
 
-PY_VARIABLE_CASE = CodeTemplate("""\
+PY_VARIABLE_CASE_WITH_SELF = CodeTemplate("""\
 ${cond} (r.idx == ${i}) {
-  return wrap(${name}(${args_with_self}));
+  return wrap(dispatch_${name}(${args_with_self}));
 """)
 
-PY_VARIABLE_DISPATCH = CodeTemplate("""\
-inline ${return_type} ${name}(${formal_args}) {
+PY_VARIABLE_CASE_WITHOUT_SELF = CodeTemplate("""\
+${cond} (r.idx == ${i}) {
+  return wrap(dispatch_${name}(${args_without_self}));
+""")
+
+PY_VARIABLE_SELF_DISPATCH = CodeTemplate("""\
+inline ${return_type} dispatch_${name}(${formal_args}) {
   ${AutoNoGIL}
   ${AutoGPU}
   return self.${name}(${dispatch_args});
+}
+""")
+
+PY_VARIABLE_SELF_DISPATCH = CodeTemplate("""\
+inline ${return_type} dispatch_${name}(${formal_args}) {
+  ${AutoNoGIL}
+  ${AutoGPU}
+  return self.${name}(${dispatch_args});
+}
+""")
+
+PY_VARIABLE_TENSORLIST_DISPATCH = CodeTemplate("""\
+inline ${return_type} dispatch_${name}(${formal_args}) {
+  ${AutoNoGIL}
+  ${AutoGPU}
+  return at::${name}(${dispatch_args});
 }
 """)
 
@@ -141,7 +165,22 @@ static PyObject * THPVariable_${name}(PyObject* self, PyObject* args)
 {
   HANDLE_TH_ERRORS
   auto& self_ = reinterpret_cast<THPVariable*>(self)->cdata;
-  return wrap(${name}(self_));
+  return wrap(dispatch_${name}(self_));
+  END_HANDLE_TH_ERRORS
+}
+""")
+
+PY_VARIABLE_METHOD_STATIC = CodeTemplate("""\
+static PyObject * THPVariable_${name}(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+  HANDLE_TH_ERRORS
+  static PythonArgParser parser({
+    ${prototypes}
+  });
+  PyObject* parsed_args[${max_args}];
+  auto r = parser.parse(args, kwargs, parsed_args);
+  ${dispatch}
+  Py_RETURN_NONE;
   END_HANDLE_TH_ERRORS
 }
 """)
@@ -394,6 +433,10 @@ def create_variable_type(top_env, aten_declarations):
                 env = {'arg_name': arg['name'], 'arg_pos': i}
                 body.append(UNWRAP_TENSOR.substitute(env))
                 unpacked_args.append(arg['name'] + '_')
+            elif arg['dynamic_type'] == 'TensorList':
+                env = {'arg_name': arg['name'], 'arg_pos': i}
+                body.append(UNWRAP_TENSORLIST.substitute(env))
+                unpacked_args.append(arg['name'] + '_')
             else:
                 unpacked_args.append(arg['name'])
         option['unpacked_args'] = unpacked_args
@@ -458,6 +501,7 @@ def create_python_bindings(top_env, python_functions):
 
     unpack_methods = {
         'int64_t': 'toInt64',
+        'int': 'toInt',
         'bool': 'toBool'
     }
 
@@ -468,25 +512,32 @@ def create_python_bindings(top_env, python_functions):
         env = {}
 
         args = []
-        formal_args = ['Tensor & self']
         python_params = args_without_self(option['python_arguments'])
+        has_self = python_params != option['python_arguments']
+        formal_args = ['Tensor & self'] if has_self else []
+        #print("args", option['python_arguments'], python_params == option['python_arguments'])
         for arg_idx, arg in enumerate(python_params):
             unpack = unpack_methods.get(arg['type'], arg['type'].lower())
             args.append('r.{}({})'.format(unpack, arg_idx))
             dispatch_type = arg['type']
-            dispatch_type = dispatch_type.replace('Tensor', 'const Tensor &')
+            dispatch_type = 'const Tensor &' if dispatch_type == 'Tensor' else dispatch_type
             formal_args.append('{} {}'.format(dispatch_type, arg['name']))
 
         env['i'] = i
         env['dispatch_args'] = [arg for arg in option['call_args'] if arg != 'self']
+        env['args_without_self'] = args
         env['args_with_self'] = ['self_'] + args
         env['AutoNoGIL'] = 'AutoNoGIL no_gil;'
-        env['AutoGPU'] = 'AutoGPU auto_gpu(self);'
+        env['AutoGPU'] = 'AutoGPU auto_gpu(self);' if has_self else 'AutoGPU auto_gpu(tensors);'
         env['formal_args'] = formal_args
         env['cond'] = 'if' if i == 0 else '} else if'
         env = nested_dict(env, option)
-        py_method_dispatch.append(PY_VARIABLE_DISPATCH.substitute(env))
-        return PY_VARIABLE_CASE.substitute(env)
+        if has_self:
+            py_method_dispatch.append(PY_VARIABLE_SELF_DISPATCH.substitute(env))
+            return PY_VARIABLE_CASE_WITH_SELF.substitute(env)
+        else:
+            py_method_dispatch.append(PY_VARIABLE_TENSORLIST_DISPATCH.substitute(env))
+            return PY_VARIABLE_CASE_WITHOUT_SELF.substitute(env)
 
     def process_option(name, options):
         env = {}
@@ -509,14 +560,22 @@ def create_python_bindings(top_env, python_functions):
         dispatch.append('}')
         env['dispatch'] = dispatch
 
-        if len(options) == 1 and len(options[0]['args']) == 1:
+        for o in options:
+            print("option", o)
+            print("option2", o.base, o.parent)
+        has_self = 'self' in options[0]['args']
+        if len(options) == 1 and len(options[0]['args']) == 1 and has_self:
             tmpl = PY_VARIABLE_METHOD_NOARGS
             env['flags'] = 'METH_NOARGS'
-        else:
+        elif has_self:
             tmpl = PY_VARIABLE_METHOD_VARARGS
             env['flags'] = 'METH_VARARGS | METH_KEYWORDS'
+        else:
+            tmpl = PY_VARIABLE_METHOD_STATIC
+            env['flags'] = 'METH_STATIC | METH_VARARGS | METH_KEYWORDS'
 
         py_methods.append(tmpl.substitute(env))
+        print("adding method def", PY_VARIABLE_METHOD_DEF.substitute(env))
         py_method_defs.append(PY_VARIABLE_METHOD_DEF.substitute(env))
 
     for name, options in python_functions.items():
@@ -569,6 +628,7 @@ def gen_variable_type(declarations, out):
         options_by_signature[signature].append(option)
         derivative = derivatives_by_signature.get(signature)
         option['derivative'] = derivative
+        print("python_functions", name, derivative, name not in python_functions)
         if derivative is not None:
             if name not in python_functions:
                 python_functions[name] = []

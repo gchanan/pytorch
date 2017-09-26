@@ -74,6 +74,25 @@ Tensor & VariableType::checked_unpack(const Tensor & t, const char * name, int p
    toString(),t.type().toString(),pos,name);
 }
 
+std::vector<at::Tensor> VariableType::checked_unpack_list(at::TensorList tl, const char *name, int pos) const {
+ std::vector<at::Tensor> ret(tl.size());
+ for (size_t i = 0; i < tl.size(); ++i) {
+   const auto &t = tl[i];
+   if(!t.defined()) {
+     runtime_error("Expected a Tensor of type %s but found an undefined Tensor for argument #%d '%s'",
+       toString(),pos,name);
+   }
+   if (&t.type() == this) {
+     ret[i] = static_cast<VariableImpl*>(t.pImpl)->data;
+   } else {
+   runtime_error("Expected object of type %s but found type %s for argument #%d '%s'",
+     toString(),t.type().toString(),pos,name);
+   }
+  }
+  return ret;
+}
+
+
 Variable VariableType::as_variable(Tensor tensor) const {
   return make_variable(std::move(tensor));
 }

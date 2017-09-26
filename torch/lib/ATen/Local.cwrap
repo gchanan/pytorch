@@ -80,5 +80,5 @@
     - arg: THTensor* self
       output: True
     - TensorList tensors
-    - int dim
+    - long dim
 ]]

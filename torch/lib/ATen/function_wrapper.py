@@ -60,11 +60,11 @@ inline ${return_type} Tensor::${api_name}(${method_formals})${const_mark} {
 """)
 # 9. add a method declaration in Functions.h
 FUNCTION_DECLARATION = CodeTemplate("""\
-static inline ${return_type} ${api_name}(${formals});
+inline ${return_type} ${api_name}(${formals});
 """)
 # 10. add a method definition in Functions.cpp
 FUNCTION_DEFINITION = CodeTemplate("""\
-static inline ${return_type} ${api_name}(${formals}) {
+inline ${return_type} ${api_name}(${formals}) {
     return ${inferred_type}.${api_name}(${actuals});
 }
 """)
