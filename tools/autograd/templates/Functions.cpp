@@ -17,7 +17,7 @@ Tensor maybe_multiply(const Tensor &t, const Scalar &s) {
   if (is_one) {
     return t;
   } else {
-    t * s;
+    return t * s;
   }
 }
 
