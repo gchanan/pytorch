@@ -6,7 +6,7 @@ using namespace at;
 
 namespace torch { namespace autograd {
 
-Tensor maybe_multiply(const Tensor &t, const Scalar &s) {
+Tensor maybe_multiply(const Tensor & t, const Scalar & s) {
   bool is_one = false;
   if (s.isFloatingPoint()) {
     is_one = s.toDouble() == 1;
@@ -87,7 +87,7 @@ Tensor addmm_self_backward(const Tensor & grad, const Scalar &beta) {
   return maybe_multiply(grad, beta);
 }
 
-Tensor addmm_mat1_backward(const Tensor & grad, const Tensor & mat1, const Tensor & mat2, const Scalar &alpha) {
+Tensor addmm_mat1_backward(const Tensor & grad, const Tensor & mat1, const Tensor & mat2, const Scalar & alpha) {
   auto mat1Strides = mat1.strides();
   auto mat1Sizes = mat1.sizes();
   if (mat1Strides[0] == 1 && mat1Strides[1] == mat1Sizes[0]) {
@@ -97,7 +97,7 @@ Tensor addmm_mat1_backward(const Tensor & grad, const Tensor & mat1, const Tenso
   }
 }
 
-Tensor addmm_mat2_backward(const Tensor & grad, const Tensor & mat1, const Tensor & mat2, const Scalar &alpha) {
+Tensor addmm_mat2_backward(const Tensor & grad, const Tensor & mat1, const Tensor & mat2, const Scalar & alpha) {
   auto mat2Strides = mat2.strides();
   auto mat2Sizes = mat2.sizes();
 
