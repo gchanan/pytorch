@@ -105,6 +105,17 @@ Tensor addmm_mat2_backward(const Tensor & grad, const Tensor & mat1, const Tenso
   }
 }
 
+variable_list cat_tensors_backward(const Tensor & grad, const std::vector<int64_t> &sizes, int64_t dim) {
+  variable_list grad_inputs(sizes.size());
+  int64_t accumulate = 0;
+  for (size_t i = 0; i < sizes.size(); ++i) {
+    auto size = sizes[i];
+    accumulate += size;
+    grad_inputs[i] = grad.narrow(dim, accumulate - size, size);
+  }
+  return grad_inputs;
+}
+
 ${autograd_function_definitions}
 
 }} // namespace torch::autograd

@@ -87,7 +87,10 @@
 
 - name: btrifact
 - name: btrisolve
-- name: cat
+
+- name: cat(TensorList tensors, int64_t dim=0)
+  tensors: cat_tensors_backward(grad, tensors.sizes(dim), dim)
+
 - name: cauchy
 - name: ceil
 
