@@ -86,7 +86,7 @@ if (should_compute_output(${i})) {
 """)
 
 DERIVATIVE_TENSORLIST = CodeTemplate("""\
-if (should_compute_output(${i})) {
+if (should_compute_any_outputs()) {
   grad_inputs = ${derivative};
 }
 """)
@@ -274,6 +274,7 @@ def load_derivatives(path):
         option['fallthrough'] = defn.get('fallthrough', False)
         option['op'] = name[0].upper() + name[1:] + 'Backward'
 
+        has_tensorlist_arg = False
         derivatives = []
         for param in params:
             if param == '' or param == '*':
@@ -287,6 +288,7 @@ def load_derivatives(path):
             arg['name'] = name
             option['python_arguments'].append(arg)
 
+            arg_sizes_found = []
             if name in defn:
                 saved = []
                 formula = defn[name]
@@ -296,11 +298,31 @@ def load_derivatives(path):
                         sizes_name = arg['name'] + '_sizes'
                         formula = formula.replace(size_str, sizes_name)
                     # turn x.sizes(y) into x_argsizes_y
-                    formula = re.sub(r"(\w+).sizes\((\w+)\)", r"\1_argsizes_\2", formula)
+                    def argsizes_repl(matchobj):
+                        argsizes_name = matchobj.group(1) + "_argsizes_" + matchobj.group(2)
+                        arg_sizes_found.append(argsizes_name)
+                        return argsizes_name
+                    formula = re.sub(r"(\w+).sizes\((\w+)\)", argsizes_repl, formula)
 
                 derivatives.append(formula)
                 arg['derivative'] = formula
-                option['num_inputs'] += 1
+                if has_tensorlist_arg:
+                    raise RuntimeError("TensorList argument already present; no further Tensor or TensorList"
+                                       "arguments are currently supported")
+                else:
+                    if arg['type'] == 'TensorList':
+                        if option['num_inputs'] != 0:
+                            raise RuntimeError("Tensor argument already present; no further TensorList"
+                                               "arguments are currently supported")
+                        has_tensorlist_arg = True
+                        if len(arg_sizes_found) == 0:
+                            option['num_inputs'] = "{}.size()".format(name)
+                        elif len(arg_sizes_found) == 1:
+                            option['num_inputs'] = "{}.size()".format(arg_sizes_found[0])
+                        else:
+                            raise RuntimeError("found multiple arg sizes, which isn't currently supported")
+                    else:
+                        option['num_inputs'] += 1
 
         if option['aten'] is not None:
             option['call_args'] = split_name_params(option['aten'])[1]
@@ -320,9 +342,9 @@ def load_derivatives(path):
                     'type': 'IntList',
                 })
             for f in derivatives:
-                for g in re.findall(r"{}_argsizes_\w+".format(name), f):
+                for match_name in re.findall(r"{}_argsizes_\w+".format(name), f):
                     saved.append({
-                        'name': g,
+                        'name': match_name,
                         'type': 'IntList',
                     })
         option['saved'] = saved

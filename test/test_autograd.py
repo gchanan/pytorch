@@ -1994,6 +1994,7 @@ method_tests = [
     ('permute', (1, 2, 3, 4), (0, 2, 3, 1)),
     ('select', (S, S, S), (1, 2), 'dim', [0]),
     ('narrow', (S, S, S), (1, 2, 2), 'dim', [0]),
+    ('unnarrow', (S, S, S), (torch.Size([M, S, S]), 0, 2), 'dim', [1]),
     ('squeeze', (S, 1, S, 1), ()),
     ('squeeze', (S, 1, S, 1), (1,), '1_dim', [0]),
     ('squeeze', (S, 1, S, 1), (2,), 'not_1_dim', [0]),
@@ -2131,6 +2132,8 @@ def exclude_tensor_method(name, test_name):
     exclude_all_tensor_method_by_test_name = {
         'test_clamp_min',
         'test_clamp_max',
+        'test_unnarrow_dim',
+        'test_unnarrow_dim_neg0',
     }
     # there are no out-of-place tensor equivalents for these
     exclude_outplace_tensor_method = {

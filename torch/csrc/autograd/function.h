@@ -115,6 +115,15 @@ struct Function : std::enable_shared_from_this<Function> {
     return fn && fn->is_executable;
   }
 
+  inline bool should_compute_any_outputs() const {
+    for (size_t i = 0; i < next_functions.size(); ++i) {
+      if (should_compute_output((int)i)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   inline void set_flags(FunctionFlags&& flags) {
     is_executable = flags.is_executable;
     next_functions = std::move(flags.next_functions);

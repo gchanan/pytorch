@@ -2,7 +2,9 @@
 
 // ${generated_comment}
 
-using namespace at;
+using at::Tensor;
+using at::Scalar;
+using at::IntList;
 
 namespace torch { namespace autograd {
 
@@ -63,10 +65,6 @@ Tensor cumsum_backward(const Tensor & x, int64_t dim) {
   ret -= ret_sum.expand(ret.sizes());
   ret += x;
   return ret;
-}
-
-Tensor unnarrow(const Tensor & self, IntList sizes, int64_t dimension, int64_t offset) {
-  throw std::runtime_error("unnarrow: not yet implemented");
 }
 
 Tensor unsqueeze_to(const Tensor & self, IntList sizes) {
