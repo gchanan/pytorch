@@ -65,6 +65,26 @@
 ]]
 
 [[
+  name: unnarrow
+  variants: [method,function]
+  return: argument 0
+  arguments:
+    - arg: THTensor* result
+      output: True
+    - THTensor* self
+    - THSize* size
+    - arg: int64_t dimension
+      wrap_dim: self
+    - int64_t offset
+  aten_custom_call: |
+    int64_t ndim = self.dim();
+    AT_ASSERT(ndim > 0, "unnarrow() cannot be applied to a 0-dim tensor.");
+    ${THTensor}_zeros(${state,}result_->tensor, size_);
+    auto narrowed_result = result.narrow(dimension, offset, self.size(dimension));
+    narrowed_result.copy_(self);
+]]
+
+[[
   name: assign_
   cname: copy
   cpu_half: True
