@@ -104,5 +104,5 @@
       output: True
     - TensorList tensors
     - arg: int64_t dim
-      wrap_dim: self
+      wrap_dim: tensors
 ]]

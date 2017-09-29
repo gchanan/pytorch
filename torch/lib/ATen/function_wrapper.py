@@ -578,9 +578,9 @@ def create_derived(backend_type_env, declarations):
                 wrap_dim_params = wrap_dim_arg.split("+")
                 wrap_dim_params[0] = wrap_dim_params[0] + "_"
                 wrap_dim_target = wrap_dim_params[0]
-                wrap_dim_params[0] = "{}->dim()".format(wrap_dim_target)
-                wrap_dim_expr = "+".join(wrap_dim_params)
-                body.append("{} = maybe_wrap_dim({}, {});".format(arg['name'], arg['name'], wrap_dim_expr))
+                wrap_dim_toadd = 0 if len(wrap_dim_params) == 1 else wrap_dim_params[1]
+                body.append("{} = maybe_wrap_dim({}, {}, {});"
+                            .format(arg['name'], arg['name'], wrap_dim_target, wrap_dim_toadd))
 
             # only generated checked casts the first time we see it
             if not arg['name'] in seen_names and requires_checked_cast(arg):
