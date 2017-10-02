@@ -51,36 +51,4 @@ static inline std::vector<TH*> tensor_list_checked_cast(ArrayRef<TBase> tensors,
   return casted;
 }
 
-static inline int64_t maybe_wrap_dim(int64_t dim, int64_t dim_post_expr) {
-  if (dim_post_expr <= 0) {
-    std::ostringstream oss;
-    oss << "dimension specified as " << dim << " but tensor has no dimensions";
-    throw std::runtime_error(oss.str());
-  }
-  if (dim < -(dim_post_expr) || dim >= (dim_post_expr)) {
-    std::ostringstream oss;
-    oss << "dimension out of range (expected to be in range of [" << -(dim_post_expr)
-        << ", " << (dim_post_expr)-1 << "], but got " << dim << ")",
-    throw std::runtime_error(oss.str());
-  }
-  if (dim  < 0) dim += dim_post_expr;
-  return dim;
-}
-
-// we need both T/TH* versions because checked_cast (called on a Tensor) returns a T*,
-// but tensor_list_checked_cast (called on a TensorList) returns a TH*, which don't have
-// a uniform way of getting the dimension.
-template<typename T>
-static inline int64_t maybe_wrap_dim(int64_t dim, T *tensor, int64_t to_add) {
-  return maybe_wrap_dim(dim, tensor->dim() + to_add);
-}
-
-template<typename TH>
-static inline int64_t maybe_wrap_dim(int64_t dim, const std::vector<TH*> &tensors, int64_t to_add) {
-  if (tensors.size() == 0) {
-    throw std::runtime_error("cannot wrap dimension of empty TensorList");
-  }
-  return maybe_wrap_dim(dim, tensors[0]->nDimension + to_add);
-}
-
 } // at
