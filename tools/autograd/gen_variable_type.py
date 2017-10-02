@@ -297,6 +297,7 @@ def load_derivatives(path):
                     if size_str in formula:
                         sizes_name = arg['name'] + '_sizes'
                         formula = formula.replace(size_str, sizes_name)
+
                     # turn x.sizes(y) into x_argsizes_y
                     def argsizes_repl(matchobj):
                         argsizes_name = matchobj.group(1) + "_argsizes_" + matchobj.group(2)
