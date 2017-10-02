@@ -274,7 +274,7 @@ def load_derivatives(path):
         option['fallthrough'] = defn.get('fallthrough', False)
         option['op'] = name[0].upper() + name[1:] + 'Backward'
 
-        has_tensorlist_arg = False
+        arg_sizes_found = []
         derivatives = []
         for param in params:
             if param == '' or param == '*':
@@ -288,7 +288,6 @@ def load_derivatives(path):
             arg['name'] = name
             option['python_arguments'].append(arg)
 
-            arg_sizes_found = []
             if name in defn:
                 saved = []
                 formula = defn[name]
@@ -300,30 +299,21 @@ def load_derivatives(path):
 
                     # turn x.sizes(y) into x_argsizes_y
                     def argsizes_repl(matchobj):
-                        argsizes_name = matchobj.group(1) + "_argsizes_" + matchobj.group(2)
-                        arg_sizes_found.append(argsizes_name)
+                        if arg['type'] != 'TensorList':
+                            raise RuntimeError("sizes(arg) calls currently only supported on a TensorList")
+                        argsizes_name = arg['name'] + "_argsizes_" + matchobj.group(1)
+                        arg_sizes_found.append(argsizes_name + ".size()")
                         return argsizes_name
-                    formula = re.sub(r"(\w+).sizes\((\w+)\)", argsizes_repl, formula)
+                    formula = re.sub(arg['name'] + r".sizes\((\w+)\)", argsizes_repl, formula)
 
                 derivatives.append(formula)
                 arg['derivative'] = formula
-                if has_tensorlist_arg:
-                    raise RuntimeError("TensorList argument already present; no further Tensor or TensorList"
-                                       "arguments are currently supported")
-                else:
-                    if arg['type'] == 'TensorList':
-                        if option['num_inputs'] != 0:
-                            raise RuntimeError("Tensor argument already present; no further TensorList"
-                                               "arguments are currently supported")
-                        has_tensorlist_arg = True
-                        if len(arg_sizes_found) == 0:
-                            option['num_inputs'] = "{}.size()".format(name)
-                        elif len(arg_sizes_found) == 1:
-                            option['num_inputs'] = "{}.size()".format(arg_sizes_found[0])
-                        else:
-                            raise RuntimeError("found multiple arg sizes, which isn't currently supported")
-                    else:
-                        option['num_inputs'] += 1
+                if arg['type'] != "TensorList":
+                    option['num_inputs'] += 1
+
+        if arg_sizes_found:
+            option['num_inputs'] = ("+".join(arg_sizes_found) +
+                                    "" if option['num_inputs'] == 0 else " + " + str(option['num_inputs']))
 
         if option['aten'] is not None:
             option['call_args'] = split_name_params(option['aten'])[1]
