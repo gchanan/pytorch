@@ -156,6 +156,7 @@ PY_FUNCTIONS_CPP = CodeTemplate.from_file(template_path + '/python_functions.cpp
 
 derivatives_path = os.path.join(os.path.dirname(__file__), 'derivatives.yaml')
 deprecated_path = os.path.join(os.path.dirname(__file__), 'deprecated.yaml')
+aten_binding_path = os.path.join(os.path.dirname(__file__), 'binding.yaml')
 
 # Functions with these return types delegate completely to the underlying
 # base at::Type
@@ -172,18 +173,26 @@ MANUAL_IMPLEMENTATIONS = {
     'contiguous', 'resize_', 'resize_as_'
 }
 
+RETURN_TYPE_OVERRIDE_MAPPING = {
+    # TensorList maps to vector because TensorList is a reference type (i.e. it will go out of scope)
+    'TensorList': 'std::vector<Tensor>',
+}
+
 # Matches "foo" in "foo, bar" but not "foobar". Used to search for the
 # occurence of a parameter in the derivative formula
 IDENT_REGEX = r'(^|\W){}($|\W)'
 
 
 def format_return_type(returns):
+    def map_return_type(return_type):
+        return RETURN_TYPE_OVERRIDE_MAPPING.get(return_type, return_type)
+
     if len(returns) == 0:
         return 'void'
     elif len(returns) == 1:
-        return returns[0]['type']
+        return map_return_type(returns[0]['type'])
     else:
-        return_types = [r['type'] for r in returns]
+        return_types = [map_return_type(r['type']) for r in returns]
         return 'std::tuple<{}>'.format(','.join(return_types))
 
 
@@ -715,9 +724,10 @@ def create_variable_type(top_env, aten_declarations):
         env['type_definition_body'] = emit_body(declaration)
 
         combined = nested_dict(env, declaration)
-        type_declarations.append(METHOD_DECLARATION.substitute(combined))
-        if declaration['name'] not in MANUAL_IMPLEMENTATIONS:
-            type_definitions.append(METHOD_DEFINITION.substitute(combined))
+        if 'Type' in combined['method_of']:
+            type_declarations.append(METHOD_DECLARATION.substitute(combined))
+            if declaration['name'] not in MANUAL_IMPLEMENTATIONS:
+                type_definitions.append(METHOD_DEFINITION.substitute(combined))
 
     for declaration in aten_declarations:
         process_function(declaration)
@@ -869,6 +879,13 @@ def gen_variable_type(declarations, out):
 
     for declaration in load_deprecated_signatures(declarations_by_signature):
         py_variable_methods[declaration['name']].append(declaration)
+
+    ©for declaration in aten_binding:
+        name = declaration['name']
+        declaration['binding_only'] = True
+        options = options_by_signature.get(declaration['signature'])
+        if options is not None:
+            python_functions[name].append(nested_dict(declaration, options[0]))
 
     env = {
         'autograd_function_declarations': [],
