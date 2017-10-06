@@ -292,10 +292,10 @@
 
 - name: stride  # fallthrough
 
-- name: sub(Tensor self, Scalar other, *, Scalar alpha)
+- name: sub(Tensor self, Scalar other, *, Scalar alpha=1)
   self: grad
 
-- name: sub(Tensor self, Tensor other, *, Scalar alpha)
+- name: sub(Tensor self, Tensor other, *, Scalar alpha=1)
   self: grad
   other: -grad * alpha
 
