@@ -164,7 +164,7 @@ struct Tensor : public detail::TensorBase {
       auto length = i < num_splits -1 ? split_size : last_split_size;
       splits[i] = narrow(dim, i * split_size, length);
     }
-      return splits;
+    return splits;
   }
 
   /*
