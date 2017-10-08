@@ -7,6 +7,7 @@
 using at::Tensor;
 using at::Scalar;
 using at::IntList;
+using at::TensorList;
 
 namespace torch { namespace autograd { namespace generated {
 
@@ -153,6 +154,10 @@ variable_list cat_tensors_backward(const Tensor & grad, const std::vector<int64_
     grad_inputs[i] = grad.narrow(dim, accumulate - size, size);
   }
   return grad_inputs;
+}
+
+Tensor chunk_self_backward(TensorList grads, int64_t dim) {
+  return at::cat(grads, dim);
 }
 
 Tensor select_backward_scalar(Tensor grad, const Tensor & input, const Tensor & value) {

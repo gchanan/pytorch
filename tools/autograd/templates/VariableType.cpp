@@ -245,6 +245,50 @@ static void set_flags(Variable& var, VariableFlags flags, std::shared_ptr<Functi
   }
 }
 
+static void _wrap_output(VariableImpl& pImpl, FunctionFlags flags, std::shared_ptr<Function> grad_fn) {
+  // Hooks up the grad_fn and sets the flags of the function output. This only
+  // supports a single differentiable output.
+  pImpl.requires_grad = flags.is_executable;
+  pImpl.is_volatile = flags.is_volatile;
+  if (!flags.is_volatile) {
+    pImpl.output_nr = grad_fn->num_inputs++;
+    grad_fn->set_flags(std::move(flags));
+    pImpl.grad_fn = std::move(grad_fn);
+  }
+}
+
+static void wrap_output(Tensor& t, FunctionFlags flags, std::shared_ptr<Function> grad_fn) {
+  auto pImpl = static_cast<VariableImpl*>(t.get());
+  _wrap_output(*pImpl, std::move(flags), std::move(grad_fn));
+}
+
+static void wrap_output(std::tuple<Variable, Variable>& t, FunctionFlags flags, std::shared_ptr<Function> grad_fn) {
+  wrap_output(std::get<0>(t), std::move(flags), std::move(grad_fn));
+}
+
+static void wrap_output(std::tuple<Variable, Variable, Variable>& t, FunctionFlags flags, std::shared_ptr<Function> grad_fn) {
+  wrap_output(std::get<0>(t), std::move(flags), std::move(grad_fn));
+}
+
+//void wrap_output(Variable &v, FunctionFlags flags, std::shared_ptr<Function> grad_fn) {
+//  _wrap_output(*v.get(), flags, grad_fn);
+//}
+
+void wrap_output(std::vector<Variable> &vars, FunctionFlags flags, std::shared_ptr<Function> grad_fn) {
+  for (auto &v : vars) {
+    // could avoid setting flags on grad_fn multiple times
+    wrap_output(v, flags, grad_fn);
+  }
+}
+
+std::vector<at::Tensor> as_tensor_list(const std::vector<Variable> &vars) {
+  std::vector<at::Tensor> tensors(vars.size());
+  for (size_t i = 0; i < vars.size(); ++i) {
+    tensors[i] = vars[i];
+  }
+  return tensors;
+}
+
 static void increment_version(const Tensor & t) {
   auto& var = static_cast<const Variable&>(t);
   var.version_counter().increment();
