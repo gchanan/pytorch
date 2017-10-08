@@ -81,6 +81,9 @@
 - name: ceil(Tensor self)
   self: zeros_like(grad)
 
+- name: chunk(Tensor self, int64_t chunks, int64_t dim=0)
+  self: chunk_self_backward(grad, dim)
+
 - name: clone(Tensor self)
   self: grad
 
@@ -443,6 +446,7 @@
 
 - name: sort(Tensor self, int64_t dim, bool descending)
   self: select_backward(grad, dim, indices, self.sizes(), true)
+
 
 - name: sqrt(Tensor self)
   self: grad * self.pow(-0.5) / 2
