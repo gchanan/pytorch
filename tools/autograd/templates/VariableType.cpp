@@ -113,6 +113,14 @@ Variable VariableType::as_variable(const Scalar & scalar) const {
   return make_variable(std::move(tensor));
 }
 
+std::vector<Variable> VariableType::as_variable(TensorList tl) const {
+  std::vector<Variable> variables(tl.size());
+  for (size_t i = 0; i < tl.size(); ++i) {
+    variables[i] = as_variable(tl[i]);
+  }
+  return variables;
+}
+
 void check_inplace(const VariableImpl& pImpl) {
   auto& version_counter = *pImpl.version_counter;
   if (pImpl.requires_grad && !pImpl.grad_fn) {
@@ -127,7 +135,7 @@ void check_inplace(const VariableImpl& pImpl) {
   }
 }
 
-void wrap_output(VariableImpl& pImpl, FunctionFlags flags, std::shared_ptr<Function> grad_fn) {
+void _wrap_output(VariableImpl& pImpl, FunctionFlags flags, std::shared_ptr<Function> grad_fn) {
   // Hooks up the grad_fn and sets the flags of the function output. This only
   // supports a single differentiable output.
   pImpl.requires_grad = flags.is_executable;
@@ -139,6 +147,25 @@ void wrap_output(VariableImpl& pImpl, FunctionFlags flags, std::shared_ptr<Funct
   }
 }
 
+void wrap_output(Variable &v, FunctionFlags flags, std::shared_ptr<Function> grad_fn) {
+  _wrap_output(*v.get(), flags, grad_fn);
+}
+
+void wrap_output(const std::vector<Variable> &vars, FunctionFlags flags, std::shared_ptr<Function> grad_fn) {
+  for (auto &v : vars) {
+    // could avoid setting flags on grad_fn multiple times
+    _wrap_output(*v.get(), flags, grad_fn);
+  }
+}
+
+std::vector<at::Tensor> as_tensor_list(const std::vector<Variable> &vars) {
+  std::vector<at::Tensor> tensors(vars.size());
+  for (size_t i = 0; i < vars.size(); ++i) {
+    tensors[i] = vars[i];
+  }
+  return tensors;
+}
+
 void VariableType::copy(const Tensor & src, Tensor & dst) const {
   auto& src_ = checked_unpack(src, "src", 0);
   auto& dst_ = checked_unpack(dst, "dst", 1);
@@ -147,7 +174,7 @@ void VariableType::copy(const Tensor & src, Tensor & dst) const {
   auto flags = Function::flags({ src });
   baseType->copy(src_, dst_);
   (*pImpl.version_counter)++;
-  wrap_output(pImpl, std::move(flags), std::make_shared<Identity>());
+  _wrap_output(pImpl, std::move(flags), std::make_shared<Identity>());
 }
 
 Tensor & VariableType::m_resize_(Tensor & self, IntList size) const {

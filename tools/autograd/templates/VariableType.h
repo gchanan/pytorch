@@ -42,6 +42,9 @@ private:
   std::vector<at::Tensor> checked_unpack(const at::TensorList &tl, const char *name, int pos) const;
   Variable as_variable(Tensor tensor) const;
   Variable as_variable(const Scalar & scalar) const;
+  std::vector<Variable> as_variable(TensorList tensor) const;
+  void join_version_counter_with(const Variable &v1, const Variable &v2);
+  //join_version_counter_with(TensorList tl);
 
 private:
   at::Type* baseType;

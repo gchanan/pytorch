@@ -86,6 +86,9 @@
 - name: cauchy
 - name: ceil
 
+- name: chunk(Tensor self, int64_t chunks, int64_t dim=0)
+  self: chunk_self_backward(grad, dim)
+
 - name: clone(Tensor self)
   self: grad
 
@@ -276,6 +279,7 @@
 
 - name: size
 - name: sort
+
 
 - name: sqrt(Tensor self)
   self: grad * self.pow(-0.5) / 2

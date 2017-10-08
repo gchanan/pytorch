@@ -92,11 +92,11 @@ if (should_compute_any_outputs()) {
 """)
 
 METHOD_DEFINITION_FLAGS_TENSORS = CodeTemplate("""\
-   auto flags = Function::flags({ ${tensor_args} });
+auto flags = Function::flags({ ${tensor_args} });
 """)
 
 METHOD_DEFINITION_FLAGS_TENSORLIST = CodeTemplate("""\
-   auto flags = Function::flags( ${tensorlist_args});
+auto flags = Function::flags( ${tensorlist_args});
 """)
 
 METHOD_DEFINITION_DERIVATIVE = CodeTemplate("""\
@@ -106,7 +106,7 @@ if (flags.is_executable) {
   ${save_variables}
 }
 auto output = as_variable(baseType->${method_prefix}${api_name}(${unpacked_args}));
-wrap_output(*output.get(), std::move(flags), std::move(grad_fn));
+wrap_output(output, std::move(flags), std::move(grad_fn));
 return ${return_value};
 """)
 
@@ -120,7 +120,7 @@ if (flags.is_executable) {
 }
 baseType->${method_prefix}${api_name}(${unpacked_args});
 (*pImpl.version_counter)++;
-wrap_output(pImpl, std::move(flags), std::move(grad_fn));
+_wrap_output(pImpl, std::move(flags), std::move(grad_fn));
 return self;
 """)
 
@@ -552,6 +552,10 @@ def create_variable_type(top_env, aten_declarations):
                                       if arg['dynamic_type'] == 'TensorList']
         if option['return_type'] == 'Scalar':
             env['return_value'] = 'Scalar(output)'
+        elif option['return_type'] == 'std::vector<Tensor>':
+            env['return_value'] = 'as_tensor_list(output)'
+        #elif option['return_type'] == 'Tensor':
+        #    env['return_value'] = 'Tensor(std::move(output))'
         else:
             env['return_value'] = 'Tensor(std::move(output))'
 
