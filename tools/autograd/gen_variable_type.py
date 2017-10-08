@@ -638,6 +638,9 @@ def create_variable_type(top_env, aten_declarations):
 
         if declaration['inplace']:
             env['return_value'] = 'self'
+        elif declaration['return_type'] == 'std::vector<Tensor>':
+            #FIXME
+            env['return_value'] = 'as_tensor_list({})'.format('ret')
         else:
             env['return_value'] = '{}(std::move(ret))'.format(declaration['return_type'])
 
