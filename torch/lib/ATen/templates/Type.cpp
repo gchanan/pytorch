@@ -4,6 +4,7 @@
 #include "ATen/Scalar.h"
 #include "ATen/SparseTensorRef.h"
 #include "ATen/ExpandUtils.h"
+#include "ATen/ATenNativeFunctions.h"
 
 #include <iostream>
 ${type_headers}

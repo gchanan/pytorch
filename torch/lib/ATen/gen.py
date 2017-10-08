@@ -48,6 +48,8 @@ TENSOR_METHODS_H = CodeTemplate.from_file(TEMPLATE_PATH + "/TensorMethods.h")
 
 FUNCTIONS_H = CodeTemplate.from_file(TEMPLATE_PATH + "/Functions.h")
 
+NATIVE_FUNCTIONS_PATH = options.source_path + "/ATenNativeFunctions.h"
+
 generators = {
     'CPUGenerator.h': {
         'name': 'CPU',
@@ -224,6 +226,7 @@ declarations = [d
                 for file in cwrap_files
                 for d in cwrap_parser.parse(file)]
 declarations += nn_parse.run(nn_files)
+declarations = aten_native_parse.parse(NATIVE_FUNCTIONS_PATH)
 declarations = preprocess_declarations.run(declarations)
 for fname, env in generators.items():
     write(fname, GENERATOR_DERIVED.substitute(env))
@@ -235,7 +238,7 @@ for fname, env in generators.items():
 output_declarations = function_wrapper.create_generic(top_env, declarations)
 
 # directly read any output_declarations specified in appropriate headers
-raw_output_declaration_search_path = [TEMPLATE_PATH + "/Tensor.h"]
+raw_output_declaration_search_path = [NATIVE_FUNCTIONS_PATH]
 raw_output_decls = []
 for file in raw_output_declaration_search_path:
     raw_output_decls += raw_outputdecl_parser.parse(file)

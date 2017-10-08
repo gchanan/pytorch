@@ -32,6 +32,12 @@ ${return_type} Type::${method_prefix}${api_name}(${formals}) const {
     throw std::runtime_error(std::string("${api_name} is not implemented for type ") + toString());
 }
 """)
+TYPE_METHOD_DEFINITION_DISPATCH_BASE = CodeTemplate("""\
+${return_type} Type::${method_prefix}${api_name}(${formals}) const {
+    ${return_call} at::native::${api_name}(${actuals});
+}
+""")
+
 # 4. add virtual override to TypeDerived.h
 TYPE_DERIVED_DECLARATION = CodeTemplate("""\
 virtual ${return_type} ${method_prefix_derived}${api_name}(${formals}) const override;
@@ -121,6 +127,7 @@ TYPE_RETURN = {
     'real': 'Scalar',
     'accreal': 'Scalar',
     'long': 'int64_t',
+    'TensorList': 'std::vector<Tensor>'
 }
 CHECKED_CAST = {
     'THTensor*': CodeTemplate('checked_cast<${Tensor}>(${arg_name}.pImpl,"${arg_name}",${arg_pos}, ${null_okay})'),
@@ -376,6 +383,7 @@ def create_generic(top_env, declarations):
         is_function = 'function' in option['variants']
         dispatch_tensor = find_dispatch_tensor(formals)
         is_namespace_function = is_function and dispatch_tensor is not None
+        print("is_namepsace_function", option['name'], is_namespace_function, is_function, dispatch_tensor)
 
         # method-only things are prefixed with m_ in Type so that
         # another function-only variant can exist without the name colliding
@@ -387,8 +395,13 @@ def create_generic(top_env, declarations):
         if broadcast_arg is None:
             top_env['type_method_declarations'].append(
                 TYPE_METHOD_DECLARATION.substitute(env))
-            top_env['type_method_definitions'].append(
-                TYPE_METHOD_DEFINITION.substitute(env))
+            if 'dispatch' in option and option['dispatch'] == 'base':
+                print('option in dispatch base', option)
+                top_env['type_method_definitions'].append(
+                    TYPE_METHOD_DEFINITION_DISPATCH_BASE.substitute(env))
+            else:
+                top_env['type_method_definitions'].append(
+                    TYPE_METHOD_DEFINITION.substitute(env))
         else:
             top_env['type_method_declarations'].append(
                 TYPE_METHOD_DECLARATION_NON_VIRTUAL.substitute(env))
@@ -706,10 +719,13 @@ def create_derived(backend_type_env, declarations):
             env = nested_dict(option, backend_type_env)
             body = emit_body(env, option)
             option['type_definition_body'] = body
-            type_object_declarations.append(
-                TYPE_DERIVED_DECLARATION.substitute(env))
-            type_object_definitions.append(
-                TYPE_DERIVED_DEFINITION.substitute(env))
+            if 'dispatch' in option and option['dispatch'] == 'base':
+                pass
+            else:
+                type_object_declarations.append(
+                    TYPE_DERIVED_DECLARATION.substitute(env))
+                type_object_definitions.append(
+                    TYPE_DERIVED_DEFINITION.substitute(env))
 
     for declaration in declarations:
         for option in declaration['options']:
