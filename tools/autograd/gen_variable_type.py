@@ -172,26 +172,18 @@ MANUAL_IMPLEMENTATIONS = {
     'contiguous', 'resize_', 'resize_as_'
 }
 
-RETURN_TYPE_OVERRIDE_MAPPING = {
-    # TensorList maps to vector because TensorList is a reference type (i.e. it will go out of scope)
-    'TensorList': 'std::vector<Tensor>',
-}
-
 # Matches "foo" in "foo, bar" but not "foobar". Used to search for the
 # occurence of a parameter in the derivative formula
 IDENT_REGEX = r'(^|\W){}($|\W)'
 
 
 def format_return_type(returns):
-    def map_return_type(return_type):
-        return RETURN_TYPE_OVERRIDE_MAPPING.get(return_type, return_type)
-
     if len(returns) == 0:
         return 'void'
     elif len(returns) == 1:
-        return map_return_type(returns[0]['type'])
+        return returns[0]['type']
     else:
-        return_types = [map_return_type(r['type']) for r in returns]
+        return_types = [r['type'] for r in returns]
         return 'std::tuple<{}>'.format(','.join(return_types))
 
 
