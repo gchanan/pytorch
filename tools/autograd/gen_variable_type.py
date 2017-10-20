@@ -111,7 +111,7 @@ auto grad_fn = std::make_shared<${op}>();
 ${save_inputs}
 baseType->${method_prefix}${base_name}(${unpacked_args});
 pImpl.version_counter.increment();
-_wrap_output(self, std::move(flags), grad_fn);
+wrap_output(self, std::move(flags), grad_fn);
 ${save_outputs}
 return ${return_value};
 """)
@@ -638,6 +638,9 @@ def create_variable_type(top_env, aten_declarations):
 
         if declaration['inplace']:
             env['return_value'] = 'self'
+        elif declaration['return_type'] == 'std::vector<Tensor>':
+            #FIXME
+            env['return_value'] = 'as_tensor_list({})'.format('ret')
         else:
             env['return_value'] = '{}(std::move(ret))'.format(declaration['return_type'])
 

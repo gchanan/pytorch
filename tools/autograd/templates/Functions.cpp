@@ -341,6 +341,8 @@ Tensor softplus_double_backward(const Tensor & grad, const Tensor & input, Scala
   return _sigmoid_backward(grad, x.sigmoid()) * (x < threshold).toType(grad.type()) * beta;
 }
 
+}
+
 ${autograd_function_definitions}
 
 }}} // namespace torch::autograd::generated

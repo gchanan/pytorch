@@ -200,21 +200,21 @@ static void wrap_output(Tensor& t, FunctionFlags flags, std::shared_ptr<Function
 }
 
 static void wrap_output(std::tuple<Variable, Variable>& t, FunctionFlags flags, std::shared_ptr<Function> grad_fn) {
-  _wrap_output(std::get<0>(t), std::move(flags), std::move(grad_fn));
+  wrap_output(std::get<0>(t), std::move(flags), std::move(grad_fn));
 }
 
 static void wrap_output(std::tuple<Variable, Variable, Variable>& t, FunctionFlags flags, std::shared_ptr<Function> grad_fn) {
-  _wrap_output(std::get<0>(t), std::move(flags), std::move(grad_fn));
+  wrap_output(std::get<0>(t), std::move(flags), std::move(grad_fn));
 }
 
-void wrap_output(Variable &v, FunctionFlags flags, std::shared_ptr<Function> grad_fn) {
-  _wrap_output(*v.get(), flags, grad_fn);
-}
+//void wrap_output(Variable &v, FunctionFlags flags, std::shared_ptr<Function> grad_fn) {
+//  _wrap_output(*v.get(), flags, grad_fn);
+//}
 
-void wrap_output(const std::vector<Variable> &vars, FunctionFlags flags, std::shared_ptr<Function> grad_fn) {
+void wrap_output(std::vector<Variable> &vars, FunctionFlags flags, std::shared_ptr<Function> grad_fn) {
   for (auto &v : vars) {
     // could avoid setting flags on grad_fn multiple times
-    _wrap_output(*v.get(), flags, grad_fn);
+    wrap_output(v, flags, grad_fn);
   }
 }
 
@@ -256,10 +256,10 @@ void VariableType::s_copy(const Tensor & src, Tensor & dst) const {
   if (isFloatingPoint(dst.type().scalarType())) {
     if (isFloatingPoint(src.type().scalarType())) {
       // TODO: handle type conversions
-      wrap_output(pImpl, std::move(flags), std::make_shared<Identity>());
+      _wrap_output(pImpl, std::move(flags), std::make_shared<Identity>());
     } else {
       // TODO: handle type conversions
-      wrap_output(pImpl, std::move(flags), std::make_shared<Identity>());
+      _wrap_output(pImpl, std::move(flags), std::make_shared<Identity>());
     }
   }
 }
