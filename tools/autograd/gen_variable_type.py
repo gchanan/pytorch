@@ -156,7 +156,6 @@ PY_FUNCTIONS_CPP = CodeTemplate.from_file(template_path + '/python_functions.cpp
 
 derivatives_path = os.path.join(os.path.dirname(__file__), 'derivatives.yaml')
 deprecated_path = os.path.join(os.path.dirname(__file__), 'deprecated.yaml')
-aten_binding_path = os.path.join(os.path.dirname(__file__), 'binding.yaml')
 
 # Functions with these return types delegate completely to the underlying
 # base at::Type
@@ -825,13 +824,6 @@ def gen_variable_type(declarations, out):
 
     for declaration in load_deprecated_signatures(declarations_by_signature):
         py_variable_methods[declaration['name']].append(declaration)
-
-    ©for declaration in aten_binding:
-        name = declaration['name']
-        declaration['binding_only'] = True
-        options = options_by_signature.get(declaration['signature'])
-        if options is not None:
-            python_functions[name].append(nested_dict(declaration, options[0]))
 
     env = {
         'autograd_function_declarations': [],
