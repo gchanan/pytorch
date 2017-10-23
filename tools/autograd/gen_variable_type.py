@@ -678,6 +678,9 @@ def create_variable_type(top_env, aten_declarations):
             env['save_outputs'] = save_variables(declaration, func['saved_outputs'], True)
             env['args_with_derivatives'] = find_args_with_derivatives(func, env['tensor_args'])
             is_view = func.get('__view__', False)
+        elif declaration['mode'] == 'native':
+            # native functions without a derivative don't need Type implementations
+            return
         else:
             env['op'] = 'Error'
             env['op_ctor'] = '"the derivative for {} is not implemented"'.format(declaration['api_name'])
@@ -843,8 +846,11 @@ def gen_variable_type(declarations, out):
 
     def should_generate_python_binding(declaration):
         name = declaration['name']
-        # don't bind unimplemented functions to prevent errors in test_autograd
-        if not is_implemented(declaration):
+        # don't bind (non-native) unimplemented functions to prevent errors in test_autograd.
+        # Native functions, even if they don't have derivatives specified, should be bound
+        # so they can be called from python (their derivatives are defined based on the functions
+        # they call).
+        if not is_implemented(declaration) and declaration['mode'] != 'native':
             return False
 
         # don't bind size or stride since the python signatures are different
