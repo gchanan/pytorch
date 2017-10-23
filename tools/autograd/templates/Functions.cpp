@@ -248,10 +248,9 @@ Tensor potrf_backward(Tensor grad, bool upper, Tensor L) {
   return S;
 }
 
-Tensor chunk_self_backward(const std::vector<torch::autograd::Variable> &grads, int64_t chunks, int64_t dim, IntList sizes, const Type &type) {
+Tensor split_backward(const std::vector<torch::autograd::Variable> &grads, int64_t split_size, int64_t dim, IntList sizes, const Type &type) {
   dim = at::maybe_wrap_dim(dim, sizes.size());
   int64_t dim_size = sizes[dim];
-  int64_t split_size = (dim_size + chunks - 1) / chunks;
   int64_t num_splits = (dim_size + split_size - 1) / split_size;
 
   // it's possible some of the grads are not defined (represents tensors of all 0s).
@@ -261,7 +260,7 @@ Tensor chunk_self_backward(const std::vector<torch::autograd::Variable> &grads, 
     if (grads[j].defined()) {
       grads_all_defined[ j ] = grads[ j ];
     } else {
-      auto length = j < num_splits - 1 ? split_size : split_size - (split_size * num_splits - dim_size);
+      auto length = j < (size_t)(num_splits - 1) ? split_size : split_size - (split_size * num_splits - dim_size);
       std::vector<int64_t> grad_size(sizes);
       grad_size[ dim ] = length;
       grads_all_defined[ j ] = type.zeros(grad_size);
