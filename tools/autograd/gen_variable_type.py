@@ -48,7 +48,7 @@ auto${ref} ${arg_name}_ = unpack${suffix}(${arg_name}, "${arg_name}", ${arg_pos}
 FUNCTION_DECLARATION = CodeTemplate("""\
 struct ${op} : public Function {
   using Function::Function;
-  variable_list apply(const variable_list& inputs) override;
+  variable_list apply(const variable_list& grads) override;
   std::string name() override { return "${op}"; }
   void releaseVariables() override {
     ${release_variables}
@@ -58,7 +58,7 @@ struct ${op} : public Function {
 """)
 
 FUNCTION_DEFINITION = CodeTemplate("""\
-variable_list ${op}::apply(const variable_list& inputs) {
+variable_list ${op}::apply(const variable_list& grads) {
   variable_list grad_inputs{${num_inputs}};
   ${body}
   return grad_inputs;
@@ -454,7 +454,7 @@ def create_autograd_functions(top_env, autogen_functions):
         body = []
 
         if uses_grad(func):
-            body.append('auto& grad = inputs[0];')
+            body.append('auto& grad = grads[0];')
 
         def emit_derivative(derivative):
             formula = derivative['formula']
