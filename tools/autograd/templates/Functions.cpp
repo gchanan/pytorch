@@ -1,4 +1,5 @@
 #include "Functions.h"
+#include <ATen/WrapDimUtils.h>
 
 #include <math.h>
 
@@ -143,10 +144,6 @@ variable_list cat_tensors_backward(const Tensor & grad, const std::vector<int64_
   return grad_inputs;
 }
 
-Tensor chunk_self_backward(TensorList grads, int64_t dim) {
-  return at::cat(grads, dim);
-}
-
 Tensor select_backward_scalar(Tensor grad, const Tensor & input, const Tensor & value) {
   if (grad.dim() == 1) {
     // TODO: remove this once zero-dim tensor work properly in PyTorch
@@ -236,6 +233,30 @@ Tensor potrf_backward(Tensor grad, bool upper, Tensor L) {
   std::tie(S, std::ignore) = at::gesv(S.t(), L.t());
   S = phi(S);
   return S;
+}
+
+Tensor chunk_self_backward(const std::vector<torch::autograd::Variable> &grads, int64_t chunks, int64_t dim, IntList sizes, const Type &type) {
+  dim = at::maybe_wrap_dim(dim, sizes.size());
+  int64_t dim_size = sizes[dim];
+  int64_t split_size = (dim_size + chunks - 1) / chunks;
+  int64_t num_splits = (dim_size + split_size - 1) / split_size;
+
+  // it's possible some of the grads are not defined (represents tensors of all 0s).
+  // Since at::cat can't handle those, let's define them
+  std::vector<Tensor> grads_all_defined(grads.size());
+  for (size_t j = 0; j < grads.size(); ++j) {
+    if (grads[j].defined()) {
+      grads2[ j ] = grads[ j ];
+    } else {
+      auto length = j < num_splits - 1 ? split_size : split_size - (split_size * num_splits - dim_size);
+      std::vector<int64_t> grad_size(sizes);
+      grad_size[ dim ] = length;
+      grads2[ j ] = type.zeros(grad_size);
+    }
+  }
+
+  auto ret =  at::cat(grads2, dim);
+  return ret;
 }
 
 Tensor glu_double_backward(const Tensor & grad, const Tensor & grad_output, const Tensor & input, int64_t dim) {

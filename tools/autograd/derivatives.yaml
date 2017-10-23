@@ -81,8 +81,9 @@
 - name: ceil(Tensor self)
   self: zeros_like(grad)
 
+# this a little strange because "inputs" is magic -- should we call it grads? *grads?
 - name: chunk(Tensor self, int64_t chunks, int64_t dim=0)
-  self: chunk_self_backward(grad, dim)
+  self: chunk_self_backward(inputs, chunks, dim, self.sizes(), self.type())
 
 - name: clone(Tensor self)
   self: grad
