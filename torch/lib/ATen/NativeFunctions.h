@@ -45,7 +45,7 @@ type_method_definition_dispatch: at::native::chunk
 */
 static inline std::vector<Tensor> chunk(const Tensor &self, int64_t chunks, int64_t dim=0) {
   int64_t split_size = (self.size(dim) + chunks - 1) / chunks;
-  return at::native::split(self, split_size, dim);
+  return self.split(split_size, dim);
 }
 
 }
