@@ -655,7 +655,9 @@ def create_variable_type(top_env, aten_declarations):
                 env['version_counter'].append('if (inplace) increment_version(input);')
             if func.get('__view__', False):
                 env['version_counter'].append('take_version_counter(ret, self);')
-
+        elif declaration['mode'] == 'native':
+            # native functions without a derivative don't need Type implementations
+            return
         else:
             env['tensor_args'] = [arg['name'] for arg in declaration['arguments']
                                   if arg['simple_type'] in {'Tensor', 'TensorList'}]
@@ -786,8 +788,11 @@ def gen_variable_type(declarations, out):
 
     def should_generate_python_binding(declaration):
         name = declaration['name']
-        # don't bind unimplemented functions to prevent errors in test_autograd
-        if not is_implemented(declaration):
+        # don't bind (non-native) unimplemented functions to prevent errors in test_autograd.
+        # Native functions, even if they don't have derivatives specified, should be bound
+        # so they can be called from python (their derivatives are defined based on the functions
+        # they call).
+        if not is_implemented(declaration) and declaration['mode'] != 'native':
             return False
 
         # don't bind size or stride since the python signatures are different
