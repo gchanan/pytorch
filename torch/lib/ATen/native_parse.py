@@ -1,8 +1,9 @@
 def python_num(s):
     try:
         return int(s)
-    except:
+    except Exception:
         return float(s)
+
 
 def parse(filename):
     with open(filename, 'r') as file:
