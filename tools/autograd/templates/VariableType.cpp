@@ -245,6 +245,12 @@ static void set_flags(Variable& var, VariableFlags flags, std::shared_ptr<Functi
   }
 }
 
+static void set_flags(std::vector<Variable> &tl, VariableFlags flags, std::shared_ptr<Function> grad_fn) {
+  for (size_t i = 0; i < tl.size(); ++i) {
+    set_flags(tl[ i ], flags, grad_fn);
+  }
+}
+
 static void _wrap_output(VariableImpl& pImpl, FunctionFlags flags, std::shared_ptr<Function> grad_fn) {
   // Hooks up the grad_fn and sets the flags of the function output. This only
   // supports a single differentiable output.

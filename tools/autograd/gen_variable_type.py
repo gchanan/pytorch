@@ -657,7 +657,7 @@ def create_variable_type(top_env, aten_declarations):
             # FIXME: IS THIS RIGHT?
             env['return_value'] = 'as_tensor_list(ret)'
             env['return_name'] = 'ret'
-            env['result'] = 'as_tensor_list(ret)'
+            env['result'] = 'ret'
         else:
             env['return_value'] = '{}(std::move(ret))'.format(declaration['return_type'])
             env['return_name'] = 'ret'
