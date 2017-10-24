@@ -268,7 +268,7 @@ inline Node* recordTrace(std::string op, std::initializer_list<Variable> inputs,
 inline Node* recordTrace(std::string op, std::initializer_list<Variable> inputs, const std::tuple<Variable, Variable, Variable>& outputs) {
   return recordTraceHelper(op, inputs, {std::get<0>(outputs), std::get<1>(outputs), std::get<2>(outputs)});
 }
-inline Node * recordTrace(std::string op, std::initializer_list<Variable> inputs, const std::vector<Variable> &outputs) {
+inline Node * recordTrace(std::string op, std::initializer_list<Variable> inputs, const std::vector<Variable>& outputs) {
   return recordTraceHelper(op, inputs, outputs);
 }
 inline Node* recordTrace(std::string op, at::TensorList inputs, const Variable& output) {
