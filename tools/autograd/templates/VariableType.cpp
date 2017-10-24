@@ -296,9 +296,9 @@ void wrap_output(std::vector<Variable> &vars, FunctionFlags flags, std::shared_p
 }
 
 std::vector<at::Tensor> as_tensor_list(const std::vector<Variable> &vars) {
-  std::vector<at::Tensor> tensors(vars.size());
-  for (size_t i = 0; i < vars.size(); ++i) {
-    tensors[i] = vars[i];
+  std::vector<at::Tensor> tensors;
+  for (auto &v : vars) {
+    tensors.emplace_back(std::move(v));
   }
   return tensors;
 }

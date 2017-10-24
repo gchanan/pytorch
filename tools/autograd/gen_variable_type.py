@@ -654,7 +654,6 @@ def create_variable_type(top_env, aten_declarations):
             env['return_name'] = 'self'
             env['result'] = 'static_cast<Variable&>(self)'
         elif declaration['return_type'] == 'std::vector<Tensor>':
-            # FIXME: IS THIS RIGHT?
             env['return_value'] = 'as_tensor_list(ret)'
             env['return_name'] = 'ret'
             env['result'] = 'ret'
