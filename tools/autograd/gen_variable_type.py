@@ -678,9 +678,6 @@ def create_variable_type(top_env, aten_declarations):
             env['save_outputs'] = save_variables(declaration, func['saved_outputs'], True)
             env['args_with_derivatives'] = find_args_with_derivatives(func, env['tensor_args'])
             is_view = func.get('__view__', False)
-        elif declaration['mode'] == 'native':
-            # native functions without a derivative don't need Type implementations
-            return
         else:
             env['op'] = 'Error'
             env['op_ctor'] = '"the derivative for {} is not implemented"'.format(declaration['api_name'])
@@ -717,6 +714,10 @@ def create_variable_type(top_env, aten_declarations):
 
     def process_function(declaration):
         if skip_function(declaration['name']):
+            return
+
+        if declaration.get('derivative') is None and declaration['mode'] == 'native':
+            # native functions without a derivative don't need Type implementations
             return
 
         env = {}
