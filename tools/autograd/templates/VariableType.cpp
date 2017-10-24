@@ -165,20 +165,20 @@ VariableType::as_variable(std::tuple<Tensor, Tensor, Tensor> tensors) const {
       make_variable(std::move(std::get<2>(tensors))));
 }
 
+std::vector<Variable> VariableType::as_variable(TensorList tl) const {
+  std::vector<Variable> variables;
+  for (auto& t : tl) {
+    variables.emplace_back(make_variable(std::move(t)));
+  }
+  return variables;
+}
+
 Variable VariableType::as_variable(const Scalar & scalar) const {
   auto tensor = scalar.toTensor();
   if (&tensor.type() != baseType) {
     tensor = tensor.toType(*baseType);
   }
   return make_variable(std::move(tensor));
-}
-
-std::vector<Variable> VariableType::as_variable(TensorList tl) const {
-  std::vector<Variable> variables(tl.size());
-  for (size_t i = 0; i < tl.size(); ++i) {
-    variables[i] = as_variable(std::move(tl[ i ]));
-  }
-  return variables;
 }
 
 struct VariableFlags {
@@ -259,9 +259,9 @@ static void set_flags(std::vector<Variable> &vl, VariableFlags flags, std::share
   }
 }
 
-std::vector<at::Tensor> as_tensor_list(const std::vector<Variable> &vars) {
-  std::vector<at::Tensor> tensors;
-  for (auto &v : vars) {
+std::vector<Tensor> as_tensor_list(std::vector<Variable> &vars) {
+  std::vector<Tensor> tensors;
+  for (auto& v : vars) {
     tensors.emplace_back(std::move(v));
   }
   return tensors;
