@@ -58,4 +58,5 @@ inline PyObject* wrap(at::Scalar scalar) {
   return wrap(scalar.toTensor());
 }
 
+
 }}} // namespace torch::autograd::utils

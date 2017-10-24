@@ -176,7 +176,7 @@ Variable VariableType::as_variable(const Scalar & scalar) const {
 std::vector<Variable> VariableType::as_variable(TensorList tl) const {
   std::vector<Variable> variables(tl.size());
   for (size_t i = 0; i < tl.size(); ++i) {
-    variables[i] = as_variable(tl[i]);
+    variables[i] = as_variable(std::move(tl[ i ]));
   }
   return variables;
 }
@@ -253,9 +253,9 @@ static void set_flags(Variable& var, VariableFlags flags, std::shared_ptr<Functi
   }
 }
 
-static void set_flags(std::vector<Variable> &tl, VariableFlags flags, std::shared_ptr<Function> grad_fn) {
-  for (size_t i = 0; i < tl.size(); ++i) {
-    set_flags(tl[ i ], flags, grad_fn);
+static void set_flags(std::vector<Variable> &vl, VariableFlags flags, std::shared_ptr<Function> grad_fn) {
+  for (auto& v : vl) {
+    set_flags(v, flags, grad_fn);
   }
 }
 
