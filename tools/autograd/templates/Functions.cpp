@@ -260,7 +260,7 @@ Tensor split_backward(const std::vector<torch::autograd::Variable> &grads, int64
     if (grads[j].defined()) {
       grads_all_defined[ j ] = grads[ j ];
     } else {
-      auto length = j < (size_t)(num_splits - 1) ? split_size : split_size - (split_size * num_splits - dim_size);
+      auto length = (int64_t)j < (num_splits - 1) ? split_size : split_size - (split_size * num_splits - dim_size);
       std::vector<int64_t> grad_size(sizes);
       grad_size[ dim ] = length;
       grads_all_defined[ j ] = type.zeros(grad_size);
