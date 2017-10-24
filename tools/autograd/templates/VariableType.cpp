@@ -173,6 +173,14 @@ Variable VariableType::as_variable(const Scalar & scalar) const {
   return make_variable(std::move(tensor));
 }
 
+std::vector<Variable> VariableType::as_variable(TensorList tl) const {
+  std::vector<Variable> variables(tl.size());
+  for (size_t i = 0; i < tl.size(); ++i) {
+    variables[i] = as_variable(tl[i]);
+  }
+  return variables;
+}
+
 struct VariableFlags {
   bool requires_grad;
   bool is_volatile;
