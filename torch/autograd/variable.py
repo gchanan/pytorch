@@ -52,8 +52,6 @@ class Variable(_C._VariableBase):
         'nelement',
         'ndimension',
         'element_size',
-        'is_contiguous',
-        'is_set_to',
         'is_signed',
         'numel',
         'dim',
