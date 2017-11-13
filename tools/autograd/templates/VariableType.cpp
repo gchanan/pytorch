@@ -188,12 +188,6 @@ static Variable as_view(Variable base, Tensor tensor) {
   return make_variable_view(std::move(base), std::move(tensor));
 }
 
-static void ensure_no_aten_scalars(Tensor & data) {
-  if (data.defined() && data.dim() == 0) {
-    data.as_strided_({1}, {1});
-  }
-}
-
 template<typename T>
 static VarFlags compute_flags_tmpl(T tensors) {
   VarFlags flags = {false, false};

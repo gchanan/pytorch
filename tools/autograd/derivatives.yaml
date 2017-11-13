@@ -481,7 +481,7 @@
   src: grad.gather(dim, index)
 
 - name: select(Tensor self, int64_t dim, int64_t sliceIndex)
-  self: maybe_unsqueeze(grad, dim, self.sizes().size() != 1)._unnarrow(dim, sliceIndex, self.size(dim))
+  self: grad.unsqueeze(dim)._unnarrow(dim, sliceIndex, self.size(dim))
 
 - name: set  # fallthrough
 
@@ -512,7 +512,7 @@
   self: unsqueeze_to(grad, self.sizes());
 
 - name: squeeze(Tensor self, int64_t dim)
-  self: maybe_unsqueeze(grad, dim, self.size(dim) == 1 && self.sizes().size() != 1)
+  self: maybe_unsqueeze(grad, dim, self.size(dim) == 1)
 
 - name: std
 
