@@ -64,7 +64,7 @@ Tensor norm_backward(const Tensor & grad, const Tensor & self, const Scalar & p_
 }
 
 Tensor norm_backward(Tensor grad, const Tensor & self, const Scalar & p_, Tensor norm, int64_t dim, bool keepdim) {
-  if (!keepdim && self.dim() > 1) {
+  if (!keepdim) {
     grad = grad.unsqueeze(dim);
     norm = norm.unsqueeze(dim);
   }
@@ -97,7 +97,7 @@ Tensor permute_backwards(const Tensor & grad, IntList fwd_dims) {
 }
 
 Tensor sum_backward(const Tensor & grad, IntList sizes, int64_t dim, bool keepdim) {
-  if (!keepdim && sizes.size() > 1) {
+  if (!keepdim) {
     return grad.unsqueeze(dim).expand(sizes);
   } else {
     return grad.expand(sizes);
@@ -160,14 +160,13 @@ Tensor mm_mat2_backward(const Tensor & grad, const Tensor & mat1, IntList sizes,
 }
 
 Tensor select_backward_scalar(Tensor grad, const Tensor & input, const Tensor & value) {
-  auto grad_data = static_cast<Variable&>(grad).data();
   auto grad_input = zeros_like(input);
-  grad_input.masked_fill_(input == value, Scalar(grad_data[0]));
+  grad_input.masked_fill_(input == value, grad);
   return grad_input;
 }
 
 Tensor select_backward(Tensor grad, int64_t dim, Tensor indices, IntList sizes, bool keepdim) {
-  if (!keepdim && sizes.size() > 1) {
+  if (!keepdim) {
     grad = grad.unsqueeze(dim);
     indices = indices.unsqueeze(dim);
   }
@@ -185,7 +184,7 @@ Tensor trace_backward(const Tensor & grad, IntList sizes) {
 
   auto grad_input = grad.type().zeros(sizes[0] * sizes[1]);
   auto indices = long_type.arange(0, grad_input.numel(), sizes[1] + 1);
-  grad_input.index_fill_(0, indices, Scalar(grad_data[0]));
+  grad_input.index_fill_(0, indices, grad);
   return grad_input.view(sizes);
 }
 

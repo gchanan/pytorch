@@ -112,7 +112,6 @@ if (flags.requires_grad) {
   ${save_inputs}
 }
 ${base_impl_call}
-${no_zero_dim}
 ${version_counter}
 ${set_flags}
 ${save_outputs}
@@ -865,15 +864,13 @@ def create_variable_type(top_env, aten_declarations):
 
         env['check_inplace'] = ''
         env['version_counter'] = ''
-        env['no_zero_dim'] = ''
+        maybe_inplace = any(arg['name'] == 'inplace' for arg in arguments)
         base_call = BASE_CALL.substitute(combined)
         if declaration['inplace']:
             env['check_inplace'] = 'check_inplace(self);'
             env['version_counter'] = 'increment_version(self);'
             modifies_data = 'false' if is_view else 'true'
             env['set_flags'] = SET_FLAGS_INPLACE.substitute(combined, modifies_data=modifies_data)
-            if is_view:
-                env['no_zero_dim'] = 'ensure_no_aten_scalars(self);'
         else:
             env['set_flags'] = SET_FLAGS.substitute(combined)
             if is_view:
