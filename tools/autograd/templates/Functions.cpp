@@ -177,11 +177,7 @@ Tensor trace_backward(const Tensor & grad, IntList sizes) {
   if (sizes.size() != 2) {
     throw std::runtime_error("expected matrix input");
   }
-
-  // TODO: simplify once toScalarType is virtual
-  auto grad_data = static_cast<const Variable&>(grad).data();
-  auto& long_type = *VariableImpl::getType(
-      grad_data.type().toScalarType(at::kLong));
+  auto& long_type = grad.type().toScalarType(at::kLong);
 
   auto grad_input = grad.type().zeros(sizes[0] * sizes[1]);
   auto indices = long_type.arange(0, grad_input.numel(), sizes[1] + 1);
@@ -190,9 +186,7 @@ Tensor trace_backward(const Tensor & grad, IntList sizes) {
 }
 
 Tensor unfold_backward(const Tensor & grad, IntList input_sizes, int64_t dim, int64_t size, int64_t step) {
-  // TODO: simplify once toScalarType is virtual
-  auto& long_type = *VariableImpl::getType(
-      Variable(grad).data().type().toScalarType(at::kLong));
+  auto& long_type = grad.type().toScalarType(at::kLong);
 
   int64_t numel = 1;
   for (auto size : input_sizes) {

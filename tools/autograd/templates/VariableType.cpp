@@ -66,6 +66,11 @@ std::unique_ptr<Storage> VariableType::storageFromBlob(void * data, int64_t size
 Tensor VariableType::unsafeTensorFromTH(void * th_pointer, bool retain) const {
   return baseType->unsafeTensorFromTH(th_pointer, retain);
 }
+
+Type & VariableType::toScalarType(ScalarType s) const {
+  return *VariableImpl::getType(baseType->toScalarType(s));
+}
+
 std::unique_ptr<Generator> VariableType::generator() const {
   return baseType->generator();
 }

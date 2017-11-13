@@ -34,6 +34,7 @@ struct VariableType : public at::Type {
   virtual size_t elementSizeInBytes() const override;
   static const char * typeString();
   at::Tensor unsafeTensorFromTH(void * th_pointer, bool retain) const override;
+  virtual at::Type & toScalarType(at::ScalarType s) const;
 
   virtual void s_copy(const Tensor & src, Tensor & dst) const override;
   ${type_derived_method_declarations}
