@@ -232,12 +232,6 @@ static Tensor as_view(const Tensor & base, Tensor tensor) {
   return make_variable_view(std::move(base_var), std::move(tensor));
 }
 
-static void ensure_no_aten_scalars(Tensor & data) {
-  if (data.defined() && data.dim() == 0) {
-    data.as_strided_({1}, {1});
-  }
-}
-
 template<typename T>
 static bool computes_grad_tmpl(T tensors) {
   if (!GradMode::is_enabled()) {
