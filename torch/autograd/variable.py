@@ -52,7 +52,6 @@ class Variable(_C._VariableBase):
         'ndimension',
         'element_size',
         'dim',
-        'is_cuda',
         'shape'
     }
 
