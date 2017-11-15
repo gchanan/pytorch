@@ -90,8 +90,7 @@ ${return_type} ${native_type_method_dispatch}(${formals_with_defaults});
 """)
 
 NATIVE_TEMPLATE_SCALAR_DECLARATION = CodeTemplate("""\
-template <typename scalartype>
-${return_type} ${native_type_method_dispatch}(${formals_with_defaults});
+template <typename scalartype> ${return_type} ${native_type_method_dispatch}(${formals_with_defaults});
 """)
 
 # We need to cast to the base type because C++ may hide the base class
