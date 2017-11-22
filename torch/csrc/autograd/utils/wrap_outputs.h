@@ -50,10 +50,6 @@ inline PyObject* wrap(bool value) {
   }
 }
 
-inline PyObject* wrap(int value) {
-  return THPUtils_packInt64(value);
-}
-
 inline PyObject* wrap(int64_t value) {
   return THPUtils_packInt64(value);
 }

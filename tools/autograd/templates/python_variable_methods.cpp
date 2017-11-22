@@ -212,12 +212,6 @@ static float dispatch_to_CFloat(const Tensor & self) {
   return self.toCFloat();
 }
 
-static int dispatch_to_CInt(const Tensor & self) {
-  AutoNoGIL no_gil;
-  AutoGPU auto_gpu(self);
-  return self.toCInt();
-}
-
 static int64_t dispatch_to_CLong(const Tensor & self) {
   AutoNoGIL no_gil;
   AutoGPU auto_gpu(self);
@@ -234,7 +228,9 @@ static PyObject * THPVariable_float_scalar(PyObject* self, PyObject* args) {
 static PyObject * THPVariable_int_scalar(PyObject* self, PyObject* args) {
   HANDLE_TH_ERRORS
   auto& self_ = reinterpret_cast<THPVariable*>(self)->cdata;
-  return wrap(dispatch_to_CInt(self_));
+  // note we want an int64_t here, not an int so we avoid ATen overflow checks
+  // because in Python2 int(...) will return a long on overflow.
+  return wrap(dispatch_to_CLong(self_));
   END_HANDLE_TH_ERRORS
 }
 
