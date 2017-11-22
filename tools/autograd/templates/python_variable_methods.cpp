@@ -206,10 +206,10 @@ static PyObject * THPVariable_detach_(PyObject* self, PyObject* args)
   END_HANDLE_TH_ERRORS
 }
 
-static float dispatch_to_CFloat(const Tensor & self) {
+static float dispatch_to_CDouble(const Tensor & self) {
   AutoNoGIL no_gil;
   AutoGPU auto_gpu(self);
-  return self.toCFloat();
+  return self.toCDouble();
 }
 
 static int64_t dispatch_to_CLong(const Tensor & self) {
@@ -218,10 +218,10 @@ static int64_t dispatch_to_CLong(const Tensor & self) {
   return self.toCLong();
 }
 
-static PyObject * THPVariable_float_scalar(PyObject* self, PyObject* args) {
+static PyObject * THPVariable_double_scalar(PyObject* self, PyObject* args) {
   HANDLE_TH_ERRORS
   auto& self_ = reinterpret_cast<THPVariable*>(self)->cdata;
-  return wrap(dispatch_to_CFloat(self_));
+  return wrap(dispatch_to_CDouble(self_));
   END_HANDLE_TH_ERRORS
 }
 
@@ -327,7 +327,7 @@ PyMethodDef variable_methods[] = {
   {"__idiv__", (PyCFunction)THPVariable_div_, METH_VARARGS | METH_KEYWORDS, NULL},
   {"__mod__", (PyCFunction)THPVariable_remainder, METH_VARARGS | METH_KEYWORDS, NULL},
   {"__bool__", (PyCFunction)THPVariable_is_nonzero, METH_NOARGS, NULL},
-  {"__float__", (PyCFunction)THPVariable_float_scalar, METH_NOARGS, NULL},
+  {"__float__", (PyCFunction)THPVariable_double_scalar, METH_NOARGS, NULL},
   // note we want an long here, not an int so we avoid ATen overflow checks
   // because in Python2 int(...) will return a long on overflow.
   {"__int__", (PyCFunction)THPVariable_long_scalar, METH_NOARGS, NULL},
