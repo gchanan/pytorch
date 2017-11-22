@@ -225,15 +225,6 @@ static PyObject * THPVariable_float_scalar(PyObject* self, PyObject* args) {
   END_HANDLE_TH_ERRORS
 }
 
-static PyObject * THPVariable_int_scalar(PyObject* self, PyObject* args) {
-  HANDLE_TH_ERRORS
-  auto& self_ = reinterpret_cast<THPVariable*>(self)->cdata;
-  // note we want an int64_t here, not an int so we avoid ATen overflow checks
-  // because in Python2 int(...) will return a long on overflow.
-  return wrap(dispatch_to_CLong(self_));
-  END_HANDLE_TH_ERRORS
-}
-
 static PyObject * THPVariable_long_scalar(PyObject* self, PyObject* args) {
   HANDLE_TH_ERRORS
   auto& self_ = reinterpret_cast<THPVariable*>(self)->cdata;
@@ -337,7 +328,9 @@ PyMethodDef variable_methods[] = {
   {"__mod__", (PyCFunction)THPVariable_remainder, METH_VARARGS | METH_KEYWORDS, NULL},
   {"__bool__", (PyCFunction)THPVariable_is_nonzero, METH_NOARGS, NULL},
   {"__float__", (PyCFunction)THPVariable_float_scalar, METH_NOARGS, NULL},
-  {"__int__", (PyCFunction)THPVariable_int_scalar, METH_NOARGS, NULL},
+  // note we want an long here, not an int so we avoid ATen overflow checks
+  // because in Python2 int(...) will return a long on overflow.
+  {"__int__", (PyCFunction)THPVariable_long_scalar, METH_NOARGS, NULL},
   {"__long__", (PyCFunction)THPVariable_long_scalar, METH_NOARGS, NULL},
   {"__nonzero__", (PyCFunction)THPVariable_is_nonzero, METH_NOARGS, NULL},
   {"byte", (PyCFunction)THPVariable_byte, METH_NOARGS, NULL},
