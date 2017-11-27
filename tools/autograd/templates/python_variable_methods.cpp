@@ -206,16 +206,10 @@ static PyObject * THPVariable_detach_(PyObject* self, PyObject* args)
   END_HANDLE_TH_ERRORS
 }
 
-static float dispatch_to_CDouble(const Tensor & self) {
+static double dispatch_to_CDouble(const Tensor & self) {
   AutoNoGIL no_gil;
   AutoGPU auto_gpu(self);
   return self.toCDouble();
-}
-
-static int64_t dispatch_to_CLong(const Tensor & self) {
-  AutoNoGIL no_gil;
-  AutoGPU auto_gpu(self);
-  return self.toCLong();
 }
 
 static PyObject * THPVariable_double_scalar(PyObject* self, PyObject* args) {
@@ -229,19 +223,16 @@ static PyObject * THPVariable_long_scalar(PyObject* self, PyObject* args) {
   HANDLE_TH_ERRORS
   auto& self_ = reinterpret_cast<THPVariable*>(self)->cdata;
   {
-    AutoNoGIL no_gil;
     AutoGPU auto_gpu(self_);
     Scalar localScalar = self_.get()->localScalar();
     if (localScalar.isFloatingPoint()) {
-      double d  = localScalar.toDouble();
-      return THPUtils_packDoubleAsInt(d);
+      return THPUtils_packDoubleAsInt(localScalar.toDouble());
     } else if (localScalar.isIntegral()) {
       return THPUtils_packInt64(localScalar.toLong());
     } else {
-      throw std::runtime_error("got non floating point no-int obj");
+      throw std::runtime_error("unexpected: got non-floating point, non-integral scalar from localScalar");
     }
   }
-  //return wrap(dispatch_to_CLong(self_));
   END_HANDLE_TH_ERRORS
 }
 

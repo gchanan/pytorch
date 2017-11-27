@@ -18,15 +18,11 @@ inline PyObject* THPUtils_packInt64(int64_t value) {
 
 inline PyObject* THPUtils_packDoubleAsInt(double value) {
 #if PY_MAJOR_VERSION == 2
-  //if (value <= INT32_MAX && value >= INT32_MIN) {
-    
-  //  return PyInt_FromLong(static_cast<long>(value));
-  //}
+  if (value <= INT32_MAX && value >= INT32_MIN) {
+    return PyInt_FromLong(static_cast<long>(value));
+  }
 #endif
-  std::cerr << "TRying to get long from double of " << value << std::endl;
-  PyObject *obj = PyLong_FromDouble(value);
-  std::cerr << "got it" << std::endl;
-  return obj;
+  return PyLong_FromDouble(value);
 }
 
 inline bool THPUtils_checkLong(PyObject* obj) {
