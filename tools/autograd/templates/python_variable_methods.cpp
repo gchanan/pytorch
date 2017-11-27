@@ -228,7 +228,20 @@ static PyObject * THPVariable_double_scalar(PyObject* self, PyObject* args) {
 static PyObject * THPVariable_long_scalar(PyObject* self, PyObject* args) {
   HANDLE_TH_ERRORS
   auto& self_ = reinterpret_cast<THPVariable*>(self)->cdata;
-  return wrap(dispatch_to_CLong(self_));
+  {
+    AutoNoGIL no_gil;
+    AutoGPU auto_gpu(self_);
+    Scalar localScalar = self_.get()->localScalar();
+    if (localScalar.isFloatingPoint()) {
+      double d  = localScalar.toDouble();
+      return THPUtils_packDoubleAsInt(d);
+    } else if (localScalar.isIntegral()) {
+      return THPUtils_packInt64(localScalar.toLong());
+    } else {
+      throw std::runtime_error("got non floating point no-int obj");
+    }
+  }
+  //return wrap(dispatch_to_CLong(self_));
   END_HANDLE_TH_ERRORS
 }
 

@@ -1237,15 +1237,19 @@ class TestAutograd(TestCase):
         i[0] = scalar
         # self.assertEqual(float(i), float(scalar))
 
+        print("float -> int")
         # floating point -> integral
         f[0] = float('nan')
+        print("t1")
         self.assertRaises(RuntimeError, lambda: int(f[0]))
         f[0] = float('inf')
+        print('t2')
         self.assertRaises(RuntimeError, lambda: int(f[0]))
         f[0] = float('-inf')
+        print('t3')
         self.assertRaises(RuntimeError, lambda: int(f[0]))
         f[0] = sys.float_info.max
-        # self.assertEqual(int(f), sys.float_info.max)
+        #self.assertEqual(int(f), sys.float_info.max)
 
         # bool, nonzero
         def test_nonzero(tensor, value, expected):
@@ -1261,9 +1265,12 @@ class TestAutograd(TestCase):
         test_nonzero(f, float('inf'), bool(float('inf')))
         test_nonzero(f, float('-inf'), bool(float('-inf')))
 
+        # FixMe: long
+
     def test_scalar_conversions(self):
         self._test_scalar_conversions(lambda x: x)
         if torch.cuda.is_available():
+            print('cuda')
             self._test_scalar_conversions(lambda x: x.cuda())
 
     def test_isolated_node(self):
