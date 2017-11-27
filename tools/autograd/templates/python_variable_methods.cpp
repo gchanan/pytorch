@@ -212,6 +212,12 @@ static double dispatch_to_CDouble(const Tensor & self) {
   return self.toCDouble();
 }
 
+static int64_t dispatch_to_CLong(const Tensor & self) {
+  AutoNoGIL no_gil;
+  AutoGPU auto_gpu(self);
+  return self.toCLong();
+}
+
 static PyObject * THPVariable_float_scalar(PyObject* self, PyObject* args) {
   HANDLE_TH_ERRORS
   auto& self_ = reinterpret_cast<THPVariable*>(self)->cdata;
@@ -222,16 +228,14 @@ static PyObject * THPVariable_float_scalar(PyObject* self, PyObject* args) {
 static PyObject * THPVariable_integral_scalar(PyObject* self, PyObject* args) {
   HANDLE_TH_ERRORS
   auto& self_ = reinterpret_cast<THPVariable*>(self)->cdata;
-  {
+  if (isFloatingType(self_.type().scalarType())) {
+    // we can't dispatch to toCLong here because we want to avoid ATen overflow checks;
+    // the python integral type (long in python2) can't overflow.
     AutoGPU auto_gpu(self_);
     Scalar localScalar = self_.get()->localScalar();
-    if (localScalar.isFloatingPoint()) {
-      return THPUtils_packDoubleAsInt(localScalar.toDouble());
-    } else if (localScalar.isIntegral()) {
-      return THPUtils_packInt64(localScalar.toLong());
-    } else {
-      throw std::runtime_error("unexpected: got non-floating point, non-integral scalar from localScalar");
-    }
+    return THPUtils_packDoubleAsInt(localScalar.toDouble());
+  } else {
+    return wrap(dispatch_to_CLong(self_));
   }
   END_HANDLE_TH_ERRORS
 }
