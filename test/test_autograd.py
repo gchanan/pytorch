@@ -1213,10 +1213,10 @@ class TestAutograd(TestCase):
 
     def _test_scalar_conversions(self, t, integral_conv):
         # integral -> integral
-        i = Variable(t(torch.zeros(1, 1, 1).long()))
+        l = Variable(t(torch.zeros(1, 1, 1).long()))
         scalar = -12345
-        i[0] = scalar
-        self.assertEqual(integral_conv(i), scalar)
+        l[0] = scalar
+        self.assertEqual(integral_conv(l), scalar)
 
         # floating point -> floating point
         f = Variable(t(torch.randn(1, 1)))
@@ -1234,8 +1234,8 @@ class TestAutograd(TestCase):
         # check we can convert something that loses precision
         scalar = 1234567890123456789
         self.assertNotEqual(scalar, integral_conv(float(scalar)))
-        i[0] = scalar
-        self.assertEqual(float(i), float(scalar))
+        l[0] = scalar
+        self.assertEqual(float(l), float(scalar))
 
         # floating point -> integral
         f[0] = float('nan')
@@ -1253,15 +1253,13 @@ class TestAutograd(TestCase):
             self.assertEqual(expected, bool(tensor))
             self.assertEqual(expected, True if tensor else False)
 
-        test_nonzero(i, 0, False)
-        test_nonzero(i, -2, True)
+        test_nonzero(l, 0, False)
+        test_nonzero(l, -2, True)
         test_nonzero(f, 0.0, False)
         test_nonzero(f, sys.float_info.min, True)
         test_nonzero(f, float('nan'), bool(float('nan')))
         test_nonzero(f, float('inf'), bool(float('inf')))
         test_nonzero(f, float('-inf'), bool(float('-inf')))
-
-        # FixMe: long
 
     def test_scalar_conversions(self):
         self._test_scalar_conversions(lambda x: x, lambda x: int(x))
@@ -1271,7 +1269,6 @@ class TestAutograd(TestCase):
             self._test_scalar_conversions(lambda x: x.cuda(), lambda x: int(x))
             if sys.version_info[0] == 2:
                 self._test_scalar_conversions(lambda x: x.cuda(), lambda x: long(x))
-
 
     def test_isolated_node(self):
         x = Variable(torch.randn(5, 5), requires_grad=True)
