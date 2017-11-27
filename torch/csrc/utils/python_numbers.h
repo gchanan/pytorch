@@ -2,7 +2,6 @@
 
 #include <Python.h>
 #include <stdint.h>
-#include <iostream>
 
 // largest integer that can be represented consecutively in a double
 const int64_t DOUBLE_INT_MAX = 9007199254740992;
