@@ -1220,7 +1220,7 @@ class TestAutograd(TestCase):
 
         # floating point -> floating point
         f = Variable(t(torch.randn(1, 1)))
-        scalar = -12345.0
+        scalar = -12345.1
         f[0] = scalar
         self.assertEqual(float(f), scalar)
         f[0] = float('nan')
