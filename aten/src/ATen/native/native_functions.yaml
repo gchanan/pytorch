@@ -79,6 +79,8 @@
 - func: stack(TensorList tensors, int64_t dim=0) -> Tensor
   variants: function
 
+- func: allclose(Tensor self, Tensor other, double rtol=1e-5, double atol=1e-8) -> bool
+
 - func: is_signed(Tensor self) -> bool
   template_scalar: True
 

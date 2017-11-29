@@ -281,6 +281,14 @@ Tensor stack(TensorList tensors, int64_t dim) {
   return at::cat(inputs, dim);
 }
 
+bool allclose(const Tensor& self, const Tensor& other, double rtol, double atol) {
+  if (!self.sub(other).abs().le(other.abs().mul(rtol).add(atol)).all()) {
+    return false;
+  }
+
+  return true;
+}
+
 std::tuple<at::Tensor, at::Tensor> RoiPooling2d_forward_cpu(
 	const Tensor& input,
 	const Tensor& rois,
