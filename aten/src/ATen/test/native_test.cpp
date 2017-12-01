@@ -104,9 +104,12 @@ int main() {
     ASSERT_ALLCLOSE(d5.matmul(d1), d5.view({24, 2, 3}).bmm(d1.view({1, 3, 1}).expand({24, 3, 1})).view({3, 2, 4, 2}));
     ASSERT_ALLCLOSE(d1o.matmul(d5), d1o.expand({24, 1, 2}).bmm(d5.view({24, 2, 3})).view({3, 2, 4, 3}));
 
+    return 0;
     // > 2-d, 2-d
     d2 = T.randn({3, 4});
     d2o = T.randn({4, 2});
+    std::cerr << d3.matmul(d2) << std::endl;
+    std::cerr << d3.bmm(d2.expand({5, 3, 4}))<< std::endl;
     ASSERT_ALLCLOSE(d3.matmul(d2), d3.bmm(d2.expand({5, 3, 4})));
     ASSERT_ALLCLOSE(d2o.matmul(d3), d2o.expand({5, 4, 2}).bmm(d3));
 

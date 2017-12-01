@@ -1,7 +1,9 @@
 #include "ATen/ATen.h"
 #include "ATen/NativeFunctions.h"
+#include "ATen/ApplyUtils.h"
 #include "ATen/WrapDimUtils.h"
 #include "ATen/ExpandUtils.h"
+#include <TH/TH.h>
 #include <functional>
 #include <numeric>
 
