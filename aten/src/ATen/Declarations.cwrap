@@ -3956,6 +3956,17 @@
 ]]
 
 [[
+  name: _copyIgnoringOverlaps
+  cname: copyIgnoringOverlaps
+  return: self
+  backends:
+    - CUDA
+  arguments:
+    - THTensor* self
+    - THTensor* src
+]]
+
+[[
   name: as_strided
   variants: [method,function]
   return: argument 0

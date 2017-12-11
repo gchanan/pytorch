@@ -40,7 +40,7 @@ namespace at {
   int ATENSOR##_contiguous = ALLOW_CONTIGUOUS && DIM < 0; \
 \
   if(ATENSOR.dim() == 0) \
-    TH_TENSOR_APPLY_hasFinished = 1; \
+    TH_TENSOR_APPLY_hasFinished = true; \
   else \
   { \
     ATENSOR##_data = ATENSOR.data<TYPE>(); \
@@ -118,7 +118,7 @@ namespace at {
       { \
         if(ATENSOR##_i == 0) \
         { \
-          TH_TENSOR_APPLY_hasFinished = 1; \
+          TH_TENSOR_APPLY_hasFinished = true; \
           break; \
         } \
           else \
@@ -134,21 +134,21 @@ namespace at {
     ATENSOR##_i = 0; \
   } \
 
-#define ATH_TENSOR_APPLY2_D(TYPE1, TYPE2, ATENSOR1, ATENSOR2, DIM, CODE) \
+#define ATH_TENSOR_APPLY2_D(TYPE, ATENSOR1, ATENSOR2, DIM, CODE) \
 { \
-  int TH_TENSOR_APPLY_hasFinished = 0; \
+  bool TH_TENSOR_APPLY_hasFinished = false; \
   int64_t TH_TENSOR_dim_index = 0; \
-  __ATH_TENSOR_APPLYX_PREAMBLE(TYPE1, ATENSOR1, DIM, 1) \
-  __ATH_TENSOR_APPLYX_PREAMBLE(TYPE2, ATENSOR2, DIM, 1) \
+  __ATH_TENSOR_APPLYX_PREAMBLE(TYPE, ATENSOR1, DIM, 1) \
+  __ATH_TENSOR_APPLYX_PREAMBLE(TYPE, ATENSOR2, DIM, 1) \
 \
-    auto t1_numel = ATENSOR1.numel(); \
-    auto t2_numel = ATENSOR2.numel(); \
-    if(t1_numel != t2_numel) {                                    \
-      std::ostringstream oss; \
-      oss << "inconsistent tensor size, expected " << ATENSOR1.sizes() << " and " << ATENSOR2.sizes() \
-          << " to have the same number of elements, but got " << t1_numel << " and " << t2_numel << " elements respectively"; \
-      throw std::runtime_error(oss.str()); \
-    }                                                                   \
+  auto t1_numel = ATENSOR1.numel(); \
+  auto t2_numel = ATENSOR2.numel(); \
+  if(t1_numel != t2_numel) {                                    \
+    std::ostringstream oss; \
+    oss << "inconsistent tensor size, expected " << ATENSOR1.sizes() << " and " << ATENSOR2.sizes() \
+        << " to have the same number of elements, but got " << t1_numel << " and " << t2_numel << " elements respectively"; \
+    throw std::runtime_error(oss.str()); \
+  }                                                                   \
   while(!TH_TENSOR_APPLY_hasFinished) \
   { \
     /* Loop through the inner most region of the Tensor */ \
@@ -165,8 +165,47 @@ namespace at {
     delete [] ATENSOR2##_counter; \
 }
 
-#define ATH_TENSOR_APPLY2(TYPE1, TYPE2, ATENSOR1, ATENSOR2, CODE) \
-  ATH_TENSOR_APPLY2_D(TYPE1, TYPE2, ATENSOR1, ATENSOR2, -1, CODE)
+template <typename ScalarType, typename Op>
+void tensor_apply2(Tensor& tensor1, Tensor& tensor2, int64_t dim, Op& op) {
+  bool TH_TENSOR_APPLY_hasFinished = false;
+  int64_t TH_TENSOR_dim_index = 0;
+  __ATH_TENSOR_APPLYX_PREAMBLE(ScalarType, tensor1, dim, 1)
+  __ATH_TENSOR_APPLYX_PREAMBLE(ScalarType, tensor2, dim, 1)
+  auto t1_numel = tensor1.numel();
+  auto t2_numel = tensor2.numel();
+  if(t1_numel != t2_numel) {
+    std::ostringstream oss;
+    oss << "inconsistent tensor size, expected " << tensor1.sizes() << " and " << tensor2.sizes()
+        << " to have the same number of elements, but got " << t1_numel << " and " << t2_numel << " elements respectively";
+    throw std::runtime_error(oss.str());
+  }
+  while(!TH_TENSOR_APPLY_hasFinished)
+  {
+    /*/* Loop through the inner most region of the Tensor */
+    for(; tensor1_i < tensor1_size && tensor2_i < tensor2_size; tensor1_i++, tensor2_i++, tensor1_data += tensor1_stride, tensor2_data += tensor2_stride)
+    {
+      op(*tensor1_data, *tensor2_data, TH_TENSOR_APPLY_hasFinished);
+    }
+    __ATH_TENSOR_APPLYX_UPDATE_COUNTERS(tensor1, 0)
+    __ATH_TENSOR_APPLYX_UPDATE_COUNTERS(tensor2, 0)
+  }
+  if(tensor1_counter != NULL)
+    delete [] tensor1_counter;
+  if(tensor2_counter != NULL)
+    delete [] tensor2_counter;
+}
+
+#define ATH_TENSOR_APPLY2(TYPE, ATENSOR1, ATENSOR2, CODE) \
+  ATH_TENSOR_APPLY2_D(TYPE, ATENSOR1, ATENSOR2, -1, CODE)
 
 
+template<typename ScalarType, typename Op>
+void tensor_apply2_op(Tensor tensor1, Tensor tensor2, Op& op) {
+  tensor_apply2<ScalarType, Op>(tensor1, tensor2, -1, op);
+}
+
+/*#define ATH_TENSOR_APPLY2_OP(TYPE, ATENSOR1, ATENSOR2, OP) \
+//tensor_apply2<TYPE, Op>
+  //tensor_apply2(TYPE, ATENSOR1, ATENSOR2, -1, OP)
+*/
 }

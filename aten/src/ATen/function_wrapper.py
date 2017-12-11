@@ -64,6 +64,12 @@ ${return_type} ${Type}::${api_name}(${formals}) const {
 }
 """)
 
+TYPE_DERIVED_DEFINITION_NATIVE_HALF_SCALAR = CodeTemplate("""\
+${return_type} ${Type}::${api_name}(${formals}) const {
+    runtime_error("not implemented");
+}
+""")
+
 # 6. add non-virtual declaration to Tensor.h
 TENSOR_METHOD_DECLARATION = CodeTemplate("""\
 ${return_type} ${api_name}(${method_formals_with_defaults})${const_mark};
@@ -1048,16 +1054,27 @@ def create_derived(backend_type_env, declarations):
                 type_object_declarations.append(
                     TYPE_DERIVED_DECLARATION.substitute(env))
                 if template_scalar:
-                    type_object_definitions.append(
-                        TYPE_DERIVED_DEFINITION_NATIVE_TEMPLATE_SCALAR.substitute(env))
+                    #print("OPTION SCALARTYPE", option['ScalarType'])
+                    #if option['ScalarType'] == 'Half':
+                    if backend_type_env['ScalarName'] == 'Half':
+                        type_object_definitions.append(
+                            TYPE_DERIVED_DEFINITION_NATIVE_HALF_SCALAR.substitute(env))
+                    else:
+                        type_object_definitions.append(
+                            TYPE_DERIVED_DEFINITION_NATIVE_TEMPLATE_SCALAR.substitute(env))
                 else:
                     type_object_definitions.append(
                         TYPE_DERIVED_DEFINITION_NATIVE.substitute(env))
         elif template_scalar:
             type_object_declarations.append(
                 TYPE_DERIVED_DECLARATION.substitute(env))
-            type_object_definitions.append(
-                TYPE_DERIVED_DEFINITION_NATIVE_TEMPLATE_SCALAR.substitute(env))
+            print("OPTION SCALARTYPE", backend_type_env['ScalarName'])
+            if backend_type_env['ScalarName'] == 'Half':
+                type_object_definitions.append(
+                    TYPE_DERIVED_DEFINITION_NATIVE_HALF_SCALAR.substitute(env))
+            else:
+                type_object_definitions.append(
+                    TYPE_DERIVED_DEFINITION_NATIVE_TEMPLATE_SCALAR.substitute(env))
 
     for declaration in declarations:
         for option in declaration['options']:
