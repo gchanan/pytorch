@@ -88,6 +88,12 @@
 - func: allclose2(Tensor self, Tensor other, double rtol=1e-5, double atol=1e-8) -> bool
   template_scalar: True
 
+- func: allclose3(Tensor self, Tensor other, double rtol=1e-5, double atol=1e-8) -> bool
+  template_scalar: True
+  dispatch:
+    CPU: allclose3_cpu
+    CUDA: allclose3_cuda
+
 - func: is_signed(Tensor self) -> bool
   template_scalar: True
 

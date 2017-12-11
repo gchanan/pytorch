@@ -1,8 +1,52 @@
 #include "ATen/NativeFunctions.h"
+#include "ApplyUtils.cuh"
 #include <cfloat>
 
 namespace at {
 namespace native {
+
+template <typename scalartype>
+struct AllCloseOp2 {
+  bool equal = true;
+  __device__ __forceinline__ void operator()(const scalartype& x, const scalartype& y, bool& early_exit)
+  {
+    if (x != y) {
+      equal = false;
+      early_exit = true;
+    }
+  }
+};
+
+template <typename ScalarType>
+bool allclose3_cuda(const Tensor& self, const Tensor& other, double rtol, double atol) {
+  AllCloseOp2<ScalarType> op;
+  pointwiseApply2<ScalarType, AllCloseOp2<ScalarType>>(self, other, op);
+  return op.equal;
+}
+
+
+template
+bool allclose3_cuda<signed char>(const Tensor& self, const Tensor& other, double rtol, double atol);
+
+
+template
+bool allclose3_cuda<unsigned char>(const Tensor& self, const Tensor& other, double rtol, double atol);
+
+template
+bool allclose3_cuda<short>(const Tensor& self, const Tensor& other, double rtol, double atol);
+
+template
+bool allclose3_cuda<int>(const Tensor& self, const Tensor& other, double rtol, double atol);
+
+template
+bool allclose3_cuda<long>(const Tensor& self, const Tensor& other, double rtol, double atol);
+
+template
+bool allclose3_cuda<float>(const Tensor& self, const Tensor& other, double rtol, double atol);
+
+template
+bool allclose3_cuda<double>(const Tensor& self, const Tensor& other, double rtol, double atol);
+
 
 __host__ __device__ __forceinline__ float fmin(float a, float b) {
   return a > b ? b : a;
