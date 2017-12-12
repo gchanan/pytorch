@@ -206,9 +206,8 @@ class _StandardGamma(Function):
         return x
 
     @staticmethod
-    @once_differentiable
     def backward(ctx, grad_output):
-        x, alpha = ctx.saved_tensors
+        x, alpha = ctx.saved_variables
         grad = torch._C._standard_gamma_grad(x, alpha)
         return grad_output * grad
 
