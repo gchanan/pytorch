@@ -1,6 +1,8 @@
 #include "ATen/NativeFunctions.h"
+//#include "ApplyUtils.cuh"
 #include "ApplyUtils.cuh"
 #include <cfloat>
+//#include "THC/THCApply.cuh"
 
 namespace at {
 namespace native {
@@ -17,35 +19,50 @@ struct AllCloseOp2 {
   }
 };
 
+template <typename scalartype, typename scalartype2>
+struct AllCloseOp3 {
+  bool equal = true;
+  __device__ __forceinline__ void operator()(scalartype* x, scalartype2* y)
+  {
+    if (*x != *y) {
+      equal = false;
+      //early_exit = true;
+    }
+  }
+};
+
 template <typename ScalarType>
 bool allclose3_cuda(const Tensor& self, const Tensor& other, double rtol, double atol) {
   AllCloseOp2<ScalarType> op;
   pointwiseApply2<ScalarType, AllCloseOp2<ScalarType>>(self, other, op);
+  //THCudaTensor *s = (THCudaTensor*)self.unsafeGetTH(false);
+  //THCudaTensor *o = (THCudaTensor*)other.unsafeGetTH(false);
+  //THCState *state = at::globalContext().thc_state;
+  
+  //ATen_pointwiseApply2(state, s, o, self, other, op);
   return op.equal;
 }
 
+template<>
+bool allclose3_cuda<signed char>(const Tensor& self, const Tensor& other, double rtol, double atol) {return true;}
 
-template
-bool allclose3_cuda<signed char>(const Tensor& self, const Tensor& other, double rtol, double atol);
 
+template<>
+bool allclose3_cuda<unsigned char>(const Tensor& self, const Tensor& other, double rtol, double atol) {return true;}
 
-template
-bool allclose3_cuda<unsigned char>(const Tensor& self, const Tensor& other, double rtol, double atol);
+template<>
+bool allclose3_cuda<short>(const Tensor& self, const Tensor& other, double rtol, double atol) {return true;}
 
-template
-bool allclose3_cuda<short>(const Tensor& self, const Tensor& other, double rtol, double atol);
+template<>
+bool allclose3_cuda<int>(const Tensor& self, const Tensor& other, double rtol, double atol) {return true;}
 
-template
-bool allclose3_cuda<int>(const Tensor& self, const Tensor& other, double rtol, double atol);
-
-template
-bool allclose3_cuda<long>(const Tensor& self, const Tensor& other, double rtol, double atol);
+template<>
+bool allclose3_cuda<long>(const Tensor& self, const Tensor& other, double rtol, double atol) {return true;}
 
 template
 bool allclose3_cuda<float>(const Tensor& self, const Tensor& other, double rtol, double atol);
-
-template
-bool allclose3_cuda<double>(const Tensor& self, const Tensor& other, double rtol, double atol);
+template<>
+bool allclose3_cuda<double>(const Tensor& self, const Tensor& other, double rtol, double atol) {return true;}
 
 
 __host__ __device__ __forceinline__ float fmin(float a, float b) {

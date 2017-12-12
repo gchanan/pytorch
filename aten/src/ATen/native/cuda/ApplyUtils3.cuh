@@ -1,6 +1,9 @@
 #ifndef THC_APPLY3_INC
 #define THC_APPLY3_INC
 
+#include "ATen/TensorUtils.h"
+#include "ATen/TensorInfo.h"
+
 #include "THCTensorCopy.h"
 #include "THCReduceApplyUtils.cuh"
 #include "THCTensorTypeUtils.cuh"
@@ -16,27 +19,6 @@
 // FIXME: use occupancy calculator instead
 #define THC_APPLY_THREADS_PER_BLOCK 32 * 16
 #define THC_APPLY_BLOCKS_PER_SM 4
-template <typename Op,
-          typename Ta,
-          typename IndexType,
-          int ADims>
-#if __CUDA_ARCH__ >= 350
-__launch_bounds__(THC_APPLY_THREADS_PER_BLOCK, THC_APPLY_BLOCKS_PER_SM)
-#endif
-__global__ void
-kernelPointwiseApply1(TensorInfo<Ta, IndexType> a,
-                      IndexType totalElements,
-                      Op op) {
-  for (IndexType linearIndex = blockIdx.x * blockDim.x + threadIdx.x;
-       linearIndex < totalElements;
-       linearIndex += gridDim.x * blockDim.x) {
-    // Convert `linearIndex` into an offset of `a`
-    const IndexType aOffset =
-      IndexToOffset<Ta, IndexType, ADims>::get(linearIndex, a);
-
-    op(&a.data[aOffset]);
-  }
-}
 
 template <typename Op,
           typename Ta, typename Tb,
@@ -49,7 +31,7 @@ __global__ void
 kernelPointwiseApply2(TensorInfo<Ta, IndexType> a,
                       TensorInfo<Tb, IndexType> b,
                       IndexType totalElements,
-                      Op op) {
+                      Op& op) {
   for (IndexType linearIndex = blockIdx.x * blockDim.x + threadIdx.x;
        linearIndex < totalElements;
        linearIndex += gridDim.x * blockDim.x) {
@@ -62,38 +44,6 @@ kernelPointwiseApply2(TensorInfo<Ta, IndexType> a,
       IndexToOffset<Tb, IndexType, BDims>::get(linearIndex, b);
 
     op(&a.data[aOffset], &b.data[bOffset]);
-  }
-}
-
-template <typename Op,
-          typename Ta, typename Tb, typename Tc,
-          typename IndexType,
-          int ADims, int BDims, int CDims>
-#if __CUDA_ARCH__ >= 350
-__launch_bounds__(THC_APPLY_THREADS_PER_BLOCK, THC_APPLY_BLOCKS_PER_SM)
-#endif
-__global__ void
-kernelPointwiseApply3(TensorInfo<Ta, IndexType> a,
-                      TensorInfo<Tb, IndexType> b,
-                      TensorInfo<Tc, IndexType> c,
-                      IndexType totalElements,
-                      Op op) {
-  for (IndexType linearIndex = blockIdx.x * blockDim.x + threadIdx.x;
-       linearIndex < totalElements;
-       linearIndex += gridDim.x * blockDim.x) {
-    // Convert `linearIndex` into an offset of `a`
-    const IndexType aOffset =
-      IndexToOffset<Ta, IndexType, ADims>::get(linearIndex, a);
-
-    // Convert `linearIndex` into an offset of `b`
-    const IndexType bOffset =
-      IndexToOffset<Tb, IndexType, BDims>::get(linearIndex, b);
-
-    // Convert `linearIndex` into an offset of `c`
-    const IndexType cOffset =
-      IndexToOffset<Tc, IndexType, CDims>::get(linearIndex, c);
-
-    op(&a.data[aOffset], &b.data[bOffset], &c.data[cOffset]);
   }
 }
 
@@ -118,25 +68,25 @@ template <typename TensorTypeA,
           typename TensorTypeB,
           typename Op>
 bool ATen_pointwiseApply2(THCState* state,
-                         TensorTypeA* a,
-                         TensorTypeB* b,
-                         at::Tensor ta,
-                         at::Tensor tb,
-                         const Op& op,
-                         TensorArgType aType = ReadWrite,
-                         TensorArgType bType = ReadOnly) {
+                          TensorTypeA* a,
+                          TensorTypeB* b,
+                          at::Tensor ta,
+                          at::Tensor tb,
+                          Op& op,
+                          TensorArgType aType = ReadWrite,
+                          TensorArgType bType = ReadOnly) {
   int64_t totalElements = ta.numel();
 
-  if (totalElements != TensorUtils<TensorTypeB>::getNumElements(state, b)) {
+  if (totalElements != tb.numel()) {
     return false;
   }
 
-  if (TensorUtils<TensorTypeA>::getDims(state, a) > MAX_CUTORCH_DIMS ||
-      TensorUtils<TensorTypeB>::getDims(state, b) > MAX_CUTORCH_DIMS) {
+  if (ta.dim() > MAX_CUTORCH_DIMS ||
+      tb.dim() > MAX_CUTORCH_DIMS) {
     return false;
   }
 
-  if (TensorUtils<TensorTypeA>::getDims(state, a) == 0) {
+  if (ta.dim() == 0) {
     // Zero-dim tensor; do nothing
     return true;
   }

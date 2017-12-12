@@ -1049,8 +1049,9 @@ def create_derived(backend_type_env, declarations):
             if pair in option['backend_type_pairs']:
                 native_dispatch = dispatch.get(pair[0])
                 if native_dispatch is None:
-                    raise Exception('could not find backend {} in native function dispatch specification {}'
-                                    .format(pair[0], dispatch))
+                    return
+                    #raise Exception('could not find backend {} in native function dispatch specification {}'
+                    #                .format(pair[0], dispatch))
                 option['native_type_method_dispatch'] = native_dispatch
                 type_object_declarations.append(
                     TYPE_DERIVED_DECLARATION.substitute(env))

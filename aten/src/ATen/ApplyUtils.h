@@ -166,7 +166,7 @@ namespace at {
 }
 
 template <typename ScalarType, typename Op>
-void tensor_apply2(Tensor& tensor1, Tensor& tensor2, int64_t dim, Op& op) {
+void tensor_apply2_dim(Tensor& tensor1, Tensor& tensor2, int64_t dim, Op op) {
   bool TH_TENSOR_APPLY_hasFinished = false;
   int64_t TH_TENSOR_dim_index = 0;
   __ATH_TENSOR_APPLYX_PREAMBLE(ScalarType, tensor1, dim, 1)
@@ -181,7 +181,7 @@ void tensor_apply2(Tensor& tensor1, Tensor& tensor2, int64_t dim, Op& op) {
   }
   while(!TH_TENSOR_APPLY_hasFinished)
   {
-    /*/* Loop through the inner most region of the Tensor */
+    /* Loop through the inner most region of the Tensor */
     for(; tensor1_i < tensor1_size && tensor2_i < tensor2_size; tensor1_i++, tensor2_i++, tensor1_data += tensor1_stride, tensor2_data += tensor2_stride)
     {
       op(*tensor1_data, *tensor2_data, TH_TENSOR_APPLY_hasFinished);
@@ -195,17 +195,57 @@ void tensor_apply2(Tensor& tensor1, Tensor& tensor2, int64_t dim, Op& op) {
     delete [] tensor2_counter;
 }
 
-#define ATH_TENSOR_APPLY2(TYPE, ATENSOR1, ATENSOR2, CODE) \
-  ATH_TENSOR_APPLY2_D(TYPE, ATENSOR1, ATENSOR2, -1, CODE)
-
-
 template<typename ScalarType, typename Op>
-void tensor_apply2_op(Tensor tensor1, Tensor tensor2, Op& op) {
-  tensor_apply2<ScalarType, Op>(tensor1, tensor2, -1, op);
+void tensor_apply2(Tensor tensor1, Tensor tensor2, Op op) {
+  tensor_apply2_dim<ScalarType, Op>(tensor1, tensor2, -1, op);
 }
 
-/*#define ATH_TENSOR_APPLY2_OP(TYPE, ATENSOR1, ATENSOR2, OP) \
-//tensor_apply2<TYPE, Op>
-  //tensor_apply2(TYPE, ATENSOR1, ATENSOR2, -1, OP)
-*/
+template <typename ScalarType, typename Op>
+void tensor_apply3_dim(Tensor &tensor1, Tensor& tensor2, Tensor& tensor3, int64_t dim, Op op) {
+  bool TH_TENSOR_APPLY_hasFinished = false;
+  int64_t TH_TENSOR_dim_index = 0;
+  __ATH_TENSOR_APPLYX_PREAMBLE(ScalarType, tensor1, dim, 1)
+  __ATH_TENSOR_APPLYX_PREAMBLE(ScalarType, tensor2, dim, 1)
+  __ATH_TENSOR_APPLYX_PREAMBLE(ScalarType, tensor3, dim, 1)
+
+  int elements_equal = 1;
+  auto t1_numel = tensor1.numel();
+  auto t2_numel = tensor2.numel();
+  auto t3_numel = tensor3.numel();
+  if(t1_numel!= t2_numel) {
+    elements_equal = 0;
+  } else if(t1_numel != t3_numel) {
+    elements_equal = 0;
+  }
+  if (elements_equal == 0) {
+    std::ostringstream oss;
+    oss << "inconsistent tensor size, expected " << tensor1.sizes() << ", " << tensor2.sizes() << ", and " << tensor3.sizes()
+        << " to have the same number of elements, but got " << t1_numel << ", " << t2_numel << ", and " << t3_numel << " elements respectively";
+    throw std::runtime_error(oss.str());
+  }
+
+  while(!TH_TENSOR_APPLY_hasFinished)
+  {
+    /* Loop through the inner most region of the Tensor */
+    for(; tensor1_i <  tensor1_size && tensor2_i < tensor2_size && tensor3_i < tensor3_size; tensor1_i++, tensor2_i++, tensor3_i++, tensor1_data += tensor1_stride, tensor2_data += tensor2_stride, tensor3_data += tensor3_stride)
+    {
+      op(*tensor1_data, *tensor2_data, *tensor3_data, TH_TENSOR_APPLY_hasFinished);
+    }
+    __ATH_TENSOR_APPLYX_UPDATE_COUNTERS(tensor1, 0)
+    __ATH_TENSOR_APPLYX_UPDATE_COUNTERS(tensor2, 0)
+    __ATH_TENSOR_APPLYX_UPDATE_COUNTERS(tensor3, 0)
+  }
+  if(tensor1_counter != NULL)
+    delete [] tensor1_counter;
+  if(tensor2_counter != NULL)
+    delete [] tensor2_counter;
+  if(tensor3_counter != NULL)
+    delete [] tensor3_counter;
+}
+
+template<typename ScalarType, typename Op>
+void tensor_apply3(Tensor tensor1, Tensor tensor2, Tensor tensor3, Op op) {
+  tensor_apply3_dim<ScalarType, Op>(tensor1, tensor2, tensor3, -1, op);
+}
+
 }
