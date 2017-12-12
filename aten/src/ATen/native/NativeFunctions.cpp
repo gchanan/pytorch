@@ -610,8 +610,8 @@ static inline ScalarType standard_gamma_grad_one(ScalarType x, ScalarType alpha)
   }
 
   // Use a bivariate rational approximation to the reparameterized gradient.
-  const ScalarType u = ::log(x / alpha);
-  const ScalarType v = ::log(alpha);
+  const ScalarType u = std::log(x / alpha);
+  const ScalarType v = std::log(alpha);
   static const ScalarType coef_uv[3][8] = {
     {0.16028008, -0.088064309, 0.019630876, -0.0016920282,
      1.0, 0.36659853, 0.10843863, 0.0066895454},
