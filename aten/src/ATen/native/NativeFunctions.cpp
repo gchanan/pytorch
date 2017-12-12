@@ -582,7 +582,7 @@ Tensor RoiPooling2d_backward_cpu(
 template <typename ScalarType>
 static inline ScalarType digamma_one(ScalarType x) {
   const ScalarType eps = x * 1e-2;
-  return (std::lgamma(x + eps) - std::lgamma(x - eps)) / (eps + eps);
+  return (::lgamma(x + eps) - ::lgamma(x - eps)) / (eps + eps);
 }
 
 /** Computes the reparameterized gradient -(d/dalpha cdf(x;alpha)) / pdf(x;alpha)
@@ -595,13 +595,13 @@ static inline ScalarType standard_gamma_grad_one(ScalarType x, ScalarType alpha)
     const ScalarType a0 = 1 / alpha;
     const ScalarType a1 = 1 / (alpha + 1);
     const ScalarType a2 = 1 / (alpha + 2);
-    const ScalarType pow_x_alpha = std::pow(x, alpha);
-    const ScalarType gamma_pdf = std::pow(x, alpha - 1) * std::exp(-x);
+    const ScalarType pow_x_alpha = ::pow(x, alpha);
+    const ScalarType gamma_pdf = ::pow(x, alpha - 1) * ::exp(-x);
     const ScalarType gamma_cdf = pow_x_alpha * (a0 - x*a1 + 0.5f*x*x*a2);
-    const ScalarType gamma_cdf_alpha = (std::log(x) - digamma_one(alpha)) * gamma_cdf
+    const ScalarType gamma_cdf_alpha = (::log(x) - digamma_one(alpha)) * gamma_cdf
         - pow_x_alpha * (a0*a0 - x*a1*a1 + 0.5f*x*x*a2*a2);
     const ScalarType result = -gamma_cdf_alpha / gamma_pdf;
-    return isnan(result) ? 0 : result;
+    return ::isnan(result) ? 0 : result;
   }
 
   // Use an asymptotic approximation for large alpha.
@@ -610,8 +610,8 @@ static inline ScalarType standard_gamma_grad_one(ScalarType x, ScalarType alpha)
   }
 
   // Use a bivariate rational approximation to the reparameterized gradient.
-  const ScalarType u = std::log(x / alpha);
-  const ScalarType v = std::log(alpha);
+  const ScalarType u = ::log(x / alpha);
+  const ScalarType v = ::log(alpha);
   static const ScalarType coef_uv[3][8] = {
     {0.16028008, -0.088064309, 0.019630876, -0.0016920282,
      1.0, 0.36659853, 0.10843863, 0.0066895454},
@@ -626,7 +626,7 @@ static inline ScalarType standard_gamma_grad_one(ScalarType x, ScalarType alpha)
   }
   const ScalarType p = coef_v[0] + v * (coef_v[1] + v * (coef_v[2] + v * coef_v[3]));
   const ScalarType q = coef_v[4] + v * (coef_v[5] + v * (coef_v[6] + v * coef_v[7]));
-  return std::exp(p / q);
+  return ::exp(p / q);
 }
 
 template <typename ScalarType>
@@ -659,7 +659,7 @@ struct AnotherF {
 
 Tensor standard_gamma_grad(const Tensor& self, const Tensor& alpha) {
   //StandardGammaGradOp<ScalarType> op;
-  Tensor ret = self.type().tensor(self.sizes());
+  Tensor ret = self.type().zeros(self.sizes());
   const Type& the_type = self.type();
   dispatch_cpu_floating_point2<AnotherF>(the_type, ret, self, alpha);
   //dispatch_cpu_floating_point<tensor_apply3>(ret, self, alpha, op);
