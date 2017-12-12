@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ATen/TensorUtils.h"
-#include "ATen/TensorInfo.h"
+#include "TensorUtils.cuh"
+//#include "TensorInfo.cuh"
 
 //
 // This file contains pointwise operation functions and kernels that

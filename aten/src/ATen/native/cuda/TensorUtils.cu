@@ -1,5 +1,5 @@
 #include "ATen/ATen.h"
-#include "ATen/TensorUtils.h"
+#include "TensorUtils.cuh"
 
 namespace at {
 namespace tensorutils {

@@ -95,9 +95,6 @@
   template_scalar: True
 
 - func: standard_gamma_grad(Tensor self, Tensor other) -> Tensor
-  template_scalar: True
-  dispatch:
-    CPU: standard_gamma_grad_cpu
 
 - func: matmul(Tensor self, Tensor other) -> Tensor
 
