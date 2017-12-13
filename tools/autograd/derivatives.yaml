@@ -650,6 +650,9 @@
 
 - name: zeros  # fallthrough
 
+- name: _standard_gamma(Tensor self, Generator generator)
+  self: grad * output._standard_gamma_grad(self)
+
 # NN double backwards support
 
 - name: avg_pool2d_backward(Tensor grad_output, Tensor self, IntList kernel_size, IntList stride, IntList padding, bool ceil_mode, bool count_include_pad)
