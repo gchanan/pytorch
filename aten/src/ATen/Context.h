@@ -46,6 +46,7 @@ public:
   }
 #if AT_CUDA_ENABLED()
   cudaStream_t getCurrentCUDAStream() const;
+  struct cudaDeviceProp* getCurrentDeviceProperties() const;
 #endif
   ~Context();
   std::unique_ptr<Generator>
