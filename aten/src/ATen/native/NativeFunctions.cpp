@@ -4,6 +4,7 @@
 #include "ATen/Dispatch.h"
 #include "ATen/ExpandUtils.h"
 #include "ATen/WrapDimUtils.h"
+#include "TH/THRandom.h"
 #include <functional>
 #include <numeric>
 
@@ -586,7 +587,74 @@ Tensor RoiPooling2d_backward_cpu(
   throw std::runtime_error("not implemented");
 }
 
+// doubles have 52 bits of mantissa (fractional part)
+static uint64_t DOUBLE_MASK = (1ULL << 53) - 1;
+static double DOUBLE_DIVISOR = 1.0 / (1ULL << 53);
 
+/* generates a random number on [0,1)-double-interval */
+static double uniform_double(Generator *_generator)
+{
+  uint64_t x = THRandom_random64((THGenerator*)_generator->unsafeGetTH());
+  return (x & DOUBLE_MASK) * DOUBLE_DIVISOR;
+}
+
+static inline double standard_gamma(Generator *_generator, double alpha) {
+  double scale = 1.0;
+
+  // Boost alpha for higher acceptance probability.
+  if(alpha < 1.0) {
+    scale *= std::pow(1 - uniform_double(_generator), 1.0 / alpha);
+    alpha += 1.0;
+  }
+
+  // This implements the acceptance-rejection method of Marsaglia and Tsang (2000)
+  // doi:10.1145/358407.358414
+  const double d = alpha - 1.0 / 3.0;
+  const double c = 1.0 / std::sqrt(9.0 * d);
+  for(;;) {
+    double x, y;
+    do {
+      x = THRandom_normal((THGenerator*)_generator->unsafeGetTH(), 0.0, 1.0);
+      y = 1.0 + c * x;
+    } while(y <= 0);
+    const double v = y * y * y;
+    const double u = 1 - uniform_double(_generator);
+    const double xx = x * x;
+    if(u < 1.0 - 0.0331 * xx * xx)
+      return scale * d * v;
+    if(std::log(u) < 0.5 * xx + d * (1.0 - v + std::log(v)))
+      return scale * d * v;
+  }
+}
+
+
+template <typename Scalar>
+struct StandardGammaOp {
+  StandardGammaOp(Generator *_generator): _generator(_generator) {}
+
+  Generator *_generator;
+  void operator()(Scalar& ret_val, const Scalar& self_val, bool& early_exit)
+  {
+    ret_val = standard_gamma(_generator, self_val);
+  }
+
+  static void apply(Tensor& ret, const Tensor& self, Generator *_generator) {
+    StandardGammaOp<Scalar> op(_generator);
+    CPU_tensor_apply2<Scalar, StandardGammaOp<Scalar>>(ret, self, op);
+  }
+};
+
+Tensor _standard_gamma(const Tensor& self, Generator* generator) {
+  if (generator == nullptr) {
+    // grrr...usually this happens at the cwrap level, but since this doesn't dispatch
+    // through cwrap we need to do this manually
+    generator = &at::globalContext().defaultGenerator(self.type().backend());
+  }
+  Tensor ret = self.type().zeros(self.sizes());
+  const Type& the_type = self.type();
+  dispatch_cpu_floating_types<StandardGammaOp>(the_type, "_standard_gamma", ret, self, generator);
+  return ret;
+}
 
 // TODO Replace this with more accurate digamma().
 template <typename Scalar>

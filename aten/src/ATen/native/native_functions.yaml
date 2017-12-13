@@ -92,7 +92,9 @@
 - func: is_signed(Tensor self) -> bool
   template_scalar: True
 
-- func: _standard_gamma_grad(Tensor self, Tensor other) -> Tensor
+- func: _standard_gamma(Tensor self, Generator* generator=nullptr) -> Tensor
+
+- func: _standard_gamma_grad(Tensor self, Tensor alpha) -> Tensor
 
 - func: matmul(Tensor self, Tensor other) -> Tensor
 
