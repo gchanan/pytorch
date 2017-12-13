@@ -1,7 +1,7 @@
 #include "ATen/ATen.h"
 #include "ATen/NativeFunctions.h"
-#include "ATen/ApplyUtils.h"
-#include "ATen/DispatchUtil.h"
+#include "ATen/CPUApplyUtils.h"
+#include "ATen/Dispatch.h"
 #include "ATen/ExpandUtils.h"
 #include "ATen/WrapDimUtils.h"
 #include <functional>
@@ -638,14 +638,14 @@ struct StandardGammaGradOp {
 
   static void apply(Tensor& ret, const Tensor& self, const Tensor& alpha) {
     StandardGammaGradOp<Scalar> op;
-    tensor_apply3<Scalar, StandardGammaGradOp<Scalar>>(ret, self, alpha, op);
+    CPU_tensor_apply3<Scalar, StandardGammaGradOp<Scalar>>(ret, self, alpha, op);
   }
 };
 
 Tensor standard_gamma_grad(const Tensor& self, const Tensor& alpha) {
   Tensor ret = self.type().zeros(self.sizes());
   const Type& the_type = self.type();
-  dispatch_cpu_floating_point<StandardGammaGradOp>(the_type, "standard_gamma_grad", ret, self, alpha);
+  dispatch_cpu_floating_types<StandardGammaGradOp>(the_type, "standard_gamma_grad", ret, self, alpha);
   return ret;
 }
 

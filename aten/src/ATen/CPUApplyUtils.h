@@ -184,7 +184,7 @@ static inline void check_correct_backend(const Tensor& t1, const Tensor &t2, con
 }
 
 template <typename ScalarType, typename Op>
-void tensor_apply2_dim(Tensor& tensor1, Tensor& tensor2, int64_t dim, Op op) {
+void CPU_tensor_apply2_dim(Tensor& tensor1, Tensor& tensor2, int64_t dim, Op op) {
   check_correct_backend(tensor1, tensor2);
   bool TH_TENSOR_APPLY_hasFinished = false;
   int64_t TH_TENSOR_dim_index = 0;
@@ -215,12 +215,12 @@ void tensor_apply2_dim(Tensor& tensor1, Tensor& tensor2, int64_t dim, Op op) {
 }
 
 template<typename ScalarType, typename Op>
-void tensor_apply2(Tensor tensor1, Tensor tensor2, Op op) {
-  tensor_apply2_dim<ScalarType, Op>(tensor1, tensor2, -1, op);
+void CPU_tensor_apply2(Tensor tensor1, Tensor tensor2, Op op) {
+  CPU_tensor_apply2_dim<ScalarType, Op>(tensor1, tensor2, -1, op);
 }
 
 template <typename ScalarType, typename Op>
-void tensor_apply3_dim(Tensor &tensor1, Tensor& tensor2, Tensor& tensor3, int64_t dim, Op op) {
+void CPU_tensor_apply3_dim(Tensor &tensor1, Tensor& tensor2, Tensor& tensor3, int64_t dim, Op op) {
   check_correct_backend(tensor1, tensor2, tensor3);
   bool TH_TENSOR_APPLY_hasFinished = false;
   int64_t TH_TENSOR_dim_index = 0;
@@ -264,8 +264,8 @@ void tensor_apply3_dim(Tensor &tensor1, Tensor& tensor2, Tensor& tensor3, int64_
 }
 
 template<typename ScalarType, typename Op>
-void tensor_apply3(Tensor tensor1, Tensor tensor2, Tensor tensor3, Op op) {
-  tensor_apply3_dim<ScalarType, Op>(tensor1, tensor2, tensor3, -1, op);
+void CPU_tensor_apply3(Tensor tensor1, Tensor tensor2, Tensor tensor3, Op op) {
+  CPU_tensor_apply3_dim<ScalarType, Op>(tensor1, tensor2, tensor3, -1, op);
 }
 
 }
