@@ -465,6 +465,29 @@ bool allclose(const Tensor& self, const Tensor& other, double rtol, double atol)
   return true;
 }
 
+template <typename CScalar>
+struct WhereOp {
+  static void apply(Tensor& ret, const Tensor& condition, const Tensor& self, const Tensor& other) {
+    CPU_tensor_apply4<CScalar, uint8_t, CScalar, CScalar>(ret, condition, self, other,
+      [](CScalar& ret_val, const uint8_t& cond_val, const CScalar& self_val, const CScalar& other_val) {
+        ret_val = cond_val ? self_val : other_val;
+      }
+    );
+  }
+};
+
+Tensor where_cpu(const Tensor& condition, const Tensor& self, const Tensor& other) {
+  if (condition.type().scalarType() != ScalarType::Byte) {
+    runtime_error("Expected condition to have ScalarType Byte, but got ScalarType %s",
+                  toString(condition.type().scalarType()));
+  }
+  Tensor b_condition, b_self, b_other;
+  std::tie(b_condition, b_self, b_other) = expand_outplace(condition, self, other, "where");
+  Tensor ret = b_self.type().tensor(b_self.sizes());
+  dispatch_all<WhereOp>(ret.type(), "where", ret, b_condition, b_self, b_other);
+  return ret;
+}
+
 std::tuple<at::Tensor, at::Tensor> RoiPooling2d_forward_cpu(
 	const Tensor& input,
 	const Tensor& rois,
@@ -653,7 +676,7 @@ static inline CScalar standard_gamma_grad_one(CScalar alpha, CScalar x) {
 template <typename CScalar>
 struct StandardGammaGradOp {
   static void apply(Tensor& ret, const Tensor& self, const Tensor& output) {
-    CPU_tensor_apply3<CScalar>(ret, self, output,
+    CPU_tensor_apply3<CScalar, CScalar, CScalar>(ret, self, output,
       [](CScalar& ret_val, const CScalar& self_val, const CScalar &output_val) {
          ret_val = standard_gamma_grad_one(self_val, output_val);
       }
