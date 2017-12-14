@@ -454,6 +454,31 @@ bool allclose(const Tensor& self, const Tensor& other, double rtol, double atol)
   return true;
 }
 
+template <typename Scalar>
+struct WhereOp {
+  void operator()(Scalar& ret_val, const uint8_t& cond_val, const Scalar &self_val, const Scalar &other_val,
+                  bool& early_exit) {
+    ret_val = cond_val ? self_val : other_val;
+  }
+
+  static void apply(Tensor& ret, const Tensor& condition, const Tensor& self, const Tensor& other) {
+    WhereOp<Scalar> op;
+    CPU_tensor_apply4<Scalar, uint8_t, Scalar, Scalar, WhereOp<Scalar>>(ret, condition, self, other, op);
+  }
+};
+
+Tensor where_cpu(const Tensor& condition, const Tensor& self, const Tensor& other) {
+  if (condition.type().scalarType() != ScalarType::Byte) {
+    runtime_error("Expected condition to have ScalarType Byte, but got ScalarType %s",
+                  toString(condition.type().scalarType()));
+  }
+  Tensor b_condition, b_self, b_other;
+  std::tie(b_condition, b_self, b_other) = expand_outplace(condition, self, other, "where");
+  Tensor ret = b_self.type().tensor(b_self.sizes());
+  dispatch_cpu<WhereOp>(ret.type(), "where", ret, b_condition, b_self, b_other);
+  return ret;
+}
+
 std::tuple<at::Tensor, at::Tensor> RoiPooling2d_forward_cpu(
 	const Tensor& input,
 	const Tensor& rois,
@@ -648,7 +673,7 @@ struct StandardGammaGradOp {
 
   static void apply(Tensor& ret, const Tensor& self, const Tensor& alpha) {
     StandardGammaGradOp<Scalar> op;
-    CPU_tensor_apply3<Scalar, StandardGammaGradOp<Scalar>>(ret, self, alpha, op);
+    CPU_tensor_apply3<Scalar, Scalar, Scalar, StandardGammaGradOp<Scalar>>(ret, self, alpha, op);
   }
 };
 

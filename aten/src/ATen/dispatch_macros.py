@@ -42,4 +42,6 @@ def create(all_types):
     # and not do a backend check
     all_cpu_types = [t for t in all_types if t['Backend'] == 'CPU']
     cpu_float_types = [t for t in all_types if t['Backend'] == 'CPU' and t['isFloatingType']]
-    return create_dispatch(all_cpu_types, "all", False) + create_dispatch(cpu_float_types, "cpu_floating_types", 'CPU')
+    return (create_dispatch(all_cpu_types, "all", False) +
+            create_dispatch(cpu_float_types, "cpu_floating_types", 'CPU') +
+            create_dispatch(all_cpu_types, "cpu", 'CPU'))

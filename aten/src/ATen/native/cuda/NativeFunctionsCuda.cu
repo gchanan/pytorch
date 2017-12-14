@@ -4,6 +4,11 @@
 namespace at {
 namespace native {
 
+Tensor where_cuda(const Tensor& condition, const Tensor& self, const Tensor& other) {
+  Tensor t = self.type().zeros({self.sizes()});
+  return t;
+}
+
 __host__ __device__ __forceinline__ float fmin(float a, float b) {
   return a > b ? b : a;
 }
