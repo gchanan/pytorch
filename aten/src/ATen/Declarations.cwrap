@@ -3940,7 +3940,7 @@
 ]]
 
 [[
-  name: _copyIgnoringOverlaps
+  name: _copyIgnoringOverlaps_
   cname: copyIgnoringOverlaps
   return: self
   backends:
