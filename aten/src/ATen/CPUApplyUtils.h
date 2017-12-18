@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sstream>
+#include "ATen/Check.h"
 
 namespace at {
 
@@ -32,31 +33,6 @@ namespace at {
  * dimensions can be merged for the purposes of APPLY, reducing the number of nested
  * loops.
  */
-
-static inline void check_correct_backend(const Tensor &t, unsigned int pos) {
-  if (t.type().backend() != Backend::CPU) {
-    runtime_error("Expected tensor at position %d to have CPU Backend, but has %s Backend",
-                  pos, toString(t.type().backend()));
-  }
-}
-
-static inline void check_correct_backend(const Tensor& t1, const Tensor &t2) {
-  check_correct_backend(t1, 1);
-  check_correct_backend(t2, 2);
-}
-
-static inline void check_correct_backend(const Tensor& t1, const Tensor &t2, const Tensor &t3) {
-  check_correct_backend(t1, 1);
-  check_correct_backend(t2, 2);
-  check_correct_backend(t3, 3);
-}
-
-static inline void check_correct_backend(const Tensor& t1, const Tensor &t2, const Tensor &t3, const Tensor &t4) {
-  check_correct_backend(t1, 1);
-  check_correct_backend(t2, 2);
-  check_correct_backend(t3, 3);
-  check_correct_backend(t4, 3);
-}
 
 // TODO: turn this macro into a proper template
 #define __ATH_TENSOR_APPLYX_PREAMBLE(TYPE, ATENSOR, DIM, ALLOW_CONTIGUOUS) \
@@ -163,7 +139,7 @@ static inline void check_correct_backend(const Tensor& t1, const Tensor &t2, con
 
 template <typename scalar1, typename scalar2, typename Op>
 void CPU_tensor_apply2_dim(Tensor& tensor1, Tensor& tensor2, int64_t dim, Op op) {
-  check_correct_backend(tensor1, tensor2);
+  checkBackend("CPU_tensor_apply2", {tensor1, tensor2}, Backend::CPU);
   bool TH_TENSOR_APPLY_hasFinished = false;
   int64_t TH_TENSOR_dim_index = 0;
   __ATH_TENSOR_APPLYX_PREAMBLE(scalar1, tensor1, dim, 1)
@@ -207,7 +183,7 @@ void CPU_tensor_apply2(Tensor tensor1, Tensor tensor2, Op op) {
 
 template<typename scalar1, typename scalar2, typename scalar3, typename Op>
 void CPU_tensor_apply3_dim(Tensor &tensor1, Tensor& tensor2, Tensor& tensor3, int64_t dim, Op op) {
-  check_correct_backend(tensor1, tensor2, tensor3);
+  checkBackend("CPU_tensor_apply3", {tensor1, tensor2, tensor3}, Backend::CPU);
   bool TH_TENSOR_APPLY_hasFinished = false;
   int64_t TH_TENSOR_dim_index = 0;
   __ATH_TENSOR_APPLYX_PREAMBLE(scalar1, tensor1, dim, 1)
@@ -264,7 +240,7 @@ void CPU_tensor_apply3(Tensor tensor1, Tensor tensor2, Tensor tensor3, Op op) {
 
 template <typename scalar1, typename scalar2, typename scalar3, typename scalar4, typename Op>
 void CPU_tensor_apply4_dim(Tensor &tensor1, Tensor& tensor2, Tensor& tensor3, Tensor& tensor4, int64_t dim, Op op) {
-  check_correct_backend(tensor1, tensor2, tensor3, tensor4);
+  checkBackend("CPU_tensor_apply4", {tensor1, tensor2, tensor3, tensor4}, Backend::CPU);
   bool TH_TENSOR_APPLY_hasFinished = false;
   int64_t TH_TENSOR_dim_index = 0;
   __ATH_TENSOR_APPLYX_PREAMBLE(scalar1, tensor1, dim, 1)

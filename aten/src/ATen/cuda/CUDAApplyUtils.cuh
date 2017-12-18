@@ -1,7 +1,7 @@
 #pragma once
 
 #include "TensorUtils.cuh"
-//#include "TensorInfo.cuh"
+#include "ATen/Check.h"
 
 //
 // This file contains pointwise operation functions and kernels that
@@ -148,12 +148,21 @@ inline dim3 getApplyBlock() {
   return dim3(THC_APPLY_THREADS_PER_BLOCK);
 }
 
+/*
+  Apply a pointwise operator to two tensors.
+
+  The calling convention for op is a function/functor that takes takes two references to
+  type scalar; at least one of these references should be non-const in order to write the output.
+  For example, to compute a = b^2, op would be of the form:
+  [] __device__ (scalar &a_val, const scalar &b_val) { a_val = b_val * b_val; };
+*/
 template <typename scalar1, typename scalar2, typename Op>
 bool CUDA_tensor_apply2(at::Tensor a,
                         at::Tensor b,
                         Op op,
                         at::TensorArgType aType = at::TensorArgType::ReadWrite,
                         at::TensorArgType bType = at::TensorArgType::ReadOnly) {
+  checkBackend("CUDA_tensor_apply2", {a, b}, Backend::CUDA);
   int64_t totalElements = a.numel();
 
   if (totalElements != b.numel()) {
@@ -323,6 +332,16 @@ bool CUDA_tensor_apply2(at::Tensor a,
   return true;
 }
 
+/*
+  Apply a pointwise operator to three tensors.
+
+  The calling convention for op is a function/functor that takes takes three references to
+  type scalar; at least one of these references should be non-const in order to write the output.
+  For example, to compute a = b + c, op would be of the form:
+  [] __device__ (scalar &a_val, const scalar &b_val, const scalar &c_val) {
+    a_val = b_val + c_val;
+  };
+*/
 template <typename scalar1, typename scalar2, typename scalar3, typename Op>
 bool CUDA_tensor_apply3(at::Tensor a,
                         at::Tensor b,
@@ -331,6 +350,7 @@ bool CUDA_tensor_apply3(at::Tensor a,
                         TensorArgType aType = at::TensorArgType::ReadWrite,
                         TensorArgType bType = at::TensorArgType::ReadOnly,
                         TensorArgType cType = at::TensorArgType::ReadOnly) {
+  checkBackend("CUDA_tensor_apply3", {a, b, c}, Backend::CUDA);
   int64_t totalElements = a.numel();
 
   if (totalElements != b.numel() ||
@@ -541,6 +561,16 @@ bool CUDA_tensor_apply3(at::Tensor a,
   return true;
 }
 
+/*
+  Apply a pointwise operator to four tensors.
+
+  The calling convention for op is a function/functor that takes takes four references to
+  type scalar; at least one of these references should be non-const in order to write the output.
+  For example, to compute a = b + c * d, op would be of the form:
+  [] __device__ (scalar &a_val, const scalar &b_val, const scalar &c_val, const scalar &d_val) {
+    a_val = b_val + c_val * d_val;
+  };
+*/
 template <typename scalar1, typename scalar2, typename scalar3, typename scalar4, typename Op>
 bool CUDA_tensor_apply4(at::Tensor a,
                         at::Tensor b,
@@ -551,6 +581,7 @@ bool CUDA_tensor_apply4(at::Tensor a,
                         TensorArgType bType = at::TensorArgType::ReadOnly,
                         TensorArgType cType = at::TensorArgType::ReadOnly,
                         TensorArgType dType = at::TensorArgType::ReadOnly) {
+  checkBackend("CUDA_tensor_apply4", {a, b, c, d}, Backend::CUDA);
   int64_t totalElements = a.numel();
 
   if (totalElements != b.numel() ||
