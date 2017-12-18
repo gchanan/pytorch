@@ -1,12 +1,35 @@
 #include "ATen/NativeFunctions.h"
+#include "ATen/Dispatch.h"
+#include "ATen/ExpandUtils.h"
+#include "ApplyUtils.cuh"
 #include <cfloat>
 
 namespace at {
 namespace native {
 
+template <typename Scalar>
+struct WhereOpCUDA {
+  __device__ __forceinline__
+  void operator()(Scalar& ret_val, const uint8_t& cond_val, const Scalar &self_val, const Scalar &other_val) {
+    ret_val = cond_val ? self_val : other_val;
+  }
+
+  static void apply(Tensor& ret, const Tensor& condition, const Tensor& self, const Tensor& other) {
+    WhereOpCUDA<Scalar> op;
+    pointwiseApply4<Scalar, uint8_t, Scalar, Scalar, WhereOpCUDA<Scalar>>(ret, condition, self, other, op);
+  }
+};
+
 Tensor where_cuda(const Tensor& condition, const Tensor& self, const Tensor& other) {
-  Tensor t = self.type().zeros({self.sizes()});
-  return t;
+  if (condition.type().scalarType() != ScalarType::Byte) {
+    runtime_error("Expected condition to have ScalarType Byte, but got ScalarType %s",
+                  toString(condition.type().scalarType()));
+  }
+  Tensor b_condition, b_self, b_other;
+  std::tie(b_condition, b_self, b_other) = expand_outplace(condition, self, other, "where");
+  Tensor ret = b_self.type().tensor(b_self.sizes());
+  at::dispatch_all<WhereOpCUDA>(ret.type(), "where", ret, b_condition, b_self, b_other);
+  return ret;
 }
 
 __host__ __device__ __forceinline__ float fmin(float a, float b) {
