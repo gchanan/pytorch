@@ -317,7 +317,7 @@ void CPU_tensor_apply4_dim(Tensor &tensor1, Tensor& tensor2, Tensor& tensor3, Te
 }
 
 /*
-  Apply a pointwise operator to three tensors.
+  Apply a pointwise operator to four tensors.
 
   The calling convention for op is a function/functor that takes takes four references to
   type scalar; at least one of these references should be non-const in order to write the output.
