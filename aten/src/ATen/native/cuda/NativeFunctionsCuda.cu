@@ -1,7 +1,7 @@
 #include "ATen/NativeFunctions.h"
 #include "ATen/Dispatch.h"
 #include "ATen/ExpandUtils.h"
-#include "ApplyUtils.cuh"
+#include "GPUApplyUtils.cuh"
 #include <cfloat>
 
 namespace at {
