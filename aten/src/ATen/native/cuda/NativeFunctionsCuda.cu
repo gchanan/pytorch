@@ -9,14 +9,12 @@ namespace native {
 
 template <typename scalar>
 struct WhereOpCUDA {
-  __device__ __forceinline__
-  void operator()(scalar& ret_val, const uint8_t& cond_val, const scalar &self_val, const scalar &other_val) {
-    ret_val = cond_val ? self_val : other_val;
-  }
-
   static void apply(Tensor& ret, const Tensor& condition, const Tensor& self, const Tensor& other) {
-    WhereOpCUDA<scalar> op;
-    CUDA_tensor_apply4<scalar, uint8_t, scalar, scalar, WhereOpCUDA<scalar>>(ret, condition, self, other, op);
+    CUDA_tensor_apply4<scalar, uint8_t, scalar, scalar>(ret, condition, self, other,
+      [] __device__ (scalar& ret_val, const uint8_t& cond_val, const scalar &self_val, const scalar &other_val) {
+        ret_val = cond_val ? self_val : other_val;
+      }
+    );
   }
 };
 
