@@ -18,16 +18,16 @@ namespace at {
 #define THC_APPLY_BLOCKS_PER_SM 4
 
 template <typename Op,
-          typename CScalar1,
-          typename CScalar2,
+          typename scalar1,
+          typename scalar2,
           typename IndexType,
           int ADims, int BDims>
 #if __CUDA_ARCH__ >= 350
 __launch_bounds__(THC_APPLY_THREADS_PER_BLOCK, THC_APPLY_BLOCKS_PER_SM)
 #endif
 __global__ void
-kernelPointwiseApply2(TensorInfo<CScalar1, IndexType> a,
-                      TensorInfo<CScalar2, IndexType> b,
+kernelPointwiseApply2(TensorInfo<scalar1, IndexType> a,
+                      TensorInfo<scalar2, IndexType> b,
                       IndexType totalElements,
                       Op op) {
   for (IndexType linearIndex = blockIdx.x * blockDim.x + threadIdx.x;
@@ -35,11 +35,11 @@ kernelPointwiseApply2(TensorInfo<CScalar1, IndexType> a,
        linearIndex += gridDim.x * blockDim.x) {
     // Convert `linearIndex` into an offset of `a`
     const IndexType aOffset =
-      IndexToOffset<CScalar1, IndexType, ADims>::get(linearIndex, a);
+      IndexToOffset<scalar1, IndexType, ADims>::get(linearIndex, a);
 
     // Convert `linearIndex` into an offset of `b`
     const IndexType bOffset =
-      IndexToOffset<CScalar2, IndexType, BDims>::get(linearIndex, b);
+      IndexToOffset<scalar2, IndexType, BDims>::get(linearIndex, b);
 
     bool earlyExit = false;
     op(a.data[aOffset], b.data[bOffset], earlyExit);
@@ -48,18 +48,18 @@ kernelPointwiseApply2(TensorInfo<CScalar1, IndexType> a,
 
 
 template <typename Op,
-          typename CScalar1,
-          typename CScalar2,
-          typename CScalar3,
+          typename scalar1,
+          typename scalar2,
+          typename scalar3,
           typename IndexType,
           int ADims, int BDims, int CDims>
 #if __CUDA_ARCH__ >= 350
 __launch_bounds__(THC_APPLY_THREADS_PER_BLOCK, THC_APPLY_BLOCKS_PER_SM)
 #endif
 __global__ void
-kernelPointwiseApply3(TensorInfo<CScalar1, IndexType> a,
-                      TensorInfo<CScalar2, IndexType> b,
-                      TensorInfo<CScalar3, IndexType> c,
+kernelPointwiseApply3(TensorInfo<scalar1, IndexType> a,
+                      TensorInfo<scalar2, IndexType> b,
+                      TensorInfo<scalar3, IndexType> c,
                       IndexType totalElements,
                       Op op) {
   for (IndexType linearIndex = blockIdx.x * blockDim.x + threadIdx.x;
@@ -67,35 +67,35 @@ kernelPointwiseApply3(TensorInfo<CScalar1, IndexType> a,
        linearIndex += gridDim.x * blockDim.x) {
     // Convert `linearIndex` into an offset of `a`
     const IndexType aOffset =
-      IndexToOffset<CScalar1, IndexType, ADims>::get(linearIndex, a);
+      IndexToOffset<scalar1, IndexType, ADims>::get(linearIndex, a);
 
     // Convert `linearIndex` into an offset of `b`
     const IndexType bOffset =
-      IndexToOffset<CScalar2, IndexType, BDims>::get(linearIndex, b);
+      IndexToOffset<scalar2, IndexType, BDims>::get(linearIndex, b);
 
     // Convert `linearIndex` into an offset of `c`
     const IndexType cOffset =
-      IndexToOffset<CScalar3, IndexType, CDims>::get(linearIndex, c);
+      IndexToOffset<scalar3, IndexType, CDims>::get(linearIndex, c);
 
     op(a.data[aOffset], b.data[bOffset], c.data[cOffset]);
   }
 }
 
 template <typename Op,
-          typename CScalar1,
-          typename CScalar2,
-          typename CScalar3,
-          typename CScalar4,
+          typename scalar1,
+          typename scalar2,
+          typename scalar3,
+          typename scalar4,
           typename IndexType,
           int ADims, int BDims, int CDims, int DDims>
 #if __CUDA_ARCH__ >= 350
 __launch_bounds__(THC_APPLY_THREADS_PER_BLOCK, THC_APPLY_BLOCKS_PER_SM)
 #endif
 __global__ void
-kernelPointwiseApply4(TensorInfo<CScalar1, IndexType> a,
-                      TensorInfo<CScalar2, IndexType> b,
-                      TensorInfo<CScalar3, IndexType> c,
-                      TensorInfo<CScalar4, IndexType> d,
+kernelPointwiseApply4(TensorInfo<scalar1, IndexType> a,
+                      TensorInfo<scalar2, IndexType> b,
+                      TensorInfo<scalar3, IndexType> c,
+                      TensorInfo<scalar4, IndexType> d,
                       IndexType totalElements,
                       Op op) {
   for (IndexType linearIndex = blockIdx.x * blockDim.x + threadIdx.x;
@@ -103,19 +103,19 @@ kernelPointwiseApply4(TensorInfo<CScalar1, IndexType> a,
        linearIndex += gridDim.x * blockDim.x) {
     // Convert `linearIndex` into an offset of `a`
     const IndexType aOffset =
-      IndexToOffset<CScalar1, IndexType, ADims>::get(linearIndex, a);
+      IndexToOffset<scalar1, IndexType, ADims>::get(linearIndex, a);
 
     // Convert `linearIndex` into an offset of `b`
     const IndexType bOffset =
-      IndexToOffset<CScalar2, IndexType, BDims>::get(linearIndex, b);
+      IndexToOffset<scalar2, IndexType, BDims>::get(linearIndex, b);
 
     // Convert `linearIndex` into an offset of `c`
     const IndexType cOffset =
-      IndexToOffset<CScalar3, IndexType, CDims>::get(linearIndex, c);
+      IndexToOffset<scalar3, IndexType, CDims>::get(linearIndex, c);
 
     // Convert `linearIndex` into an offset of `d`
     const IndexType dOffset =
-      IndexToOffset<CScalar4, IndexType, DDims>::get(linearIndex, d);
+      IndexToOffset<scalar4, IndexType, DDims>::get(linearIndex, d);
 
     op(a.data[aOffset], b.data[bOffset], c.data[cOffset], d.data[dOffset]);
   }
@@ -148,7 +148,7 @@ inline dim3 getApplyBlock() {
   return dim3(THC_APPLY_THREADS_PER_BLOCK);
 }
 
-template <typename CScalar1, typename CScalar2, typename Op>
+template <typename scalar1, typename scalar2, typename Op>
 bool CUDA_tensor_apply2(at::Tensor a,
                         at::Tensor b,
                         Op op,
@@ -210,8 +210,8 @@ bool CUDA_tensor_apply2(at::Tensor a,
 
 #define HANDLE_CASE(TYPE, A, B)                                         \
   kernelPointwiseApply2<Op,                                             \
-                        CScalar1,                                       \
-                        CScalar2,                                       \
+                        scalar1,                                        \
+                        scalar2,                                        \
                         TYPE, A, B>                                     \
    <<<grid, block, 0, at::globalContext().getCurrentCUDAStream()>>>(    \
        aInfo, bInfo, (TYPE) totalElements, op);
@@ -256,12 +256,12 @@ bool CUDA_tensor_apply2(at::Tensor a,
 
   if (at::tensorutils::canUse32BitIndexMath(a) &&
       at::tensorutils::canUse32BitIndexMath(b)) {
-    TensorInfo<CScalar1, unsigned int> aInfo =
-      at::tensorutils::getTensorInfo<CScalar1, unsigned int>(a);
+    TensorInfo<scalar1, unsigned int> aInfo =
+      at::tensorutils::getTensorInfo<scalar1, unsigned int>(a);
     aInfo.collapseDims();
 
-    TensorInfo<CScalar2, unsigned int> bInfo =
-      at::tensorutils::getTensorInfo<CScalar2, unsigned int>(b);
+    TensorInfo<scalar2, unsigned int> bInfo =
+      at::tensorutils::getTensorInfo<scalar2, unsigned int>(b);
     bInfo.collapseDims();
 #if CUDA_VERSION < 9000
     if (!(aInfo.isContiguous() && bInfo.isContiguous()))
@@ -270,12 +270,12 @@ bool CUDA_tensor_apply2(at::Tensor a,
 
     HANDLE_A_CASE(unsigned int, aInfo.dims, bInfo.dims);
   } else {
-    TensorInfo<CScalar1, uint64_t> aInfo =
-      at::tensorutils::getTensorInfo<CScalar1, uint64_t>(a);
+    TensorInfo<scalar1, uint64_t> aInfo =
+      at::tensorutils::getTensorInfo<scalar1, uint64_t>(a);
     aInfo.collapseDims();
 
-    TensorInfo<CScalar2, uint64_t> bInfo =
-      at::tensorutils::getTensorInfo<CScalar2, uint64_t>(b);
+    TensorInfo<scalar2, uint64_t> bInfo =
+      at::tensorutils::getTensorInfo<scalar2, uint64_t>(b);
     bInfo.collapseDims();
 
     // For large tensors, we only compile the completely contiguous
@@ -283,8 +283,8 @@ bool CUDA_tensor_apply2(at::Tensor a,
     // compilation time.
     if (aInfo.isContiguous() && bInfo.isContiguous()) {
       kernelPointwiseApply2<Op,
-                            CScalar1,
-                            CScalar2,
+                            scalar1,
+                            scalar2,
                           uint64_t, -2, -2>
         <<<grid, block, 0, at::globalContext().getCurrentCUDAStream()>>>(
            aInfo, bInfo, (uint64_t) totalElements, op);
@@ -293,8 +293,8 @@ bool CUDA_tensor_apply2(at::Tensor a,
       grid.x = std::min((unsigned int)at::globalContext().getCurrentDeviceProperties()->multiProcessorCount * THC_APPLY_BLOCKS_PER_SM , grid.x);
 #endif
       kernelPointwiseApply2<Op,
-                            CScalar1,
-                            CScalar2,
+                            scalar1,
+                            scalar2,
                             uint64_t, -1, -1>
         <<<grid, block, 0, at::globalContext().getCurrentCUDAStream()>>>(
            aInfo, bInfo, (uint64_t) totalElements, op);
@@ -323,7 +323,7 @@ bool CUDA_tensor_apply2(at::Tensor a,
   return true;
 }
 
-template <typename CScalar1, typename CScalar2, typename CScalar3, typename Op>
+template <typename scalar1, typename scalar2, typename scalar3, typename Op>
 bool CUDA_tensor_apply3(at::Tensor a,
                         at::Tensor b,
                         at::Tensor c,
@@ -387,9 +387,9 @@ bool CUDA_tensor_apply3(at::Tensor a,
 
 #define HANDLE_CASE(TYPE, A, B, C)                                      \
   kernelPointwiseApply3<Op,                                             \
-                        CScalar1,                                       \
-                        CScalar2,                                       \
-                        CScalar3,                                       \
+                        scalar1,                                        \
+                        scalar2,                                        \
+                        scalar3,                                        \
                         TYPE, A, B, C>                                  \
     <<<grid, block, 0, at::globalContext().getCurrentCUDAStream()>>>(   \
       aInfo, bInfo, cInfo, (TYPE) totalElements, op);
@@ -454,16 +454,16 @@ bool CUDA_tensor_apply3(at::Tensor a,
   if (at::tensorutils::canUse32BitIndexMath(a) &&
       at::tensorutils::canUse32BitIndexMath(b) &&
       at::tensorutils::canUse32BitIndexMath(c)) {
-    TensorInfo<CScalar1, unsigned int> aInfo =
-      at::tensorutils::getTensorInfo<CScalar1, unsigned int>(a);
+    TensorInfo<scalar1, unsigned int> aInfo =
+      at::tensorutils::getTensorInfo<scalar1, unsigned int>(a);
     aInfo.collapseDims();
 
-    TensorInfo<CScalar2, unsigned int> bInfo =
-      at::tensorutils::getTensorInfo<CScalar2, unsigned int>(b);
+    TensorInfo<scalar2, unsigned int> bInfo =
+      at::tensorutils::getTensorInfo<scalar2, unsigned int>(b);
     bInfo.collapseDims();
 
-    TensorInfo<CScalar3, unsigned int> cInfo =
-      at::tensorutils::getTensorInfo<CScalar3, unsigned int>(c);
+    TensorInfo<scalar3, unsigned int> cInfo =
+      at::tensorutils::getTensorInfo<scalar3, unsigned int>(c);
     cInfo.collapseDims();
 
 #if CUDA_VERSION < 9000
@@ -472,16 +472,16 @@ bool CUDA_tensor_apply3(at::Tensor a,
 #endif
     HANDLE_A_CASE(unsigned int, aInfo.dims, bInfo.dims, cInfo.dims);
   } else {
-    TensorInfo<CScalar1, uint64_t> aInfo =
-      at::tensorutils::getTensorInfo<CScalar1, uint64_t>(a);
+    TensorInfo<scalar1, uint64_t> aInfo =
+      at::tensorutils::getTensorInfo<scalar1, uint64_t>(a);
     aInfo.collapseDims();
 
-    TensorInfo<CScalar2, uint64_t> bInfo =
-      at::tensorutils::getTensorInfo<CScalar2, uint64_t>(b);
+    TensorInfo<scalar2, uint64_t> bInfo =
+      at::tensorutils::getTensorInfo<scalar2, uint64_t>(b);
     bInfo.collapseDims();
 
-    TensorInfo<CScalar3, uint64_t> cInfo =
-      at::tensorutils::getTensorInfo<CScalar3, uint64_t>(c);
+    TensorInfo<scalar3, uint64_t> cInfo =
+      at::tensorutils::getTensorInfo<scalar3, uint64_t>(c);
     cInfo.collapseDims();
 
     // For large tensors, we only compile the completely contiguous
@@ -489,9 +489,9 @@ bool CUDA_tensor_apply3(at::Tensor a,
     // compilation time.
     if (aInfo.isContiguous() && bInfo.isContiguous() && cInfo.isContiguous()) {
       kernelPointwiseApply3<Op,
-                            CScalar1,
-                            CScalar2,
-                            CScalar3,
+                            scalar1,
+                            scalar2,
+                            scalar3,
                             uint64_t, -2, -2, -2>
         <<<grid, block, 0, at::globalContext().getCurrentCUDAStream()>>>(
           aInfo, bInfo, cInfo, (uint64_t) totalElements, op);
@@ -501,9 +501,9 @@ bool CUDA_tensor_apply3(at::Tensor a,
 #endif
 
 	kernelPointwiseApply3<Op,
-                        CScalar1,
-                        CScalar2,
-                        CScalar3,
+                        scalar1,
+                        scalar2,
+                        scalar3,
                         uint64_t, -1, -1, -1>
         <<<grid, block, 0, at::globalContext().getCurrentCUDAStream()>>>(
           aInfo, bInfo, cInfo, (uint64_t) totalElements, op);
@@ -541,7 +541,7 @@ bool CUDA_tensor_apply3(at::Tensor a,
   return true;
 }
 
-template <typename CScalar1, typename CScalar2, typename CScalar3, typename CScalar4, typename Op>
+template <typename scalar1, typename scalar2, typename scalar3, typename scalar4, typename Op>
 bool CUDA_tensor_apply4(at::Tensor a,
                         at::Tensor b,
                         at::Tensor c,
@@ -615,10 +615,10 @@ bool CUDA_tensor_apply4(at::Tensor a,
 
 #define HANDLE_CASE(TYPE, A, B, C, D)                                   \
   kernelPointwiseApply4<Op,                                             \
-                        CScalar1,                                       \
-                        CScalar2,                                       \
-                        CScalar3,                                       \
-                        CScalar4,                                       \
+                        scalar1,                                        \
+                        scalar2,                                        \
+                        scalar3,                                        \
+                        scalar4,                                        \
                         TYPE, A, B, C, D>                               \
     <<<grid, block, 0, at::globalContext().getCurrentCUDAStream()>>>(   \
     aInfo, bInfo, cInfo, dInfo, (TYPE) totalElements, op);
@@ -703,20 +703,20 @@ bool CUDA_tensor_apply4(at::Tensor a,
       at::tensorutils::canUse32BitIndexMath(b) &&
       at::tensorutils::canUse32BitIndexMath(c) &&
       at::tensorutils::canUse32BitIndexMath(d)) {
-    TensorInfo<CScalar1, unsigned int> aInfo =
-      at::tensorutils::getTensorInfo<CScalar1, unsigned int>(a);
+    TensorInfo<scalar1, unsigned int> aInfo =
+      at::tensorutils::getTensorInfo<scalar1, unsigned int>(a);
     aInfo.collapseDims();
 
-    TensorInfo<CScalar2, unsigned int> bInfo =
-      at::tensorutils::getTensorInfo<CScalar2, unsigned int>(b);
+    TensorInfo<scalar2, unsigned int> bInfo =
+      at::tensorutils::getTensorInfo<scalar2, unsigned int>(b);
     bInfo.collapseDims();
 
-    TensorInfo<CScalar3, unsigned int> cInfo =
-      at::tensorutils::getTensorInfo<CScalar3, unsigned int>(c);
+    TensorInfo<scalar3, unsigned int> cInfo =
+      at::tensorutils::getTensorInfo<scalar3, unsigned int>(c);
     cInfo.collapseDims();
 
-    TensorInfo<CScalar4, unsigned int> dInfo =
-      at::tensorutils::getTensorInfo<CScalar4, unsigned int>(d);
+    TensorInfo<scalar4, unsigned int> dInfo =
+      at::tensorutils::getTensorInfo<scalar4, unsigned int>(d);
     dInfo.collapseDims();
 
 #if CUDA_VERSION < 9000
@@ -725,20 +725,20 @@ bool CUDA_tensor_apply4(at::Tensor a,
 #endif
     HANDLE_A_CASE(unsigned int, aInfo.dims, bInfo.dims, cInfo.dims, dInfo.dims);
   } else {
-    TensorInfo<CScalar1, uint64_t> aInfo =
-      at::tensorutils::getTensorInfo<CScalar1, uint64_t>(a);
+    TensorInfo<scalar1, uint64_t> aInfo =
+      at::tensorutils::getTensorInfo<scalar1, uint64_t>(a);
     aInfo.collapseDims();
 
-    TensorInfo<CScalar2, uint64_t> bInfo =
-      at::tensorutils::getTensorInfo<CScalar2, uint64_t>(b);
+    TensorInfo<scalar2, uint64_t> bInfo =
+      at::tensorutils::getTensorInfo<scalar2, uint64_t>(b);
     bInfo.collapseDims();
 
-    TensorInfo<CScalar3, uint64_t> cInfo =
-      at::tensorutils::getTensorInfo<CScalar3, uint64_t>(c);
+    TensorInfo<scalar3, uint64_t> cInfo =
+      at::tensorutils::getTensorInfo<scalar3, uint64_t>(c);
     cInfo.collapseDims();
 
-    TensorInfo<CScalar4, uint64_t> dInfo =
-      at::tensorutils::getTensorInfo<CScalar4, uint64_t>(d);
+    TensorInfo<scalar4, uint64_t> dInfo =
+      at::tensorutils::getTensorInfo<scalar4, uint64_t>(d);
     dInfo.collapseDims();
 
     // For large tensors, we only compile the completely contiguous
@@ -746,10 +746,10 @@ bool CUDA_tensor_apply4(at::Tensor a,
     // compilation time.
     if (aInfo.isContiguous() && bInfo.isContiguous() && cInfo.isContiguous() && dInfo.isContiguous()) {
       kernelPointwiseApply4<Op,
-                            CScalar1,
-                            CScalar2,
-                            CScalar3,
-                            CScalar4,
+                            scalar1,
+                            scalar2,
+                            scalar3,
+                            scalar4,
                             uint64_t, -2, -2, -2, -2>
         <<<grid, block, 0, at::globalContext().getCurrentCUDAStream()>>>(
           aInfo, bInfo, cInfo, dInfo, (uint64_t) totalElements, op);
@@ -759,10 +759,10 @@ bool CUDA_tensor_apply4(at::Tensor a,
 #endif
 
 	kernelPointwiseApply4<Op,
-                        CScalar1,
-                        CScalar2,
-                        CScalar3,
-                        CScalar4,
+                        scalar1,
+                        scalar2,
+                        scalar3,
+                        scalar4,
                         uint64_t, -1, -1, -1, -1>
         <<<grid, block, 0, at::globalContext().getCurrentCUDAStream()>>>(
           aInfo, bInfo, cInfo, dInfo, (uint64_t) totalElements, op);

@@ -7,16 +7,16 @@
 namespace at {
 namespace native {
 
-template <typename Scalar>
+template <typename scalar>
 struct WhereOpCUDA {
   __device__ __forceinline__
-  void operator()(Scalar& ret_val, const uint8_t& cond_val, const Scalar &self_val, const Scalar &other_val) {
+  void operator()(scalar& ret_val, const uint8_t& cond_val, const scalar &self_val, const scalar &other_val) {
     ret_val = cond_val ? self_val : other_val;
   }
 
   static void apply(Tensor& ret, const Tensor& condition, const Tensor& self, const Tensor& other) {
-    WhereOpCUDA<Scalar> op;
-    pointwiseApply4<Scalar, uint8_t, Scalar, Scalar, WhereOpCUDA<Scalar>>(ret, condition, self, other, op);
+    WhereOpCUDA<scalar> op;
+    CUDA_tensor_apply4<scalar, uint8_t, scalar, scalar, WhereOpCUDA<scalar>>(ret, condition, self, other, op);
   }
 };
 

@@ -161,13 +161,13 @@ static inline void check_correct_backend(const Tensor& t1, const Tensor &t2, con
     ATENSOR##_i = 0; \
   }
 
-template <typename CScalar1, typename CScalar2, typename Op>
+template <typename scalar1, typename scalar2, typename Op>
 void CPU_tensor_apply2_dim(Tensor& tensor1, Tensor& tensor2, int64_t dim, Op op) {
   check_correct_backend(tensor1, tensor2);
   bool TH_TENSOR_APPLY_hasFinished = false;
   int64_t TH_TENSOR_dim_index = 0;
-  __ATH_TENSOR_APPLYX_PREAMBLE(CScalar1, tensor1, dim, 1)
-  __ATH_TENSOR_APPLYX_PREAMBLE(CScalar2, tensor2, dim, 1)
+  __ATH_TENSOR_APPLYX_PREAMBLE(scalar1, tensor1, dim, 1)
+  __ATH_TENSOR_APPLYX_PREAMBLE(scalar2, tensor2, dim, 1)
   auto t1_numel = tensor1.numel();
   auto t2_numel = tensor2.numel();
   if(t1_numel != t2_numel) {
@@ -196,23 +196,23 @@ void CPU_tensor_apply2_dim(Tensor& tensor1, Tensor& tensor2, int64_t dim, Op op)
   Apply a pointwise operator to two tensors.
 
   The calling convention for op is a function/functor that takes takes two references to
-  type CScalar; at least one of these references should be non-const in order to write the output.
+  type scalar; at least one of these references should be non-const in order to write the output.
   For example, to compute a = b^2, op would be of the form:
-  [](CScalar &a_val, const CScalar &b_val) { a_val = b_val * b_val; };
+  [](scalar &a_val, const scalar &b_val) { a_val = b_val * b_val; };
 */
-template<typename CScalar1, typename CScalar2, typename Op>
+template<typename scalar1, typename scalar2, typename Op>
 void CPU_tensor_apply2(Tensor tensor1, Tensor tensor2, Op op) {
-  CPU_tensor_apply2_dim<CScalar1, CScalar2, Op>(tensor1, tensor2, -1, op);
+  CPU_tensor_apply2_dim<scalar1, scalar2, Op>(tensor1, tensor2, -1, op);
 }
 
-template<typename CScalar1, typename CScalar2, typename CScalar3, typename Op>
+template<typename scalar1, typename scalar2, typename scalar3, typename Op>
 void CPU_tensor_apply3_dim(Tensor &tensor1, Tensor& tensor2, Tensor& tensor3, int64_t dim, Op op) {
   check_correct_backend(tensor1, tensor2, tensor3);
   bool TH_TENSOR_APPLY_hasFinished = false;
   int64_t TH_TENSOR_dim_index = 0;
-  __ATH_TENSOR_APPLYX_PREAMBLE(CScalar1, tensor1, dim, 1)
-  __ATH_TENSOR_APPLYX_PREAMBLE(CScalar2, tensor2, dim, 1)
-  __ATH_TENSOR_APPLYX_PREAMBLE(CScalar3, tensor3, dim, 1)
+  __ATH_TENSOR_APPLYX_PREAMBLE(scalar1, tensor1, dim, 1)
+  __ATH_TENSOR_APPLYX_PREAMBLE(scalar2, tensor2, dim, 1)
+  __ATH_TENSOR_APPLYX_PREAMBLE(scalar3, tensor3, dim, 1)
 
   int elements_equal = 1;
   auto t1_numel = tensor1.numel();
@@ -253,24 +253,24 @@ void CPU_tensor_apply3_dim(Tensor &tensor1, Tensor& tensor2, Tensor& tensor3, in
   Apply a pointwise operator to three tensors.
 
   The calling convention for op is a function/functor that takes takes three references to
-  type CScalar; at least one of these references should be non-const in order to write the output.
+  type scalar; at least one of these references should be non-const in order to write the output.
   For example, to compute a = b + c, op would be of the form:
-  [](CScalar &a_val, const CScalar &b_val, const CScalar &c_val) { a_val = b_val + c_val; };
+  [](scalar &a_val, const scalar &b_val, const scalar &c_val) { a_val = b_val + c_val; };
 */
-template<typename CScalar1, typename CScalar2, typename CScalar3, typename Op>
+template<typename scalar1, typename scalar2, typename scalar3, typename Op>
 void CPU_tensor_apply3(Tensor tensor1, Tensor tensor2, Tensor tensor3, Op op) {
-  CPU_tensor_apply3_dim<CScalar1, CScalar2, CScalar3, Op>(tensor1, tensor2, tensor3, -1, op);
+  CPU_tensor_apply3_dim<scalar1, scalar2, scalar3, Op>(tensor1, tensor2, tensor3, -1, op);
 }
 
-template <typename CScalar1, typename CScalar2, typename CScalar3, typename CScalar4, typename Op>
+template <typename scalar1, typename scalar2, typename scalar3, typename scalar4, typename Op>
 void CPU_tensor_apply4_dim(Tensor &tensor1, Tensor& tensor2, Tensor& tensor3, Tensor& tensor4, int64_t dim, Op op) {
   check_correct_backend(tensor1, tensor2, tensor3, tensor4);
   bool TH_TENSOR_APPLY_hasFinished = false;
   int64_t TH_TENSOR_dim_index = 0;
-  __ATH_TENSOR_APPLYX_PREAMBLE(CScalar1, tensor1, dim, 1)
-  __ATH_TENSOR_APPLYX_PREAMBLE(CScalar2, tensor2, dim, 1)
-  __ATH_TENSOR_APPLYX_PREAMBLE(CScalar3, tensor3, dim, 1)
-  __ATH_TENSOR_APPLYX_PREAMBLE(CScalar4, tensor4, dim, 1)
+  __ATH_TENSOR_APPLYX_PREAMBLE(scalar1, tensor1, dim, 1)
+  __ATH_TENSOR_APPLYX_PREAMBLE(scalar2, tensor2, dim, 1)
+  __ATH_TENSOR_APPLYX_PREAMBLE(scalar3, tensor3, dim, 1)
+  __ATH_TENSOR_APPLYX_PREAMBLE(scalar4, tensor4, dim, 1)
 
   int elements_equal = 1;
   auto t1_numel = tensor1.numel();
@@ -320,15 +320,15 @@ void CPU_tensor_apply4_dim(Tensor &tensor1, Tensor& tensor2, Tensor& tensor3, Te
   Apply a pointwise operator to three tensors.
 
   The calling convention for op is a function/functor that takes takes four references to
-  type CScalar; at least one of these references should be non-const in order to write the output.
+  type scalar; at least one of these references should be non-const in order to write the output.
   For example, to compute a = b + c * d, op would be of the form:
-  [](CScalar &a_val, const CScalar &b_val, const CScalar &c_val, const CScalar &d_val) {
+  [](scalar &a_val, const scalar &b_val, const scalar &c_val, const scalar &d_val) {
     a_val = b_val + c_val * d_val;
   };
 */
-template<typename CScalar1, typename CScalar2, typename CScalar3, typename CScalar4, typename Op>
+template<typename scalar1, typename scalar2, typename scalar3, typename scalar4, typename Op>
 void CPU_tensor_apply4(Tensor tensor1, Tensor tensor2, Tensor tensor3, Tensor tensor4, Op op) {
-  CPU_tensor_apply4_dim<CScalar1, CScalar2, CScalar3, CScalar4, Op>(tensor1, tensor2, tensor3, tensor4, -1, op);
+  CPU_tensor_apply4_dim<scalar1, scalar2, scalar3, scalar4, Op>(tensor1, tensor2, tensor3, tensor4, -1, op);
 }
 
 }
