@@ -149,11 +149,11 @@ inline dim3 getApplyBlock() {
 }
 
 template <typename CScalar1, typename CScalar2, typename Op>
-bool pointwiseApply2(at::Tensor a,
-                     at::Tensor b,
-                     Op op,
-                     at::TensorArgType aType = at::TensorArgType::ReadWrite,
-                     at::TensorArgType bType = at::TensorArgType::ReadOnly) {  
+bool CUDA_tensor_apply2(at::Tensor a,
+                        at::Tensor b,
+                        Op op,
+                        at::TensorArgType aType = at::TensorArgType::ReadWrite,
+                        at::TensorArgType bType = at::TensorArgType::ReadOnly) {
   int64_t totalElements = a.numel();
 
   if (totalElements != b.numel()) {
@@ -324,13 +324,13 @@ bool pointwiseApply2(at::Tensor a,
 }
 
 template <typename CScalar1, typename CScalar2, typename CScalar3, typename Op>
-bool pointwiseApply3(at::Tensor a,
-                     at::Tensor b,
-                     at::Tensor c,
-                     const Op& op,
-                     TensorArgType aType = at::TensorArgType::ReadWrite,
-                     TensorArgType bType = at::TensorArgType::ReadOnly,
-                     TensorArgType cType = at::TensorArgType::ReadOnly) {
+bool CUDA_tensor_apply3(at::Tensor a,
+                        at::Tensor b,
+                        at::Tensor c,
+                        const Op& op,
+                        TensorArgType aType = at::TensorArgType::ReadWrite,
+                        TensorArgType bType = at::TensorArgType::ReadOnly,
+                        TensorArgType cType = at::TensorArgType::ReadOnly) {
   int64_t totalElements = a.numel();
 
   if (totalElements != b.numel() ||
@@ -542,15 +542,15 @@ bool pointwiseApply3(at::Tensor a,
 }
 
 template <typename CScalar1, typename CScalar2, typename CScalar3, typename CScalar4, typename Op>
-bool pointwiseApply4(at::Tensor a,
-                     at::Tensor b,
-                     at::Tensor c,
-                     at::Tensor d,
-                     const Op& op,
-                     TensorArgType aType = at::TensorArgType::ReadWrite,
-                     TensorArgType bType = at::TensorArgType::ReadOnly,
-                     TensorArgType cType = at::TensorArgType::ReadOnly,
-                     TensorArgType dType = at::TensorArgType::ReadOnly) {
+bool CUDA_tensor_apply4(at::Tensor a,
+                        at::Tensor b,
+                        at::Tensor c,
+                        at::Tensor d,
+                        const Op& op,
+                        TensorArgType aType = at::TensorArgType::ReadWrite,
+                        TensorArgType bType = at::TensorArgType::ReadOnly,
+                        TensorArgType cType = at::TensorArgType::ReadOnly,
+                        TensorArgType dType = at::TensorArgType::ReadOnly) {
   int64_t totalElements = a.numel();
 
   if (totalElements != b.numel() ||
