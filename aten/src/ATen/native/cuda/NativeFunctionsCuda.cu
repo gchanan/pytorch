@@ -18,15 +18,9 @@ struct WhereOpCUDA {
   }
 };
 
-Tensor where_cuda(const Tensor& condition, const Tensor& self, const Tensor& other) {
-  if (condition.type().scalarType() != ScalarType::Byte) {
-    runtime_error("Expected condition to have ScalarType Byte, but got ScalarType %s",
-                  toString(condition.type().scalarType()));
-  }
-  Tensor b_condition, b_self, b_other;
-  std::tie(b_condition, b_self, b_other) = expand_outplace(condition, self, other, "where");
-  Tensor ret = b_self.type().tensor(b_self.sizes());
-  at::dispatch_all<WhereOpCUDA>(ret.type(), "where", ret, b_condition, b_self, b_other);
+Tensor _s_where_cuda(const Tensor& condition, const Tensor& self, const Tensor& other) {
+  Tensor ret = self.type().tensor(self.sizes());
+  at::dispatch_all_cuda<WhereOpCUDA>(ret.type(), "where", ret, condition, self, other);
   return ret;
 }
 

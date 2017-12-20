@@ -1734,6 +1734,25 @@ class TestAutograd(TestCase):
         gradcheck(as_strided, [x], raise_exception=True)
         gradgradcheck(as_strided, [x], [Variable(torch.randn(3, 3))])
 
+    @unittest.skipIf(not torch.cuda.is_available(), "CUDA unavailable")
+    def test_where_cuda(self):
+        x = Variable(torch.randn(5, 5).cuda(), requires_grad=True)
+        y = Variable(torch.randn(5, 5).cuda(), requires_grad=True)
+        cond = Variable(mask_not_all_zeros((5, 5)).cuda(), requires_grad=False)
+        def where(cond, x, y):
+            return torch.where(cond, x, y)
+            #return torch.where(x, cond, y)
+            #return torch.where(cond, x, y)
+            #return x.where(cond, y)
+
+        gradcheck(where, [cond, x, y], raise_exception=True)
+        gradgradcheck(where, [cond, x, y], [Variable(torch.randn(5, 5).cuda())])
+
+        x = Variable(torch.randn(5, 1, 5).cuda(), requires_grad=True)
+        y = Variable(torch.randn(5, 5, 1).cuda(), requires_grad=True)
+        gradcheck(where, [cond, x, y], raise_exception=True)
+        gradgradcheck(where, [cond, x, y], [Variable(torch.randn(5, 5, 5).cuda())])
+
     def test_inplace_view_backprop_base(self):
         # modify view and back-prop through base
         root = Variable(torch.randn(2, 2), requires_grad=True)
