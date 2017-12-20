@@ -1,4 +1,3 @@
-#include "ATen/ATen.h"
 #include "TensorUtils.cuh"
 
 namespace at {
@@ -89,7 +88,7 @@ bool canUse32BitIndexMath(const Tensor& t, ptrdiff_t max_elem) {
     return false;
   }
 
-  return true;                                                          \
+  return true;
 }
 
 } // tensorutils
