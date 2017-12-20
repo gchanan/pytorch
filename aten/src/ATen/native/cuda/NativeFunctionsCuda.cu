@@ -1,7 +1,6 @@
 #include "ATen/NativeFunctions.h"
 #include "ATen/Dispatch.h"
-#include "ATen/ExpandUtils.h"
-#include "CUDAApplyUtils.cuh"
+#include "ATen/cuda/CUDAApplyUtils.cuh"
 #include <cfloat>
 
 namespace at {
