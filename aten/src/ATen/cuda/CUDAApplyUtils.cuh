@@ -12,6 +12,109 @@
 
 namespace at {
 
+// Rearrange dimensions for pointwise operations so that strides are in
+// decreasing order as much as possible, so that kernels have better memory
+// access patterns.
+//
+// For example, consider a binary operation on two "transposed" 2-dim tensors:
+//    sizes:          256 512
+//    aInfo->strides:   1 256
+//    bInfo->strides:   1 256
+//
+// Given this, each concurrent memory access inside kernelPointwiseApply2() is
+// exactly 256 elements apart, resulting in poor performance.
+//
+// This function exchanges dimensions so that memory access is contiguous:
+//    sizes:          512 256
+//    aInfo->strides: 256   1
+//    bInfo->strides: 256   1
+//
+// (Actually, it becomes even better because now collapseDims() can turn each
+// input into one contiguous array.)
+//
+// In general, given M (<=4) TensorInfo's with N dimensions, we can view each
+// strides[i] (0 <= i < N) as an M-tuple.  Given each pair i < j, we exchange
+// strides[i] and [j] if
+//    (1) strides[i][k] < strides[j][k] for some k (0 <= k < M)
+//        (exchanging them will benefit input #k), and
+//    (2) strides[i][k] <= strieds[j][k] for all k
+//        (exchanging them will not make any input worse).
+template <typename T1, typename IndexType,
+          typename T2 = void, typename T3 = void, typename T4 = void>
+void rearrangeDims(TensorInfo<T1, IndexType>* aInfo,
+                   TensorInfo<T2, IndexType>* bInfo = nullptr,
+                   TensorInfo<T3, IndexType>* cInfo = nullptr,
+                   TensorInfo<T4, IndexType>* dInfo = nullptr) {
+  int numInfos = 1;
+  int dims = aInfo->dims;
+  IndexType *sizes[4] = { aInfo->sizes, };
+  IndexType *strides[4] = { aInfo->strides, };
+
+  if (bInfo != nullptr) {
+    ++numInfos;
+    if (bInfo->dims != dims) return;
+    sizes[1] = bInfo->sizes;
+    strides[1] = bInfo->strides;
+  }
+
+  if (cInfo != nullptr) {
+    ++numInfos;
+    if (cInfo->dims != dims) return;
+    sizes[2] = cInfo->sizes;
+    strides[2] = cInfo->strides;
+  }
+
+  if (dInfo != nullptr) {
+    ++numInfos;
+    if (dInfo->dims != dims) return;
+    sizes[3] = dInfo->sizes;
+    strides[3] = dInfo->strides;
+  }
+
+  // Bail out if sizes do not match: we are using "deprecated pointwise
+  // behavior" among tensors of different shapes but same number of elements.
+  for (int i = 1; i < numInfos; ++i) {
+    for (int j = 0; j < dims; ++j) {
+      if (sizes[i][j] != sizes[0][j]) return;
+    }
+  }
+
+  for (int i = 0; i < dims - 1; ++i) {
+    // No need to consider dimensions of size 1.
+    if (sizes[0][i] == 1) continue;
+
+    for (int j = i + 1; j < dims; ++j) {
+      if (sizes[0][j] == 1) continue;
+
+      // Compare the relative sizes of strides between dim #i and dim #j.
+      bool hasIncreasingStrides = false;
+      bool hasDecreasingStrides = false;
+
+      for (int k = 0; k < numInfos; k++) {
+        IndexType stride_i = strides[k][i];
+        IndexType stride_j = strides[k][j];
+        if (stride_i < stride_j) {
+          hasIncreasingStrides = true;
+        } else if (stride_i > stride_j) {
+          hasDecreasingStrides = true;
+        }
+      }
+
+      if (hasIncreasingStrides && !hasDecreasingStrides) {
+        for (int k = 0; k < numInfos; k++) {
+          IndexType size = sizes[k][i];
+          sizes[k][i] = sizes[k][j];
+          sizes[k][j] = size;
+
+          IndexType stride = strides[k][i];
+          strides[k][i] = strides[k][j];
+          strides[k][j] = stride;
+        }
+      }
+    }
+  }
+}
+
 // Threads per block for our apply kernel
 // FIXME: use occupancy calculator instead
 #define THC_APPLY_THREADS_PER_BLOCK 32 * 16
@@ -267,10 +370,11 @@ bool CUDA_tensor_apply2(at::Tensor a,
       at::tensorutils::canUse32BitIndexMath(b)) {
     TensorInfo<scalar1, unsigned int> aInfo =
       at::tensorutils::getTensorInfo<scalar1, unsigned int>(a);
-    aInfo.collapseDims();
 
     TensorInfo<scalar2, unsigned int> bInfo =
       at::tensorutils::getTensorInfo<scalar2, unsigned int>(b);
+    rearrangeDims(&aInfo, &bInfo);
+    aInfo.collapseDims();
     bInfo.collapseDims();
 #if CUDA_VERSION < 9000
     if (!(aInfo.isContiguous() && bInfo.isContiguous()))
@@ -281,10 +385,11 @@ bool CUDA_tensor_apply2(at::Tensor a,
   } else {
     TensorInfo<scalar1, uint64_t> aInfo =
       at::tensorutils::getTensorInfo<scalar1, uint64_t>(a);
-    aInfo.collapseDims();
 
     TensorInfo<scalar2, uint64_t> bInfo =
       at::tensorutils::getTensorInfo<scalar2, uint64_t>(b);
+    rearrangeDims(&aInfo, &bInfo);
+    aInfo.collapseDims();
     bInfo.collapseDims();
 
     // For large tensors, we only compile the completely contiguous
@@ -476,14 +581,16 @@ bool CUDA_tensor_apply3(at::Tensor a,
       at::tensorutils::canUse32BitIndexMath(c)) {
     TensorInfo<scalar1, unsigned int> aInfo =
       at::tensorutils::getTensorInfo<scalar1, unsigned int>(a);
-    aInfo.collapseDims();
 
     TensorInfo<scalar2, unsigned int> bInfo =
       at::tensorutils::getTensorInfo<scalar2, unsigned int>(b);
-    bInfo.collapseDims();
 
     TensorInfo<scalar3, unsigned int> cInfo =
       at::tensorutils::getTensorInfo<scalar3, unsigned int>(c);
+
+    rearrangeDims(&aInfo, &bInfo, &cInfo);
+    aInfo.collapseDims();
+    bInfo.collapseDims();
     cInfo.collapseDims();
 
 #if CUDA_VERSION < 9000
@@ -494,14 +601,16 @@ bool CUDA_tensor_apply3(at::Tensor a,
   } else {
     TensorInfo<scalar1, uint64_t> aInfo =
       at::tensorutils::getTensorInfo<scalar1, uint64_t>(a);
-    aInfo.collapseDims();
 
     TensorInfo<scalar2, uint64_t> bInfo =
       at::tensorutils::getTensorInfo<scalar2, uint64_t>(b);
-    bInfo.collapseDims();
 
     TensorInfo<scalar3, uint64_t> cInfo =
       at::tensorutils::getTensorInfo<scalar3, uint64_t>(c);
+
+    rearrangeDims(&aInfo, &bInfo, &cInfo);
+    aInfo.collapseDims();
+    bInfo.collapseDims();
     cInfo.collapseDims();
 
     // For large tensors, we only compile the completely contiguous
@@ -736,18 +845,20 @@ bool CUDA_tensor_apply4(at::Tensor a,
       at::tensorutils::canUse32BitIndexMath(d)) {
     TensorInfo<scalar1, unsigned int> aInfo =
       at::tensorutils::getTensorInfo<scalar1, unsigned int>(a);
-    aInfo.collapseDims();
 
     TensorInfo<scalar2, unsigned int> bInfo =
       at::tensorutils::getTensorInfo<scalar2, unsigned int>(b);
-    bInfo.collapseDims();
 
     TensorInfo<scalar3, unsigned int> cInfo =
       at::tensorutils::getTensorInfo<scalar3, unsigned int>(c);
-    cInfo.collapseDims();
 
     TensorInfo<scalar4, unsigned int> dInfo =
       at::tensorutils::getTensorInfo<scalar4, unsigned int>(d);
+
+    rearrangeDims(&aInfo, &bInfo, &cInfo, &dInfo);
+    aInfo.collapseDims();
+    bInfo.collapseDims();
+    cInfo.collapseDims();
     dInfo.collapseDims();
 
 #if CUDA_VERSION < 9000
@@ -758,18 +869,20 @@ bool CUDA_tensor_apply4(at::Tensor a,
   } else {
     TensorInfo<scalar1, uint64_t> aInfo =
       at::tensorutils::getTensorInfo<scalar1, uint64_t>(a);
-    aInfo.collapseDims();
 
     TensorInfo<scalar2, uint64_t> bInfo =
       at::tensorutils::getTensorInfo<scalar2, uint64_t>(b);
-    bInfo.collapseDims();
 
     TensorInfo<scalar3, uint64_t> cInfo =
       at::tensorutils::getTensorInfo<scalar3, uint64_t>(c);
-    cInfo.collapseDims();
 
     TensorInfo<scalar4, uint64_t> dInfo =
       at::tensorutils::getTensorInfo<scalar4, uint64_t>(d);
+
+    rearrangeDims(&aInfo, &bInfo, &cInfo, &dInfo);
+    aInfo.collapseDims();
+    bInfo.collapseDims();
+    cInfo.collapseDims();
     dInfo.collapseDims();
 
     // For large tensors, we only compile the completely contiguous
