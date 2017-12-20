@@ -6,7 +6,7 @@ import math
 
 __all__ = [
     'split', 'chunk', 'stack', 'unbind', 'btriunpack', 'matmul', 'det', 'stft',
-    'hann_window', 'hamming_window', 'bartlett_window',
+    'hann_window', 'hamming_window', 'bartlett_window', 'where',
 ]
 
 
@@ -440,3 +440,8 @@ def bartlett_window(window_length, periodic=True):
         return window[:-1]
     else:
         return window
+
+def where(cond, x, y):
+    # the parameter order is changed here; the functional order is the same as numpy; the
+    # method follows the usual torch mask semantics of x.fn(mask, y)
+    return torch._C._VariableBase.where(x, cond, y)
