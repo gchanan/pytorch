@@ -1,7 +1,8 @@
 #include "TensorUtils.cuh"
 
 namespace at {
-namespace tensorutils {
+namespace cuda {
+namespace applyutils {
 
 struct SizeAndStride {
   int64_t size;
@@ -91,5 +92,6 @@ bool canUse32BitIndexMath(const Tensor& t, ptrdiff_t max_elem) {
   return true;
 }
 
-} // tensorutils
+} // applytuils
+} // cuda
 } // at

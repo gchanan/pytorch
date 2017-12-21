@@ -4,7 +4,8 @@
 #include "TensorInfo.cuh"
 
 namespace at {
-namespace tensorutils {
+namespace cuda {
+namespace applyutils {
 
 bool overlappingIndices(const at::Tensor& t);
 bool canUse32BitIndexMath(const at::Tensor &t, ptrdiff_t max_elem=UINT32_MAX);
@@ -25,5 +26,6 @@ getTensorInfo(const at::Tensor& t) {
     t.data<scalar>(), dims, sz, st);
 }
 
-} // tensorutils
+} // applyutils
+} // cuda
 } // at

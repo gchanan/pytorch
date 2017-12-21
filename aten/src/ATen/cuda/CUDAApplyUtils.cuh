@@ -11,6 +11,7 @@
 //
 
 namespace at {
+namespace cuda {
 
 // Rearrange dimensions for pointwise operations so that strides are in
 // decreasing order as much as possible, so that kernels have better memory
@@ -263,8 +264,8 @@ template <typename scalar1, typename scalar2, typename Op>
 bool CUDA_tensor_apply2(at::Tensor a,
                         at::Tensor b,
                         Op op,
-                        at::TensorArgType aType = at::TensorArgType::ReadWrite,
-                        at::TensorArgType bType = at::TensorArgType::ReadOnly) {
+                        TensorArgType aType = TensorArgType::ReadWrite,
+                        TensorArgType bType = TensorArgType::ReadOnly) {
   checkBackend("CUDA_tensor_apply2", {a, b}, Backend::CUDA);
   int64_t totalElements = a.numel();
 
@@ -300,12 +301,12 @@ bool CUDA_tensor_apply2(at::Tensor a,
   Tensor oldA;
   Tensor oldB;
 
-  if (aType == at::TensorArgType::ReadWrite && at::tensorutils::overlappingIndices(a)) {
+  if (aType == TensorArgType::ReadWrite && applyutils::overlappingIndices(a)) {
     // Must perform in contiguous space
     oldA = a;
     a = a.contiguous();
   }
-  if (bType == at::TensorArgType::ReadWrite && at::tensorutils::overlappingIndices(b)) {
+  if (bType == TensorArgType::ReadWrite && applyutils::overlappingIndices(b)) {
     // Must perform in contiguous space
     oldB = b;
     b = b.contiguous();
@@ -366,13 +367,13 @@ bool CUDA_tensor_apply2(at::Tensor a,
     }                                           \
   }
 
-  if (at::tensorutils::canUse32BitIndexMath(a) &&
-      at::tensorutils::canUse32BitIndexMath(b)) {
+  if (applyutils::canUse32BitIndexMath(a) &&
+      applyutils::canUse32BitIndexMath(b)) {
     TensorInfo<scalar1, unsigned int> aInfo =
-      at::tensorutils::getTensorInfo<scalar1, unsigned int>(a);
+      applyutils::getTensorInfo<scalar1, unsigned int>(a);
 
     TensorInfo<scalar2, unsigned int> bInfo =
-      at::tensorutils::getTensorInfo<scalar2, unsigned int>(b);
+      applyutils::getTensorInfo<scalar2, unsigned int>(b);
     rearrangeDims(&aInfo, &bInfo);
     aInfo.collapseDims();
     bInfo.collapseDims();
@@ -384,10 +385,10 @@ bool CUDA_tensor_apply2(at::Tensor a,
     HANDLE_A_CASE(unsigned int, aInfo.dims, bInfo.dims);
   } else {
     TensorInfo<scalar1, uint64_t> aInfo =
-      at::tensorutils::getTensorInfo<scalar1, uint64_t>(a);
+      applyutils::getTensorInfo<scalar1, uint64_t>(a);
 
     TensorInfo<scalar2, uint64_t> bInfo =
-      at::tensorutils::getTensorInfo<scalar2, uint64_t>(b);
+      applyutils::getTensorInfo<scalar2, uint64_t>(b);
     rearrangeDims(&aInfo, &bInfo);
     aInfo.collapseDims();
     bInfo.collapseDims();
@@ -452,9 +453,9 @@ bool CUDA_tensor_apply3(at::Tensor a,
                         at::Tensor b,
                         at::Tensor c,
                         const Op& op,
-                        TensorArgType aType = at::TensorArgType::ReadWrite,
-                        TensorArgType bType = at::TensorArgType::ReadOnly,
-                        TensorArgType cType = at::TensorArgType::ReadOnly) {
+                        TensorArgType aType = TensorArgType::ReadWrite,
+                        TensorArgType bType = TensorArgType::ReadOnly,
+                        TensorArgType cType = TensorArgType::ReadOnly) {
   checkBackend("CUDA_tensor_apply3", {a, b, c}, Backend::CUDA);
   int64_t totalElements = a.numel();
 
@@ -494,17 +495,17 @@ bool CUDA_tensor_apply3(at::Tensor a,
   Tensor oldB;
   Tensor oldC;
 
-  if (aType == at::TensorArgType::ReadWrite && at::tensorutils::overlappingIndices(a)) {
+  if (aType == TensorArgType::ReadWrite && applyutils::overlappingIndices(a)) {
     // Must perform in contiguous space
     oldA = a;
     a = a.contiguous();
   }
-  if (bType == at::TensorArgType::ReadWrite && at::tensorutils::overlappingIndices(b)) {
+  if (bType == TensorArgType::ReadWrite && applyutils::overlappingIndices(b)) {
     // Must perform in contiguous space
     oldB = b;
     b = b.contiguous();
   }
-  if (cType == at::TensorArgType::ReadWrite && at::tensorutils::overlappingIndices(c)) {
+  if (cType == TensorArgType::ReadWrite && applyutils::overlappingIndices(c)) {
     // Must perform in contiguous space
     oldC = c;
     c = c.contiguous();
@@ -576,17 +577,17 @@ bool CUDA_tensor_apply3(at::Tensor a,
     }                                           \
   }
 
-  if (at::tensorutils::canUse32BitIndexMath(a) &&
-      at::tensorutils::canUse32BitIndexMath(b) &&
-      at::tensorutils::canUse32BitIndexMath(c)) {
+  if (applyutils::canUse32BitIndexMath(a) &&
+      applyutils::canUse32BitIndexMath(b) &&
+      applyutils::canUse32BitIndexMath(c)) {
     TensorInfo<scalar1, unsigned int> aInfo =
-      at::tensorutils::getTensorInfo<scalar1, unsigned int>(a);
+      applyutils::getTensorInfo<scalar1, unsigned int>(a);
 
     TensorInfo<scalar2, unsigned int> bInfo =
-      at::tensorutils::getTensorInfo<scalar2, unsigned int>(b);
+      applyutils::getTensorInfo<scalar2, unsigned int>(b);
 
     TensorInfo<scalar3, unsigned int> cInfo =
-      at::tensorutils::getTensorInfo<scalar3, unsigned int>(c);
+      applyutils::getTensorInfo<scalar3, unsigned int>(c);
 
     rearrangeDims(&aInfo, &bInfo, &cInfo);
     aInfo.collapseDims();
@@ -600,13 +601,13 @@ bool CUDA_tensor_apply3(at::Tensor a,
     HANDLE_A_CASE(unsigned int, aInfo.dims, bInfo.dims, cInfo.dims);
   } else {
     TensorInfo<scalar1, uint64_t> aInfo =
-      at::tensorutils::getTensorInfo<scalar1, uint64_t>(a);
+      applyutils::getTensorInfo<scalar1, uint64_t>(a);
 
     TensorInfo<scalar2, uint64_t> bInfo =
-      at::tensorutils::getTensorInfo<scalar2, uint64_t>(b);
+      applyutils::getTensorInfo<scalar2, uint64_t>(b);
 
     TensorInfo<scalar3, uint64_t> cInfo =
-      at::tensorutils::getTensorInfo<scalar3, uint64_t>(c);
+      applyutils::getTensorInfo<scalar3, uint64_t>(c);
 
     rearrangeDims(&aInfo, &bInfo, &cInfo);
     aInfo.collapseDims();
@@ -686,10 +687,10 @@ bool CUDA_tensor_apply4(at::Tensor a,
                         at::Tensor c,
                         at::Tensor d,
                         const Op& op,
-                        TensorArgType aType = at::TensorArgType::ReadWrite,
-                        TensorArgType bType = at::TensorArgType::ReadOnly,
-                        TensorArgType cType = at::TensorArgType::ReadOnly,
-                        TensorArgType dType = at::TensorArgType::ReadOnly) {
+                        TensorArgType aType = TensorArgType::ReadWrite,
+                        TensorArgType bType = TensorArgType::ReadOnly,
+                        TensorArgType cType = TensorArgType::ReadOnly,
+                        TensorArgType dType = TensorArgType::ReadOnly) {
   checkBackend("CUDA_tensor_apply4", {a, b, c, d}, Backend::CUDA);
   int64_t totalElements = a.numel();
 
@@ -732,22 +733,22 @@ bool CUDA_tensor_apply4(at::Tensor a,
   Tensor oldC;
   Tensor oldD;
 
-  if (aType == at::TensorArgType::ReadWrite && at::tensorutils::overlappingIndices(a)) {
+  if (aType == TensorArgType::ReadWrite && applyutils::overlappingIndices(a)) {
     // Must perform in contiguous space
     oldA = a;
     a = a.contiguous();
   }
-  if (bType == at::TensorArgType::ReadWrite && at::tensorutils::overlappingIndices(b)) {
+  if (bType == TensorArgType::ReadWrite && applyutils::overlappingIndices(b)) {
     // Must perform in contiguous space
     oldB = b;
     b = b.contiguous();
   }
-  if (cType == at::TensorArgType::ReadWrite && at::tensorutils::overlappingIndices(c)) {
+  if (cType == TensorArgType::ReadWrite && applyutils::overlappingIndices(c)) {
     // Must perform in contiguous space
     oldC = c;
     c = c.contiguous();
   }
-  if (dType == at::TensorArgType::ReadWrite && at::tensorutils::overlappingIndices(c)) {
+  if (dType == TensorArgType::ReadWrite && applyutils::overlappingIndices(c)) {
     // Must perform in contiguous space
     oldD = d;
     d = d.contiguous();
@@ -839,21 +840,21 @@ bool CUDA_tensor_apply4(at::Tensor a,
     }                                           \
   }
 
-  if (at::tensorutils::canUse32BitIndexMath(a) &&
-      at::tensorutils::canUse32BitIndexMath(b) &&
-      at::tensorutils::canUse32BitIndexMath(c) &&
-      at::tensorutils::canUse32BitIndexMath(d)) {
+  if (applyutils::canUse32BitIndexMath(a) &&
+      applyutils::canUse32BitIndexMath(b) &&
+      applyutils::canUse32BitIndexMath(c) &&
+      applyutils::canUse32BitIndexMath(d)) {
     TensorInfo<scalar1, unsigned int> aInfo =
-      at::tensorutils::getTensorInfo<scalar1, unsigned int>(a);
+      applyutils::getTensorInfo<scalar1, unsigned int>(a);
 
     TensorInfo<scalar2, unsigned int> bInfo =
-      at::tensorutils::getTensorInfo<scalar2, unsigned int>(b);
+      applyutils::getTensorInfo<scalar2, unsigned int>(b);
 
     TensorInfo<scalar3, unsigned int> cInfo =
-      at::tensorutils::getTensorInfo<scalar3, unsigned int>(c);
+      applyutils::getTensorInfo<scalar3, unsigned int>(c);
 
     TensorInfo<scalar4, unsigned int> dInfo =
-      at::tensorutils::getTensorInfo<scalar4, unsigned int>(d);
+      applyutils::getTensorInfo<scalar4, unsigned int>(d);
 
     rearrangeDims(&aInfo, &bInfo, &cInfo, &dInfo);
     aInfo.collapseDims();
@@ -868,16 +869,16 @@ bool CUDA_tensor_apply4(at::Tensor a,
     HANDLE_A_CASE(unsigned int, aInfo.dims, bInfo.dims, cInfo.dims, dInfo.dims);
   } else {
     TensorInfo<scalar1, uint64_t> aInfo =
-      at::tensorutils::getTensorInfo<scalar1, uint64_t>(a);
+      applyutils::getTensorInfo<scalar1, uint64_t>(a);
 
     TensorInfo<scalar2, uint64_t> bInfo =
-      at::tensorutils::getTensorInfo<scalar2, uint64_t>(b);
+      applyutils::getTensorInfo<scalar2, uint64_t>(b);
 
     TensorInfo<scalar3, uint64_t> cInfo =
-      at::tensorutils::getTensorInfo<scalar3, uint64_t>(c);
+      applyutils::getTensorInfo<scalar3, uint64_t>(c);
 
     TensorInfo<scalar4, uint64_t> dInfo =
-      at::tensorutils::getTensorInfo<scalar4, uint64_t>(d);
+      applyutils::getTensorInfo<scalar4, uint64_t>(d);
 
     rearrangeDims(&aInfo, &bInfo, &cInfo, &dInfo);
     aInfo.collapseDims();
@@ -953,4 +954,5 @@ bool CUDA_tensor_apply4(at::Tensor a,
   return true;
 }
 
-}
+} // cuda
+} // at

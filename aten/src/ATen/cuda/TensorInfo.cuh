@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ATen/Tensor.h"
+#include "ATen/ATen.h"
 
 namespace at {
-  
+namespace cuda {
 
 #define MAX_TENSORINFO_DIMS 25
 
@@ -270,4 +270,5 @@ struct IndexToOffset<T, IndexType, -1> {
   }
 };
 
+} // cuda
 } // at
