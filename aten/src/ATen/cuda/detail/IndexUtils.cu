@@ -1,4 +1,4 @@
-#include "TensorUtils.cuh"
+#include "IndexUtils.cuh"
 
 namespace at {
 namespace cuda {

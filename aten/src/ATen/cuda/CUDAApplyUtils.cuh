@@ -1,6 +1,6 @@
 #pragma once
 
-#include "TensorUtils.cuh"
+#include "detail/IndexUtils.cuh"
 #include "ATen/Check.h"
 
 //
