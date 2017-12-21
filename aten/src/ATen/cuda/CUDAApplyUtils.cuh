@@ -117,8 +117,8 @@ void rearrangeDims(TensorInfo<T1, IndexType>* aInfo,
 
 // Threads per block for our apply kernel
 // FIXME: use occupancy calculator instead
-#define THC_APPLY_THREADS_PER_BLOCK 32 * 16
-#define THC_APPLY_BLOCKS_PER_SM 4
+#define AT_APPLY_THREADS_PER_BLOCK 32 * 16
+#define AT_APPLY_BLOCKS_PER_SM 4
 
 template <typename Op,
           typename scalar1,
@@ -126,7 +126,7 @@ template <typename Op,
           typename IndexType,
           int ADims, int BDims>
 #if __CUDA_ARCH__ >= 350
-__launch_bounds__(THC_APPLY_THREADS_PER_BLOCK, THC_APPLY_BLOCKS_PER_SM)
+__launch_bounds__(AT_APPLY_THREADS_PER_BLOCK, AT_APPLY_BLOCKS_PER_SM)
 #endif
 __global__ void
 kernelPointwiseApply2(TensorInfo<scalar1, IndexType> a,
@@ -157,7 +157,7 @@ template <typename Op,
           typename IndexType,
           int ADims, int BDims, int CDims>
 #if __CUDA_ARCH__ >= 350
-__launch_bounds__(THC_APPLY_THREADS_PER_BLOCK, THC_APPLY_BLOCKS_PER_SM)
+__launch_bounds__(AT_APPLY_THREADS_PER_BLOCK, AT_APPLY_BLOCKS_PER_SM)
 #endif
 __global__ void
 kernelPointwiseApply3(TensorInfo<scalar1, IndexType> a,
@@ -192,7 +192,7 @@ template <typename Op,
           typename IndexType,
           int ADims, int BDims, int CDims, int DDims>
 #if __CUDA_ARCH__ >= 350
-__launch_bounds__(THC_APPLY_THREADS_PER_BLOCK, THC_APPLY_BLOCKS_PER_SM)
+__launch_bounds__(AT_APPLY_THREADS_PER_BLOCK, AT_APPLY_BLOCKS_PER_SM)
 #endif
 __global__ void
 kernelPointwiseApply4(TensorInfo<scalar1, IndexType> a,
@@ -237,7 +237,7 @@ inline bool getApplyGrid(uint64_t totalElements, dim3& grid) {
   cudaGetDevice(&curDevice);
   if (curDevice == -1) return false;
 
-  uint64_t numBlocks = ATenCeilDiv(totalElements, static_cast<uint64_t>(THC_APPLY_THREADS_PER_BLOCK));
+  uint64_t numBlocks = ATenCeilDiv(totalElements, static_cast<uint64_t>(AT_APPLY_THREADS_PER_BLOCK));
   uint64_t maxGridX = at::globalContext().getCurrentDeviceProperties()->maxGridSize[0];
   if (numBlocks > maxGridX)
       numBlocks = maxGridX;
@@ -248,7 +248,7 @@ inline bool getApplyGrid(uint64_t totalElements, dim3& grid) {
 enum class TensorArgType { ReadWrite, ReadOnly };
 
 inline dim3 getApplyBlock() {
-  return dim3(THC_APPLY_THREADS_PER_BLOCK);
+  return dim3(AT_APPLY_THREADS_PER_BLOCK);
 }
 
 /*
@@ -378,7 +378,7 @@ bool CUDA_tensor_apply2(at::Tensor a,
     bInfo.collapseDims();
 #if CUDA_VERSION < 9000
     if (!(aInfo.isContiguous() && bInfo.isContiguous()))
-        grid.x = std::min((unsigned int)at::globalContext().getCurrentDeviceProperties()->multiProcessorCount * THC_APPLY_BLOCKS_PER_SM , grid.x);
+        grid.x = std::min((unsigned int)at::globalContext().getCurrentDeviceProperties()->multiProcessorCount * AT_APPLY_BLOCKS_PER_SM , grid.x);
 #endif
 
     HANDLE_A_CASE(unsigned int, aInfo.dims, bInfo.dims);
@@ -404,7 +404,7 @@ bool CUDA_tensor_apply2(at::Tensor a,
            aInfo, bInfo, (uint64_t) totalElements, op);
     } else {
 #if CUDA_VERSION < 9000
-      grid.x = std::min((unsigned int)at::globalContext().getCurrentDeviceProperties()->multiProcessorCount * THC_APPLY_BLOCKS_PER_SM , grid.x);
+      grid.x = std::min((unsigned int)at::globalContext().getCurrentDeviceProperties()->multiProcessorCount * AT_APPLY_BLOCKS_PER_SM , grid.x);
 #endif
       kernelPointwiseApply2<Op,
                             scalar1,
@@ -595,7 +595,7 @@ bool CUDA_tensor_apply3(at::Tensor a,
 
 #if CUDA_VERSION < 9000
     if (!(aInfo.isContiguous() && bInfo.isContiguous() && cInfo.isContiguous()))
-      grid.x = std::min((unsigned int)at::globalContext().getCurrentDeviceProperties()->multiProcessorCount * THC_APPLY_BLOCKS_PER_SM , grid.x);
+      grid.x = std::min((unsigned int)at::globalContext().getCurrentDeviceProperties()->multiProcessorCount * AT_APPLY_BLOCKS_PER_SM , grid.x);
 #endif
     HANDLE_A_CASE(unsigned int, aInfo.dims, bInfo.dims, cInfo.dims);
   } else {
@@ -626,7 +626,7 @@ bool CUDA_tensor_apply3(at::Tensor a,
           aInfo, bInfo, cInfo, (uint64_t) totalElements, op);
     } else {
 #if CUDA_VERSION < 9000
-  grid.x = std::min((unsigned int)at::globalContext().getCurrentDeviceProperties()->multiProcessorCount * THC_APPLY_BLOCKS_PER_SM , grid.x);
+  grid.x = std::min((unsigned int)at::globalContext().getCurrentDeviceProperties()->multiProcessorCount * AT_APPLY_BLOCKS_PER_SM , grid.x);
 #endif
 
 	kernelPointwiseApply3<Op,
@@ -863,7 +863,7 @@ bool CUDA_tensor_apply4(at::Tensor a,
 
 #if CUDA_VERSION < 9000
     if (!(aInfo.isContiguous() && bInfo.isContiguous() && cInfo.isContiguous() && dInfo.isContiguous()))
-      grid.x = std::min((unsigned int)at::globalContext().getCurrentDeviceProperties()->multiProcessorCount * THC_APPLY_BLOCKS_PER_SM , grid.x);
+      grid.x = std::min((unsigned int)at::globalContext().getCurrentDeviceProperties()->multiProcessorCount * AT_APPLY_BLOCKS_PER_SM , grid.x);
 #endif
     HANDLE_A_CASE(unsigned int, aInfo.dims, bInfo.dims, cInfo.dims, dInfo.dims);
   } else {
@@ -899,7 +899,7 @@ bool CUDA_tensor_apply4(at::Tensor a,
           aInfo, bInfo, cInfo, dInfo, (uint64_t) totalElements, op);
     } else {
 #if CUDA_VERSION < 9000
-  grid.x = std::min((unsigned int)at::globalContext().getCurrentDeviceProperties()->multiProcessorCount * THC_APPLY_BLOCKS_PER_SM , grid.x);
+  grid.x = std::min((unsigned int)at::globalContext().getCurrentDeviceProperties()->multiProcessorCount * AT_APPLY_BLOCKS_PER_SM , grid.x);
 #endif
 
 	kernelPointwiseApply4<Op,
