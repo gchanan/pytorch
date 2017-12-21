@@ -2,7 +2,7 @@
 
 namespace at {
 namespace cuda {
-namespace applyutils {
+namespace detail {
 
 struct SizeAndStride {
   int64_t size;
@@ -92,6 +92,6 @@ bool canUse32BitIndexMath(const Tensor& t, ptrdiff_t max_elem) {
   return true;
 }
 
-} // applytuils
+} // detail
 } // cuda
 } // at

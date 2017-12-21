@@ -42,10 +42,10 @@ namespace cuda {
 //        (exchanging them will not make any input worse).
 template <typename T1, typename IndexType,
           typename T2 = void, typename T3 = void, typename T4 = void>
-void rearrangeDims(TensorInfo<T1, IndexType>* aInfo,
-                   TensorInfo<T2, IndexType>* bInfo = nullptr,
-                   TensorInfo<T3, IndexType>* cInfo = nullptr,
-                   TensorInfo<T4, IndexType>* dInfo = nullptr) {
+void rearrangeDims(detail::TensorInfo<T1, IndexType>* aInfo,
+                   detail::TensorInfo<T2, IndexType>* bInfo = nullptr,
+                   detail::TensorInfo<T3, IndexType>* cInfo = nullptr,
+                   detail::TensorInfo<T4, IndexType>* dInfo = nullptr) {
   int numInfos = 1;
   int dims = aInfo->dims;
   IndexType *sizes[4] = { aInfo->sizes, };
@@ -130,8 +130,8 @@ template <typename Op,
 __launch_bounds__(AT_APPLY_THREADS_PER_BLOCK, AT_APPLY_BLOCKS_PER_SM)
 #endif
 __global__ void
-kernelPointwiseApply2(TensorInfo<scalar1, IndexType> a,
-                      TensorInfo<scalar2, IndexType> b,
+kernelPointwiseApply2(detail::TensorInfo<scalar1, IndexType> a,
+                      detail::TensorInfo<scalar2, IndexType> b,
                       IndexType totalElements,
                       Op op) {
   for (IndexType linearIndex = blockIdx.x * blockDim.x + threadIdx.x;
@@ -139,11 +139,11 @@ kernelPointwiseApply2(TensorInfo<scalar1, IndexType> a,
        linearIndex += gridDim.x * blockDim.x) {
     // Convert `linearIndex` into an offset of `a`
     const IndexType aOffset =
-      IndexToOffset<scalar1, IndexType, ADims>::get(linearIndex, a);
+      detail::IndexToOffset<scalar1, IndexType, ADims>::get(linearIndex, a);
 
     // Convert `linearIndex` into an offset of `b`
     const IndexType bOffset =
-      IndexToOffset<scalar2, IndexType, BDims>::get(linearIndex, b);
+      detail::IndexToOffset<scalar2, IndexType, BDims>::get(linearIndex, b);
 
     bool earlyExit = false;
     op(a.data[aOffset], b.data[bOffset], earlyExit);
@@ -161,9 +161,9 @@ template <typename Op,
 __launch_bounds__(AT_APPLY_THREADS_PER_BLOCK, AT_APPLY_BLOCKS_PER_SM)
 #endif
 __global__ void
-kernelPointwiseApply3(TensorInfo<scalar1, IndexType> a,
-                      TensorInfo<scalar2, IndexType> b,
-                      TensorInfo<scalar3, IndexType> c,
+kernelPointwiseApply3(detail::TensorInfo<scalar1, IndexType> a,
+                      detail::TensorInfo<scalar2, IndexType> b,
+                      detail::TensorInfo<scalar3, IndexType> c,
                       IndexType totalElements,
                       Op op) {
   for (IndexType linearIndex = blockIdx.x * blockDim.x + threadIdx.x;
@@ -171,15 +171,15 @@ kernelPointwiseApply3(TensorInfo<scalar1, IndexType> a,
        linearIndex += gridDim.x * blockDim.x) {
     // Convert `linearIndex` into an offset of `a`
     const IndexType aOffset =
-      IndexToOffset<scalar1, IndexType, ADims>::get(linearIndex, a);
+      detail::IndexToOffset<scalar1, IndexType, ADims>::get(linearIndex, a);
 
     // Convert `linearIndex` into an offset of `b`
     const IndexType bOffset =
-      IndexToOffset<scalar2, IndexType, BDims>::get(linearIndex, b);
+      detail::IndexToOffset<scalar2, IndexType, BDims>::get(linearIndex, b);
 
     // Convert `linearIndex` into an offset of `c`
     const IndexType cOffset =
-      IndexToOffset<scalar3, IndexType, CDims>::get(linearIndex, c);
+      detail::IndexToOffset<scalar3, IndexType, CDims>::get(linearIndex, c);
 
     op(a.data[aOffset], b.data[bOffset], c.data[cOffset]);
   }
@@ -196,10 +196,10 @@ template <typename Op,
 __launch_bounds__(AT_APPLY_THREADS_PER_BLOCK, AT_APPLY_BLOCKS_PER_SM)
 #endif
 __global__ void
-kernelPointwiseApply4(TensorInfo<scalar1, IndexType> a,
-                      TensorInfo<scalar2, IndexType> b,
-                      TensorInfo<scalar3, IndexType> c,
-                      TensorInfo<scalar4, IndexType> d,
+kernelPointwiseApply4(detail::TensorInfo<scalar1, IndexType> a,
+                      detail::TensorInfo<scalar2, IndexType> b,
+                      detail::TensorInfo<scalar3, IndexType> c,
+                      detail::TensorInfo<scalar4, IndexType> d,
                       IndexType totalElements,
                       Op op) {
   for (IndexType linearIndex = blockIdx.x * blockDim.x + threadIdx.x;
@@ -207,19 +207,19 @@ kernelPointwiseApply4(TensorInfo<scalar1, IndexType> a,
        linearIndex += gridDim.x * blockDim.x) {
     // Convert `linearIndex` into an offset of `a`
     const IndexType aOffset =
-      IndexToOffset<scalar1, IndexType, ADims>::get(linearIndex, a);
+      detail::IndexToOffset<scalar1, IndexType, ADims>::get(linearIndex, a);
 
     // Convert `linearIndex` into an offset of `b`
     const IndexType bOffset =
-      IndexToOffset<scalar2, IndexType, BDims>::get(linearIndex, b);
+      detail::IndexToOffset<scalar2, IndexType, BDims>::get(linearIndex, b);
 
     // Convert `linearIndex` into an offset of `c`
     const IndexType cOffset =
-      IndexToOffset<scalar3, IndexType, CDims>::get(linearIndex, c);
+      detail::IndexToOffset<scalar3, IndexType, CDims>::get(linearIndex, c);
 
     // Convert `linearIndex` into an offset of `d`
     const IndexType dOffset =
-      IndexToOffset<scalar4, IndexType, DDims>::get(linearIndex, d);
+      detail::IndexToOffset<scalar4, IndexType, DDims>::get(linearIndex, d);
 
     op(a.data[aOffset], b.data[bOffset], c.data[cOffset], d.data[dOffset]);
   }
@@ -301,12 +301,12 @@ bool CUDA_tensor_apply2(at::Tensor a,
   Tensor oldA;
   Tensor oldB;
 
-  if (aType == TensorArgType::ReadWrite && applyutils::overlappingIndices(a)) {
+  if (aType == TensorArgType::ReadWrite && detail::overlappingIndices(a)) {
     // Must perform in contiguous space
     oldA = a;
     a = a.contiguous();
   }
-  if (bType == TensorArgType::ReadWrite && applyutils::overlappingIndices(b)) {
+  if (bType == TensorArgType::ReadWrite && detail::overlappingIndices(b)) {
     // Must perform in contiguous space
     oldB = b;
     b = b.contiguous();
@@ -367,13 +367,13 @@ bool CUDA_tensor_apply2(at::Tensor a,
     }                                           \
   }
 
-  if (applyutils::canUse32BitIndexMath(a) &&
-      applyutils::canUse32BitIndexMath(b)) {
-    TensorInfo<scalar1, unsigned int> aInfo =
-      applyutils::getTensorInfo<scalar1, unsigned int>(a);
+  if (detail::canUse32BitIndexMath(a) &&
+      detail::canUse32BitIndexMath(b)) {
+    detail::TensorInfo<scalar1, unsigned int> aInfo =
+      detail::getTensorInfo<scalar1, unsigned int>(a);
 
-    TensorInfo<scalar2, unsigned int> bInfo =
-      applyutils::getTensorInfo<scalar2, unsigned int>(b);
+    detail::TensorInfo<scalar2, unsigned int> bInfo =
+      detail::getTensorInfo<scalar2, unsigned int>(b);
     rearrangeDims(&aInfo, &bInfo);
     aInfo.collapseDims();
     bInfo.collapseDims();
@@ -384,11 +384,11 @@ bool CUDA_tensor_apply2(at::Tensor a,
 
     HANDLE_A_CASE(unsigned int, aInfo.dims, bInfo.dims);
   } else {
-    TensorInfo<scalar1, uint64_t> aInfo =
-      applyutils::getTensorInfo<scalar1, uint64_t>(a);
+    detail::TensorInfo<scalar1, uint64_t> aInfo =
+      detail::getTensorInfo<scalar1, uint64_t>(a);
 
-    TensorInfo<scalar2, uint64_t> bInfo =
-      applyutils::getTensorInfo<scalar2, uint64_t>(b);
+    detail::TensorInfo<scalar2, uint64_t> bInfo =
+      detail::getTensorInfo<scalar2, uint64_t>(b);
     rearrangeDims(&aInfo, &bInfo);
     aInfo.collapseDims();
     bInfo.collapseDims();
@@ -495,17 +495,17 @@ bool CUDA_tensor_apply3(at::Tensor a,
   Tensor oldB;
   Tensor oldC;
 
-  if (aType == TensorArgType::ReadWrite && applyutils::overlappingIndices(a)) {
+  if (aType == TensorArgType::ReadWrite && detail::overlappingIndices(a)) {
     // Must perform in contiguous space
     oldA = a;
     a = a.contiguous();
   }
-  if (bType == TensorArgType::ReadWrite && applyutils::overlappingIndices(b)) {
+  if (bType == TensorArgType::ReadWrite && detail::overlappingIndices(b)) {
     // Must perform in contiguous space
     oldB = b;
     b = b.contiguous();
   }
-  if (cType == TensorArgType::ReadWrite && applyutils::overlappingIndices(c)) {
+  if (cType == TensorArgType::ReadWrite && detail::overlappingIndices(c)) {
     // Must perform in contiguous space
     oldC = c;
     c = c.contiguous();
@@ -577,17 +577,17 @@ bool CUDA_tensor_apply3(at::Tensor a,
     }                                           \
   }
 
-  if (applyutils::canUse32BitIndexMath(a) &&
-      applyutils::canUse32BitIndexMath(b) &&
-      applyutils::canUse32BitIndexMath(c)) {
-    TensorInfo<scalar1, unsigned int> aInfo =
-      applyutils::getTensorInfo<scalar1, unsigned int>(a);
+  if (detail::canUse32BitIndexMath(a) &&
+      detail::canUse32BitIndexMath(b) &&
+      detail::canUse32BitIndexMath(c)) {
+    detail::TensorInfo<scalar1, unsigned int> aInfo =
+      detail::getTensorInfo<scalar1, unsigned int>(a);
 
-    TensorInfo<scalar2, unsigned int> bInfo =
-      applyutils::getTensorInfo<scalar2, unsigned int>(b);
+    detail::TensorInfo<scalar2, unsigned int> bInfo =
+      detail::getTensorInfo<scalar2, unsigned int>(b);
 
-    TensorInfo<scalar3, unsigned int> cInfo =
-      applyutils::getTensorInfo<scalar3, unsigned int>(c);
+    detail::TensorInfo<scalar3, unsigned int> cInfo =
+      detail::getTensorInfo<scalar3, unsigned int>(c);
 
     rearrangeDims(&aInfo, &bInfo, &cInfo);
     aInfo.collapseDims();
@@ -600,14 +600,14 @@ bool CUDA_tensor_apply3(at::Tensor a,
 #endif
     HANDLE_A_CASE(unsigned int, aInfo.dims, bInfo.dims, cInfo.dims);
   } else {
-    TensorInfo<scalar1, uint64_t> aInfo =
-      applyutils::getTensorInfo<scalar1, uint64_t>(a);
+    detail::TensorInfo<scalar1, uint64_t> aInfo =
+      detail::getTensorInfo<scalar1, uint64_t>(a);
 
-    TensorInfo<scalar2, uint64_t> bInfo =
-      applyutils::getTensorInfo<scalar2, uint64_t>(b);
+    detail::TensorInfo<scalar2, uint64_t> bInfo =
+      detail::getTensorInfo<scalar2, uint64_t>(b);
 
-    TensorInfo<scalar3, uint64_t> cInfo =
-      applyutils::getTensorInfo<scalar3, uint64_t>(c);
+    detail::TensorInfo<scalar3, uint64_t> cInfo =
+      detail::getTensorInfo<scalar3, uint64_t>(c);
 
     rearrangeDims(&aInfo, &bInfo, &cInfo);
     aInfo.collapseDims();
@@ -733,22 +733,22 @@ bool CUDA_tensor_apply4(at::Tensor a,
   Tensor oldC;
   Tensor oldD;
 
-  if (aType == TensorArgType::ReadWrite && applyutils::overlappingIndices(a)) {
+  if (aType == TensorArgType::ReadWrite && detail::overlappingIndices(a)) {
     // Must perform in contiguous space
     oldA = a;
     a = a.contiguous();
   }
-  if (bType == TensorArgType::ReadWrite && applyutils::overlappingIndices(b)) {
+  if (bType == TensorArgType::ReadWrite && detail::overlappingIndices(b)) {
     // Must perform in contiguous space
     oldB = b;
     b = b.contiguous();
   }
-  if (cType == TensorArgType::ReadWrite && applyutils::overlappingIndices(c)) {
+  if (cType == TensorArgType::ReadWrite && detail::overlappingIndices(c)) {
     // Must perform in contiguous space
     oldC = c;
     c = c.contiguous();
   }
-  if (dType == TensorArgType::ReadWrite && applyutils::overlappingIndices(c)) {
+  if (dType == TensorArgType::ReadWrite && detail::overlappingIndices(c)) {
     // Must perform in contiguous space
     oldD = d;
     d = d.contiguous();
@@ -840,21 +840,21 @@ bool CUDA_tensor_apply4(at::Tensor a,
     }                                           \
   }
 
-  if (applyutils::canUse32BitIndexMath(a) &&
-      applyutils::canUse32BitIndexMath(b) &&
-      applyutils::canUse32BitIndexMath(c) &&
-      applyutils::canUse32BitIndexMath(d)) {
-    TensorInfo<scalar1, unsigned int> aInfo =
-      applyutils::getTensorInfo<scalar1, unsigned int>(a);
+  if (detail::canUse32BitIndexMath(a) &&
+      detail::canUse32BitIndexMath(b) &&
+      detail::canUse32BitIndexMath(c) &&
+      detail::canUse32BitIndexMath(d)) {
+    detail::TensorInfo<scalar1, unsigned int> aInfo =
+      detail::getTensorInfo<scalar1, unsigned int>(a);
 
-    TensorInfo<scalar2, unsigned int> bInfo =
-      applyutils::getTensorInfo<scalar2, unsigned int>(b);
+    detail::TensorInfo<scalar2, unsigned int> bInfo =
+      detail::getTensorInfo<scalar2, unsigned int>(b);
 
-    TensorInfo<scalar3, unsigned int> cInfo =
-      applyutils::getTensorInfo<scalar3, unsigned int>(c);
+    detail::TensorInfo<scalar3, unsigned int> cInfo =
+      detail::getTensorInfo<scalar3, unsigned int>(c);
 
-    TensorInfo<scalar4, unsigned int> dInfo =
-      applyutils::getTensorInfo<scalar4, unsigned int>(d);
+    detail::TensorInfo<scalar4, unsigned int> dInfo =
+      detail::getTensorInfo<scalar4, unsigned int>(d);
 
     rearrangeDims(&aInfo, &bInfo, &cInfo, &dInfo);
     aInfo.collapseDims();
@@ -868,17 +868,17 @@ bool CUDA_tensor_apply4(at::Tensor a,
 #endif
     HANDLE_A_CASE(unsigned int, aInfo.dims, bInfo.dims, cInfo.dims, dInfo.dims);
   } else {
-    TensorInfo<scalar1, uint64_t> aInfo =
-      applyutils::getTensorInfo<scalar1, uint64_t>(a);
+    detail::TensorInfo<scalar1, uint64_t> aInfo =
+      detail::getTensorInfo<scalar1, uint64_t>(a);
 
-    TensorInfo<scalar2, uint64_t> bInfo =
-      applyutils::getTensorInfo<scalar2, uint64_t>(b);
+    detail::TensorInfo<scalar2, uint64_t> bInfo =
+      detail::getTensorInfo<scalar2, uint64_t>(b);
 
-    TensorInfo<scalar3, uint64_t> cInfo =
-      applyutils::getTensorInfo<scalar3, uint64_t>(c);
+    detail::TensorInfo<scalar3, uint64_t> cInfo =
+      detail::getTensorInfo<scalar3, uint64_t>(c);
 
-    TensorInfo<scalar4, uint64_t> dInfo =
-      applyutils::getTensorInfo<scalar4, uint64_t>(d);
+    detail::TensorInfo<scalar4, uint64_t> dInfo =
+      detail::getTensorInfo<scalar4, uint64_t>(d);
 
     rearrangeDims(&aInfo, &bInfo, &cInfo, &dInfo);
     aInfo.collapseDims();

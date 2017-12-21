@@ -5,7 +5,7 @@
 
 namespace at {
 namespace cuda {
-namespace applyutils {
+namespace detail {
 
 bool overlappingIndices(const at::Tensor& t);
 bool canUse32BitIndexMath(const at::Tensor &t, ptrdiff_t max_elem=UINT32_MAX);
@@ -26,6 +26,6 @@ getTensorInfo(const at::Tensor& t) {
     t.data<scalar>(), dims, sz, st);
 }
 
-} // applyutils
+} // detail
 } // cuda
 } // at

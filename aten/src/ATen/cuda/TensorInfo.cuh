@@ -4,6 +4,7 @@
 
 namespace at {
 namespace cuda {
+namespace detail {
 
 #define MAX_TENSORINFO_DIMS 25
 
@@ -270,5 +271,6 @@ struct IndexToOffset<T, IndexType, -1> {
   }
 };
 
+} // detail
 } // cuda
 } // at
