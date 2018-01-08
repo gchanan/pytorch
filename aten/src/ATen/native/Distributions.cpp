@@ -7,6 +7,10 @@
 namespace at {
 namespace native {
 
+Tensor randn_like(const Tensor& self) {
+  return self.type().randn(self.sizes());
+}
+
 Tensor& bernoulli_(Tensor& self, const Tensor& p, Generator* generator) {
   self.copy_(at::bernoulli(std::get<0>(expand_inplace(self, p)), generator));
   return self;
