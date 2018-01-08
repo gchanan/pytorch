@@ -8,7 +8,12 @@ namespace at {
 static inline int64_t maybe_wrap_dim(int64_t dim, int64_t dim_post_expr, bool wrap_scalar=true) {
   std::cerr << "Dim " << dim << " " << dim_post_expr << std::endl;
   if (dim_post_expr <= 0) {
-    if (!wrap_scalar || (dim < -1 || dim > 0)) {
+    if (!wrap_scalar) {
+      std::ostringstream oss;
+      oss << "dimension specified as " << dim << " but tensor has no dimensions";
+      throw std::runtime_error(oss.str());
+    }
+    else if (dim < -1 || dim > 0) {
       std::ostringstream oss;
       oss << "dimension out of range (expected to be in range of [-1, 0], but got " << dim << ")";
       throw std::runtime_error(oss.str());
