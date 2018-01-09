@@ -2319,7 +2319,7 @@ method_tests = [
 
 def make_non_contiguous(tensor):
     if tensor.numel() < 2: # can't make non-contiguous
-        return tensor
+        return tensor.new(tensor.size())
     osize = list(tensor.size())
 
     # randomly inflate a few dimensions in osize
@@ -2380,14 +2380,24 @@ def unpack_variables(args):
 
 
 def generate_gradoutput(dummy_out, non_contiguous=False):
-    def maybe_non_contig(tensor):
-        return tensor if not non_contiguous else make_non_contiguous(tensor)
+    def maybe_non_contig(tensor, requires_grad):
+        if non_contiguous:
+            tensor = tensor.detach()
+            ret = make_non_contiguous(tensor.double().randn_like())
+            #randn_like = tensor.double().randn_like()
+            #ret.copy_(randn_like)
+            if ret.numel() >= 2:
+                assert not ret.is_contiguous()
+        else:
+            ret = tensor.double().randn_like()
+
+        ret.requires_grad = requires_grad
+        return ret
 
     if isinstance(dummy_out, tuple):
-        grad_y = tuple(maybe_non_contig(x.randn_like()) for x in dummy_out if isinstance(x, Variable))
+        grad_y = tuple(maybe_non_contig(x, x.requires_grad) for x in dummy_out if isinstance(x, Variable))
     else:
-        grad_y = (maybe_non_contig(dummy_out.randn_like()),)
-        grad_y[0].requires_grad = dummy_out.requires_grad
+        grad_y = (maybe_non_contig(dummy_out, dummy_out.requires_grad),)
 
     return grad_y
 
