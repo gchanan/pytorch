@@ -2352,6 +2352,7 @@ method_tests = [
     ('__getitem__', torch.randn(S, S, S), (dont_convert([[0, 3], Ellipsis]),), 'adv_index_sub_3'),
     ('__getitem__', torch.randn(S, S, S), (dont_convert([[0, 2, 3], [1, 3, 3],
      Variable(torch.LongTensor([0, 0, 2]), requires_grad=False)]),), 'adv_index_var'),
+    ('_scalar_sum', (S, S, S), ()),
 ]
 # TODO: clamp with min/max
 
@@ -2460,7 +2461,8 @@ def exclude_tensor_method(name, test_name):
         'test_clamp_max',
         'test_slice',
         'test_where',
-        'test_where_broadcast_all'
+        'test_where_broadcast_all',
+        'test__scalar_sum',
     }
     # there are no out-of-place tensor equivalents for these
     exclude_outplace_tensor_method = {
