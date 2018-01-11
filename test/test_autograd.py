@@ -2347,7 +2347,8 @@ method_tests = [
     ('__getitem__', torch.randn(S, S, S), (dont_convert([[0, 3], Ellipsis]),), 'adv_index_sub_3'),
     ('__getitem__', torch.randn(S, S, S), (dont_convert([[0, 2, 3], [1, 3, 3],
      Variable(torch.LongTensor([0, 0, 2]), requires_grad=False)]),), 'adv_index_var'),
-    ('_scalar_sum', (S, S, S), ()),
+    ('_scalar_sum', (), NO_ARGS, 'scalar_arg'),
+    ('_scalar_sum', (S, S, S), NO_ARGS, 'tensor_arg'),
 ]
 # TODO: clamp with min/max
 
@@ -2389,6 +2390,11 @@ def create_input(call_args, requires_grad=True, non_contiguous=False):
 
         if isinstance(arg, torch.Size) or isinstance(arg, dont_convert):
             return arg
+        elif isinstance(arg, tuple) and len(arg) == 0:
+            # FixMe: maybe use torch.randn() or similar when we have scalar factories
+            var = Variable(torch.randn(1).double())._scalar_sum()
+            var.requires_grad = requires_grad
+            return var
         elif isinstance(arg, tuple) and not isinstance(arg[0], Variable):
             return Variable(maybe_non_contig(torch.randn(*arg).double()), requires_grad=requires_grad)
         elif torch.is_tensor(arg):
@@ -2460,7 +2466,8 @@ def exclude_tensor_method(name, test_name):
         'test_slice',
         'test_where',
         'test_where_broadcast_all',
-        'test__scalar_sum',
+        'test__scalar_sum_scalar_arg',
+        'test__scalar_sum_tensor_arg',
     }
     # there are no out-of-place tensor equivalents for these
     exclude_outplace_tensor_method = {
