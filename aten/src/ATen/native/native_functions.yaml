@@ -299,3 +299,5 @@
   dispatch:
     CPU: _standard_gamma_grad_cpu
     CUDA: _standard_gamma_grad_cuda
+
+- func: _scalar_sum(Tensor self) -> Tensor
