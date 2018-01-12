@@ -983,7 +983,8 @@ class TestAutograd(TestCase):
         x = Variable(torch.ones(*size), requires_grad=True)
         y = x + 2
         y_version = y._version
-        value = Variable(torch.Tensor(x[index].size()).fill_(7), requires_grad=True)
+        value = x.new(x[index].size()).fill_(7)
+        value.requires_grad = True
         y[index] = value
         self.assertNotEqual(y._version, y_version)
         y.backward(torch.ones(*size))
@@ -1004,7 +1005,7 @@ class TestAutograd(TestCase):
 
         expected_grad_input[index] = 0
         self.assertEqual(x.grad.data, expected_grad_input)
-        self.assertEqual(value.grad.data, torch.ones(value.size()))
+        self.assertEqual(value.grad.data, torch.ones(value.data.size()))
 
         # case when x broadcasts to as y[1]
         x = Variable(torch.randn(4), requires_grad=True)
@@ -1027,6 +1028,7 @@ class TestAutograd(TestCase):
         self._test_setitem_tensor((5, 5), 3)
         self._test_setitem_tensor((5, 5), [[0, 1], [1, 0]])
         self._test_setitem_tensor((5,), 3)
+        self._test_setitem_tensor((5,), Variable(torch.LongTensor([3]), requires_grad=False).sum())
         self._test_setitem_tensor((5,), [[0, 1, 2, 3]])
         self._test_setitem_tensor((5, 5, 5), [slice(None), slice(None), [1, 3]])
         self._test_setitem_tensor((5, 5, 5), [slice(None), [1, 3], slice(None)])
