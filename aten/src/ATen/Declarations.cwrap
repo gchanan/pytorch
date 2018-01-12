@@ -1120,7 +1120,7 @@
     - CUDA
   options:
     - cname: logicalAndAll
-      return: bool
+      return: real
       arguments:
         - THTensor* self
     - cname: logicalAnd
@@ -1146,7 +1146,7 @@
     - CUDA
   options:
     - cname: logicalAnyAll
-      return: bool
+      return: real
       arguments:
         - THTensor* self
     - cname: logicalAny
