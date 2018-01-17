@@ -44,7 +44,7 @@ static PyObject* THPVariable_NewWithVar(PyTypeObject* type, Variable var)
   return obj;
 }
 
-PyObject * THPVariable_Wrap(Variable var, bool allow_scalar)
+PyObject * THPVariable_Wrap(Variable var)
 {
   if (!var.defined()) {
     Py_RETURN_NONE;
