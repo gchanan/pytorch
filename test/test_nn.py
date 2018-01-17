@@ -126,10 +126,12 @@ def _assertGradAndGradgradChecks(test_case, apply_fn, inputs):
         return a
 
     if isinstance(dummy_out, tuple):
-        grad_y = tuple(Variable(randn_match_cpu_gpu(x), requires_grad=x.requires_grad)
-                       for x in dummy_out if isinstance(x, Variable))
+        grad_y = tuple(x.randn_like() for x in dummy_out if isinstance(x, Variable))
+        for g, d in zip(grad_y, dummy_out):
+            g.requires_grad = d.requires_grad
     else:
-        grad_y = (Variable(randn_match_cpu_gpu(dummy_out), requires_grad=dummy_out.requires_grad),)
+        grad_y = (dummy_out.randn_like(),)
+        grad_y[0].requires_grad = dummy_out.requires_grad
 
     test_case.assertTrue(gradgradcheck(apply_fn, inputs, grad_y,))
 
