@@ -9,6 +9,7 @@ __all__ = [
     'make_non_contiguous', 'randn_like'
 ]
 
+
 def make_non_contiguous(tensor):
     if tensor.numel() <= 1:  # can't make non-contiguous
         return tensor.new(tensor.size())
