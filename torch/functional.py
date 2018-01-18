@@ -67,14 +67,13 @@ def chunk(tensor, chunks, dim=0):
 def empty_like(input):
     r"""empty_like(input) -> Tensor
 
-    Returns an initialized tensor with the same size as :attr:`input`.
+    Returns an uninitialized tensor with the same size as :attr:`input`.
 
     Args:
         input (Tensor): the size of :attr:`input` will determine size of the output tensor
 
     Example::
 
-        >>> input = torch.FloatTensor(2, 3)
         >>> input = torch.LongTensor(2,3)
         >>> input.new(input.size())
 
