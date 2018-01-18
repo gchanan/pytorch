@@ -393,7 +393,7 @@ def group_declarations(declarations):
     return result
 
 
-def get_python_signature(declaration, include_out):
+def get_python_signature(declaration, maybe_include_out):
     # Use the saved signature for deprecated pseudo-declarations
     if 'python_signature' in declaration:
         return declaration['python_signature']
@@ -402,6 +402,7 @@ def get_python_signature(declaration, include_out):
     typed_args = []
     output_args = []
     positional = True
+    has_tensor_input_arg = False
     for arg in declaration['arguments']:
         if arg.get('output', False):
             output_args.append(arg)
@@ -410,6 +411,8 @@ def get_python_signature(declaration, include_out):
             typed_args.append('*')
             positional = False
         typename = arg['simple_type']
+        if typename in ['Tensor', 'TensorList']:
+            has_tensor_input_arg = True
         if arg.get('is_nullable'):
             typename = '{}?'.format(typename)
         if arg.get('size') is not None:
@@ -430,6 +433,9 @@ def get_python_signature(declaration, include_out):
     name = declaration['name']
     if name.endswith('_out'):
         name = name[:-4]
+
+    is_factory = not has_tensor_input_arg or name.endswith('_like')
+    include_out = maybe_include_out and not is_factory
 
     if len(output_args) > 0 and include_out:
         assert declaration['name'].endswith('_out')
