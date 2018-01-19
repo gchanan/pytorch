@@ -51,8 +51,8 @@ except ImportError:
 Example = namedtuple('Example', ['Dist', 'params'])
 EXAMPLES = [
     Example(Bernoulli, [
-        {'probs': Variable(torch.Tensor([0.7, 0.2, 0.4]), requires_grad=True)},
-        {'probs': Variable(torch.Tensor([0.3]), requires_grad=True)},
+        #{'probs': Variable(torch.Tensor([0.7, 0.2, 0.4]), requires_grad=True)},
+        #{'probs': Variable(torch.Tensor([0.3]), requires_grad=True)},
         {'probs': 0.3},
     ]),
     Example(Beta, [
@@ -161,7 +161,7 @@ EXAMPLES = [
             'alpha': Variable(torch.randn(5, 5).abs(), requires_grad=True)
         },
         {
-            'scale': torch.Tensor([1.0]),
+            'scale': Variable(torch.Tensor([1.0])),
             'alpha': 1.0
         }
     ]),
@@ -1223,14 +1223,15 @@ class TestDistributionShapes(TestCase):
     def test_entropy_shape(self):
         for Dist, params in EXAMPLES:
             for i, param in enumerate(params):
+                print("dist", Dist, "params", params)
                 dist = Dist(**param)
                 try:
                     actual_shape = dist.entropy().size()
                     expected_shape = dist._batch_shape
-                    if not expected_shape:
-                        expected_shape = torch.Size((1,))  # TODO Remove this once scalars are supported.
+                    #if not expected_shape:
+                    #    expected_shape = torch.Size((1,))  # TODO Remove this once scalars are supported.
                     message = '{} example {}/{}, shape mismatch. expected {}, actual {}'.format(
-                        Dist.__name__, i, len(params), expected_shape, actual_shape)
+                        Dist.__name__, i + 1, len(params), expected_shape, actual_shape)
                     self.assertEqual(actual_shape, expected_shape, message=message)
                 except NotImplementedError:
                     continue

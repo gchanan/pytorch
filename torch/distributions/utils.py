@@ -64,10 +64,8 @@ def broadcast_all(*values):
       - `torch.Tensor` and `torch.autograd.Variable` instances are broadcasted as
         per the `broadcasting rules
         <http://pytorch.org/docs/master/notes/broadcasting.html>`_
-      - numbers.Number instances (scalars) are upcast to Tensor/Variable having
-        the same size and type as the first tensor passed to `values`. If all the
-        values are scalars, then they are upcasted to `torch.Tensor` having size
-        `(1,)`.
+      - numbers.Number instances (scalars) are upcast to Variables having
+        the same size and type as the first tensor passed to `values`.
 
     Args:
         values (list of `numbers.Number`, `torch.autograd.Variable` or
@@ -84,16 +82,25 @@ def broadcast_all(*values):
     if len(scalar_idxs) + len(tensor_idxs) != len(values):
         raise ValueError('Input arguments must all be instances of numbers.Number, torch.Tensor or ' +
                          'torch.autograd.Variable.')
+    print("scalar_idxs", scalar_idxs)
+    print("tensor_idxs", tensor_idxs)
     if tensor_idxs:
         broadcast_shape = _broadcast_shape([values[i].size() for i in tensor_idxs])
         for idx in tensor_idxs:
             values[idx] = values[idx].expand(broadcast_shape)
         template = values[tensor_idxs[0]]
+        if len(scalar_idxs) > 0 and not isinstance(template, torch.autograd.Variable):
+            raise ValueError(('Input arguments containing instances of numbers.Number and torch.Tensor '
+                              'are not currently supported.  Use torch.autograd.Variable instead of torch.Tensor'))
         for idx in scalar_idxs:
             values[idx] = template.new(template.size()).fill_(values[idx])
     else:
+        print("values", values)
         for idx in scalar_idxs:
-            values[idx] = torch.Tensor([values[idx]])
+            print("values[idx]", values[idx])
+            #values[idx] = torch.Tensor([values[idx]])
+            values[idx] = Variable(torch.Tensor([values[idx]])).squeeze_()
+    print("values", values)
     return values
 
 
