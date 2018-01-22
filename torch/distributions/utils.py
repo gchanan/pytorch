@@ -51,7 +51,7 @@ def _broadcast_shape(shapes):
     Args:
         shapes (list of torch.Size): list of tensor sizes
     """
-    shape = torch.Size([1])
+    shape = torch.Size()
     for s in shapes:
         shape = torch._C._infer_size(s, shape)
     return shape
@@ -93,7 +93,7 @@ def broadcast_all(*values):
             values[idx] = template.new(template.size()).fill_(values[idx])
     else:
         for idx in scalar_idxs:
-            values[idx] = torch.Tensor([values[idx]])
+            values[idx] = variable(values[idx])
     return values
 
 
