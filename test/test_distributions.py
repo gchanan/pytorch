@@ -51,8 +51,8 @@ except ImportError:
 Example = namedtuple('Example', ['Dist', 'params'])
 EXAMPLES = [
     Example(Bernoulli, [
-        {'probs': Variable(torch.Tensor([0.7, 0.2, 0.4]), requires_grad=True)},
-        {'probs': Variable(torch.Tensor([0.3]), requires_grad=True)},
+        #{'probs': Variable(torch.Tensor([0.7, 0.2, 0.4]), requires_grad=True)},
+        #{'probs': Variable(torch.Tensor([0.3]), requires_grad=True)},
         {'probs': 0.3},
     ]),
     Example(Geometric, [
@@ -166,7 +166,7 @@ EXAMPLES = [
             'alpha': Variable(torch.randn(5, 5).abs(), requires_grad=True)
         },
         {
-            'scale': torch.Tensor([1.0]),
+            'scale': Variable(torch.Tensor([1.0])),
             'alpha': 1.0
         }
     ]),
@@ -313,8 +313,8 @@ class TestDistributions(TestCase):
         s = 0.3
         self.assertEqual(Geometric(p).sample_n(8).size(), (8, 3))
         self.assertEqual(Geometric(1).sample(), 0)
-        self.assertEqual(Geometric(1).log_prob(torch.Tensor([1])), -float('inf'), allow_inf=True)
-        self.assertEqual(Geometric(1).log_prob(torch.Tensor([0])), 0)
+        self.assertEqual(Geometric(1).log_prob(torch.autograd.variable(1)), -float('inf'), allow_inf=True)
+        self.assertEqual(Geometric(1).log_prob(torch.autograd.variable(0)), 0)
         self.assertTrue(isinstance(Geometric(p).sample().data, torch.Tensor))
         self.assertEqual(Geometric(r).sample_n(8).size(), (8, 1))
         self.assertEqual(Geometric(r).sample().size(), (1,))
@@ -838,7 +838,7 @@ class TestDistributions(TestCase):
             x = dist.sample((num_samples,))
             actual_log_prob = dist.log_prob(x)
             for i in range(num_samples):
-                expected_log_prob = scipy.stats.t.logpdf(x[i], df=df, loc=loc, scale=scale)
+                expected_log_prob = torch.autograd.variable(scipy.stats.t.logpdf(x[i], df=df, loc=loc, scale=scale))
                 self.assertAlmostEqual(actual_log_prob[i], expected_log_prob, places=3)
 
     def test_dirichlet_shape(self):
@@ -1261,12 +1261,13 @@ class TestDistributionShapes(TestCase):
     def test_entropy_shape(self):
         for Dist, params in EXAMPLES:
             for i, param in enumerate(params):
+                print("dist", Dist, "params", params)
                 dist = Dist(**param)
                 try:
                     actual_shape = dist.entropy().size()
                     expected_shape = dist._batch_shape
-                    if not expected_shape:
-                        expected_shape = torch.Size((1,))  # TODO Remove this once scalars are supported.
+                    #if not expected_shape:
+                    #    expected_shape = torch.Size((1,))  # TODO Remove this once scalars are supported.
                     message = '{} example {}/{}, shape mismatch. expected {}, actual {}'.format(
                         Dist.__name__, i + 1, len(params), expected_shape, actual_shape)
                     self.assertEqual(actual_shape, expected_shape, message=message)

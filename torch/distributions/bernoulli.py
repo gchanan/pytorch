@@ -34,8 +34,10 @@ class Bernoulli(Distribution):
         if (probs is None) == (logits is None):
             raise ValueError("Either `probs` or `logits` must be specified, but not both.")
         if probs is not None:
+            print("probs is not None", probs)
             is_scalar = isinstance(probs, Number)
             self.probs, = broadcast_all(probs)
+            print("self.probs", self.probs)
         else:
             is_scalar = isinstance(logits, Number)
             self.logits, = broadcast_all(logits)
@@ -71,7 +73,9 @@ class Bernoulli(Distribution):
         return -binary_cross_entropy_with_logits(logits, value, reduce=False)
 
     def entropy(self):
-        return binary_cross_entropy_with_logits(self.logits, self.probs, reduce=False)
+        ret =  binary_cross_entropy_with_logits(self.logits, self.probs, reduce=False)
+        print("in entropy", self.logits.size(), self.probs.size(), ret.size())
+        return ret
 
     def enumerate_support(self):
         values = self._new((2,))

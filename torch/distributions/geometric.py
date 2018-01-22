@@ -64,6 +64,7 @@ class Geometric(Distribution):
 
     def log_prob(self, value):
         self._validate_log_prob_arg(value)
+        print("broadcasting all", value, self.probs.clone())
         value, probs = broadcast_all(value, self.probs.clone())
         probs[(probs == 1) & (value == 0)] = 0
         return value * (-probs).log1p() + self.probs.log()
