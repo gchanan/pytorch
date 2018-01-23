@@ -116,8 +116,6 @@ class Distribution(object):
             sample_shape (torch.Size): the size of the sample to be drawn.
         """
         shape = torch.Size(sample_shape + self._batch_shape + self._event_shape)
-        if not shape:
-            shape = torch.Size((1,))
         return shape
 
     def _validate_log_prob_arg(self, value):
