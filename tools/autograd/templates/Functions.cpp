@@ -65,7 +65,7 @@ Tensor norm_backward(const Tensor & grad, const Tensor & self, const Scalar & p_
 }
 
 Tensor norm_backward(Tensor grad, const Tensor & self, const Scalar & p_, Tensor norm, int64_t dim, bool keepdim) {
-#if WITH_SCALARS
+#ifdef WITH_SCALARS
   if (!keepdim) {
 #else
   if (!keepdim && self.dim() > 1) {
@@ -102,7 +102,7 @@ Tensor permute_backwards(const Tensor & grad, IntList fwd_dims) {
 }
 
 Tensor sum_backward(const Tensor & grad, IntList sizes, int64_t dim, bool keepdim) {
-#if WITH_SCALARS
+#ifdef WITH_SCALARS
   if (!keepdim) {
 #else
    if (!keepdim && sizes.size() > 1) {
@@ -311,7 +311,7 @@ Tensor unsqueeze_to(const Tensor & self, IntList sizes) {
   auto result = self;
   int64_t nDims = sizes.size();
 
-#if !WITH_SCALARS
+#ifndef WITH_SCALARS
   // Let's say the input had size (1, 1). input.squeeze(), with scalars
   // disabled, produces a result of size (1,). This needs some
   // special handling because for all other cases we unsqueeze every
@@ -334,7 +334,7 @@ Tensor unsqueeze_to(const Tensor & self, IntList sizes) {
 }
 
 Tensor maybe_unsqueeze(const Tensor & self, int64_t dim, int64_t dim_size) {
-#if WITH_SCALARS
+#ifdef WITH_SCALARS
   if (self.size(dim) == 1) {
 #else
   if (self.size(dim) == 1 && self.sizes().size() != 1) {
@@ -405,7 +405,7 @@ Tensor renorm_backward(const Tensor & grad, const Tensor & self, Scalar p, int64
 
 Tensor select_backward_scalar(Tensor grad, const Tensor & input, const Tensor & value) {
   auto grad_input = zeros_like(input);
-#if WITH_SCALARS
+#ifdef WITH_SCALARS
   grad_input.masked_fill_(input == value, grad);
 #else
   auto grad_data = static_cast<Variable&>(grad).data();
@@ -415,7 +415,7 @@ Tensor select_backward_scalar(Tensor grad, const Tensor & input, const Tensor & 
 }
 
 Tensor select_backward(Tensor grad, int64_t dim, Tensor indices, IntList sizes, bool keepdim) {
-#if WITH_SCALARS
+#ifdef WITH_SCALARS
   if (!keepdim) {
 #else
   if (!keepdim && sizes.size() > 1) {
@@ -435,7 +435,7 @@ Tensor trace_backward(const Tensor & grad, IntList sizes) {
 
   auto grad_input = grad.type().zeros(sizes[0] * sizes[1]);
   auto indices = long_type.arange(0, grad_input.numel(), sizes[1] + 1);
-#if WITH_SCALARS
+#ifdef WITH_SCALARS
   grad_input.index_fill_(0, indices, grad);
 #else
   auto grad_data = static_cast<const Variable&>(grad).data();

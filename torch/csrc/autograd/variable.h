@@ -159,7 +159,7 @@ inline Variable make_variable(at::Tensor data, bool requires_grad=false) {
     return Variable();
   }
 
-#if !WITH_SCALARS
+#ifndef WITH_SCALARS
   if (data.dim() == 0) {
     // don't expose 0-dim tensors to Variable API.
     data = data.as_strided_({1}, {1});
@@ -174,7 +174,7 @@ inline Variable make_variable(at::Tensor data, int output_nr, std::shared_ptr<Fu
     return Variable();
   }
 
-#if !WITH_SCALARS
+#ifndef WITH_SCALARS
   if (data.dim() == 0) {
     // don't expose 0-dim tensors to Variable API.
     data = data.as_strided_({1}, {1});
@@ -192,7 +192,7 @@ inline Variable make_variable_view(Variable base, at::Tensor data, int output_nr
     return Variable();
   }
 
-#if !WITH_SCALARS
+#ifndef WITH_SCALARS
   if (data.dim() == 0) {
     // don't expose 0-dim tensors to Variable API.
     data = data.as_strided_({1}, {1});
