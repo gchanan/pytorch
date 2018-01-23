@@ -50,6 +50,12 @@ PyObject * THPVariable_Wrap(Variable var)
     Py_RETURN_NONE;
   }
 
+#if !WITH_SCALARS
+  if (var.dim() == 0) {
+    throw std::runtime_error("Variable API does not support Scalars");
+  }
+#endif
+
   if (auto obj = var.get()->pyobj) {
     Py_INCREF(obj);
     return obj;
