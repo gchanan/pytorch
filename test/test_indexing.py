@@ -1,4 +1,5 @@
 from common import TestCase, run_tests
+import unittest
 import torch
 from torch.autograd import Variable, variable
 
@@ -93,39 +94,72 @@ class TestIndexing(TestCase):
         self.assertEqual(x, y)
 
     def test_index_copies(self):
-        # non-scalar, getitem
-        a = Variable(torch.rand(2, 3))
-        self.assertNotEqual(a.data_ptr(), a[True].data_ptr())
-        self.assertEqual(variable([]), a[False])
-        self.assertEqual(a.data_ptr(), a[None].data_ptr())
-        self.assertEqual(a.data_ptr(), a[...].data_ptr())
-        self.assertEqual(a.data_ptr(), a[:].data_ptr())
-        self.assertEqual(a.data_ptr(), a[:, :].data_ptr())
+        true = variable(1).byte()
+        false = variable(0).byte()
+        zero = variable(0).long()
 
-        # non_scalar, setitem
-        a_clone = a.clone()
-        # prefix with a 1,1, to ensure we are compatible with numpy which cuts off prefix 1s
-        # (some of these ops already add a 1 to the size)
-        neg_ones = torch.ones(2, 3) * -1
-        neg_ones_expanded = neg_ones.unsqueeze(0).unsqueeze(0)
+        tensors = [Variable(torch.randn(2, 3))]
+        if torch._C._with_scalars():
+            tensors.append(variable(3))
 
-        a[True] = torch.autograd.Variable(neg_ones_expanded)
-        self.assertEqual(a_clone, a)
-        a[False] = 5
-        self.assertEqual(a_clone, a)
-        a[None] = Variable(neg_ones_expanded * 2)
-        self.assertEqual(a, neg_ones * 2)
-        a[...] = Variable(neg_ones_expanded * 3)
-        self.assertEqual(a, neg_ones * 3)
-        a[:] = Variable(neg_ones_expanded * 4)
-        self.assertEqual(a, neg_ones * 4)
-        a[:, :] = Variable(neg_ones_expanded * 5)
-        self.assertEqual(a[:, :], neg_ones * 5)
+        for a in tensors:
+            # getitem
+            self.assertNotEqual(a.data_ptr(), a[True].data_ptr())
+            self.assertEqual(variable([]), a[False])
+            self.assertEqual(a.data_ptr(), a[None].data_ptr())
+            self.assertEqual(a.data_ptr(), a[...].data_ptr())
+            if a.dim() > 0:
+                self.assertEqual(a.data_ptr(), a[:].data_ptr())
+                self.assertEqual(a.data_ptr(), a[:, :].data_ptr())
+                self.assertEqual(a[zero].size(), zero.size() + (3,))
+            else:
+                with self.assertRaises(RuntimeError):
+                    a[:]
+                with self.assertRaises(RuntimeError):
+                    a[:, :]
+                with self.assertRaises(RuntimeError):
+                    a[variable(0).long()]
 
-        # check prefix without 1s doesn't work
-        neg_ones_expanded = neg_ones_expanded.expand(5, 1, 2, 3)
-        with self.assertRaises(RuntimeError):
-            a[True] = torch.autograd.Variable(neg_ones_expanded)
+            if torch._C._with_scalars():
+                self.assertNotEqual(a.data_ptr(), a[true].data_ptr())
+                self.assertEqual(variable([]), a[false])
+
+            # setitem
+            a_clone = a.clone()
+            # prefix with a 1,1, to ensure we are compatible with numpy which cuts off prefix 1s
+            # (some of these ops already add a 1 to the size)
+            neg_ones = torch.ones_like(a) * -1
+            neg_ones_expanded = neg_ones.unsqueeze(0).unsqueeze(0)
+            a[True] = neg_ones_expanded
+            self.assertEqual(a_clone, a)
+            a[False] = 5
+            self.assertEqual(a_clone, a)
+            if torch._C._with_scalars():
+                a[true] = neg_ones_expanded
+                self.assertEqual(a_clone, a)
+                a[false] = 5
+                self.assertEqual(a_clone, a)
+            a[None] = neg_ones_expanded * 2
+            self.assertEqual(a, neg_ones * 2)
+            a[...] = neg_ones_expanded * 3
+            self.assertEqual(a, neg_ones * 3)
+            if a.dim() > 0:
+                a[:] = neg_ones_expanded * 4
+                self.assertEqual(a, neg_ones * 4)
+                a[:, :] = neg_ones_expanded * 5
+                self.assertEqual(a[:, :], neg_ones * 5)
+            else:
+                with self.assertRaises(RuntimeError):
+                    a[:] = neg_ones_expanded * 4
+                with self.assertRaises(RuntimeError):
+                    a[:, :] = neg_ones_expanded * 5
+
+            # check prefix without 1s doesn't work
+            neg_ones_expanded = neg_ones_expanded.expand(torch.Size([5, 1]) + neg_ones_expanded.size())
+            with self.assertRaises(RuntimeError):
+                a[True] = neg_ones_expanded
+            with self.assertRaises(RuntimeError):
+                a[true] = torch.autograd.Variable(neg_ones_expanded)
 
     def test_basic_advanced_combined(self):
         # From the NumPy indexing example
