@@ -923,7 +923,7 @@ class TestDistributions(TestCase):
             x = dist.sample((num_samples,))
             actual_log_prob = dist.log_prob(x)
             for i in range(num_samples):
-                expected_log_prob = scipy.stats.t.logpdf(x[i], df=df, loc=loc, scale=scale)
+                expected_log_prob = scipy.stats.t.logpdf(x[i], df=df, loc=loc, scale=scale)[0]
                 self.assertAlmostEqual(float(actual_log_prob[i]), expected_log_prob, places=3)
 
     def test_dirichlet_shape(self):
@@ -974,7 +974,7 @@ class TestDistributions(TestCase):
             dist = Beta(con1, con0)
             x = dist.sample()
             actual_log_prob = dist.log_prob(x).sum()
-            expected_log_prob = scipy.stats.beta.logpdf(x, con1, con0)
+            expected_log_prob = scipy.stats.beta.logpdf(x, con1, con0)[0]
             self.assertAlmostEqual(float(actual_log_prob), expected_log_prob, places=3, allow_inf=True)
 
     @unittest.skipIf(not TEST_NUMPY, "NumPy not found")
@@ -1361,7 +1361,7 @@ class TestDistributionShapes(TestCase):
                 dist = Dist(**param)
                 try:
                     actual_shape = dist.entropy().size()
-                    expected_shape = dist._batch_shape
+                    expected_shape = dist._batch_shape if dist._batch_shape else torch.Size(SCALAR_SHAPE)
                     message = '{} example {}/{}, shape mismatch. expected {}, actual {}'.format(
                         Dist.__name__, i + 1, len(params), expected_shape, actual_shape)
                     self.assertEqual(actual_shape, expected_shape, message=message)
