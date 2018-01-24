@@ -922,8 +922,8 @@ class TestDistributions(TestCase):
             x = dist.sample((num_samples,))
             actual_log_prob = dist.log_prob(x)
             for i in range(num_samples):
-                expected_log_prob = scipy.stats.t.logpdf(x[i], df=df, loc=loc, scale=scale)[0]
-                self.assertAlmostEqual(float(actual_log_prob[i]), expected_log_prob, places=3)
+                expected_log_prob = scipy.stats.t.logpdf(x[i], df=df, loc=loc, scale=scale)
+                self.assertAlmostEqual(float(actual_log_prob[i]), float(expected_log_prob), places=3)
 
     def test_dirichlet_shape(self):
         alpha = Variable(torch.exp(torch.randn(2, 3)), requires_grad=True)
@@ -973,8 +973,8 @@ class TestDistributions(TestCase):
             dist = Beta(con1, con0)
             x = dist.sample()
             actual_log_prob = dist.log_prob(x).sum()
-            expected_log_prob = scipy.stats.beta.logpdf(x, con1, con0)[0]
-            self.assertAlmostEqual(float(actual_log_prob), expected_log_prob, places=3, allow_inf=True)
+            expected_log_prob = scipy.stats.beta.logpdf(x, con1, con0)
+            self.assertAlmostEqual(float(actual_log_prob), float(expected_log_prob), places=3, allow_inf=True)
 
     @unittest.skipIf(not TEST_NUMPY, "NumPy not found")
     def test_beta_sample(self):
