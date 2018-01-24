@@ -321,9 +321,9 @@ class TestDistributions(TestCase):
         s = 0.3
         self.assertEqual(Bernoulli(p).sample_n(8).size(), (8, 3))
         self.assertTrue(isinstance(Bernoulli(p).sample().data, torch.Tensor))
-        self.assertEqual(Bernoulli(r).sample_n(8).size(), (8, 1))
+        self.assertEqual(Bernoulli(r).sample_n(8).size(), (8,) + SCALAR_SHAPE)
         self.assertEqual(Bernoulli(r).sample().size(), SCALAR_SHAPE)
-        self.assertEqual(Bernoulli(r).sample((3, 2)).size(), (3, 2, 1))
+        self.assertEqual(Bernoulli(r).sample((3, 2)).size(), (3, 2,) + SCALAR_SHAPE)
         self.assertEqual(Bernoulli(s).sample().size(), SCALAR_SHAPE)
         self._gradcheck_log_prob(Bernoulli, (p,))
 
