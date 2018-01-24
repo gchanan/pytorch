@@ -218,7 +218,7 @@ static std::tuple<Tensor, Tensor> makeLinearIndex(Tensor self, TensorList orig) 
     indices.emplace_back();
   }
   // if the non-null indices are not all adjacent, transpose self and indices
-  // together so that they're adjacent at the frot
+  // together so that they're adjacent at the front
   if (!hasContiguousSubspace(indices)) {
     std::tie(self, indices) = transposeToFront(self, indices);
   }
@@ -227,6 +227,16 @@ static std::tuple<Tensor, Tensor> makeLinearIndex(Tensor self, TensorList orig) 
 }
 
 Tensor index(const Tensor & self, TensorList indices) {
+  // special case these to behave like [True, False]
+  // TODO: it is most likely not consistent with NumPy to let 0-dimensional byte tensors past here
+  if (indices.size() == 1 && indices[0].type().scalarType() == ScalarType::Byte && indices[0].dim() == 0) {
+    if (indices[0].toCByte()) {
+      return self.type().copy(self.unsqueeze(0));
+    } else {
+      return self.type().tensor({0});
+    }
+  }
+
   if (indices.size() > (size_t)self.dim()) {
     runtime_error("too many indices for tensor of dimension %d (got %d)",
       (int)self.dim(), (int)indices.size());
@@ -237,7 +247,38 @@ Tensor index(const Tensor & self, TensorList indices) {
   return src.take(linearIndex);
 }
 
+static void copy_to(Tensor dst, Tensor src) {
+  Tensor b_src;
+  // To match numpy semantics:
+  // As a special case for backwards compatibility,
+  // strip away unit dimensions from the left of 'src'
+  auto src_sizes = src.sizes();
+  size_t first_nonzero_src = src_sizes.size();
+  for (size_t i = 0; i < src_sizes.size(); ++i) {
+    if (src_sizes[i] != 1) {
+      first_nonzero_src = i;
+      break;
+    }
+  }
+
+  src_sizes = src_sizes.slice(first_nonzero_src);
+  std::tie(b_src) = expand_inplace(dst, src.view(src_sizes), "index_put_");
+  dst.copy_(b_src);
+}
+
 Tensor & index_put_(Tensor & self, TensorList indices, const Tensor & value) {
+  // special case these to behave like [True, False]
+  // TODO: it is most likely not consistent with NumPy to let 0-dimensional byte tensors past here
+  if (indices.size() == 1 && indices[0].type().scalarType() == ScalarType::Byte && indices[0].dim() == 0) {
+    if (indices[0].toCByte()) {
+      Tensor dst = self.type().copy(self.unsqueeze(0));
+      copy_to(dst, value);
+      return dst;
+    } else {
+      return self;
+    }
+  }
+
   if (indices.size() > (size_t)self.dim()) {
     runtime_error("too many indices for tensor of dimension %d (got %d)",
       (int)self.dim(), (int)indices.size());
