@@ -316,13 +316,13 @@ class TestDistributions(TestCase):
                               "Please add {} to the EXAMPLES list in test_distributions.py".format(Dist.__name__))
 
     def test_bernoulli(self):
-        p = Variable(torch.Tensor([0.7, 0.2, 0.4]), requires_grad=True)
-        r = Variable(torch.Tensor([0.3]), requires_grad=True)
+        p = variable([0.7, 0.2, 0.4], requires_grad=True)
+        r = variable(0.3, requires_grad=True)
         s = 0.3
         self.assertEqual(Bernoulli(p).sample_n(8).size(), (8, 3))
         self.assertTrue(isinstance(Bernoulli(p).sample().data, torch.Tensor))
         self.assertEqual(Bernoulli(r).sample_n(8).size(), (8, 1))
-        self.assertEqual(Bernoulli(r).sample().size(), (1,))
+        self.assertEqual(Bernoulli(r).sample().size(), SCALAR_SHAPE)
         self.assertEqual(Bernoulli(r).sample((3, 2)).size(), (3, 2, 1))
         self.assertEqual(Bernoulli(s).sample().size(), SCALAR_SHAPE)
         self._gradcheck_log_prob(Bernoulli, (p,))
@@ -356,8 +356,8 @@ class TestDistributions(TestCase):
         self.assertEqual(Bernoulli(p).sample_n(2).size(), (2, 2, 3, 5))
 
     def test_geometric(self):
-        p = Variable(torch.Tensor([0.7, 0.2, 0.4]), requires_grad=True)
-        r = Variable(torch.Tensor([0.3]), requires_grad=True)
+        p = variable([0.7, 0.2, 0.4], requires_grad=True)
+        r = variable(0.3, requires_grad=True)
         s = 0.3
         self.assertEqual(Geometric(p).sample_n(8).size(), (8, 3))
         self.assertEqual(Geometric(1).sample(), 0)
@@ -365,9 +365,9 @@ class TestDistributions(TestCase):
         self.assertEqual(Geometric(1).log_prob(variable(0)), 0)
         self.assertTrue(isinstance(Geometric(p).sample().data, torch.Tensor))
         self.assertEqual(Geometric(r).sample_n(8).size(), (8, 1))
-        self.assertEqual(Geometric(r).sample().size(), (1,))
+        self.assertEqual(Geometric(r).sample().size(), SCALAR_SHAPE)
         self.assertEqual(Geometric(r).sample((3, 2)).size(), (3, 2, 1))
-        self.assertEqual(Geometric(s).sample().size(), (1,))
+        self.assertEqual(Geometric(s).sample().size(), SCALAR_SHAPE)
         self._gradcheck_log_prob(Geometric, (p,))
         self.assertRaises(ValueError, lambda: Geometric(0))
         self.assertRaises(NotImplementedError, Geometric(r).rsample)
@@ -869,6 +869,7 @@ class TestDistributions(TestCase):
         self.assertEqual(Chi2(df).sample_n(5).size(), (5, 2, 3))
         self.assertEqual(Chi2(df_1d).sample_n(1).size(), (1, 1))
         self.assertEqual(Chi2(df_1d).sample().size(), (1,))
+        self.assertEqual(Chi2(variable(0.5, requires_grad=True)).sample().size(), SCALAR_SHAPE)
         self.assertEqual(Chi2(0.5).sample().size(), SCALAR_SHAPE)
         self.assertEqual(Chi2(0.5).sample_n(1).size(), (1,))
 
@@ -895,6 +896,7 @@ class TestDistributions(TestCase):
         self.assertEqual(StudentT(df).sample_n(5).size(), (5, 2, 3))
         self.assertEqual(StudentT(df_1d).sample_n(1).size(), (1, 1))
         self.assertEqual(StudentT(df_1d).sample().size(), (1,))
+        self.assertEqual(StudentT(variable(0.5, requires_grad=True)).sample().size(), SCALAR_SHAPE)
         self.assertEqual(StudentT(0.5).sample().size(), SCALAR_SHAPE)
         self.assertEqual(StudentT(0.5).sample_n(1).size(), (1,))
 
