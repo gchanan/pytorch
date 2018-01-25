@@ -65,8 +65,12 @@ class Geometric(Distribution):
     def log_prob(self, value):
         self._validate_log_prob_arg(value)
         value, probs = broadcast_all(value, self.probs.clone())
+        print("probs", probs, "value", value, "index", (probs == 1) & (value == 0))
         probs[(probs == 1) & (value == 0)] = 0
-        return value * (-probs).log1p() + self.probs.log()
+        print("result", probs[(probs == 1) & (value == 0)], "probs", probs)
+        ret = value * (-probs).log1p() + self.probs.log()
+        print("result", ret)
+        return ret
 
     def entropy(self):
         return binary_cross_entropy_with_logits(self.logits, self.probs, reduce=False) / self.probs

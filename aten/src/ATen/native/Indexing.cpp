@@ -271,9 +271,9 @@ Tensor & index_put_(Tensor & self, TensorList indices, const Tensor & value) {
   // TODO: it is most likely not consistent with NumPy to let 0-dimensional byte tensors past here
   if (indices.size() == 1 && indices[0].type().scalarType() == ScalarType::Byte && indices[0].dim() == 0) {
     if (indices[0].toCByte()) {
-      Tensor dst = self.type().copy(self.unsqueeze(0));
+      Tensor dst = self.unsqueeze(0);
       copy_to(dst, value);
-      return dst;
+      return self;
     } else {
       return self;
     }
