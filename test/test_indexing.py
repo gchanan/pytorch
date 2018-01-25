@@ -109,8 +109,6 @@ class TestIndexing(TestCase):
             self.assertEqual(a.data_ptr(), a[None].data_ptr())
             self.assertEqual(a.data_ptr(), a[...].data_ptr())
             if a.dim() > 0:
-                self.assertEqual(a.data_ptr(), a[:].data_ptr())
-                self.assertEqual(a.data_ptr(), a[:, :].data_ptr())
                 self.assertEqual(a[zero].size(), zero.size() + (3,))
             else:
                 with self.assertRaises(RuntimeError):
@@ -143,12 +141,7 @@ class TestIndexing(TestCase):
             self.assertEqual(a, neg_ones * 2)
             a[...] = neg_ones_expanded * 3
             self.assertEqual(a, neg_ones * 3)
-            if a.dim() > 0:
-                a[:] = neg_ones_expanded * 4
-                self.assertEqual(a, neg_ones * 4)
-                a[:, :] = neg_ones_expanded * 5
-                self.assertEqual(a[:, :], neg_ones * 5)
-            else:
+            if a.dim() == 0:
                 with self.assertRaises(RuntimeError):
                     a[:] = neg_ones_expanded * 4
                 with self.assertRaises(RuntimeError):
