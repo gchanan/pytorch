@@ -127,12 +127,12 @@ class TestIndexing(TestCase):
             a[True] = neg_ones_expanded
             self.assertEqual(a, neg_ones)
             a[False] = 5
-            self.assertEqual(a_clone, a)
+            self.assertEqual(a, neg_ones)
             if torch._C._with_scalars():
                 a[true] = neg_ones_expanded * 2
                 self.assertEqual(a, neg_ones * 2)
                 a[false] = 5
-                self.assertEqual(a_clone, a)
+                self.assertEqual(a, neg_ones * 2)
             a[None] = neg_ones_expanded * 3
             self.assertEqual(a, neg_ones * 3)
             a[...] = neg_ones_expanded * 4
