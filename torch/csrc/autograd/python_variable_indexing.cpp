@@ -295,7 +295,7 @@ int THPVariable_setitem(PyObject* self, PyObject* index, PyObject* py_value) {
     copy_to(self_.unsqueeze(0), value);
     return 0;
   } else if (index == Py_True) {
-    copy_to(self_.type().copy(self_.unsqueeze(0)), value);
+    copy_to(self_.unsqueeze(0), value);
     return 0;
   } else if (THPUtils_checkLong(index)) {
     applySelect(self_, 0, THPUtils_unpackLong(index)).copy_(value);
