@@ -2051,6 +2051,11 @@ def uniform_scalar_clamp(amin, amax, requires_grad=False):
     v.requires_grad = requires_grad
     return v
 
+def bernoulli_scalar(requires_grad=False):
+    v = variable(0).byte().bernoulli_()
+    v.requires_grad = requires_grad
+    return v
+
 class dont_convert(tuple):
     pass
 
@@ -2518,6 +2523,9 @@ method_tests = [
     ('masked_select', (M,), (Variable(mask_not_all_zeros((M, M)), requires_grad=False),), 'broadcast_lhs'),
     ('masked_select', (M, 1, M), (Variable(mask_not_all_zeros((M, M)), requires_grad=False),),
      'broadcast_all'),
+    ('masked_select', (), (bernoulli_scalar(requires_grad=False),), 'scalar'),
+    ('masked_select', (M, M), (bernoulli_scalar(requires_grad=False),), 'scalar_broadcast_rhs'),
+    ('masked_select', (), (Variable(mask_not_all_zeros((M, M)), requires_grad=False),), 'scalar_broadcast_lhs'),
     ('masked_fill', (M, M), (Variable(torch.ByteTensor(M, M).bernoulli_(), requires_grad=False), 10)),
     ('masked_fill', (M, M), (Variable(torch.ByteTensor(M, M).bernoulli_(), requires_grad=False), variable(10)),
      'variable', NO_ARGS, [skipIfNoScalars]),
@@ -2530,6 +2538,9 @@ method_tests = [
     ('masked_scatter', (M, M), (Variable(torch.ByteTensor(M, M).bernoulli_(), requires_grad=False), (M, M))),
     ('masked_scatter', (M, M), (Variable(torch.ByteTensor(M,).bernoulli_(), requires_grad=False), (M, M)),
      'broadcast_rhs'),
+    ('masked_scatter', (M, M), (bernoulli_scalar(requires_grad=False), (M, M)), 'scalar'),
+    ('masked_scatter', (M, M), (bernoulli_scalar(requires_grad=False), (M, M)),
+     'scalar_broadcast_rhs'),
     ('resize_', (S, S, S), (torch.Size([S * S, S])), 'fewer_dims'),
     ('resize_', (), (dont_convert(()),), 'scalar', NO_ARGS, [skipIfNoScalars]),
     ('resize_', (), (torch.Size([1, 1, 1])), 'scalar_to_dims'),
