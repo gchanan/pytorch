@@ -2041,6 +2041,11 @@ def random_fullrank_matrix_distinct_singular_value(l):
     return u.mm(torch.diag(s)).mm(v.transpose(0, 1))
 
 
+def uniform_scalar(offset=0, requires_grad=False):
+    v = variable(0).uniform_(0, 1) + offset
+    v.requires_grad = requires_grad
+    return v
+
 class dont_convert(tuple):
     pass
 
@@ -2087,12 +2092,18 @@ method_tests = [
     ('div', (S, S, S), (torch.rand(S, S) + 0.1,), 'broadcast_rhs'),
     ('div', (S, S), (torch.rand(S, S, S) + 0.1,), 'broadcast_lhs'),
     ('div', (S, 1, S), (torch.rand(M, S) + 0.1,), 'broadcast_all'),
+    ('div', (), (uniform_scalar(0.1),), 'scalar'),
+    ('div', (S, S, S), (uniform_scalar(0.1),), 'scalar_broadcast_rhs'),
+    ('div', (), (uniform_scalar(0.1),), 'scalar_broadcast_lhs'),
     ('div', torch.rand(S, S, S) + 1e-1, (3.14,), 'constant'),
     ('__rdiv__', torch.rand(S, S, S) + 1e-1, (3.14,), 'constant'),
     ('pow', torch.rand(S, S, S) + 1e-3, (torch.rand(S, S, S) + 0.1,)),
     ('pow', torch.rand(S, S, S) + 1e-3, (torch.rand(1,) + 0.1,), 'broadcast_rhs'),
     ('pow', torch.rand(1,) + 1e-3, (torch.rand(S, S, S) + 0.1,), 'broadcast_lhs'),
     ('pow', torch.rand(S, 1, S) + 1e-3, (torch.rand(1, S, 1) + 0.1,), 'broadcast_all'),
+    ('pow', uniform_scalar(1e-3, True), (uniform_scalar(0.1),), 'scalar'),
+    ('pow', torch.rand(S, S, S) + 1e-3, (uniform_scalar(0.1),), 'scalar_broadcast_rhs'),
+    ('pow', uniform_scalar(1e-3, True), (torch.rand(S, S, S) + 0.1,), 'scalar_broadcast_lhs'),
     ('pow', torch.rand(S, S, S) + 1e-3, (3.14,), 'constant'),
     ('__rpow__', torch.rand(S, S, S) + 1e-3, (3.14,), 'constant'),
     ('transpose', (1, 2, 3), (1, 2), 'dim', [0, 1]),
@@ -2172,11 +2183,16 @@ method_tests = [
     ('fmod', (S,), (Variable(torch.rand(S, S, S) + 1.5, requires_grad=False),), 'tensor_broadcast_lhs'),
     ('fmod', (S, S, S), (Variable(torch.rand(S) + 1.5, requires_grad=False),), 'tensor_broadcast_rhs'),
     ('fmod', (S, 1, S), (Variable(torch.rand(S, S) + 1.5, requires_grad=False),), 'tensor_broadcast_all'),
+    ('fmod', (), (uniform_scalar(1.5),), 'scalar_tensor'),
+    ('fmod', (), (Variable(torch.rand(S, S, S) + 1.5, requires_grad=False),), 'scalar_tensor_broadcast_lhs'),
+    ('fmod', (S, S, S), (uniform_scalar(1.5),), 'scalar_tensor_broadcast_rhs'),
     ('remainder', (S, S, S), (1.5,)),
     ('remainder', (), (1.5,), 'scalar'),
     ('remainder', (S, S, S), (Variable(torch.rand(S, S, S) + 1.5, requires_grad=False),), 'tensor'),
     ('remainder', (S,), (Variable(torch.rand(S, S, S) + 1.5, requires_grad=False),), 'tensor_broadcast_lhs'),
     ('remainder', (S, 1, S), (Variable(torch.rand(S, S) + 1.5, requires_grad=False),), 'tensor_broadcast_all'),
+    ('remainder', (), (uniform_scalar(1.5),), 'scalar_tensor'),
+    ('remainder', (), (Variable(torch.rand(S, S, S) + 1.5, requires_grad=False),), 'scalar_tensor_broadcast_lhs'),
     ('lerp', (S, S, S), ((S, S, S), 0.4)),
     ('lerp', (S, S, S), ((S,), 0.4), 'broadcast_rhs'),
     ('lerp', (S,), ((S, S, S), 0.4), 'broadcast_lhs'),
