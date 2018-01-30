@@ -18,6 +18,8 @@
 
 #include "torch/csrc/DynamicTypes.h"
 #include "torch/csrc/autograd/generated/python_nn_functions.h"
+#include "torch/csrc/autograd/python_variable.h"
+#include "torch/csrc/tensor/python_tensor.h"
 #include "torch/csrc/utils/python_strings.h"
 #include "torch/csrc/utils/tensor_numpy.h"
 #include "torch/csrc/jit/python_tracer.h"
@@ -40,7 +42,6 @@ PyObject* module;
 PyObject* tensor_classes;
 
 PyObject *THPDefaultTensorClass = NULL;
-at::Type *THPDefaultATenType = nullptr;
 THPGenerator *THPDefaultGenerator   = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -166,9 +167,11 @@ bool THPModule_isTensor(PyObject *obj)
 
 PyObject * THPModule_setDefaultTensorType(PyObject *_unused, PyObject *type)
 {
+  HANDLE_TH_ERRORS
   THPDefaultTensorClass = type;
-  THPDefaultATenType = &torch::getATenType((PyTypeObject*)type);
+  torch::tensor::set_default_tensor_type(type);
   Py_RETURN_NONE;
+  END_HANDLE_TH_ERRORS
 }
 
 PyObject * THPModule_fromNumpy(PyObject *_unused, PyObject *array)
@@ -430,15 +433,21 @@ PyObject *THPModule_addDocStr(PyObject *_unused, PyObject *args)
   if (Py_TYPE(obj) == &PyCFunction_Type) {
     PyCFunctionObject* f = (PyCFunctionObject *)obj;
     if (f->m_ml->ml_doc) {
-      return PyErr_Format(PyExc_RuntimeError,
-          "function '%s' already has a docstring", f->m_ml->ml_name);
+      // temporary workaround
+      Py_INCREF(obj);
+      return obj;
+      // return PyErr_Format(PyExc_RuntimeError,
+      //     "function '%s' already has a docstring", f->m_ml->ml_name);
     }
     f->m_ml->ml_doc = doc_str;
   } else if (strcmp(Py_TYPE(obj)->tp_name, "method_descriptor") == 0) {
     PyMethodDescrObject* m = (PyMethodDescrObject *)obj;
     if (m->d_method->ml_doc) {
-      return PyErr_Format(PyExc_RuntimeError,
-          "method '%s' already has a docstring", m->d_method->ml_name);
+      // temporary workaround
+      Py_INCREF(obj);
+      return obj;
+      // return PyErr_Format(PyExc_RuntimeError,
+      //     "method '%s' already has a docstring", m->d_method->ml_name);
     }
     m->d_method->ml_doc = doc_str;
   } else {
@@ -513,14 +522,17 @@ PyObject *THPModule_hasDistributed(PyObject *_unused)
 
 PyObject *THPModule_toDLPack(PyObject *_unused, PyObject *data)
 {
-  THPUtils_assert(THPModule_isTensor(data), "data must be a Tensor");
-  auto atTensor = torch::createTensor(data);
-  DLManagedTensor* dlMTensor = at::toDLPack(atTensor);
+  HANDLE_TH_ERRORS
+  THPUtils_assert(THPVariable_Check(data), "data must be a Tensor");
+  DLManagedTensor* dlMTensor = at::toDLPack(THPVariable_UnpackData(data));
   return PyCapsule_New(dlMTensor, "dltensor", NULL);
+  END_HANDLE_TH_ERRORS
 }
 
 PyObject *THPModule_fromDLPack(PyObject *_unused, PyObject *data)
 {
+  using namespace torch::autograd;
+  HANDLE_TH_ERRORS
   DLManagedTensor * dlMTensor = (DLManagedTensor *)PyCapsule_GetPointer(data, "dltensor");
   THPUtils_assert(dlMTensor, "from_dlpack received an invalid capsule. "
     "Note that DLTensor capsules can be consumed only once, "
@@ -528,7 +540,7 @@ PyObject *THPModule_fromDLPack(PyObject *_unused, PyObject *data)
   // atensor steals the ownership of the underlying storage. It also passes a
   // destructor function that will be called when the underlying storage goes
   // out of scope. When the destructor is called, the dlMTensor is destructed too.
-  at::Tensor atensor = at::fromDLPack(dlMTensor);
+  auto atensor = make_variable(at::fromDLPack(dlMTensor));
 
   // It is possible that the call to at::fromDLPack is the very first
   // call to create a Tensor in PyTorch. If so, then _lazy_init has
@@ -541,7 +553,8 @@ PyObject *THPModule_fromDLPack(PyObject *_unused, PyObject *data)
   }
   // Make sure this capsule will never be used again.
   PyCapsule_SetName(data, "used_dltensor");
-  return torch::createPyObject(atensor);
+  return THPVariable_Wrap(std::move(atensor));
+  END_HANDLE_TH_ERRORS
 }
 
 PyObject *THPModule_setUserEnabledCuDNN(PyObject *_unused, PyObject *arg)
@@ -586,6 +599,14 @@ PyObject *THPModule_benchmarkCuDNN(PyObject *_unused)
   else Py_RETURN_FALSE;
 }
 
+static PyObject* THPModule_initializeTensorTypes(PyObject *_unused)
+{
+  HANDLE_TH_ERRORS
+  torch::tensor::initialize_types(nullptr);
+  Py_RETURN_NONE;
+  END_HANDLE_TH_ERRORS
+}
+
 #ifdef WITH_CUDA
 extern PyObject * THCSPModule_initExtension(PyObject *self);
 #endif
@@ -597,6 +618,7 @@ static PyMethodDef TorchMethods[] = {
   {"_sparse_init",    (PyCFunction)THSPModule_initExtension,  METH_NOARGS,  NULL},
   {"_init_names",     (PyCFunction)THPModule_initNames,       METH_O,       NULL},
   {"_has_distributed",(PyCFunction)THPModule_hasDistributed,  METH_NOARGS,  NULL},
+  {"_initialize_tensor_types",(PyCFunction)THPModule_initializeTensorTypes,  METH_NOARGS,  NULL},
 #ifdef WITH_CUDA
   {"_cuda_sparse_init",  (PyCFunction)THCSPModule_initExtension,    METH_NOARGS,  NULL},
 #endif

@@ -672,18 +672,18 @@ class TestCuda(TestCase):
 
     def test_type_conversions(self):
         x = torch.randn(5, 5)
-        self.assertIs(type(x.float()), torch.FloatTensor)
-        self.assertIs(type(x.cuda()), torch.cuda.DoubleTensor)
-        self.assertIs(type(x.cuda().float()), torch.cuda.FloatTensor)
-        self.assertIs(type(x.cuda().float().cpu()), torch.FloatTensor)
-        self.assertIs(type(x.cuda().float().cpu().int()), torch.IntTensor)
+        self.assertIsInstance(x.float(), torch.FloatTensor)
+        self.assertIsInstance(x.cuda(), torch.cuda.DoubleTensor)
+        self.assertIsInstance(x.cuda().float(), torch.cuda.FloatTensor)
+        self.assertIsInstance(x.cuda().float().cpu(), torch.FloatTensor)
+        self.assertIsInstance(x.cuda().float().cpu().int(), torch.IntTensor)
 
         y = x.storage()
-        self.assertIs(type(y.float()), torch.FloatStorage)
-        self.assertIs(type(y.cuda()), torch.cuda.DoubleStorage)
-        self.assertIs(type(y.cuda().float()), torch.cuda.FloatStorage)
-        self.assertIs(type(y.cuda().float().cpu()), torch.FloatStorage)
-        self.assertIs(type(y.cuda().float().cpu().int()), torch.IntStorage)
+        self.assertIsInstance(y.float(), torch.FloatStorage)
+        self.assertIsInstance(y.cuda(), torch.cuda.DoubleStorage)
+        self.assertIsInstance(y.cuda().float(), torch.cuda.FloatStorage)
+        self.assertIsInstance(y.cuda().float().cpu(), torch.FloatStorage)
+        self.assertIsInstance(y.cuda().float().cpu().int(), torch.IntStorage)
 
     @unittest.skipIf(torch.cuda.device_count() < 2, "only one GPU detected")
     def test_type_conversions_same_gpu(self):
@@ -774,13 +774,13 @@ class TestCuda(TestCase):
         for r, t in zip(r_tensors, tensors):
             self.assertEqual(r.get_device(), t.get_device())
             self.assertEqual(r, t * 2)
-            self.assertIsInstance(r, type(t))
+            self.assertEqual(r.type(), t.type())
 
         rc_tensors = comm.reduce_add_coalesced(dup_tensors, buffer_size=buffer_size)
         self.assertEqual(r_tensors, rc_tensors)
         for r, rc in zip(r_tensors, rc_tensors):
             self.assertEqual(rc.get_device(), r.get_device())
-            self.assertIsInstance(rc, type(r))
+            self.assertEqual(rc.type(), r.type())
 
     @unittest.skipIf(torch.cuda.device_count() < 2, "only one GPU detected")
     def test_reduce_add_coalesced(self):
@@ -1193,9 +1193,6 @@ class TestCuda(TestCase):
     def test_contiguous(self):
         TestTorch._test_contiguous(self, lambda t: t.cuda())
 
-    def test_broadcast_fallback(self):
-        TestTorch._test_broadcast_fallback(self, lambda t: t.cuda())
-
     def test_broadcast_fused_matmul(self):
         TestTorch._test_broadcast_fused_matmul(self, lambda t: t.cuda())
 
@@ -1250,7 +1247,7 @@ class TestCuda(TestCase):
         tensor = torch.randn(100).cuda()
         self.assertEqual(tensor.var(0), tensor.var(0, unbiased=True))
         self.assertEqual(tensor.var(), tensor.var(unbiased=True))
-        self.assertEqual(tensor.var(unbiased=False), tensor.var(0, unbiased=False)[0])
+        self.assertEqual(tensor.var(unbiased=False), tensor.var(0, unbiased=False))
 
         tensor = torch.FloatTensor([1.0, 2.0]).cuda()
         self.assertEqual(tensor.var(unbiased=True), 0.5)
@@ -1259,7 +1256,7 @@ class TestCuda(TestCase):
         tensor = torch.randn(100).cuda()
         self.assertEqual(tensor.std(0), tensor.std(0, unbiased=True))
         self.assertEqual(tensor.std(), tensor.std(unbiased=True))
-        self.assertEqual(tensor.std(unbiased=False), tensor.std(0, unbiased=False)[0])
+        self.assertEqual(tensor.std(unbiased=False), tensor.std(0, unbiased=False))
 
     def test_var_large_input(self):
         # Large, not-nice input
@@ -1272,14 +1269,14 @@ class TestCuda(TestCase):
         tensor = torch.FloatTensor([2281.5, 2281.25]).cuda()
 
         # Stability for inner dim
-        self.assertEqual(tensor.var(0)[0], 0.03125)
+        self.assertEqual(tensor.var(0), 0.03125)
 
         # General stability
         self.assertEqual(tensor.var(), 0.03125)
 
         # Stability for outer dimensions
         tensor = tensor.unsqueeze(1)
-        self.assertEqual(tensor.var(0)[0], 0.03125)
+        self.assertEqual(tensor.var(0), 0.03125)
 
     def test_digamma(self):
         def test(use_double=False):
@@ -1356,11 +1353,18 @@ class TestCuda(TestCase):
         torch.cuda.nvtx.range_pop()
 
 
-if HAS_CUDA:
+def load_ignore_file():
+    from os.path import join, dirname
+    global ignores
+    path = join(dirname(__file__), 'data', 'cuda_test_ignores.txt')
+    with open(path, 'r') as f:
+        ignores = set(f.read().splitlines())
+
+
+def generate_tests():
     for decl in tests:
         for t in types:
             tensor = t()
-            gpu_tensor = get_gpu_type(t)()
 
             # Default values
             desc = ''
@@ -1388,9 +1392,8 @@ if HAS_CUDA:
                     name_inner = name
                 if not hasattr(tensor, name_inner):
                     continue
-                if not hasattr(gpu_tensor, name_inner):
-                    print("Ignoring {}, because it's not implemented by torch.cuda.{}".format(
-                        name_inner, gpu_tensor.__class__.__name__))
+                full_name = '{}.{}'.format(tensor.type(), name_inner)
+                if full_name in ignores:
                     continue
 
                 test_name = 'test_' + t.__name__ + '_' + name_inner
@@ -1404,4 +1407,6 @@ if HAS_CUDA:
 
 
 if __name__ == '__main__':
+    load_ignore_file()
+    generate_tests()
     run_tests()
