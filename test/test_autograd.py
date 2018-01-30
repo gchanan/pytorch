@@ -2669,7 +2669,6 @@ def run_grad_and_gradgrad_checks(test_case, name, test_name, apply_method, outpu
     else:
         test_case.assertTrue(gradgradcheck(apply_method, input_variables, gen_non_contig_grad_outputs=True))
 
-
 def has_scalars(output, args):
     def ensure_tuple(y):
         return y if isinstance(y, tuple) else (y,)
@@ -2722,7 +2721,10 @@ for test in method_tests:
             def check(name):
                 is_magic_method = name[:2] == '__' and name[-2:] == '__'
                 is_inplace = name[-1] == "_" and not is_magic_method
-                self_variable = create_input((self_size,), requires_grad=not is_inplace)[0]
+                self_variable = create_input((self_size,))[0]
+                # FixMe: run grad checks on inplace self
+                if is_inplace:
+                    self_variable.requires_grad = False
                 # need to record this because methods can change the szie (e.g. unsqueeze)
                 self_is_scalar = torch._C._with_scalars() and self_variable.dim() == 0
                 args_variable = create_input(args, requires_grad=not is_inplace)
