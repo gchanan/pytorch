@@ -1105,10 +1105,36 @@ class TestAutograd(TestCase):
         gradcheck(func, [root, values])
         gradgradcheck(func, [root, values])
 
+    def test_put_scalar(self):
+        root = variable(1, requires_grad=True)
+        values = variable(2, requires_grad=True)
+        idx = variable(0).long()
+
+        def func(root, values):
+            x = root.clone()
+            x.put_(idx, values)
+            return x
+
+        gradcheck(func, [root, values])
+        gradgradcheck(func, [root, values])
+
     def test_put_accumulate(self):
         root = Variable(torch.randn(4, 5), requires_grad=True)
         values = Variable(torch.randn(6), requires_grad=True)
         idx = Variable(torch.LongTensor([1, 2, 3, 1, 2, 3]))
+
+        def func(root, values):
+            x = root.clone()
+            x.put_(idx, values, accumulate=True)
+            return x
+
+        gradcheck(func, [root, values])
+        gradgradcheck(func, [root, values])
+
+    def test_put_accumulate_scalar(self):
+        root = variable(1, requires_grad=True)
+        values = variable(2, requires_grad=True)
+        idx = variable(0).long()
 
         def func(root, values):
             x = root.clone()
@@ -1352,6 +1378,15 @@ class TestAutograd(TestCase):
     @unittest.skipIf(not torch.cuda.is_available(), "CUDA unavailable")
     def test_pin_memory(self):
         x = Variable(torch.randn(2, 2), requires_grad=True)
+        self.assertEqual(x, x.pin_memory())
+        self.assertIsNot(x, x.pin_memory())
+        self.assertTrue(x.pin_memory().requires_grad)
+        gradcheck(lambda x: x.pin_memory(), [x])
+        gradgradcheck(lambda x: x.pin_memory(), [x])
+
+    @unittest.skipIf(not torch.cuda.is_available(), "CUDA unavailable")
+    def test_pin_memory_scalar(self):
+        x = variable(2, requires_grad=True)
         self.assertEqual(x, x.pin_memory())
         self.assertIsNot(x, x.pin_memory())
         self.assertTrue(x.pin_memory().requires_grad)
@@ -1780,6 +1815,15 @@ class TestAutograd(TestCase):
 
         gradcheck(as_strided, [x], raise_exception=True)
         gradgradcheck(as_strided, [x], [Variable(torch.randn(3, 3))])
+
+    def test_as_strided_scalar(self):
+        x = variable([[1]], requires_grad=True)
+
+        def as_strided(x):
+            return x.as_strided([], [], 0)
+
+        gradcheck(as_strided, [x], raise_exception=True)
+        gradgradcheck(as_strided, [x], [normal_scalar_clamp(-1, 1)])
 
     def _test_where_functional(self, t):
         x = Variable(t(torch.randn(5, 5)), requires_grad=True)
