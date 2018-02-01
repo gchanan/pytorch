@@ -168,7 +168,7 @@ class TestTorch(TestCase):
     @unittest.skipIf(not torch._C._with_scalars(), "scalars not enabled")
     def test_linear_algebra_scalar_raises(self):
         from torch.autograd import Variable, variable
-        m = Variable(torch.randn(5,5))
+        m = Variable(torch.randn(5, 5))
         v = Variable(torch.randn(5))
         s = variable(7)
         self.assertRaises(RuntimeError, lambda: torch.mv(m, s))
