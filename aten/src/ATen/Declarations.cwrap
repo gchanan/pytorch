@@ -2985,7 +2985,8 @@
         - THTensor* mat2
 ]]
 [[
-  name: addmv
+  name: _addmv
+  cname: addmv
   variants:
     - method
     - function
@@ -3005,7 +3006,7 @@
     - THTensor* vec
 ]]
 [[
-  name: addmv_
+  name: _addmv_
   cname: addmv
   return: self
   arguments:
