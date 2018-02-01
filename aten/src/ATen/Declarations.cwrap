@@ -3042,7 +3042,7 @@
     - THTensor* vec2
 ]]
 [[
-  name: addr_
+  name: _addr_
   cname: addr
   return: self
   arguments:

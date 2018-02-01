@@ -94,6 +94,11 @@ Tensor& addr_out(Tensor &result, const Tensor& self, const Tensor& vec1, const T
   return at::_addr_out(result, self, vec1, vec2, beta, alpha);
 }
 
+Tensor& addr_(Tensor& self, const Tensor& vec1, const Tensor& vec2, Scalar beta, Scalar alpha) {
+  check_not_scalar(self, "addr", "vec1");
+  check_not_scalar(self, "addr", "vec2");
+  return self._addr_(vec1, vec2, beta, alpha);
+}
 
 static Tensor maybeSqueeze(const Tensor & tensor, int64_t dim_tensor1, int64_t dim_tensor2) {
   if (dim_tensor1 == 1) {
