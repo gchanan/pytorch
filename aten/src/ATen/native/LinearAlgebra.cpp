@@ -62,25 +62,38 @@ static void check_not_scalar(const Tensor& t, const char* fn, const char* arg) {
 
 Tensor ger(const Tensor& self, const Tensor& vec2) {
   check_not_scalar(self, "ger", "self");
-  check_not_scalar(self, "ger", "vec2");
+  check_not_scalar(vec2, "ger", "vec2");
   return at::_ger(self, vec2);
 }
 
 Tensor& ger_out(Tensor& result, const Tensor& self, const Tensor& vec2) {
   check_not_scalar(self, "ger", "self");
-  check_not_scalar(self, "ger", "vec2");
+  check_not_scalar(vec2, "ger", "vec2");
   return at::_ger_out(result, self, vec2);
 }
 
 Tensor mv(const Tensor& self, const Tensor& vec) {
-  check_not_scalar(self, "mv", "vec");
+  check_not_scalar(vec, "mv", "vec");
   return at::_mv(self, vec);
 }
 
 Tensor& mv_out(Tensor& result, const Tensor& self, const Tensor& vec) {
-  check_not_scalar(self, "mv", "vec");
+  check_not_scalar(vec, "mv", "vec");
   return at::_mv_out(result, self, vec);
 }
+
+Tensor addr(const Tensor& self, const Tensor& vec1, const Tensor& vec2, Scalar beta, Scalar alpha) {
+  check_not_scalar(self, "addr", "vec1");
+  check_not_scalar(self, "addr", "vec2");
+  return at::_addr(self, vec1, vec2, beta, alpha);
+}
+
+Tensor& addr_out(Tensor &result, const Tensor& self, const Tensor& vec1, const Tensor& vec2, Scalar beta, Scalar alpha) {
+  check_not_scalar(self, "addr", "vec1");
+  check_not_scalar(self, "addr", "vec2");
+  return at::_addr_out(result, self, vec1, vec2, beta, alpha);
+}
+
 
 static Tensor maybeSqueeze(const Tensor & tensor, int64_t dim_tensor1, int64_t dim_tensor2) {
   if (dim_tensor1 == 1) {
