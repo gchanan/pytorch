@@ -3057,7 +3057,7 @@
     - THTensor* vec2
 ]]
 [[
-  name: ger
+  name: _ger
   cname: addr
   variants:
     - method
@@ -3080,7 +3080,7 @@
     - THTensor* vec2
 ]]
 [[
-  name: mv
+  name: _mv
   cname: addmv
   variants:
     - method

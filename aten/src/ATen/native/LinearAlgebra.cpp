@@ -54,6 +54,34 @@ Tensor det(const Tensor& self) {
   return std::get<0>(self._det_with_svd());
 }
 
+static void check_not_scalar(const Tensor& t, const char* fn, const char* arg) {
+  if (t.dim() == 0) {
+    runtime_error("%s: Expected 1-D argument %s, but got %d-D", fn, arg, t.dim());
+  }
+}
+
+Tensor ger(const Tensor& self, const Tensor& vec2) {
+  check_not_scalar(self, "ger", "self");
+  check_not_scalar(self, "ger", "vec2");
+  return at::_ger(self, vec2);
+}
+
+Tensor& ger_out(Tensor& result, const Tensor& self, const Tensor& vec2) {
+  check_not_scalar(self, "ger", "self");
+  check_not_scalar(self, "ger", "vec2");
+  return at::_ger_out(result, self, vec2);
+}
+
+Tensor mv(const Tensor& self, const Tensor& vec) {
+  check_not_scalar(self, "mv", "vec");
+  return at::_mv(self, vec);
+}
+
+Tensor& mv_out(Tensor& result, const Tensor& self, const Tensor& vec) {
+  check_not_scalar(self, "mv", "vec");
+  return at::_mv_out(result, self, vec);
+}
+
 static Tensor maybeSqueeze(const Tensor & tensor, int64_t dim_tensor1, int64_t dim_tensor2) {
   if (dim_tensor1 == 1) {
     return tensor.squeeze(-2);
