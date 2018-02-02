@@ -6,7 +6,7 @@ from itertools import product
 
 import torch
 import torch.cuda
-from torch.autograd import Variable
+from torch.autograd import Variable, variable
 from common import TestCase, to_gpu, freeze_rng_state
 from torch.autograd.gradcheck import get_numerical_jacobian, iter_tensors, contiguous
 import torch.backends.cudnn
@@ -263,13 +263,13 @@ def nlllossNd_reference(input, target, weight=None, ignore_index=-100,
     N = input.size(0)
     C = input.size(1)
     out_size = (N,) + input.size()[2:]
-    output = torch.zeros(out_size).type_as(input)
-    if isinstance(target, Variable):
-        target = target.data
+    output = Variable(torch.zeros(out_size).type_as(input))
 
     if weight is None:
-        weight = torch.ones(C).type_as(input)
-
+        weight = Variable(torch.ones(C).type_as(input))
+    if torch.is_tensor(weight):
+        # TODO: get rid of this
+        weight = Variable(weight)
     total_weight_data = 0
     for tup in product(*[range(size) for size in out_size]):
         t_nx = target[tup]
@@ -288,20 +288,21 @@ def nlllossNd_reference(input, target, weight=None, ignore_index=-100,
 
 def nllloss_reference(input, target, weight=None, ignore_index=-100,
                       size_average=True, reduce=True):
-    if isinstance(target, Variable):
-        target = target.data
 
     def nll_loss_helper(input, target, weight, ignore_index):
-        if target is ignore_index:
-            return (0, 0)
+        if target == ignore_index:
+            return (variable(0), variable(0))
         norm = 1 if weight is None else weight[target]
         result = -input[target] * norm
         return (result, norm)
 
+    if torch.is_tensor(weight):
+        # TODO: remove this
+        weight = Variable(weight)
     losses_and_weights = [nll_loss_helper(i, t, weight, ignore_index)
                           for i, t in zip(input, target)]
     losses, weights = zip(*losses_and_weights)
-    losses_tensor = torch.Tensor(losses).type_as(input)
+    losses_tensor = torch.stack(losses).type_as(input)
     if reduce and size_average:
         return sum(losses_tensor) / sum(weights)
     elif reduce:
@@ -337,6 +338,13 @@ criterion_tests = [
         target_size=(2, 3, 4),
         reference_fn=lambda i, t, _: 1. / i.numel() *
         sum((a - b).abs().sum() for a, b in zip(i, t)),
+    ),
+    dict(
+        module_name='L1Loss',
+        input_size=(),
+        target_size=(),
+        reference_fn=lambda i, t, _: 1. / i.numel() * (i - t).abs().sum(),
+        desc='scalar',
     ),
     dict(
         module_name='NLLLoss',
@@ -629,7 +637,7 @@ class NNTestCase(TestCase):
                 x[i] = original - eps
                 fx2 = self._forward_criterion(criterion, input, target)
                 deriv = (fx1 - fx2) / (2. * eps)
-                d_x[i] = deriv
+                d_x[i] = float(deriv)
                 x[i] = original
 
         # TODO: check structure
@@ -679,9 +687,9 @@ class TestBase(object):
 
     @property
     def constructor_args(self):
-        return self._get_arg('constructor_args')
+        return self._get_arg('constructor_args', False)
 
-    def _get_arg(self, name):
+    def _get_arg(self, name, requires_grad):
         assert name in self._required_arg_names
 
         if name not in self._arg_cache:
@@ -691,7 +699,16 @@ class TestBase(object):
             if name in self._extra_kwargs:
                 self._arg_cache[name] = self._extra_kwargs[name]
             elif fn_name in self._extra_kwargs:
-                self._arg_cache[name] = self._extra_kwargs[fn_name]()
+                fn_ret = self._extra_kwargs[fn_name]()
+
+                def tensor_to_var(t):
+                    return Variable(t, requires_grad=requires_grad) if torch.is_tensor(t) else t
+
+                if isinstance(fn_ret, tuple):
+                    fn_ret = tuple(tensor_to_var(x) for x in fn_ret)
+                else:
+                    fn_ret = tensor_to_var(fn_ret)
+                self._arg_cache[name] = fn_ret
             else:
                 assert size_name in self._extra_kwargs
 
@@ -699,15 +716,18 @@ class TestBase(object):
                     if isinstance(sizes, list):
                         return [map_tensor_sizes(s) for s in sizes]
                     elif torch.is_tensor(sizes):
-                        return sizes.double()
+                        return Variable(sizes.double(), requires_grad=requires_grad)
                     else:
-                        return torch.randn(*sizes)
+                        if len(sizes) == 0:
+                            return torch.testing.randn_like(variable(0), requires_grad=requires_grad)
+                        else:
+                            return Variable(torch.randn(*sizes), requires_grad=requires_grad)
 
                 self._arg_cache[name] = map_tensor_sizes(self._extra_kwargs[size_name])
         return self._arg_cache[name]
 
     def _get_input(self):
-        return self._get_arg('input')
+        return self._get_arg('input', True)
 
     def __call__(self, test_case):
         raise NotImplementedError
@@ -730,12 +750,9 @@ class ModuleTest(TestBase):
 
         if self.reference_fn is not None:
             out = test_case._forward(module, input)
-            if isinstance(out, Variable):
-                out = out.data
-            ref_input = self._unpack(deepcopy(input))
+            ref_input = deepcopy(input)
             expected_out = self.reference_fn(ref_input, test_case._get_parameters(module)[0])
             test_case.assertEqual(out, expected_out)
-
         self.test_noncontig(test_case, module, input)
 
         if self.should_test_pickle:
@@ -891,7 +908,7 @@ class CriterionTest(TestBase):
         self.should_test_cuda = kwargs.get('test_cuda', True)
 
     def _get_target(self):
-        return self._get_arg('target')
+        return self._get_arg('target', False)
 
     def __call__(self, test_case):
         module = self.constructor(*self.constructor_args)
@@ -905,8 +922,8 @@ class CriterionTest(TestBase):
 
         if self.reference_fn is not None:
             out = test_case._forward_criterion(module, input, target)
-            expected_out = self.reference_fn(deepcopy(self._unpack(input)),
-                                             deepcopy(self._unpack(target)), module)
+            expected_out = self.reference_fn(deepcopy(input),
+                                             deepcopy(target), module)
             test_case.assertEqual(out, expected_out)
 
         test_case.check_criterion_jacobian(module, input, target)
