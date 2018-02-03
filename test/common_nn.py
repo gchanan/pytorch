@@ -7,7 +7,7 @@ from itertools import product
 import torch
 import torch.cuda
 from torch.autograd import Variable, variable
-from common import TestCase, to_gpu, freeze_rng_state
+from common import TestCase, to_gpu, freeze_rng_state, is_iterable
 from torch.autograd.gradcheck import get_numerical_jacobian, iter_tensors, contiguous
 import torch.backends.cudnn
 
@@ -302,7 +302,10 @@ def nllloss_reference(input, target, weight=None, ignore_index=-100,
     losses_and_weights = [nll_loss_helper(i, t, weight, ignore_index)
                           for i, t in zip(input, target)]
     losses, weights = zip(*losses_and_weights)
-    losses_tensor = torch.stack(losses).type_as(input)
+    if isinstance(losses[0], Variable):
+        losses_tensor = torch.stack(losses).type_as(input)
+    else:
+        losses_tensor = torch.Tensor(losses).type_as(input)
     if reduce and size_average:
         return sum(losses_tensor) / sum(weights)
     elif reduce:
@@ -682,33 +685,35 @@ class TestBase(object):
             return value.data
         elif torch.is_tensor(value):
             return value
-        else:
+        elif is_iterable(value):
             return type(value)(self._unpack(v) for v in value)
+        else:
+            return value
 
     @property
     def constructor_args(self):
-        return self._get_arg('constructor_args', False)
+        return self._get_arg('constructor_args', True, False)
 
-    def _get_arg(self, name, requires_grad):
+    def _get_arg(self, name, unpack, requires_grad):
         assert name in self._required_arg_names
 
         if name not in self._arg_cache:
             fn_name = name + '_fn'
             size_name = name + '_size'
 
-            if name in self._extra_kwargs:
-                self._arg_cache[name] = self._extra_kwargs[name]
-            elif fn_name in self._extra_kwargs:
-                fn_ret = self._extra_kwargs[fn_name]()
-
+            def convert_tensors_to_vars(args):
                 def tensor_to_var(t):
                     return Variable(t, requires_grad=requires_grad) if torch.is_tensor(t) else t
 
-                if isinstance(fn_ret, tuple):
-                    fn_ret = tuple(tensor_to_var(x) for x in fn_ret)
+                if isinstance(args, tuple):
+                    return tuple(tensor_to_var(x) for x in args)
                 else:
-                    fn_ret = tensor_to_var(fn_ret)
-                self._arg_cache[name] = fn_ret
+                    return tensor_to_var(args)
+
+            if name in self._extra_kwargs:
+                self._arg_cache[name] = convert_tensors_to_vars(self._extra_kwargs[name])
+            elif fn_name in self._extra_kwargs:
+                self._arg_cache[name] = convert_tensors_to_vars(self._extra_kwargs[fn_name]())
             else:
                 assert size_name in self._extra_kwargs
 
@@ -724,10 +729,11 @@ class TestBase(object):
                             return Variable(torch.randn(*sizes), requires_grad=requires_grad)
 
                 self._arg_cache[name] = map_tensor_sizes(self._extra_kwargs[size_name])
-        return self._arg_cache[name]
+
+        return self._unpack(self._arg_cache[name]) if unpack else self._arg_cache[name]
 
     def _get_input(self):
-        return self._get_arg('input', True)
+        return self._get_arg('input', True, False)
 
     def __call__(self, test_case):
         raise NotImplementedError
@@ -908,7 +914,7 @@ class CriterionTest(TestBase):
         self.should_test_cuda = kwargs.get('test_cuda', True)
 
     def _get_target(self):
-        return self._get_arg('target', False)
+        return self._get_arg('target', True, False)
 
     def __call__(self, test_case):
         module = self.constructor(*self.constructor_args)

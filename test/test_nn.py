@@ -262,6 +262,16 @@ class NewModuleTest(InputVariableMixin, ModuleTest):
                         test_case.assertEqual(type(p.data), torch.cuda.FloatTensor)
                         test_case.assertEqual(p.get_device(), 1)
 
+    def _get_target(self):
+        return self._get_arg('target', False, False)
+
+    @property
+    def constructor_args(self):
+        return self._get_arg('constructor_args', False, False)
+
+    def _get_input(self):
+        return self._get_arg('input', False, True)
+
 
 class NewCriterionTest(InputVariableMixin, CriterionTest):
     # TODO: check that criterions don't ignore grad_output
@@ -279,10 +289,16 @@ class NewCriterionTest(InputVariableMixin, CriterionTest):
             else:
                 _assertGradAndGradgradChecks(test_case, lambda x, y, z, *args, **kw: module(x, y, z),
                                              input + (target,) + params)
-
     def _get_target(self):
-        target = CriterionTest._get_target(self)
-        return target
+        return self._get_arg('target', False, False)
+
+    @property
+    def constructor_args(self):
+        return self._get_arg('constructor_args', False, False)
+
+    def _get_input(self):
+        input =  self._get_arg('input', False, True)
+        return input
 
 
 class TestNN(NNTestCase):
@@ -4444,7 +4460,7 @@ def nllloss_no_reduce_weights_ignore_index_test():
 
 def nllloss_no_reduce_weights_ignore_index_neg_test():
     t = Variable(torch.Tensor(15).uniform_().mul(10).floor().long())
-    weight = torch.rand(10)
+    weight = Variable(torch.rand(10))
 
     def kwargs(i):
         return {'weight': weight.type_as(i), 'reduce': False,
@@ -4453,8 +4469,8 @@ def nllloss_no_reduce_weights_ignore_index_neg_test():
     return dict(
         fullname='NLLLoss_no_reduce_weights_ignore_index_neg',
         constructor=wrap_functional(
-            lambda i: F.nll_loss(i, t.type_as(i).long(), **kwargs(i.data))),
-        input=torch.rand(15, 10).add(1e-2).log(),
+            lambda i: F.nll_loss(i, t.type_as(i).long(), **kwargs(i))),
+        input=Variable(torch.rand(15, 10).add(1e-2).log(), requires_grad=True),
         reference_fn=lambda i, _:
             loss_reference_fns['NLLLoss'](i, t.type_as(i).long(), **kwargs(i)),
         pickle=False)
@@ -4496,7 +4512,7 @@ def nllloss2d_no_reduce_weights_test():
     return dict(
         fullname='NLLLoss2d_no_reduce_weights',
         constructor=wrap_functional(
-            lambda i: F.nll_loss(i, t.type_as(i).long(), **kwargs(i.data))),
+            lambda i: F.nll_loss(i, t.type_as(i).long(), **kwargs(i))),
         input_fn=lambda: torch.rand(2, 3, 5, 5).log(),
         reference_fn=lambda i, _:
             loss_reference_fns['NLLLossNd'](i, t.type_as(i).long(), **kwargs(i)),
@@ -4531,7 +4547,7 @@ def nlllossNd_no_reduce_ignore_index_test():
 
 def nlllossNd_no_reduce_weights_test():
     t = Variable(torch.rand(2, 5, 5, 2, 2).mul(3).floor().long())
-    weight = torch.rand(3)
+    weight = Variable(torch.rand(3))
 
     def kwargs(i):
         return {'weight': weight.type_as(i), 'reduce': False}
@@ -4539,7 +4555,7 @@ def nlllossNd_no_reduce_weights_test():
     return dict(
         fullname='NLLLossNd_no_reduce_weights',
         constructor=wrap_functional(
-            lambda i: F.nll_loss(i, t.type_as(i).long(), **kwargs(i.data))),
+            lambda i: F.nll_loss(i, t.type_as(i).long(), **kwargs(i))),
         input_fn=lambda: torch.rand(2, 3, 5, 5, 2, 2).log(),
         reference_fn=lambda i, _:
             loss_reference_fns['NLLLossNd'](i, t.type_as(i).long(), **kwargs(i)),
