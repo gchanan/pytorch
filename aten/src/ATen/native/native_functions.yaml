@@ -188,6 +188,9 @@
 - func: ger_out(Tensor result, Tensor self, Tensor vec2) -> Tensor
   variants: function
 
+- func: hinge_embedding_loss_double_backward(Tensor grad, Tensor grad_output, Tensor input, Tensor target, double margin, bool size_average) -> (Tensor, Tensor)
+  variants: function
+
 - func: index(Tensor self, TensorList indices) -> Tensor
   # NB: This function is special-cased in tools/autograd/gen_variable_type.py
 
