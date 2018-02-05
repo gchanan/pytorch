@@ -267,7 +267,7 @@ def nlllossNd_reference(input, target, weight=None, ignore_index=-100,
 
     if weight is None:
         weight = Variable(torch.ones(C).type_as(input))
-    if torch.is_tensor(weight):
+    if weight is not None and not isinstance(weight, Variable):
         # TODO: remove this once Variables and tensors merge
         weight = Variable(weight)
     total_weight_data = 0
@@ -296,7 +296,7 @@ def nllloss_reference(input, target, weight=None, ignore_index=-100,
         result = -input[target] * norm
         return (result, norm)
 
-    if torch.is_tensor(weight):
+    if weight is not None and not isinstance(weight, Variable):
         # TODO: remove this once Variables and tensors merge
         weight = Variable(weight)
     losses_and_weights = [nll_loss_helper(i, t, weight, ignore_index)
@@ -754,7 +754,7 @@ class TestBase(object):
 
             def convert_tensors_to_vars(args):
                 def tensor_to_var(t):
-                    return Variable(t) if torch.is_tensor(t) else t
+                    return Variable(t) if torch.is_tensor(t) and not isinstance(t, Variable) else t
 
                 if isinstance(args, tuple):
                     return tuple(tensor_to_var(x) for x in args)
@@ -771,7 +771,7 @@ class TestBase(object):
                 def map_tensor_sizes(sizes):
                     if isinstance(sizes, list):
                         return [map_tensor_sizes(s) for s in sizes]
-                    elif torch.is_tensor(sizes):
+                    elif torch.is_tensor(sizes) and not isinstance(sizes, Variable):
                         return Variable(sizes.double())
                     else:
                         if len(sizes) == 0:
