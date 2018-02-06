@@ -1468,12 +1468,26 @@ def margin_ranking_loss(input1, input2, target, margin=0, size_average=True):
 
 
 def hinge_embedding_loss(input, target, margin=1.0, size_average=True):
+    return _functions.loss.HingeEmbeddingLoss.apply(input, target, margin, size_average)
+
+def hinge_embedding_loss2(input, target, margin=1.0, size_average=True):
     """hinge_embedding_loss(input, target, margin=1.0, size_average=True) -> Variable
 
     See :class:`~torch.nn.HingeEmbeddingLoss` for details.
     """
-    return _functions.loss.HingeEmbeddingLoss.apply(input, target, margin, size_average)
+    zeros_like = torch.zeros_like(input)
+    output = torch.where(target == 1, input, zeros_like)
+    output2 = torch.where(target == -1, (margin - input).clamp_(min=0), zeros_like)
+    #output = output.sum() + output2.sum()
+    output = (output + output2).sum()
+    #output = ((target == 1).type_as(input) * input).sum()
+    #output += ((target == -1).type_as(input) * (margin - input).clamp_(min=0)).sum()
+    if size_average:
+        output = output / input.nelement()
+    return output
 
+def hinge_embedding_loss3(input, target, margin=1.0, size_average=True):
+    return torch._C._VariableFunctions.hinge_embedding_loss(input, target, margin, size_average)
 
 multilabel_margin_loss = _add_docstr(torch._C._nn.multilabel_margin_loss, r"""
 multilabel_margin_loss(input, target, size_average=True, reduce=True) -> Variable
