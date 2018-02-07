@@ -22,7 +22,7 @@ import torch.nn.utils.rnn as rnn_utils
 import torch.legacy.nn as legacy
 from torch.nn.utils import clip_grad_norm
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
-from torch.autograd import Variable, gradcheck
+from torch.autograd import Variable, variable, gradcheck
 from torch.autograd.gradcheck import gradgradcheck
 from torch.nn import Parameter
 from torch.nn.parallel._functions import Broadcast
@@ -1481,10 +1481,18 @@ class TestNN(NNTestCase):
         inputs = Variable(torch.randn(1, 2, 3, 4, 4), requires_grad=True)
         self.assertTrue(gradcheck(lambda x: F.pad(x, (1, 1, 1, 1, 1, 1), mode='replicate'), (inputs,)))
 
+    def test_pad_scalar_error(self):
+        inputs = variable(0, requires_grad=True)
+        self.assertRaises(AssertionError, lambda: F.pad(inputs, (1, 1)))
+        self.assertRaises(AssertionError, lambda: F.pad(inputs, (1,)))
+
     def test_normalize(self):
         inputs = Variable(torch.randn(1, 3, 4, 4), requires_grad=True)
         self.assertTrue(gradcheck(lambda x: F.normalize(x, p=1, dim=-1), (inputs,)))
         self.assertTrue(gradcheck(lambda x: F.normalize(x, p=2, dim=-2), (inputs,)))
+
+        inputs = torch_randn((), requires_grad=True)
+        self.assertTrue(gradcheck(lambda x: F.normalize(x, p=1, dim=-1), (inputs,)))
 
     def _test_maxpool_indices(self, num_dim, adaptive=False, type=torch.FloatTensor):
         def expected_indices(dim):
@@ -3521,6 +3529,11 @@ class TestNN(NNTestCase):
 
         input1 = Variable(torch.randn(4, 5, 6), requires_grad=True)
         input2 = Variable(torch.randn(4, 5, 6), requires_grad=True)
+        self.assertTrue(gradcheck(lambda x, y: F.cosine_similarity(x, y, dim=0), (input1, input2)))
+        self.assertTrue(gradcheck(lambda x, y: F.cosine_similarity(x, y, dim=-1), (input1, input2)))
+
+        input1 = torch_randn((), requires_grad=True)
+        input2 = torch_randn((), requires_grad=True)
         self.assertTrue(gradcheck(lambda x, y: F.cosine_similarity(x, y, dim=0), (input1, input2)))
         self.assertTrue(gradcheck(lambda x, y: F.cosine_similarity(x, y, dim=-1), (input1, input2)))
 

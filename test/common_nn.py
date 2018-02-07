@@ -496,20 +496,20 @@ sample_scalar = variable(0)
 
 # TODO: replace this with torch.rand() when Variables and tensors are merged;
 # this function will correctly handle scalars (i.e. empty tuple sizes) for now.
-def torch_rand(sizes):
+def torch_rand(sizes, requires_grad=False):
     if len(sizes) == 0:
-        return torch.testing.rand_like(sample_scalar)
+        return torch.testing.rand_like(sample_scalar, requires_grad=requires_grad)
     else:
-        return Variable(torch.rand(*sizes))
+        return Variable(torch.rand(*sizes), requires_grad=requires_grad)
 
 
 # TODO: replace this with torch.randn() when Variables and tensors are merged;
 # this function will correctly handle scalars (i.e. empty tuple sizes) for now.
-def torch_randn(sizes):
+def torch_randn(sizes, requires_grad=False):
     if len(sizes) == 0:
-        return torch.testing.randn_like(sample_scalar)
+        return torch.testing.randn_like(sample_scalar, requires_grad=requires_grad)
     else:
-        return Variable(torch.randn(*sizes))
+        return Variable(torch.randn(*sizes), requires_grad=requires_grad)
 
 criterion_tests = [
     dict(
