@@ -4426,6 +4426,18 @@ def bceloss_no_reduce_test():
         pickle=False)
 
 
+def bceloss_no_reduce_scalar_test():
+    t = torch_randn(()).gt(0).double()
+    return dict(
+        fullname='BCELoss_no_reduce_scalar',
+        constructor=wrap_functional(
+            lambda i: F.binary_cross_entropy(i, t.type_as(i), reduce=False)),
+        input_fn=lambda: torch_rand(()).clamp_(2.8e-2, 1 - 2.8e-2),
+        reference_fn=lambda i, m: -(t * i.log() + (1 - t) * (1 - i).log()),
+        check_gradgrad=False,
+        pickle=False)
+
+
 def bceloss_weights_no_reduce_test():
     t = Variable(torch.randn(15, 10).gt(0).double())
     weights = Variable(torch.rand(10))
@@ -4435,6 +4447,20 @@ def bceloss_weights_no_reduce_test():
             lambda i: F.binary_cross_entropy(i, t.type_as(i),
                                              weight=weights.type_as(i), reduce=False)),
         input_fn=lambda: torch.rand(15, 10).clamp_(2.8e-2, 1 - 2.8e-2),
+        reference_fn=lambda i, m: -(t * i.log() + (1 - t) * (1 - i).log()) * weights,
+        check_gradgrad=False,
+        pickle=False)
+
+
+def bceloss_weights_no_reduce_scalar_test():
+    t = torch_randn(()).double()
+    weights = torch_rand(())
+    return dict(
+        fullname='BCELoss_weights_no_reduce_scalar',
+        constructor=wrap_functional(
+            lambda i: F.binary_cross_entropy(i, t.type_as(i),
+                                             weight=weights.type_as(i), reduce=False)),
+        input_fn=lambda: torch_rand(()).clamp_(2.8e-2, 1 - 2.8e-2),
         reference_fn=lambda i, m: -(t * i.log() + (1 - t) * (1 - i).log()) * weights,
         check_gradgrad=False,
         pickle=False)
@@ -4453,6 +4479,19 @@ def bce_with_logistic_no_reduce_test():
         pickle=False)
 
 
+def bce_with_logistic_no_reduce_scalar_test():
+    t = torch_randn(()).gt(0).double()
+    sigmoid = nn.Sigmoid()
+    return dict(
+        fullname='BCEWithLogitsLoss_no_reduce_scalar',
+        constructor=wrap_functional(
+            lambda i: F.binary_cross_entropy_with_logits(i, t.type_as(i), reduce=False)),
+        input_fn=lambda: torch_rand(()).clamp_(2.8e-2, 1 - 2.8e-2),
+        reference_fn=lambda i, m: -(t * sigmoid(i).log() + (1 - t) * (1 - sigmoid(i)).log()),
+        check_gradgrad=False,
+        pickle=False)
+
+
 def kldivloss_no_reduce_test():
     t = Variable(torch.randn(10, 10))
     return dict(
@@ -4460,6 +4499,18 @@ def kldivloss_no_reduce_test():
         constructor=wrap_functional(
             lambda i: F.kl_div(i, t.type_as(i), reduce=False)),
         input_fn=lambda: torch.rand(10, 10).log(),
+        reference_fn=lambda i, _:
+            loss_reference_fns['KLDivLoss'](i, t.type_as(i), reduce=False),
+        pickle=False)
+
+
+def kldivloss_no_reduce_scalar_test():
+    t = torch_randn(())
+    return dict(
+        fullname='KLDivLoss_no_reduce_scalar',
+        constructor=wrap_functional(
+            lambda i: F.kl_div(i, t.type_as(i), reduce=False)),
+        input_fn=lambda: torch_rand(()).log(),
         reference_fn=lambda i, _:
             loss_reference_fns['KLDivLoss'](i, t.type_as(i), reduce=False),
         pickle=False)
@@ -4476,11 +4527,34 @@ def l1loss_no_reduce_test():
         pickle=False)
 
 
+def l1loss_no_reduce_scalar_test():
+    t = torch_randn(())
+    return dict(
+        fullname='L1Loss_no_reduce_scalar',
+        constructor=wrap_functional(
+            lambda i: F.l1_loss(i, t.type_as(i), reduce=False)),
+        input_fn=lambda: torch_randn(()),
+        reference_fn=lambda i, m: (i - t.type_as(i)).abs(),
+        pickle=False)
+
+
 def mseloss_no_reduce_test():
     input_size = (2, 3, 4, 5)
     target = Variable(torch.randn(*input_size))
     return dict(
         fullname='MSELoss_no_reduce',
+        constructor=wrap_functional(
+            lambda i: F.mse_loss(i, target.type_as(i), reduce=False)),
+        input_size=input_size,
+        reference_fn=lambda i, m: (i - target).pow(2),
+        pickle=False)
+
+
+def mseloss_no_reduce_scalar_test():
+    input_size = ()
+    target = torch_randn(input_size)
+    return dict(
+        fullname='MSELoss_no_reduce_scalar',
         constructor=wrap_functional(
             lambda i: F.mse_loss(i, target.type_as(i), reduce=False)),
         input_size=input_size,
@@ -4665,6 +4739,18 @@ def smoothl1loss_no_reduce_test():
         pickle=False)
 
 
+def smoothl1loss_no_reduce_scalar_test():
+    t = torch_randn(())
+    return dict(
+        fullname='SmoothL1Loss_no_reduce_scalar',
+        constructor=wrap_functional(
+            lambda i: F.smooth_l1_loss(i, t.type_as(i), reduce=False)),
+        input_fn=lambda: torch_randn(),
+        reference_fn=lambda i, _:
+            loss_reference_fns['SmoothL1Loss'](i, t.type_as(i), reduce=False),
+        pickle=False)
+
+
 def multilabelmarginloss_1d_no_reduce_test():
     t = Variable(torch.rand(10).mul(10).floor().long())
     return dict(
@@ -4712,9 +4798,15 @@ new_module_tests = [
     bceloss_no_reduce_test(),
     bceloss_weights_no_reduce_test(),
     bce_with_logistic_no_reduce_test(),
+    bceloss_no_reduce_scalar_test(),
+    bceloss_weights_no_reduce_scalar_test(),
+    bce_with_logistic_no_reduce_scalar_test(),
     kldivloss_no_reduce_test(),
+    kldivloss_no_reduce_scalar_test(),
     l1loss_no_reduce_test(),
+    l1loss_no_reduce_scalar_test(),
     mseloss_no_reduce_test(),
+    mseloss_no_reduce_scalar_test(),
     nllloss_no_reduce_test(),
     nllloss_no_reduce_ignore_index_test(),
     nllloss_no_reduce_weights_test(),
@@ -4727,6 +4819,7 @@ new_module_tests = [
     nlllossNd_no_reduce_weights_test(),
     nlllossNd_no_reduce_ignore_index_test(),
     smoothl1loss_no_reduce_test(),
+    smoothl1loss_no_reduce_scalar_test(),
     multilabelmarginloss_1d_no_reduce_test(),
     multilabelmarginloss_index_neg_test(),
     multilabelmarginloss_no_reduce_test(),
@@ -5470,6 +5563,12 @@ new_module_tests = [
         check_inplace=True
     ),
     dict(
+        module_name='SELU',
+        input_size=(),
+        check_inplace=True,
+        desc='scalar'
+    ),
+    dict(
         module_name='GLU',
         input_size=(5, 6),
     ),
@@ -5512,6 +5611,13 @@ new_module_tests = [
         pickle=False,
     ),
     dict(
+        constructor=wrap_functional(F.softmax, dim=-1),
+        input_size=(),
+        fullname='softmax_functional_scalar',
+        test_cuda=False,
+        pickle=False,
+    ),
+    dict(
         constructor=wrap_functional(F.log_softmax, dim=-1),
         input_size=(2, 128),  # trigger the last-dim algo in CUDA
         fullname='log_softmax_lastdim',
@@ -5539,6 +5645,12 @@ new_module_tests = [
         constructor=wrap_functional(F.log_softmax, dim=3),
         input_size=(2, 3, 4, 5),
         fullname='log_softmax_dim3',
+        pickle=False,
+    ),
+    dict(
+        constructor=wrap_functional(F.log_softmax, dim=0),
+        input_size=(),
+        fullname='log_softmax_scalar',
         pickle=False,
     ),
     dict(
