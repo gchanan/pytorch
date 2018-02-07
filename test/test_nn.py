@@ -4745,7 +4745,7 @@ def smoothl1loss_no_reduce_scalar_test():
         fullname='SmoothL1Loss_no_reduce_scalar',
         constructor=wrap_functional(
             lambda i: F.smooth_l1_loss(i, t.type_as(i), reduce=False)),
-        input_fn=lambda: torch_randn(),
+        input_fn=lambda: torch_randn(()),
         reference_fn=lambda i, _:
             loss_reference_fns['SmoothL1Loss'](i, t.type_as(i), reduce=False),
         pickle=False)
