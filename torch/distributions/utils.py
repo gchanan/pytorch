@@ -108,9 +108,16 @@ def _sum_rightmost(value, dim):
         value (Tensor or Variable): A tensor of ``.dim()`` at least ``dim``.
         dim (int): The number of rightmost dims to sum out.
     """
+    ret2 = value.contiguous().view(value.shape[:-dim] + (-1,))
+    #print('in _sum_rightmost', value, dim, value.shape[:-dim] + (-1,), ret2)
+    a = ret2.sum(-1)
+    #print("a", a)
     if dim == 0:
+    #    print("returning value", value)
         return value
-    return value.contiguous().view(value.shape[:-dim] + (-1,)).sum(-1)
+    ret = value.contiguous().view(value.shape[:-dim] + (-1,)).sum(-1)
+    print("ret", ret)
+    return ret
 
 
 def softmax(tensor):

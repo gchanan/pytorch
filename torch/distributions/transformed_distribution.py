@@ -77,14 +77,20 @@ class TransformedDistribution(Distribution):
         self.base_dist._validate_log_prob_arg(value)
         event_dim = len(self.event_shape)
         log_prob = 0.0
+        print("!value", value)
         y = value
         for transform in reversed(self.transforms):
             x = transform.inv(y)
+            print("x, y", x, y)
             log_prob -= _sum_rightmost(transform.log_abs_det_jacobian(x, y),
-                                       event_dim - transform.event_dim)
+                                       max(0,event_dim-transform.event_dim))
+            print("log_prob", log_prob, event_dim, transform.event_dim, transform.log_abs_det_jacobian(x, y))
             y = x
+        print("event_dim", event_dim, "self.base_dist.event_shape", len(self.base_dist.event_shape),
+             self.base_dist.log_prob(y), log_prob)
         log_prob += _sum_rightmost(self.base_dist.log_prob(y),
                                    event_dim - len(self.base_dist.event_shape))
+        print("added to log_prob!")
         return log_prob
 
     def cdf(self, value):
