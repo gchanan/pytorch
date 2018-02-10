@@ -1793,6 +1793,11 @@ bool THPTensor_(postInit)(PyObject *module)
 #endif
   const char *type_name = TH_CONCAT_STRING_2(Real,);
   torch::registerPyTypeObject((PyTypeObject*)THPTensorClass, type_name, is_cuda, false);
+  at::Type* type = &torch::getATenType((PyTypeObject*)THPTensorClass);
+  THPDtype *dtype = (THPDtype*)THPDtype_NewWithType(type);
+  std::string dtype_name = type_name;
+  std::transform(dtype_name.begin(), dtype_name.end(), dtype_name.begin(), ::tolower);
+  PyModule_AddObject(module, dtype_name.c_str(), (PyObject*)dtype);
   return true;
 }
 

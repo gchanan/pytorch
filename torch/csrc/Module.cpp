@@ -871,6 +871,7 @@ static PyObject* initModule() {
   ASSERT_TRUE(THPGenerator_init(module));
   ASSERT_TRUE(THPException_init(module));
   ASSERT_TRUE(THPSize_init(module));
+  ASSERT_TRUE(THPDtype_init(module));
   ASSERT_TRUE(THPVariable_initModule(module));
   ASSERT_TRUE(THPFunction_initModule(module));
   ASSERT_TRUE(THPEngine_initModule(module));
