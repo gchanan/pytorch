@@ -18,8 +18,10 @@
 
 #include "torch/csrc/DynamicTypes.h"
 #include "torch/csrc/autograd/generated/python_nn_functions.h"
+#include "torch/csrc/autograd/generated/VariableType.h"
 #include "torch/csrc/utils/python_strings.h"
 #include "torch/csrc/utils/tensor_numpy.h"
+#include "torch/csrc/utils/tensor_types.h"
 #include "torch/csrc/jit/python_tracer.h"
 #include "torch/csrc/jit/init.h"
 #include "torch/csrc/jit/python_ir.h"
@@ -99,6 +101,7 @@ static PyObject * THPModule_initNames(PyObject *self, PyObject *arg)
     std::string name = THPUtils_unpackString(module_name.get());
     names.push_back(name + "." + type->tp_name);
     type->tp_name = names.back().c_str();
+    std::cerr << "name " << name << " " << name + "." + type->tp_name << std::endl;
   }
   Py_RETURN_NONE;
 }
@@ -511,6 +514,55 @@ PyObject *THPModule_hasDistributed(PyObject *_unused)
 #endif
 }
 
+PyObject * THPModule_initializeDtypes(PyObject *module) {
+  auto torch_module = THPObjectPtr(PyImport_ImportModule("torch"));
+  auto cuda_module = THPObjectPtr(PyImport_ImportModule("torch.cuda"));
+  auto sparse_module = THPObjectPtr(PyImport_ImportModule("torch.sparse"));
+  auto cuda_sparse_module = THPObjectPtr(PyImport_ImportModule("torch.cuda.sparse"));
+  //THPObjectPtr cuda_module(PyObject_GetAttrString(torch_module, "cuda"));
+  //THPObjectPtr sparse_module(PyObject_GetAttrString(torch_module, "sparse"));
+  std::cerr << "module: " << module << " cuda module: " << cuda_module.get() << " sparse_module: " << sparse_module.get() << std::endl;
+  //THPObjectPtr cuda_sparse_module(PyObject_GetAttrString(cuda_module.get(), "sparse"));
+  for (auto type : torch::autograd::VariableType::allTypes()) {
+    THPDtype *dtype = (THPDtype*)THPDtype_NewWithType(type);
+    torch::registerDtypeObject((PyObject*)dtype, type);
+    std::string dtype_name("d");
+    dtype_name += toString(type->scalarType());
+    std::transform(dtype_name.begin(), dtype_name.end(), dtype_name.begin(), ::tolower);
+    switch (type->backend()) {
+      case at::kCPU: {
+        PyModule_AddObject(torch_module, dtype_name.c_str(), (PyObject*)dtype);
+        break;
+      }
+      case at::kCUDA: {
+        PyModule_AddObject(cuda_module.get(), dtype_name.c_str(), (PyObject*)dtype);
+        break;
+      }
+      case at::kSparseCPU: {
+        PyModule_AddObject(sparse_module.get(), dtype_name.c_str(), (PyObject*)dtype);
+        break;
+      }
+      case at::kSparseCUDA: {
+        PyModule_AddObject(cuda_sparse_module.get(), dtype_name.c_str(), (PyObject*)dtype);
+        break;
+      }
+      default: throw std::runtime_error("Unimplemented backend");
+    }
+    /*std::cerr << " Would init dtype " << torch::utils::type_to_string(*type) << std::endl;
+    std::string backend_str = torch::utils::type_to_string(*type);
+    PyObject *current_module = module;
+    auto pos = backend_str.find('.');
+    do {
+      std::string module_str = backend_str.substr(0, pos);
+      std::cerr << "module string is " << module_str << std::endl;
+      std::string backend_str = backend_str.substr(pos);
+      std::cerr << "asdf " << module_str << " " << backend_str << std::endl;
+    } while ( (pos = backend_str.find('.', pos)) != std::string::npos);
+    std::cerr << " at end " << backend_str << std::endl;*/
+  }
+  Py_RETURN_NONE;
+}
+
 PyObject *THPModule_toDLPack(PyObject *_unused, PyObject *data)
 {
   THPUtils_assert(THPModule_isTensor(data), "data must be a Tensor");
@@ -597,6 +649,7 @@ static PyMethodDef TorchMethods[] = {
   {"_sparse_init",    (PyCFunction)THSPModule_initExtension,  METH_NOARGS,  NULL},
   {"_init_names",     (PyCFunction)THPModule_initNames,       METH_O,       NULL},
   {"_has_distributed",(PyCFunction)THPModule_hasDistributed,  METH_NOARGS,  NULL},
+  {"_initialize_dtypes",(PyCFunction)THPModule_initializeDtypes,  METH_NOARGS,  NULL},
 #ifdef WITH_CUDA
   {"_cuda_sparse_init",  (PyCFunction)THCSPModule_initExtension,    METH_NOARGS,  NULL},
 #endif
@@ -836,6 +889,62 @@ PyMethodDef* THCUDNN_methods() {
 }
 #endif
 
+
+
+/*static void PyObject *getModuleForType(PyObject *moduleBase, const at::Type& type) {
+  switch (type.backend()) {
+    case at::kCPU: return moduleBase;
+    case at::kCUDA: return moduleBase.getAttrString(moduleBase, 'cuda');
+    case at::kSparseCPU: return moduleBase.getAttrString(moduleBase, 'sparse');
+    case at::kSparseCUDA: return moduleBase.getAttrString(moduleBase, 'cuda').moduleBase('sparse');
+    default: throw std::runtime_error("Unimplemented backend");
+  }
+}*/
+
+
+static void initDtypes(PyObject *module) {
+  THPObjectPtr cuda_module(PyObject_GetAttrString(module, "cuda"));
+  THPObjectPtr sparse_module(PyObject_GetAttrString(module, "sparse"));
+  std::cerr << "module: " << module << " cuda module: " << cuda_module.get() << " sparse_module: " << sparse_module.get() << std::endl;
+  THPObjectPtr cuda_sparse_module(PyObject_GetAttrString(cuda_module.get(), "sparse"));
+  for (auto type : torch::autograd::VariableType::allTypes()) {
+    THPDtype *dtype = (THPDtype*)THPDtype_NewWithType(type);
+    std::string dtype_name("d");
+    dtype_name += toString(type->scalarType());
+    std::transform(dtype_name.begin(), dtype_name.end(), dtype_name.begin(), ::tolower);
+    switch (type->backend()) {
+      case at::kCPU: {
+        PyModule_AddObject(module, dtype_name.c_str(), (PyObject*)dtype);
+        break;
+      }
+      case at::kCUDA: {
+        PyModule_AddObject(cuda_module.get(), dtype_name.c_str(), (PyObject*)dtype);
+        break;
+      }
+      case at::kSparseCPU: {
+        PyModule_AddObject(sparse_module.get(), dtype_name.c_str(), (PyObject*)dtype);
+        break;
+      }
+      case at::kSparseCUDA: {
+        PyModule_AddObject(cuda_sparse_module.get(), dtype_name.c_str(), (PyObject*)dtype);
+        break;
+      }
+      default: throw std::runtime_error("Unimplemented backend");
+    }
+    /*std::cerr << " Would init dtype " << torch::utils::type_to_string(*type) << std::endl;
+    std::string backend_str = torch::utils::type_to_string(*type);
+    PyObject *current_module = module;
+    auto pos = backend_str.find('.');
+    do {
+      std::string module_str = backend_str.substr(0, pos);
+      std::cerr << "module string is " << module_str << std::endl;
+      std::string backend_str = backend_str.substr(pos);
+      std::cerr << "asdf " << module_str << " " << backend_str << std::endl;
+    } while ( (pos = backend_str.find('.', pos)) != std::string::npos);
+    std::cerr << " at end " << backend_str << std::endl;*/
+  }
+}
+
 static PyObject* initModule() {
   HANDLE_TH_ERRORS
   THInferNumThreads();
@@ -871,6 +980,7 @@ static PyObject* initModule() {
   ASSERT_TRUE(THPGenerator_init(module));
   ASSERT_TRUE(THPException_init(module));
   ASSERT_TRUE(THPSize_init(module));
+  ASSERT_TRUE(THPDtype_init(module));
   ASSERT_TRUE(THPVariable_initModule(module));
   ASSERT_TRUE(THPFunction_initModule(module));
   ASSERT_TRUE(THPEngine_initModule(module));
@@ -941,6 +1051,8 @@ static PyObject* initModule() {
   ASSERT_TRUE(THCSPByteTensor_init(module));
 #endif
 
+  std::cerr << "are things set up? " << torch::utils::type_from_string("torch.cuda.FloatTensor") << std::endl;
+
 #ifdef WITH_CUDNN
   PyObject *has_cudnn = Py_True;
 #else
@@ -978,6 +1090,8 @@ static PyObject* initModule() {
   THPDefaultGenerator = (THPGenerator*)THPGenerator_NewWithGenerator(
     defaultGenerator);
   ASSERT_TRUE(PyModule_AddObject(module, "default_generator", (PyObject*)THPDefaultGenerator) == 0);
+
+  //initDtypes(module);
 
 #ifdef WITH_NUMPY
   if (_import_array() < 0) return NULL;

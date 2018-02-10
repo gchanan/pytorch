@@ -12,6 +12,7 @@
 #include <TH/THMath.h>
 
 #include "torch/csrc/THP.h"
+#include "torch/csrc/dtype.h"
 #include "torch/csrc/copy_utils.h"
 #include "torch/csrc/DynamicTypes.h"
 #include "torch/csrc/utils/tensor_numpy.h"

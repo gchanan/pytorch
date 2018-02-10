@@ -403,6 +403,10 @@ static PyObject * THPVariable_element_size(PyObject* self, PyObject* args)
   END_HANDLE_TH_ERRORS
 }
 
+/*static PyObject * THPVariable_dtype(PyObject* self, PyObject* args) {
+  return THPVariable_to_type(self, ScalarType::Double);
+}*/
+
 static PyObject * THPVariable_numpy(PyObject* self, PyObject* arg)
 {
   HANDLE_TH_ERRORS
@@ -591,6 +595,7 @@ PyMethodDef variable_methods[] = {
   {"detach", (PyCFunction)THPVariable_detach, METH_NOARGS, NULL},
   {"detach_", (PyCFunction)THPVariable_detach_, METH_NOARGS, NULL},
   {"double", (PyCFunction)THPVariable_double, METH_NOARGS, NULL},
+  //{"dtype", (PyCFunction)THPVariable_dtype, METH_NOARGS, NULL},
   {"element_size", (PyCFunction)THPVariable_element_size, METH_NOARGS, NULL},
   {"float", (PyCFunction)THPVariable_float, METH_NOARGS, NULL},
   {"half", (PyCFunction)THPVariable_half, METH_NOARGS, NULL},

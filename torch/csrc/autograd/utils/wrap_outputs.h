@@ -9,6 +9,8 @@
 #include "torch/csrc/autograd/python_variable.h"
 #include "torch/csrc/autograd/variable.h"
 #include "torch/csrc/utils/python_numbers.h"
+#include "torch/csrc/dtype.h"
+
 
 namespace torch { namespace autograd { namespace utils {
 
@@ -87,5 +89,9 @@ inline PyObject* wrap(at::Scalar scalar) {
   return wrap(scalar.toTensor());
 }
 
+inline PyObject* wrap(THPDtype *dtype) {
+  Py_INCREF(dtype);
+  return (PyObject*)dtype;
+}
 
 }}} // namespace torch::autograd::utils
