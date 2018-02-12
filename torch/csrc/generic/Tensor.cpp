@@ -1777,10 +1777,19 @@ bool THPTensor_(init)(PyObject *module)
   if (PyType_Ready(&THPTensorStatelessType) < 0)
     return false;
 
+  std::cerr << "THPTensorBaseSTr " << THPTensorBaseStr << std::endl;
   PyModule_AddObject(module, THPTensorBaseStr, (PyObject *)&THPTensorType);
+  THPDtype *dtype = (THPDtype*)THPDtype_New();
+  // FixMe: can we just use lower case real?
+  std::string dtype_name = TH_CONCAT_STRING_2(Real,);;
+  std::transform(dtype_name.begin(), dtype_name.end(), dtype_name.begin(), ::tolower);
+  PyModule_AddObject(module, dtype_name.c_str(), (PyObject*)dtype);
+  std::cerr << "added object " << dtype_name << " " << PyModule_GetName(module) << std::endl;
   THPTensor_(initCopyMethods)();
   return true;
 }
+
+
 
 bool THPTensor_(postInit)(PyObject *module)
 {
@@ -1791,13 +1800,20 @@ bool THPTensor_(postInit)(PyObject *module)
 #ifdef THC_GENERIC_FILE
   is_cuda = true;
 #endif
-  const char *type_name = TH_CONCAT_STRING_2(Real,);
-  torch::registerPyTypeObject((PyTypeObject*)THPTensorClass, type_name, is_cuda, false);
+  std::string type_name = TH_CONCAT_STRING_2(Real,);
+  torch::registerPyTypeObject((PyTypeObject*)THPTensorClass, type_name.c_str(), is_cuda, false);
   at::Type* type = &torch::getATenType((PyTypeObject*)THPTensorClass);
-  THPDtype *dtype = (THPDtype*)THPDtype_NewWithType(type);
-  std::string dtype_name = type_name;
-  std::transform(dtype_name.begin(), dtype_name.end(), dtype_name.begin(), ::tolower);
-  PyModule_AddObject(module, dtype_name.c_str(), (PyObject*)dtype);
+  //THPDtype *dtype = (THPDtype*)THPDtype_NewWithType(type);
+  std::transform(type_name.begin(), type_name.end(), type_name.begin(), ::tolower);
+  //PyModule_AddObject(module, dtype_name.c_str(), (PyObject*)dtype);
+  PyObject *module_dict = PyModule_GetDict(module);
+  THPObjectPtr dtype_handle(PyMapping_GetItemString(module_dict, type_name.c_str()));
+  THPObjectPtr dtype_handle2(PyObject_GetAttrString(module, type_name.c_str()));
+  THPDtype *dtype = (THPDtype*)dtype_handle.get();
+  THPDtype *dtype2 = (THPDtype*)dtype_handle2.get();
+  std::cerr << "about to Set cdata for " << type_name << " " << type << " " << dtype << " " << dtype2 << " " << is_cuda << " " << PyModule_GetName(module) << std::endl;
+  dtype->cdata = type;
+  std::cerr << "Set cdata for " << type_name << " " << type << " " << dtype << " " << is_cuda << std::endl;
   return true;
 }
 

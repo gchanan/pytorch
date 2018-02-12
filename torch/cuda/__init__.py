@@ -19,6 +19,7 @@ from torch._six import raise_from
 from subprocess import Popen, PIPE
 from multiprocessing.util import register_after_fork as _register_after_fork
 
+print("!!!IN CUDA INIT")
 _initialized = False
 _queued_calls = []  # don't invoke these until initialization occurs
 _in_bad_fork = False  # this global is also used in torch.manual_seed
@@ -144,6 +145,7 @@ def init():
 
 
 def _lazy_init():
+    print("in _lazy_init")
     global _initialized, _cudart, _original_pid, _queued_calls
     if _initialized:
         return
@@ -478,6 +480,7 @@ if not hasattr(torch._C, 'CudaDoubleStorageBase'):
 
         torch._C.__dict__[storage_name] = _dummy_type(storage_name)
         torch._C.__dict__[tensor_name] = _dummy_type(tensor_name)
+        print("torch._C.__dict", tensor_name)
 
     torch._C.__dict__['_CudaStreamBase'] = _dummy_type('CudaStreamBase')
 

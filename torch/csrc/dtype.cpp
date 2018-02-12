@@ -1,4 +1,5 @@
 #include <Python.h>
+#include <structmember.h>
 #include "dtype.h"
 
 #include <string>
@@ -7,6 +8,15 @@
 #include "THP.h"
 
 PyObject* THPDtypeClass = NULL;
+
+PyObject * THPDtype_New()
+{
+  auto type = (PyTypeObject*)THPDtypeClass;
+  auto self = THPObjectPtr{type->tp_alloc(type, 0)};
+  if (!self) throw python_error();
+  auto self_ = reinterpret_cast<THPDtype*>(self.get());
+  return self.release();
+}
 
 PyObject * THPDtype_NewWithType(at::Type* cdata)
 {
@@ -47,8 +57,8 @@ static PyMethodDef  THPDtype_methods[] = {
   {NULL}
 };
 
-static struct PyMemberDef  THPDtype_members[] = {
-  {(char*)"_cdata", T_ULONGLONG, offsetof(THPDtype, cdata), READONLY, NULL},
+static struct PyGetSetDef THPDtype_properties[] = {
+  //{"_cdata",       (getter), offsetof(THPDtype, cdata), READONLY, NULL},
   {"is_cuda",      (getter)THPDtype_is_cuda, NULL, NULL, NULL},
   {"is_sparse",    (getter)THPDtype_is_sparse, NULL, NULL, NULL},
   {NULL}
@@ -83,8 +93,8 @@ PyTypeObject THPDtypeType = {
   0,                                     /* tp_iter */
   0,                                     /* tp_iternext */
   THPDtype_methods,                      /* tp_methods */
-  THPDtype_members,                      /* tp_members */
-  0,                                     /* tp_getset */
+  0,                                     /* tp_members */
+  THPDtype_properties,                   /* tp_getset */
   0,                                     /* tp_base */
   0,                                     /* tp_dict */
   0,                                     /* tp_descr_get */

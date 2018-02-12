@@ -8,13 +8,16 @@
 struct THPDtype {
   PyObject_HEAD
   at::Type *cdata;
+  bool isCuda;
+  bool isSparse;
 };
 
 extern PyObject *THPDtypeClass;
 
 #define THPDtype_Check(obj) ((PyObject*)Py_TYPE(obj) == THPDtypeClass)
 
-PyObject * THPDtype_NewWithType(at::Type* type);
+PyObject * THPDtype_New();
+PyObject * THPDtype_NewWithType(at::Type* cdata);
 
 #ifdef _THP_CORE
 bool THPDtype_init(PyObject *module);

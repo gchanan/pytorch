@@ -302,6 +302,7 @@ def manager_path():
 _C._initExtension(manager_path())
 del manager_path
 
+
 set_default_tensor_type('torch.FloatTensor')
 
 ################################################################################
@@ -349,6 +350,8 @@ import torch.testing
 from torch.autograd import no_grad, enable_grad
 
 _C._init_names(list(torch._tensor_classes) + list(torch._storage_classes))
+print("torch.cuda", torch.cuda)
+_C._initialize_dtypes()
 
 # attach docstrings to torch and tensor functions
 from . import _torch_docs, _tensor_docs, _storage_docs
