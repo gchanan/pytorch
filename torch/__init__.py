@@ -305,8 +305,9 @@ _C._initialize_tensor_types()
 set_default_tensor_type('torch.FloatTensor')
 
 
-for name in dir(torch._C._VariableFunctions):
-    globals()[name] = getattr(torch._C._VariableFunctions, name)
+from torch._C import _VariableFunctions
+for name in dir(_VariableFunctions):
+    globals()[name] = getattr(_VariableFunctions, name)
 
 
 
