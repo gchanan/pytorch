@@ -1079,6 +1079,18 @@ class TestTorch(TestCase):
         output = torch.ones_like(x)
         self.assertEqual(output, expected)
 
+    def test_dtypes(self):
+        cpu_dtypes = [torch.dbyte, torch.ddouble, torch.dchar, torch.dfloat, torch.dint, torch.dshort]
+        cuda_dtypes = [torch.cuda.dbyte, torch.cuda.ddouble, torch.cuda.dchar, torch.cuda.dfloat, torch.cuda.dint, torch.cuda.dshort]
+        dtypes = cpu_dtypes
+        if torch.cuda.is_available():
+            dtypes += cuda_dtypes
+
+        for dtype in dtypes:
+            out = torch._C._VariableFunctions.eye(3, 3, dtype=dtype)
+            #self.assertTrue(dtype.name in out.type().lower())
+            self.assertEqual(out.dtype, dtype)
+
     def test_variable_factory(self):
         expected = torch.autograd.Variable(torch.Tensor([1, 1]))
         # test data

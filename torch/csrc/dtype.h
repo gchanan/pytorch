@@ -19,6 +19,8 @@ extern PyObject *THPDtypeClass;
 PyObject * THPDtype_New();
 PyObject * THPDtype_NewWithType(at::Type* cdata);
 
+at::Type * THPDtype_toType(THPDtype *dtype);
+
 #ifdef _THP_CORE
 bool THPDtype_init(PyObject *module);
 #endif

@@ -5,6 +5,7 @@
 #include <string>
 #include "torch/csrc/utils/python_strings.h"
 #include "torch/csrc/utils/python_tuples.h"
+#include "torch/csrc/utils/tensor_types.h"
 #include "THP.h"
 
 PyObject* THPDtypeClass = NULL;
@@ -52,6 +53,14 @@ PyObject *THPDtype_is_sparse(THPDtype *self)
   }
 }
 
+PyObject *THPDtype_name(THPDtype *self)
+{
+  std::string backend_name = torch::utils::backend_to_string(*self->cdata);
+  std::string scalar_name = toString(self->cdata->scalarType());
+  std::transform(scalar_name.begin(), scalar_name.end(), scalar_name.begin(), ::tolower);
+  return THPUtils_packString(backend_name + '.' + scalar_name);
+}
+
 static PyMethodDef  THPDtype_methods[] = {
   {"element_size",    (PyCFunction)THPDtype_element_size,       METH_NOARGS,  NULL},
   {NULL}
@@ -61,6 +70,7 @@ static struct PyGetSetDef THPDtype_properties[] = {
   //{"_cdata",       (getter), offsetof(THPDtype, cdata), READONLY, NULL},
   {"is_cuda",      (getter)THPDtype_is_cuda, NULL, NULL, NULL},
   {"is_sparse",    (getter)THPDtype_is_sparse, NULL, NULL, NULL},
+  {"name",    (getter)THPDtype_name, NULL, NULL, NULL},
   {NULL}
 };
 

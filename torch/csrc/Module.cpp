@@ -525,12 +525,13 @@ PyObject * THPModule_initializeDtypes(PyObject *module) {
   //THPObjectPtr cuda_sparse_module(PyObject_GetAttrString(cuda_module.get(), "sparse"));
   for (auto type : torch::autograd::VariableType::allTypes()) {
     THPDtype *dtype = (THPDtype*)THPDtype_NewWithType(type);
+    torch::registerDtypeObject((PyObject*)dtype, type);
     std::string dtype_name("d");
     dtype_name += toString(type->scalarType());
     std::transform(dtype_name.begin(), dtype_name.end(), dtype_name.begin(), ::tolower);
     switch (type->backend()) {
       case at::kCPU: {
-        PyModule_AddObject(module, dtype_name.c_str(), (PyObject*)dtype);
+        PyModule_AddObject(torch_module, dtype_name.c_str(), (PyObject*)dtype);
         break;
       }
       case at::kCUDA: {
