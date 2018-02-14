@@ -460,6 +460,7 @@ main_sources = [
     "torch/csrc/utils/tensor_list.cpp",
     "torch/csrc/utils/tensor_new.cpp",
     "torch/csrc/utils/tensor_numpy.cpp",
+    "torch/csrc/utils/tensor_dtypes.cpp",
     "torch/csrc/utils/tensor_types.cpp",
     "torch/csrc/utils/tuple_parser.cpp",
     "torch/csrc/utils/tensor_apply.cpp",
