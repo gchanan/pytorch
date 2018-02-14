@@ -66,6 +66,17 @@ if (r.isNone(${out_idx})) {
 }
 """)
 
+PY_VARIABLE_OUT_CHECK_DTYPE = CodeTemplate("""\
+if (r.isNone(${out_idx})) {
+  ${call_dispatch}
+} else {
+  if (!r.isNone(${dtype_idx})) {
+    check_out_dtype_matches(r.tensor(${out_idx}), r.dtype(${dtype_idx}));
+  }
+  ${call_dispatch_out}
+}
+""")
+
 PY_VARIABLE_CALL_DISPATCH = CodeTemplate("""\
 ${dispatch_name}(${actuals})""")
 
@@ -310,6 +321,8 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                     dtype_formal_name = "type"
                     # rename formal argument from dtype to type, since we convert it to an at::Type
                     formal_args.append(dtype_formal.replace(" dtype", " " + dtype_formal_name))
+                elif len(outputs) > 1:
+                    raise RuntimeError("Not supported: dtype parameter with multiple outputs")
             elif arg['name'] == 'requires_grad' and arg['type'] == 'bool':
                 requires_grad_idx = arg_idx if out_idx is None else out_idx + 2
                 requires_grad = parse_arg(arg, requires_grad_idx)[0]
@@ -354,7 +367,12 @@ def create_python_bindings(python_functions, has_self, is_module=False):
             env = {}
             env['call_dispatch_out'] = emit_single_dispatch(dictionary['out'], out_idx, base_env)
             env['call_dispatch'] = emit_single_dispatch(dictionary['base'], out_idx, base_env)
-            body = PY_VARIABLE_OUT.substitute(env, out_idx=out_idx).split('\n')
+
+            has_dtype = 'dtype' in [d['name'] for d in dictionary['out'].get('python_binding_arguments', [])]
+            if has_dtype:
+                body = PY_VARIABLE_OUT_CHECK_DTYPE.substitute(env, out_idx=out_idx, dtype_idx=out_idx + 1).split('\n')
+            else:
+                body = PY_VARIABLE_OUT.substitute(env, out_idx=out_idx).split('\n')
         else:
             body = emit_single_dispatch(dictionary['base'], None, base_env)
 
