@@ -300,14 +300,16 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                                python_binding_arg_count)
         for arg in declaration.get('python_binding_arguments', []):
             if arg['name'] == 'dtype' and arg['type'] == 'dtype':
-                # we have to use out_idx if there is an out variant because the base variant
-                # won't have the full arg_idx count
-                dtype_idx = arg_idx if out_idx is None else out_idx + 1
-                dtype_actual, dtype_formal = parse_arg(arg, dtype_idx)
-                actuals.append(dtype_actual)
-                dtype_formal_name = "type"
-                # rename formal argument from dtype to type, since we convert it to an at::Type
-                formal_args.append(dtype_formal.replace(" dtype", " " + dtype_formal_name))
+                # out(s) determines the dtype if it is present, so don't pass the dtype to the dispatch.
+                if len(outputs) == 0:
+                    # we have to use out_idx if there is an out variant because the base variant
+                    # won't have the full arg_idx count
+                    dtype_idx = arg_idx if out_idx is None else out_idx + 1
+                    dtype_actual, dtype_formal = parse_arg(arg, dtype_idx)
+                    actuals.append(dtype_actual)
+                    dtype_formal_name = "type"
+                    # rename formal argument from dtype to type, since we convert it to an at::Type
+                    formal_args.append(dtype_formal.replace(" dtype", " " + dtype_formal_name))
             elif arg['name'] == 'requires_grad' and arg['type'] == 'bool':
                 requires_grad_idx = arg_idx if out_idx is None else out_idx + 2
                 requires_grad = parse_arg(arg, requires_grad_idx)[0]
