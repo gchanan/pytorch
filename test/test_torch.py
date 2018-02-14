@@ -1084,10 +1084,7 @@ class TestTorch(TestCase):
                       torch.float16, torch.float32, torch.float64]
         cuda_dtypes = [torch.cuda.uint8, torch.cuda.int8, torch.cuda.int16, torch.cuda.int32, torch.cuda.int64,
                        torch.cuda.float16, torch.cuda.float32, torch.cuda.float64]
-
-        dtypes = cpu_dtypes
-        if torch.cuda.is_available():
-            dtypes += cuda_dtypes
+        dtypes = cpu_dtypes + (cuda_dtypes if torch.cuda.is_available() else [])
 
         for dtype in dtypes:
             # no ops on float16 currently, cuda.float16 doesn't work on windows
