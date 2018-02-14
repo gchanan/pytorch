@@ -512,8 +512,8 @@ PyObject *THPModule_hasDistributed(PyObject *_unused)
 #endif
 }
 
-PyObject * THPModule_initializeDtypes(PyObject *module) {
-  torch::utils::initializeDtypes(module);
+PyObject * THPModule_initializeDtypes(PyObject *_unused) {
+  torch::utils::initializeDtypes();
   Py_RETURN_NONE;
 }
 
