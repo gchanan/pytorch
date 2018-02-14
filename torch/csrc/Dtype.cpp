@@ -1,29 +1,30 @@
 #include "Dtype.h"
 
+#include <cstring>
 #include <structmember.h>
-#include <string>
 #include "torch/csrc/utils/python_strings.h"
+#include "torch/csrc/utils/tensor_dtypes.h"
 #include "torch/csrc/utils/tensor_types.h"
 #include "THP.h"
 
 PyObject* THPDtypeClass = nullptr;
 
-PyObject * THPDtype_NewWithType(at::Type* cdata)
+PyObject * THPDtype_New(at::Type* cdata, const std::string& name)
 {
   auto type = (PyTypeObject*)THPDtypeClass;
   auto self = THPObjectPtr{type->tp_alloc(type, 0)};
   if (!self) throw python_error();
   auto self_ = reinterpret_cast<THPDtype*>(self.get());
   self_->cdata = cdata;
+  char *name_cstr = new char[name.length() + 1];
+  std::strcpy (name_cstr, name.c_str());
+  self_->name = name_cstr;
   return self.release();
 }
 
 PyObject *THPDtype_repr(THPDtype *self)
 {
-  std::string backend_name = torch::utils::backend_to_string(*self->cdata);
-  std::string scalar_name = toString(self->cdata->scalarType());
-  std::transform(scalar_name.begin(), scalar_name.end(), scalar_name.begin(), ::tolower);
-  return THPUtils_packString(backend_name + '.' + scalar_name);
+  return THPUtils_packString(self->name);
 }
 
 static PyObject * THPDtype_element_size(THPDtype *self) {

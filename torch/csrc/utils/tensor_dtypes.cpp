@@ -1,8 +1,5 @@
 #include <Python.h>
 #include "tensor_dtypes.h"
-
-#include <tuple>
-#include <ATen/ATen.h>
 #include "torch/csrc/Dtype.h"
 #include "torch/csrc/DynamicTypes.h"
 #include "torch/csrc/Exceptions.h"
@@ -10,7 +7,7 @@
 
 namespace torch { namespace utils {
 
-static std::tuple<std::string, std::string> getDtypeNames(at::Type &type) {
+static std::tuple<std::string, std::string> getDtypeNames(const at::Type &type) {
   switch(type.scalarType()) {
     case at::ScalarType::Byte:
       // no "byte" because byte is signed in numpy and we overload
@@ -43,8 +40,6 @@ void initializeDtypes() {
   auto sparse_module = THPObjectPtr(PyImport_ImportModule("torch.sparse"));
   auto cuda_sparse_module = THPObjectPtr(PyImport_ImportModule("torch.cuda.sparse"));
   for (auto type : torch::autograd::VariableType::allTypes()) {
-    THPDtype *dtype = (THPDtype*)THPDtype_NewWithType(type);
-    torch::registerDtypeObject(dtype, *type);
     std::string primary_name, legacy_name;
     std::tie(primary_name, legacy_name) = getDtypeNames(*type);
     PyObject *module = nullptr;
@@ -67,6 +62,9 @@ void initializeDtypes() {
       }
       default: throw std::runtime_error("Unimplemented backend");
     }
+    std::string name = std::string(PyModule_GetName(module)) + '.' + primary_name;
+    THPDtype *dtype = (THPDtype*)THPDtype_New(type, name);
+    torch::registerDtypeObject(dtype, *type);
     PyModule_AddObject(module, primary_name.c_str(), (PyObject*)dtype);
     if (legacy_name != "") {
       PyModule_AddObject(module, legacy_name.c_str(), (PyObject*)dtype);
