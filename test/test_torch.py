@@ -1092,7 +1092,7 @@ class TestTorch(TestCase):
                 out = torch._C._VariableFunctions.eye(3, 3, dtype=dtype)
                 self.assertEqual(out.dtype, dtype)
 
-    def test_out_dtype_match(self):
+    def test_dtype_out_match(self):
         d = torch.autograd.Variable(torch.DoubleTensor(2, 3))
         self.assertRaises(RuntimeError, lambda: torch._C._VariableFunctions.zeros((2, 3), out=d, dtype=torch.float32))
 
