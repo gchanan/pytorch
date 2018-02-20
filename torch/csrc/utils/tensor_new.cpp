@@ -46,9 +46,6 @@ static Tensor new_with_tensor(const Type& type, Tensor other) {
 }
 
 static Tensor new_with_tensor_copy(const Type& type, Tensor other) {
-  if (other.type() != type) {
-    throw TypeError("expected %s (got %s)", type.toString(), other.type().toString());
-  }
   maybe_initialize_cuda(type);
   return type.copy(other);
 }

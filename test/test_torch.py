@@ -1121,22 +1121,37 @@ class TestTorch(TestCase):
         # test data
         res1 = expected.new_tensor([1, 1])
         self.assertEqual(res1, expected)
+        res1 = expected.new_tensor([1, 1], dtype=torch.int)
+        self.assertEqual(res1, expected)
+        self.assertIs(res1.dtype, torch.int)
 
         # test copy
         res2 = expected.new_tensor(expected)
         self.assertEqual(res2, expected)
         res2[1] = 2
         self.assertEqual(expected, torch.ones_like(expected))
+        res2 = expected.new_tensor(expected, dtype=torch.int)
+        self.assertEqual(res2, expected)
+        self.assertIs(res2.dtype, torch.int)
 
         if torch.cuda.device_count() >= 2:
             expected = expected.cuda(1)
             res1 = expected.new_tensor([1, 1])
             self.assertEqual(res1.get_device(), expected.get_device())
+            res1 = expected.new_tensor([1, 1], dtype=torch.cuda.int)
+            self.assertIs(res1.dtype, torch.cuda.int)
+            self.assertEqual(res1.get_device(), expected.get_device())
 
             res2 = expected.new_tensor(expected)
             self.assertEqual(res2.get_device(), expected.get_device())
+            res2 = expected.new_tensor(expected, dtype=torch.cuda.int)
+            self.assertIs(res1.dtype, torch.cuda.int)
+            self.assertEqual(res2.get_device(), expected.get_device())
 
             res1 = expected.new_tensor(1)
+            self.assertEqual(res1.get_device(), expected.get_device())
+            res1 = expected.new_tensor(1, dtype=torch.cuda.int)
+            self.assertIs(res1.dtype, torch.cuda.int)
             self.assertEqual(res1.get_device(), expected.get_device())
 
     def test_diag(self):
