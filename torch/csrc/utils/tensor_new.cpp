@@ -163,12 +163,12 @@ static Tensor legacy_sparse_tensor_ctor(const Type& type, PyObject* args, PyObje
 
 Tensor legacy_tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs) {
   static PythonArgParser parser({
-    "new(*, int64_t? device=-1)",
-    "new(IntList size, *, int64_t? device=-1)",
+    "new(*, Type dtype=None, int64_t? device=-1)",
+    "new(IntList size, *, Type dtype=None, int64_t? device=-1)",
     "new(Storage storage)",
     "new(*, int64_t cdata)|hidden",
-    "new(Tensor other)",
-    "new(PyObject* data, *, int64_t? device=-1)",
+    "new(Tensor other)",  // this doesn't have a dtype/device because it creates an alias.
+    "new(PyObject* data, *, Type dtype=None, int64_t? device=-1)",
   });
 
   if (type.is_sparse()) {
@@ -178,16 +178,16 @@ Tensor legacy_tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs) {
   PyObject* parsed_args[2];
   auto r = parser.parse(args, kwargs, parsed_args);
   if (r.idx == 0) {
-    AutoGPU auto_gpu(r.toInt64(0));
-    return type.tensor();
+    AutoGPU auto_gpu(r.toInt64(1));
+    return r.typeWithDefault(0, type).tensor();
   } else if (r.idx == 1) {
     PyObject* arg = parsed_args[0];
     if (!THPSize_Check(arg) && PyTuple_GET_SIZE(args) >= 1 && arg == PyTuple_GET_ITEM(args, 0)) {
       // new(sequence) binds to this signature but should be treated differently
       // unless the sequences is a torch.Size
-      return new_from_sequence(type, r.toInt64(1), r.pyobject(0));
+      return new_from_sequence(r.typeWithDefault(1, type), r.toInt64(2), r.pyobject(0));
     }
-    return new_with_sizes(type, r.toInt64(1), r.intlist(0));
+    return new_with_sizes(r.typeWithDefault(1, type), r.toInt64(2), r.intlist(0));
   } else if (r.idx == 2) {
     return new_with_storage(type, *r.storage(0));
   } else if (r.idx == 3) {
@@ -196,7 +196,7 @@ Tensor legacy_tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs) {
   } else if (r.idx == 4) {
     return new_with_tensor(type, r.tensor(0));
   } else if (r.idx == 5) {
-    return new_from_sequence(type, r.toInt64(1), r.pyobject(0));
+    return new_from_sequence(r.typeWithDefault(1, type), r.toInt64(2), r.pyobject(0));
   }
   throw std::runtime_error("new(): invalid arguments");
 }
