@@ -154,8 +154,8 @@ static Tensor legacy_sparse_tensor_ctor(const Type& type, PyObject* args, PyObje
     "new(*, Type dtype=None, int64_t? device=-1)",
     "new(IntList size, *, Type dtype=None, int64_t? device=-1)",
     "new(*, int64_t cdata)|hidden",
-    "new(Tensor indices, Tensor values, *, Type dtype=None, int64_t? device=-1)",
-    "new(Tensor indices, Tensor values, IntList size, *, Type dtype=None, int64_t? device=-1)",
+    "new(Tensor indices, Tensor values, *, int64_t? device=-1)",
+    "new(Tensor indices, Tensor values, IntList size, *, int64_t? device=-1)",
   });
   PyObject* parsed_args[5];
   auto r = parser.parse(args, kwargs, parsed_args);
@@ -179,25 +179,9 @@ static Tensor legacy_sparse_tensor_ctor(const Type& type, PyObject* args, PyObje
     auto cdata = reinterpret_cast<void*>(r.toInt64(0));
     return type.unsafeTensorFromTH(cdata, true);
   } else if (r.idx == 3) {
-    auto ret = type.sparse_coo_tensor(r.tensor(0), r.tensor(1));
-    const auto& actual_type = r.typeWithDefault(2, type);
-    if (actual_type == type) {
-      return ret;
-    } else {
-      check_is_sparse(actual_type);
-      maybe_initialize_cuda(actual_type);
-      return actual_type.copy(ret);
-    }
+    return type.sparse_coo_tensor(r.tensor(0), r.tensor(1));
   } else if (r.idx == 4) {
-    auto ret = type.sparse_coo_tensor(r.tensor(0), r.tensor(1), r.intlist(2));
-    const auto& actual_type = r.typeWithDefault(3, type);
-    if (actual_type == type) {
-      return ret;
-    } else {
-      check_is_sparse(actual_type);
-      maybe_initialize_cuda(actual_type);
-      return actual_type.copy(ret);
-    }
+    return type.sparse_coo_tensor(r.tensor(0), r.tensor(1), r.intlist(2));
   }
   throw std::runtime_error("new(): invalid arguments");
 }

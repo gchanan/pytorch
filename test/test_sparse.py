@@ -847,27 +847,19 @@ class TestSparse(TestCase):
         self._test_new_device((30, 20, 10), 1)
 
     def test_new(self):
-        def do_test(x, indices, values, test_dtypes):
-            float32 = torch.cuda.sparse.float32 if x.is_cuda else torch.sparse.float32
-            float64 = torch.cuda.sparse.float64 if x.is_cuda else torch.sparse.float64
+        def do_test(x, indices, values):
             if not x.is_cuda:
                 # CUDA sparse tensors currently requires the size to be
                 # specified if nDimV > 0
                 self.assertEqual(x.new(indices, values), x)
-                if test_dtypes:
-                    self.assertEqual(float32, x.new(indices, values, dtype=float32).dtype)
-                    self.assertEqual(float64, x.new(indices, values, dtype=float64).dtype)
             self.assertEqual(x.new(indices, values, x.size()), x)
-            if test_dtypes:
-                self.assertEqual(float32, x.new(indices, values, x.size(), dtype=float32).dtype)
-                self.assertEqual(float64, x.new(indices, values, x.size(), dtype=float64).dtype)
 
         x, i, v = self._gen_sparse(3, 10, 100)
-        do_test(x, i, v, False)
+        do_test(x, i, v)
 
         # TODO: simplify once Variable and Tensor are merged
         from torch.autograd import Variable
-        do_test(Variable(x), Variable(i), Variable(v), True)
+        do_test(Variable(x), Variable(i), Variable(v))
 
     @cpu_only  # not really, but we only really want to run this once
     def test_dtypes(self):
