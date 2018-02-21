@@ -27,6 +27,7 @@ static void maybe_initialize_cuda(const at::Type &type) {
 }
 
 static Tensor new_with_sizes(const Type& type, int device, IntList sizes) {
+  maybe_initialize_cuda(type);
   AutoNoGIL no_gil;
   AutoGPU auto_gpu(device);
   return type.tensor(sizes);
@@ -179,7 +180,9 @@ Tensor legacy_tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs) {
   auto r = parser.parse(args, kwargs, parsed_args);
   if (r.idx == 0) {
     AutoGPU auto_gpu(r.toInt64(1));
-    return r.typeWithDefault(0, type).tensor();
+    auto& actual_type = r.typeWithDefault(0, type);
+    maybe_initialize_cuda(actual_type);
+    return actual_type.tensor();
   } else if (r.idx == 1) {
     PyObject* arg = parsed_args[0];
     if (!THPSize_Check(arg) && PyTuple_GET_SIZE(args) >= 1 && arg == PyTuple_GET_ITEM(args, 0)) {
