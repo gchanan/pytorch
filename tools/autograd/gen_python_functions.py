@@ -300,7 +300,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 actuals.append('results[{}]'.format(i))
 
         # check python_binding_arguments
-        dtype_formal_name = None
+        has_dtype = False
         requires_grad = None
         python_binding_arguments = declaration.get('python_binding_arguments', [])
         if 'dtype' in (a['name'] for a in python_binding_arguments):
@@ -315,11 +315,8 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 if len(outputs) == 0:
                     # we have to use out_idx if there is an out variant because the base variant
                     # won't have the full arg_idx count
-                    dtype_actual, dtype_formal = parse_arg(arg, dtype_idx)
-                    actuals.append(dtype_actual)
-                    dtype_formal_name = "type"
-                    # rename formal argument from dtype to type, since we convert it to an at::Type
-                    formal_args.append(dtype_formal.replace(" dtype", " " + dtype_formal_name))
+                    has_dtype = True
+                    append_actuals_formals(*parse_arg(arg, dtype_idx))
                 elif len(outputs) > 1:
                     raise RuntimeError("Not supported: dtype parameter with multiple outputs")
             elif arg['name'] == 'requires_grad' and arg['simple_type'] == 'bool':
@@ -340,13 +337,13 @@ def create_python_bindings(python_functions, has_self, is_module=False):
             env['dispatch_args'] = [arg for arg in env['dispatch_args'] if arg != 'self']
             env['dispatch_call'] = 'self.{}'.format(declaration['name'])
         elif 'namespace' in declaration['method_of']:
-            if dtype_formal_name:
+            if has_dtype:
                 raise RuntimeError(("dtype with namespace dispatch currently not supported, "
                                    "consider writing as a native function"))
             env['dispatch_call'] = 'at::{}'.format(declaration['name'])
-        elif dtype_formal_name:
-            env['initialize_cuda'] = 'maybe_initialize_cuda({});'.format(dtype_formal_name)
-            env['dispatch_call'] = '{}.{}'.format(dtype_formal_name, declaration['name'])
+        elif has_dtype:
+            env['initialize_cuda'] = 'maybe_initialize_cuda(dtype);'
+            env['dispatch_call'] = 'dtype.{}'.format(declaration['name'])
         else:
             env['dispatch_call'] = 'default_type().{}'.format(declaration['name'])
         env['AutoNoGIL'] = 'AutoNoGIL no_gil;'
