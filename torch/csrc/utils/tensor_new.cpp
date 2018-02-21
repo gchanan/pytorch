@@ -132,32 +132,48 @@ static Tensor new_from_sequence(const Type & type, int device, PyObject* data) {
 
 static Tensor legacy_sparse_tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs) {
   static PythonArgParser parser({
-    "new(*, int64_t? device=-1)",
-    "new(IntList size, *, int64_t? device=-1)",
+    "new(*, Type dtype=None, int64_t? device=-1)",
+    "new(IntList size, *, Type dtype=None, int64_t? device=-1)",
     "new(*, int64_t cdata)|hidden",
-    "new(Tensor indices, Tensor values, *, int64_t? device=-1)",
-    "new(Tensor indices, Tensor values, IntList size, *, int64_t? device=-1)",
+    "new(Tensor indices, Tensor values, *, Type dtype=None, int64_t? device=-1)",
+    "new(Tensor indices, Tensor values, IntList size, *, Type dtype=None, int64_t? device=-1)",
   });
   PyObject* parsed_args[4];
   auto r = parser.parse(args, kwargs, parsed_args);
   if (r.idx == 0) {
-    AutoGPU auto_gpu(r.toInt64(0));
-    return type.tensor();
+    auto& actual_type = r.typeWithDefault(0, type);
+    maybe_initialize_cuda(actual_type);
+    AutoGPU auto_gpu(r.toInt64(1));
+    return actual_type.tensor();
   } else if (r.idx == 1) {
     PyObject* arg = parsed_args[0];
     if (!THPSize_Check(arg) && PyTuple_GET_SIZE(args) >= 1 && arg == PyTuple_GET_ITEM(args, 0)) {
       // new(sequence) binds to this signature but should be treated differently
       // unless the sequences is a torch.Size
-      return new_from_sequence(type, r.toInt64(1), r.pyobject(0));
+      return new_from_sequence(r.typeWithDefault(1, type), r.toInt64(2), r.pyobject(0));
     }
-    return new_with_sizes(type, r.toInt64(1), r.intlist(0));
+    return new_with_sizes(r.typeWithDefault(1, type), r.toInt64(2), r.intlist(0));
   } else if (r.idx == 2) {
     auto cdata = reinterpret_cast<void*>(r.toInt64(0));
     return type.unsafeTensorFromTH(cdata, true);
   } else if (r.idx == 3) {
-    return type.sparse_coo_tensor(r.tensor(0), r.tensor(1));
+    auto ret = type.sparse_coo_tensor(r.tensor(0), r.tensor(1));
+    auto& actual_type = r.typeWithDefault(2, type);
+    if (actual_type == type) {
+      return ret;
+    } else {
+      maybe_initialize_cuda(actual_type);
+      return actual_type.copy(ret);
+    }
   } else if (r.idx == 4) {
-    return type.sparse_coo_tensor(r.tensor(0), r.tensor(1), r.intlist(2));
+    auto ret = type.sparse_coo_tensor(r.tensor(0), r.tensor(1), r.intlist(2));
+    auto& actual_type = r.typeWithDefault(3, type);
+    if (actual_type == type) {
+      return ret;
+    } else {
+      maybe_initialize_cuda(actual_type);
+      return actual_type.copy(ret);
+    }
   }
   throw std::runtime_error("new(): invalid arguments");
 }
@@ -179,9 +195,9 @@ Tensor legacy_tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs) {
   PyObject* parsed_args[2];
   auto r = parser.parse(args, kwargs, parsed_args);
   if (r.idx == 0) {
-    AutoGPU auto_gpu(r.toInt64(1));
     auto& actual_type = r.typeWithDefault(0, type);
     maybe_initialize_cuda(actual_type);
+    AutoGPU auto_gpu(r.toInt64(1));
     return actual_type.tensor();
   } else if (r.idx == 1) {
     PyObject* arg = parsed_args[0];
