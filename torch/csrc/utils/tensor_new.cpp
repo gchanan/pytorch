@@ -3,6 +3,7 @@
 
 #include <ATen/ATen.h>
 
+#include "torch/csrc/DynamicTypes.h"
 #include "torch/csrc/Exceptions.h"
 #include "torch/csrc/cuda/lazy_init.h"
 #include "torch/csrc/utils/auto_gil.h"
@@ -133,7 +134,7 @@ static void check_is_dense(const Type& type) {
   if (type.is_sparse()) {
     std::ostringstream oss;
     oss << "new(..) on a dense tensor can only be called with a dense dtype, got: ";
-    oss << type.toString();
+    oss << torch::getDtype(type)->name;
     throw std::runtime_error(oss.str());
   }
 }
@@ -142,7 +143,7 @@ static void check_is_sparse(const Type& type) {
   if (!type.is_sparse()) {
     std::ostringstream oss;
     oss << "new(..) on a spase tensor can only be called with a sparse dtype, got: ";
-    oss << type.toString();
+    oss << torch::getDtype(type)->name;
     throw std::runtime_error(oss.str());
   }
 }
