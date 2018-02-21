@@ -156,7 +156,7 @@ static Tensor legacy_sparse_tensor_ctor(const Type& type, PyObject* args, PyObje
     "new(Tensor indices, Tensor values, *, Type dtype=None, int64_t? device=-1)",
     "new(Tensor indices, Tensor values, IntList size, *, Type dtype=None, int64_t? device=-1)",
   });
-  PyObject* parsed_args[4];
+  PyObject* parsed_args[5];
   auto r = parser.parse(args, kwargs, parsed_args);
   if (r.idx == 0) {
     auto& actual_type = r.typeWithDefault(0, type);
@@ -215,7 +215,7 @@ Tensor legacy_tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs) {
     return legacy_sparse_tensor_ctor(type, args, kwargs);
   }
 
-  PyObject* parsed_args[2];
+  PyObject* parsed_args[3];
   auto r = parser.parse(args, kwargs, parsed_args);
   if (r.idx == 0) {
     const auto& actual_type = r.typeWithDefault(0, type);
