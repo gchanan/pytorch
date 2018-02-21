@@ -160,14 +160,14 @@ static Tensor legacy_sparse_tensor_ctor(const Type& type, PyObject* args, PyObje
   PyObject* parsed_args[5];
   auto r = parser.parse(args, kwargs, parsed_args);
   if (r.idx == 0) {
-    auto& actual_type = r.typeWithDefault(0, type);
+    const auto& actual_type = r.typeWithDefault(0, type);
     check_is_sparse(actual_type);
     maybe_initialize_cuda(actual_type);
     AutoGPU auto_gpu(r.toInt64(1));
     return actual_type.tensor();
   } else if (r.idx == 1) {
     PyObject* arg = parsed_args[0];
-    auto& actual_type = r.typeWithDefault(1, type);
+    const auto& actual_type = r.typeWithDefault(1, type);
     check_is_sparse(actual_type);
     if (!THPSize_Check(arg) && PyTuple_GET_SIZE(args) >= 1 && arg == PyTuple_GET_ITEM(args, 0)) {
       // new(sequence) binds to this signature but should be treated differently
@@ -180,7 +180,7 @@ static Tensor legacy_sparse_tensor_ctor(const Type& type, PyObject* args, PyObje
     return type.unsafeTensorFromTH(cdata, true);
   } else if (r.idx == 3) {
     auto ret = type.sparse_coo_tensor(r.tensor(0), r.tensor(1));
-    auto& actual_type = r.typeWithDefault(2, type);
+    const auto& actual_type = r.typeWithDefault(2, type);
     if (actual_type == type) {
       return ret;
     } else {
@@ -190,7 +190,7 @@ static Tensor legacy_sparse_tensor_ctor(const Type& type, PyObject* args, PyObje
     }
   } else if (r.idx == 4) {
     auto ret = type.sparse_coo_tensor(r.tensor(0), r.tensor(1), r.intlist(2));
-    auto& actual_type = r.typeWithDefault(3, type);
+    const auto& actual_type = r.typeWithDefault(3, type);
     if (actual_type == type) {
       return ret;
     } else {
