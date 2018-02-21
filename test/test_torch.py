@@ -5042,7 +5042,7 @@ class TestTorch(TestCase):
             self.assertEqual(x.new([np.int32(3), np.float64(4)]).tolist(), [3, 4])
             self.assertEqual(torch.uint8, x.new([np.int32(3), np.float64(4)], dtype=torch.uint8).dtype)
             self.assertEqual(x.new(np.array((3, 4))).tolist(), [3, 4])
-            self.assertEqual(torch.long, x.new(np.array((3, 4)), dtype=torch.long).dtype)
+            self.assertEqual(torch.int64, x.new(np.array((3, 4)), dtype=torch.int64).dtype)
         self.assertEqual(x.new([z[2], z[0] + 3]).tolist(), [3, 4])
         self.assertEqual(torch.uint8, x.new([z[2], z[0] + 3], dtype=torch.uint8).dtype)
         self.assertEqual(x.new(size=(3, 4)).shape, [3, 4])
