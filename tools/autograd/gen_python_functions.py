@@ -219,7 +219,9 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 return arg['name']
         return None
 
-    def auto_gpu(option):
+    def auto_gpu(option, has_device):
+        if has_device:
+            return 'AutoGPU auto_gpu(device);'
         tensor_arg = first_tensor_arg(option['arguments'])
         if tensor_arg is None:
             return ''
@@ -301,11 +303,13 @@ def create_python_bindings(python_functions, has_self, is_module=False):
 
         # check python_binding_arguments
         has_dtype = False
+        has_device = False
         requires_grad = None
         python_binding_arguments = declaration.get('python_binding_arguments', [])
         if 'dtype' in (a['name'] for a in python_binding_arguments):
             dtype_idx = arg_idx if out_idx is None else out_idx + 1
-            requires_grad_idx = dtype_idx + 1
+            device_idx = dtype_idx + 1
+            requires_grad_idx = device_idx + 1
         else:
             requires_grad_idx = arg_idx if out_idx is None else out_idx + 1
 
@@ -319,6 +323,10 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                     append_actuals_formals(*parse_arg(arg, dtype_idx))
                 elif len(outputs) > 1:
                     raise RuntimeError("Not supported: dtype parameter with multiple outputs")
+            elif arg['name'] == 'device' and arg['simple_type'] == 'int64_t':
+                if len(outputs) == 0:
+                    has_device = True
+                    append_actuals_formals(*parse_arg(arg, device_idx))
             elif arg['name'] == 'requires_grad' and arg['simple_type'] == 'bool':
                 requires_grad = parse_arg(arg, requires_grad_idx)[0]
             else:
@@ -347,7 +355,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
         else:
             env['dispatch_call'] = 'default_type().{}'.format(declaration['name'])
         env['AutoNoGIL'] = 'AutoNoGIL no_gil;'
-        env['AutoGPU'] = auto_gpu(declaration)
+        env['AutoGPU'] = auto_gpu(declaration, has_device)
 
         env = nested_dict(env, nested_dict(base_env, declaration))
         call_dispatch = PY_VARIABLE_CALL_DISPATCH.substitute(env)
@@ -406,7 +414,16 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 'type': 'const Type &',
                 'simple_type': 'Type',
             }
+            device_arg = {
+                'default': -1,
+                'default_init': -1,
+                'dynamic_type': 'int64_t',
+                'name': 'device',
+                'type': 'int64_t',
+                'simple_type': 'int64_t'
+            }
             python_binding_arguments.append(dtype_arg)
+            python_binding_arguments.append(device_arg)
         if (not has_tensor_input_arg or name.endswith('_like')) and has_tensor_return:
             requires_grad_arg = {
                 'default': False,
