@@ -86,12 +86,18 @@ set_requires_grad(${call_dispatch}, ${requires_grad})""")
 PY_VARIABLE_WRAP = CodeTemplate("""\
 return wrap(${call_dispatch});""")
 
+PY_VARIABLE_RETURN_DISPATCH = CodeTemplate("""\
+return ${dispatch_call}(${dispatch_args});""")
+
+PY_VARIABLE_RETURN_DISPATCH_COPY_DEVICE = CodeTemplate("""\
+return copy_to_device(${dispatch_call}(${dispatch_args}), device);""")
+
 PY_VARIABLE_DISPATCH = CodeTemplate("""\
 inline ${return_type} ${dispatch_name}(${formal_args}) {
   ${initialize_cuda}
   ${AutoNoGIL}
   ${AutoGPU}
-  return ${dispatch_call}(${dispatch_args});
+  ${return_dispatch}
 }
 """)
 
@@ -220,12 +226,13 @@ def create_python_bindings(python_functions, has_self, is_module=False):
         return None
 
     def auto_gpu(option, has_device):
-        if has_device:
-            return 'AutoGPU auto_gpu(device);'
         tensor_arg = first_tensor_arg(option['arguments'])
-        if tensor_arg is None:
+        if tensor_arg is not None:
+            return 'AutoGPU auto_gpu({});'.format(tensor_arg)
+        elif has_device:
+            return 'AutoGPU auto_gpu(device);'
+        else:
             return ''
-        return 'AutoGPU auto_gpu({});'.format(tensor_arg)
 
     def emit_single_dispatch(declaration, out_idx, base_env):
         env = {}
@@ -302,16 +309,18 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 actuals.append('results[{}]'.format(i))
 
         # check python_binding_arguments
-        has_dtype = False
-        has_device = False
+        has_dtype_bind = False
+        has_device_bind = False
         requires_grad = None
         python_binding_arguments = declaration.get('python_binding_arguments', [])
+        first_binding_arg_idx = arg_idx if out_idx is None else out_idx + 1
         if 'dtype' in (a['name'] for a in python_binding_arguments):
             dtype_idx = arg_idx if out_idx is None else out_idx + 1
             device_idx = dtype_idx + 1
             requires_grad_idx = device_idx + 1
         else:
-            requires_grad_idx = arg_idx if out_idx is None else out_idx + 1
+            device_idx = arg_idx if out_idx is None else out_idx + 1
+            requires_grad_idx = device_idx + 1
 
         for arg in python_binding_arguments:
             if arg['name'] == 'dtype' and arg['simple_type'] == 'Type':
@@ -319,13 +328,13 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 if len(outputs) == 0:
                     # we have to use out_idx if there is an out variant because the base variant
                     # won't have the full arg_idx count
-                    has_dtype = True
+                    has_dtype_bind = True
                     append_actuals_formals(*parse_arg(arg, dtype_idx))
                 elif len(outputs) > 1:
                     raise RuntimeError("Not supported: dtype parameter with multiple outputs")
             elif arg['name'] == 'device' and arg['simple_type'] == 'int64_t':
                 if len(outputs) == 0:
-                    has_device = True
+                    has_device_bind = True
                     append_actuals_formals(*parse_arg(arg, device_idx))
             elif arg['name'] == 'requires_grad' and arg['simple_type'] == 'bool':
                 requires_grad = parse_arg(arg, requires_grad_idx)[0]
@@ -336,7 +345,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
         env['unpack_args'] = []
         env['formal_args'] = formal_args
         env['actuals'] = actuals
-        env['initialize_cuda'] = []
+        env['initialize_cuda'] = 'maybe_initialize_cuda(dtype);' if (has_dtype_bind or any('dtype' in a['name'] for a in inputs)) else []
         if 'call_args' in declaration:
             env['dispatch_args'] = declaration['call_args']
         else:
@@ -345,17 +354,16 @@ def create_python_bindings(python_functions, has_self, is_module=False):
             env['dispatch_args'] = [arg for arg in env['dispatch_args'] if arg != 'self']
             env['dispatch_call'] = 'self.{}'.format(declaration['name'])
         elif 'namespace' in declaration['method_of']:
-            if has_dtype:
+            if has_dtype_bind:
                 raise RuntimeError(("dtype with namespace dispatch currently not supported, "
                                    "consider writing as a native function"))
             env['dispatch_call'] = 'at::{}'.format(declaration['name'])
-        elif has_dtype:
-            env['initialize_cuda'] = 'maybe_initialize_cuda(dtype);'
+        elif has_dtype_bind:
             env['dispatch_call'] = 'dtype.{}'.format(declaration['name'])
         else:
             env['dispatch_call'] = 'default_type().{}'.format(declaration['name'])
         env['AutoNoGIL'] = 'AutoNoGIL no_gil;'
-        env['AutoGPU'] = auto_gpu(declaration, has_device)
+        env['AutoGPU'] = auto_gpu(declaration, has_device_bind)
 
         env = nested_dict(env, nested_dict(base_env, declaration))
         call_dispatch = PY_VARIABLE_CALL_DISPATCH.substitute(env)
@@ -363,7 +371,11 @@ def create_python_bindings(python_functions, has_self, is_module=False):
             call_dispatch = PY_VARIABLE_SET_REQUIRES_GRAD.substitute(env, call_dispatch=call_dispatch,
                                                                      requires_grad=requires_grad)
         body.append(PY_VARIABLE_WRAP.substitute(env, call_dispatch=call_dispatch))
-        py_method_dispatch.append(PY_VARIABLE_DISPATCH.substitute(env))
+        if has_device_bind and first_tensor_arg(declaration['arguments']) is not None:
+            return_dispatch = PY_VARIABLE_RETURN_DISPATCH_COPY_DEVICE.substitute(env)
+        else:
+            return_dispatch = PY_VARIABLE_RETURN_DISPATCH.substitute(env)
+        py_method_dispatch.append(PY_VARIABLE_DISPATCH.substitute(env, return_dispatch=return_dispatch))
         return body
 
     def emit_dispatch(i, dictionary, base_env):
@@ -374,8 +386,8 @@ def create_python_bindings(python_functions, has_self, is_module=False):
             env['call_dispatch_out'] = emit_single_dispatch(dictionary['out'], out_idx, base_env)
             env['call_dispatch'] = emit_single_dispatch(dictionary['base'], out_idx, base_env)
 
-            has_dtype = 'dtype' in [d['name'] for d in dictionary['out'].get('python_binding_arguments', [])]
-            if has_dtype:
+            has_dtype_bind = 'dtype' in [d['name'] for d in dictionary['out'].get('python_binding_arguments', [])]
+            if has_dtype_bind:
                 body = PY_VARIABLE_OUT_CHECK_DTYPE.substitute(env, out_idx=out_idx, dtype_idx=out_idx + 1).split('\n')
             else:
                 body = PY_VARIABLE_OUT.substitute(env, out_idx=out_idx).split('\n')
@@ -414,17 +426,18 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 'type': 'const Type &',
                 'simple_type': 'Type',
             }
+            python_binding_arguments.append(dtype_arg)
+        if (not has_tensor_input_arg or name.endswith('_like')) and has_tensor_return:
             device_arg = {
                 'default': -1,
                 'default_init': -1,
                 'dynamic_type': 'int64_t',
+                'kwarg_only': True,
                 'name': 'device',
                 'type': 'int64_t',
                 'simple_type': 'int64_t'
             }
-            python_binding_arguments.append(dtype_arg)
             python_binding_arguments.append(device_arg)
-        if (not has_tensor_input_arg or name.endswith('_like')) and has_tensor_return:
             requires_grad_arg = {
                 'default': False,
                 'default_init': False,
