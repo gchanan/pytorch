@@ -39,11 +39,11 @@ else:
 #    declaration under Type.h  (right now, we call this template
 #    BROADCAST but it also handles default arguments)
 TYPE_METHOD_DECLARATION_BROADCAST = CodeTemplate("""\
-${return_type} ${api_name}(${formals_with_defaults}) const;
+${return_type} ${api_name}(${type_method_formals_with_defaults}) const;
 """)
 # 2. broadcasting functions are implemented in Type.cpp
 TYPE_METHOD_DEFINITION_BROADCAST = CodeTemplate("""\
-${return_type} Type::${api_name}(${formals}) const {
+${return_type} Type::${api_name}(${type_method_formals}) const {
     Tensor ${broadcast_returns};
     std::tie(${broadcast_returns}) = ${broadcast_function}(${broadcast_actuals}, "${api_name}");
     return ${method_prefix_derived}${api_name}(${broadcast_modified_actuals});
@@ -59,28 +59,28 @@ ${return_type} Type::${api_name}(${formals}) const {
 #    for 'native' declarations (so the native dispatch is hardcoded into
 #    the template here.)
 TYPE_METHOD_DECLARATION_ABSTRACT = CodeTemplate("""\
-virtual ${return_type} ${method_prefix_derived}${api_name}(${formals_with_defaults}) const;
+virtual ${return_type} ${method_prefix_derived}${api_name}(${type_method_formals_with_defaults}) const;
 """)
 TYPE_METHOD_DEFINITION_ABSTRACT = CodeTemplate("""\
-${return_type} Type::${method_prefix_derived}${api_name}(${formals}) const {
+${return_type} Type::${method_prefix_derived}${api_name}(${type_method_formals}) const {
     runtime_error("${method_prefix_derived}${api_name} is not implemented for type %s", toString());
 }
 """)
 TYPE_METHOD_DECLARATION_CONCRETE = CodeTemplate("""\
-virtual ${return_type} ${api_name}(${formals_with_defaults}) const;
+virtual ${return_type} ${api_name}(${type_method_formals_with_defaults}) const;
 """)
 TYPE_METHOD_DEFINITION_CONCRETE = CodeTemplate("""\
-${return_type} Type::${api_name}(${formals}) const {
+${return_type} Type::${api_name}(${type_method_formals}) const {
     ${type_definition_body}
 }
 """)
 # 4. add virtual override to TypeDerived.h
 TYPE_DERIVED_DECLARATION = CodeTemplate("""\
-virtual ${return_type} ${method_prefix_derived}${api_name}(${formals}) const override;
+virtual ${return_type} ${method_prefix_derived}${api_name}(${type_method_formals}) const override;
 """)
 # 5. add override definition to TypeDerived.cpp
 TYPE_DERIVED_DEFINITION = CodeTemplate("""\
-${return_type} ${Type}::${method_prefix_derived}${api_name}(${formals}) const {
+${return_type} ${Type}::${method_prefix_derived}${api_name}(${type_method_formals}) const {
     ${type_definition_body}
 }
 """)
@@ -88,7 +88,7 @@ ${return_type} ${Type}::${method_prefix_derived}${api_name}(${formals}) const {
 # because we will inherit it from the TYPE_METHOD_DEFINITION_CONCRETE in
 # the superclass.  But it doesn't seem to be harmful.
 TYPE_DERIVED_DEFINITION_NATIVE = CodeTemplate("""\
-${return_type} ${Type}::${api_name}(${formals}) const {
+${return_type} ${Type}::${api_name}(${type_method_formals}) const {
     ${return_call} at::native::${native_type_method_dispatch}(${actuals});
 }
 """)
@@ -113,7 +113,7 @@ static inline ${return_type} ${api_name}(${formals_with_defaults});
 # 9. add method definition in Functions.h
 FUNCTION_DEFINITION = CodeTemplate("""\
 static inline ${return_type} ${api_name}(${formals}) {
-    return ${inferred_type}.${api_name}(${actuals});
+    return ${inferred_type}.${api_name}(${type_method_actuals});
 }
 """)
 # 10. add a native declaration for a native function
@@ -396,6 +396,9 @@ FunctionOption = TypedDict('FunctionOption', {
     'return': ReturnDecl,
     'variants': str,
     'type_method_definition_dispatch': str,
+    'type_method_formals': List[str],
+    'type_method_formals_with_defaults': List[str],
+    'type_method_actuals': List[str],
     'cname': str,
     'backends': List[str],
     'api_name': str,
@@ -698,6 +701,11 @@ def create_generic(top_env, declarations):
         option['method_actuals'] = [
             f['name'] if f['name'] != 'self' else '*this' for f in formals]
 
+        # There are no cases where these differ, but they do in native_functions
+        option['type_method_formals'] = option['formals']
+        option['type_method_formals_with_defaults'] = option['formals_with_defaults']
+        option['type_method_actuals'] = option['actuals']
+
         option['const_mark'] = '' if option['inplace'] else ' const'
 
         is_method = 'method' in option['variants']
@@ -883,6 +891,10 @@ def create_generic(top_env, declarations):
             [formal_with_default(f) for f in formals if f['name'] != 'self'])
         option['method_actuals'] = [
             f['name'] if f['name'] != 'self' else '*this' for f in formals]
+
+        option['type_method_formals'] = option['formals']
+        option['type_method_formals_with_defaults'] = option['formals_with_defaults']
+        option['type_method_actuals'] = option['actuals']
 
         option['const_mark'] = '' if option['inplace'] else ' const'
 
