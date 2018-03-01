@@ -223,7 +223,10 @@ def create_python_bindings(python_functions, has_self, is_module=False):
         'int64_t': 'toInt64WithDefault',
         'bool': 'setDefaultBool',
         'double': 'setDefaultDouble',
+        'const Type &': 'typeWithDefault',
     }
+
+    unpack_with_default_ref = ['const Type &']
 
     def first_tensor_arg(arguments):
         for arg in arguments:
@@ -280,7 +283,10 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 expr = 'r.{}({})'.format(unpack, arg_index)
 
             if unpack_args:
-                body.append('auto {} = {};'.format(name, expr))
+                if typename in unpack_with_default_ref:
+                    body.append('auto& {} = {};'.format(name, expr))
+                else:
+                    body.append('auto {} = {};'.format(name, expr))
                 expr = name
 
             if typename == 'Storage &':
@@ -404,6 +410,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
     def get_python_binding_arguments(declaration):
         python_binding_arguments = []
         has_tensor_input_arg = False
+        has_dtype_arg = False
         for arg in declaration['arguments']:
             if arg.get('output', False):
                 continue
@@ -412,6 +419,8 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 has_tensor_input_arg = True
             if arg['name'] == 'requires_grad':
                 raise ValueError("argument named requires_grad not supported")
+            if arg['name'] == 'dtype':
+                has_dtype_arg = True
 
         has_tensor_return = False
         for ret in declaration['returns']:
@@ -425,15 +434,17 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 default_type = 'torch.int64'
             else:
                 default_type = 'None'
-            dtype_arg = {
-                'default': default_type,
-                'dynamic_type': 'Type',
-                'kwarg_only': True,
-                'name': 'dtype',
-                'type': 'const Type &',
-                'simple_type': 'Type',
-            }
-            python_binding_arguments.append(dtype_arg)
+
+            if not has_dtype_arg:
+                dtype_arg = {
+                    'default': default_type,
+                    'dynamic_type': 'Type',
+                    'kwarg_only': True,
+                    'name': 'dtype',
+                    'type': 'const Type &',
+                    'simple_type': 'Type',
+                }
+                python_binding_arguments.append(dtype_arg)
         if (not has_tensor_input_arg or name.endswith('_like')) and has_tensor_return:
             device_arg = {
                 'default': -1,
