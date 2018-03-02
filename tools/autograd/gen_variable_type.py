@@ -70,11 +70,11 @@ DONT_REQUIRE_DERIVATIVE = {
 }
 
 METHOD_DECLARATION = CodeTemplate("""\
-virtual ${return_type} ${method_prefix_derived}${api_name}(${formals}) const override;
+virtual ${return_type} ${method_prefix_derived}${api_name}(${type_method_formals}) const override;
 """)
 
 METHOD_DEFINITION = CodeTemplate("""\
-${return_type} VariableType::${method_prefix_derived}${api_name}(${formals}) const {
+${return_type} VariableType::${method_prefix_derived}${api_name}(${type_method_formals}) const {
   ${type_definition_body}
 }
 """)
@@ -98,8 +98,9 @@ grad_fn->set_next_edges(collect_next_edges( ${args_with_derivatives} ));
 """)
 
 CALL_VIA_TYPE = CodeTemplate("""\
-Type::${method_prefix_derived}${api_name}(${args})""")
+Type::${method_prefix_derived}${api_name}(${type_method_args})""")
 
+# FIXME: this too?
 CALL_VIA_DERIVED = CodeTemplate("""\
 baseType->${method_prefix_derived}${base_name}(${unpacked_args})""")
 

@@ -95,6 +95,9 @@ ${return_type} ${Type}::${api_name}(${type_method_formals}) const {
 TYPE_DEFINITION_BODY_NATIVE = CodeTemplate("""\
 ${return_call} at::native::${native_type_method_dispatch}(${actuals});
 """)
+TYPE_DEFINITION_BODY_DTYPE_NATIVE = CodeTemplate("""\
+${return_call} at::native::${native_type_method_dispatch}(${type_method_actuals}, *this);
+""")
 
 # 6. add non-virtual declaration to Tensor.h
 TENSOR_METHOD_DECLARATION = CodeTemplate("""\
@@ -370,6 +373,7 @@ AtFormal = TypedDict('AtFormal', {
     'python_default_init': str,
     'output': bool,
     'size': int,
+    'is_type_ellided': bool,
 }, total=False)
 
 ReturnType = TypedDict('ReturnType', {
@@ -892,16 +896,28 @@ def create_generic(top_env, declarations):
         option['method_actuals'] = [
             f['name'] if f['name'] != 'self' else '*this' for f in formals]
 
+
+        dispatch_tensor = find_dispatch_tensor(formals)
+        has_dtype = any(n == 'dtype' for n in option['actuals']) and not dispatch_tensor
+        print("HAS_DTYPE", has_dtype, option['name'])
         option['type_method_formals'] = option['formals']
         option['type_method_formals_with_defaults'] = option['formals_with_defaults']
         option['type_method_actuals'] = option['actuals']
 
+        if has_dtype:
+            for arg in option['formals_list']:
+                if arg['name'] == 'dtype':
+                    arg['is_type_ellided'] = True
+            option['formals_list'] = formals
+            option['type_method_formals'] = [format_formal(f) for f in formals if f['name'] != 'dtype']
+            option['type_method_formals_with_defaults'] = [formal_with_default(f) for f in formals if f['name'] != 'dtype']
+            option['type_method_actuals'] = [f['name'] for f in formals if f['name'] != 'dtype']
         option['const_mark'] = '' if option['inplace'] else ' const'
 
         is_method = 'method' in option['variants']
         is_function = 'function' in option['variants']
         dispatch_tensor = find_dispatch_tensor(formals)
-        is_namespace_function = is_function and dispatch_tensor is not None
+        is_namespace_function = is_function and (dispatch_tensor is not None or has_dtype)
 
         option['method_prefix_derived'] = ''
         env = nested_dict(option, top_env)
@@ -930,7 +946,10 @@ def create_generic(top_env, declarations):
                 TYPE_METHOD_DEFINITION_ABSTRACT.substitute(env))
         else:
             abstract = False
-            body = TYPE_DEFINITION_BODY_NATIVE.substitute(env)
+            if has_dtype:
+                body = TYPE_DEFINITION_BODY_DTYPE_NATIVE.substitute(env)
+            else:
+                body = TYPE_DEFINITION_BODY_NATIVE.substitute(env)
             top_env['type_method_definitions'].append(
                 TYPE_METHOD_DEFINITION_CONCRETE.substitute(
                     env, type_definition_body=body))
@@ -958,7 +977,10 @@ def create_generic(top_env, declarations):
             method_of.append('Tensor')
 
         if is_namespace_function:
-            option['inferred_type'] = 'infer_type({})'.format(dispatch_tensor)
+            if has_dtype:
+                option['inferred_type'] = 'dtype'
+            else:
+                option['inferred_type'] = 'infer_type({})'.format(dispatch_tensor)
             top_env['function_declarations'].append(
                 FUNCTION_DECLARATION.substitute(env))
             top_env['function_definitions'].append(
@@ -1376,6 +1398,7 @@ def create_derived(backend_type_env, declarations):
                 option['native_type_method_dispatch'] = native_dispatch
                 type_object_declarations.append(
                     TYPE_DERIVED_DECLARATION.substitute(env))
+                # FIXME
                 type_object_definitions.append(
                     TYPE_DERIVED_DEFINITION_NATIVE.substitute(env))
 
