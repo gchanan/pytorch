@@ -46,6 +46,16 @@ Tensor randn_like(const Tensor& self, const Type& dtype) {
   return dtype.randn(self.sizes());
 }
 
+Tensor zeros(IntList size, const Type& dtype) {
+  auto result = dtype.tensor(size);
+  return result.fill_(0);
+}
+
+Tensor& zeros_out(Tensor& result, IntList size) {
+  result.resize_(size);
+  return result.fill_(0);
+}
+
 Tensor zeros_like(const Tensor& self) {
   return at::native::zeros_like(self, self.type());
 }
@@ -57,7 +67,7 @@ Tensor zeros_like(const Tensor& self, const Type& dtype) {
     res.zero_();
     return res;
   }
-  return dtype.zeros(self.sizes());
+  return at::native::zeros(self.sizes(), dtype);
 }
 
 }

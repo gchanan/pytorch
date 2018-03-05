@@ -210,7 +210,7 @@ void test(Type &T) {
       // take
       {
         auto lhs = ones(*lhs_it, T);
-        auto rhs = T.zeros(*rhs_it).toType(ScalarType::Long);
+        auto rhs = zeros(*rhs_it, T).toType(ScalarType::Long);
         TRY_CATCH_ELSE(auto result = lhs.take(rhs),
                        ASSERT(lhs.numel() == 0 && rhs.numel() != 0),
                        assert_equal_size_dim(result, rhs));
