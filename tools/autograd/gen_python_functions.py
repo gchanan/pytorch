@@ -260,6 +260,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
 
         inputs = [arg for arg in declaration['arguments'] if not is_output(arg)]
         outputs = [arg for arg in declaration['arguments'] if is_output(arg)]
+        type_ellided_args = [arg for arg in declaration['arguments'] if arg.get('is_type_ellided')]
 
         def parse_arg(arg, arg_index, unpack_args=False):
             name = arg['name']
@@ -302,6 +303,8 @@ def create_python_bindings(python_functions, has_self, is_module=False):
 
         unpack = any(arg.get('python_default_init') for arg in inputs)
         for arg in inputs:
+            if arg.get('is_type_ellided'):
+                continue
             if has_self and arg['name'] == 'self':
                 formal_args.append('Tensor & self')
                 actuals.append('self_')
@@ -318,16 +321,20 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 formal_args.append('Tensor & {}'.format(arg['name']))
                 actuals.append('results[{}]'.format(i))
 
+        arg_idx = arg_idx if out_idx is None else out_idx + 1
+        for arg in type_ellided_args:
+            append_actuals_formals(*parse_arg(arg, arg_idx, unpack))
+            arg_idx += 1
+
         # check python_binding_arguments
         has_dtype_bind = False
         has_device_bind = False
         requires_grad = None
         python_binding_arguments = declaration.get('python_binding_arguments', [])
-        bind_arg_idx = arg_idx if out_idx is None else out_idx + 1
         if 'dtype' in (a['name'] for a in python_binding_arguments):
-            dtype_idx, device_idx, requires_grad_idx = (bind_arg_idx, bind_arg_idx + 1, bind_arg_idx + 2)
+            dtype_idx, device_idx, requires_grad_idx = (arg_idx, arg_idx + 1, arg_idx + 2)
         else:
-            device_idx, requires_grad_idx = (bind_arg_idx, bind_arg_idx + 1)
+            device_idx, requires_grad_idx = (arg_idx, arg_idx + 1)
 
         for arg in python_binding_arguments:
             if arg['name'] == 'dtype' and arg['simple_type'] == 'Type':
@@ -404,12 +411,15 @@ def create_python_bindings(python_functions, has_self, is_module=False):
     def get_python_binding_arguments(declaration):
         python_binding_arguments = []
         has_tensor_input_arg = False
+        has_type_input_arg = False
         for arg in declaration['arguments']:
             if arg.get('output', False):
                 continue
             typename = arg['simple_type']
             if typename in ['Tensor', 'TensorList']:
                 has_tensor_input_arg = True
+            if typename == 'Type':
+                has_type_input_arg = True
             if arg['name'] == 'requires_grad':
                 raise ValueError("argument named requires_grad not supported")
 
@@ -420,7 +430,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 # produce a compile-time error that is obvious
                 has_tensor_return = True
 
-        if has_tensor_return and not has_tensor_input_arg:
+        if has_tensor_return and not has_tensor_input_arg and not has_type_input_arg:
             if declaration['name'].startswith('randperm'):
                 default_type = 'torch.int64'
             else:
@@ -432,6 +442,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 'name': 'dtype',
                 'type': 'const Type &',
                 'simple_type': 'Type',
+                'is_type_ellided': True,
             }
             python_binding_arguments.append(dtype_arg)
         if (not has_tensor_input_arg or name.endswith('_like')) and has_tensor_return:
@@ -547,6 +558,7 @@ def get_python_signature(declaration, include_out):
     # Compute the Python function signature for argument parsing
     typed_args = []
     output_args = []
+    type_ellided_args = []
     positional = True
 
     def get_typed_arg(arg):
@@ -563,6 +575,11 @@ def get_python_signature(declaration, include_out):
                 default = 'None'
         if arg.get('python_default_init') is not None:
             default = 'None'
+        if default is None and arg.get('is_type_ellided', False):
+            # this is necessary because ATen does not have default_types; in this case,
+            # the type exists in the public API (at:: namespace), but not in the type interface;
+            # to match the PyTorch default_type API, we set the default to None.
+            default = 'None'
         if default is not None:
             param += '=' + str(default)
         return param
@@ -570,6 +587,9 @@ def get_python_signature(declaration, include_out):
     for arg in declaration['arguments']:
         if arg.get('output', False):
             output_args.append(arg)
+            continue
+        if arg.get('is_type_ellided', False):
+            type_ellided_args.append(arg)
             continue
         if arg.get('kwarg_only', False) and positional:
             typed_args.append('*')
@@ -594,7 +614,14 @@ def get_python_signature(declaration, include_out):
             typename = typenames[0]
         typed_args.append(typename + ' out=None')
 
-    # we could put this in the loop above but we want to ensure it is after the out argument
+    # we could put this in the loop above but we want to ensure both type_ellided
+    # and python binding arguments are after the out argument.
+    for arg in type_ellided_args:
+        if arg.get('kwarg_only', False) and positional:
+            typed_args.append('*')
+            positional = False
+        typed_args.append(get_typed_arg(arg))
+
     if len(declaration['python_binding_arguments']) > 0:
         for arg in declaration['python_binding_arguments']:
             if arg.get('kwarg_only', False) and positional:
