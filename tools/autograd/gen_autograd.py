@@ -53,16 +53,41 @@ def load_aten_declarations(path):
     with open(path, 'r') as f:
         declarations = yaml.load(f, Loader=YamlLoader)
 
+    def find_dispatch_tensor(formals):
+        # type: (List[AtFormal]) -> Optional[str]
+        # dispatch to self if it's a parameter
+        for formal in formals:
+            if formal['name'] == 'self' and formal['dynamic_type'] == 'Tensor':
+                return formal['name']
+        # otherwise dispatch to the first Tensor or TensorList
+        for formal in formals:
+            if 'TensorList' == formal['dynamic_type'] or formal['dynamic_type'] == 'Tensor':
+                return formal['name']
+        return None
+
     # enrich declarations with additional information
     for declaration in declarations:
+        dispatch_tensor = find_dispatch_tensor(declaration['arguments'])
+        has_dtype_name = False
         for arg in declaration['arguments']:
             simple_type = arg['type']
             simple_type = simple_type.replace(' &', '').replace('const ', '')
             simple_type = simple_type.replace('Generator *', 'Generator')
             arg['simple_type'] = simple_type
+            if arg['name'] == 'dtype':
+                has_dtype_name = True
         declaration['formals'] = [arg['type'] + ' ' + arg['name']
                                   for arg in declaration['arguments']]
+        
+        has_dtype = has_dtype_name and not dispatch_tensor
+        declaration['type_method_formals'] = declaration['formals']
+        if has_dtype:
+            declaration['type_method_formals'] = [arg['type'] + ' ' + arg['name']
+                                                  for arg in declaration['arguments'] if arg['name'] != 'dtype']
         declaration['args'] = [arg['name'] for arg in declaration['arguments']]
+        declaration['type_method_args'] = declaration['args']
+        if has_dtype:
+            declaration['type_method_args'] = [arg['name'] for arg in declaration['arguments'] if arg['name'] != 'dtype']
         declaration['api_name'] = declaration['name']
         declaration['return_type'] = format_return_type(declaration['returns'])
 

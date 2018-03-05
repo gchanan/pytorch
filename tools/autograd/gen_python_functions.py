@@ -66,12 +66,12 @@ if (r.isNone(${out_idx})) {
 }
 """)
 
-PY_VARIABLE_OUT_CHECK_DTYPE = CodeTemplate("""\
+PY_VARIABLE_OUT_CHECK_TYPE = CodeTemplate("""\
 if (r.isNone(${out_idx})) {
   ${call_dispatch}
 } else {
-  if (!r.isNone(${dtype_idx})) {
-    check_out_dtype_matches(r.tensor(${out_idx}), r.type(${dtype_idx}));
+  if (!r.isNone(${type_idx})) {
+    check_out_type_matches(r.tensor(${out_idx}), r.type(${type_idx}));
   }
   ${call_dispatch_out}
 }
@@ -359,8 +359,8 @@ def create_python_bindings(python_functions, has_self, is_module=False):
         env['unpack_args'] = []
         env['formal_args'] = formal_args
         env['actuals'] = actuals
-        has_any_dtype = (has_dtype_bind or any('dtype' in a['name'] for a in inputs))
-        env['initialize_cuda'] = 'maybe_initialize_cuda(dtype);' if has_any_dtype else []
+        has_any_types = has_dtype_bind or any(a['simple_type'] == 'Type' for a in inputs)
+        env['initialize_cuda'] = 'maybe_initialize_cuda(dtype);' if has_any_types else []
         if 'call_args' in declaration:
             env['dispatch_args'] = declaration['call_args']
         else:
@@ -399,7 +399,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
 
             has_dtype_bind = 'dtype' in [d['name'] for d in dictionary['out'].get('python_binding_arguments', [])]
             if has_dtype_bind:
-                body = PY_VARIABLE_OUT_CHECK_DTYPE.substitute(env, out_idx=out_idx, dtype_idx=out_idx + 1).split('\n')
+                body = PY_VARIABLE_OUT_CHECK_TYPE.substitute(env, out_idx=out_idx, type_idx=out_idx + 1).split('\n')
             else:
                 body = PY_VARIABLE_OUT.substitute(env, out_idx=out_idx).split('\n')
         else:

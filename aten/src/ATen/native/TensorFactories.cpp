@@ -18,6 +18,7 @@ Tensor ones(IntList size, const Type& dtype) {
 }
 
 Tensor& ones_out(Tensor& result, IntList size) {
+  // FIXME: exception
   result.resize_(size);
   return result.fill_(1);
 }
