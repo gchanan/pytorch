@@ -26,12 +26,30 @@ Tensor& arange_out(Tensor &result, Scalar end) {
   return at::_arange_out(result, end);
 }
 
+Tensor empty(const Type& dtype, IntList size) {
+  return dtype.tensor(size);
+}
+
+Tensor& empty_out(Tensor& result, IntList size) {
+  if (result.is_sparse()) {
+    result.sparse_raw_resize_(size, size.size(), 0);
+  } else {
+    result.resize_(size);
+  }
+  return result;
+}
+
 Tensor empty_like(const Tensor& self) {
-  return self.type().tensor(self.sizes());
+  return at::native::empty_like(self, self.type());
 }
 
 Tensor empty_like(const Tensor& self, const Type& dtype) {
-  return dtype.tensor(self.sizes());
+  if (dtype.is_sparse() && self.type().is_sparse()) {
+    auto res = dtype.tensor();
+    res.resize_as_(self);
+    return res;
+  }
+  return at::native::empty(dtype, self.sizes());
 }
 
 Tensor eye(const Type& dtype, int64_t n, int64_t m) {
