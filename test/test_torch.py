@@ -1095,12 +1095,58 @@ class TestTorch(TestCase):
             self.assertEqual(is_sparse, dtype.is_sparse)
 
     def test_dtypes(self):
-        cpu_dtypes = [torch.uint8, torch.int8, torch.int16, torch.int32, torch.int64,
-                      torch.float16, torch.float32, torch.float64]
-        cuda_dtypes = [torch.cuda.uint8, torch.cuda.int8, torch.cuda.int16, torch.cuda.int32, torch.cuda.int64,
-                       torch.cuda.float32, torch.cuda.float64]
-        cuda_dtypes.append(torch.cuda.float16)
+        all_dtypes = torch.testing.get_all_dtypes()
+        cpu_dtypes = [d for d in all_dtypes if not d.is_cuda and not d.is_sparse]
+        cuda_dtypes = [d for d in all_dtypes if d.is_cuda and not d.is_sparse]
         self._test_dtypes(self, cpu_dtypes, cuda_dtypes, False)
+
+    @staticmethod
+    def _test_empty_full(self, cpu_dtypes, cuda_dtypes):
+        dtypes = cpu_dtypes + (cuda_dtypes if torch.cuda.is_available() else [])
+        shape = torch.Size([2, 3])
+
+        def check_value(tensor, dtype, device, value):
+            self.assertEqual(shape, tensor.shape)
+            self.assertIs(dtype, tensor.dtype)
+            if tensor.is_cuda:
+                self.assertEqual(device, tensor.get_device())
+            if value is not None:
+                fill = tensor.new(shape).fill_(value)
+                self.assertEqual(tensor, fill)
+
+        def get_int64_dtype(dtype):
+            if not dtype.is_cuda and not dtype.is_sparse:
+                return torch.int64
+            if not dtype.is_cuda and dtype.is_sparse:
+                return torch.sparse.int64
+            if dtype.is_cuda and not dtype.is_sparse:
+                return torch.cuda.int64
+            else:
+                return torch.cuda.sparse.int64
+
+        check_value(torch.empty(shape), torch.Tensor.dtype, -1, None)
+        check_value(torch.full(shape, -5), torch.Tensor.dtype, -1, None)
+        for dtype in dtypes:
+            int64_dtype = get_int64_dtype(dtype)
+            device = -1 if not (dtype.is_cuda and torch.cuda.device_count() > 1) else 1
+            v = torch.empty(shape, dtype=dtype, device=device)
+            check_value(v, dtype, device, None)
+            check_value(torch.empty_like(v), dtype, device, None)
+            check_value(torch.empty_like(v, dtype=int64_dtype, device=device), int64_dtype, device, None)
+
+            if dtype is not torch.float16 and not dtype.is_sparse:
+                fill_value = 3
+                v = torch.full(shape, fill_value, dtype=dtype, device=device)
+                check_value(v, dtype, device, fill_value)
+                check_value(torch.full_like(v, fill_value + 1), dtype, device, fill_value + 1)
+                check_value(torch.full_like(v, fill_value + 2, dtype=int64_dtype, device=device),
+                            int64_dtype, device, fill_value + 2)
+
+    def test_empty_full(self):
+        all_dtypes = torch.testing.get_all_dtypes()
+        cpu_dtypes = [d for d in all_dtypes if not d.is_cuda and not d.is_sparse]
+        cuda_dtypes = [d for d in all_dtypes if d.is_cuda and not d.is_sparse]
+        self._test_empty_full(self, cpu_dtypes, cuda_dtypes)
 
     def test_dtype_out_match(self):
         d = torch.autograd.Variable(torch.DoubleTensor(2, 3))

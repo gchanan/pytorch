@@ -46,7 +46,8 @@ Tensor empty_like(const Tensor& self) {
 Tensor empty_like(const Tensor& self, const Type& dtype) {
   if (dtype.is_sparse() && self.type().is_sparse()) {
     auto res = dtype.tensor();
-    res.resize_as_(self);
+    // resize_as_ requires the same exact type.
+    res.sparse_raw_resize_(self.sizes(), self._dimI(), self._dimV());
     return res;
   }
   return at::native::empty(dtype, self.sizes());
@@ -79,6 +80,30 @@ Tensor& eye_out_cpu(Tensor& result, int64_t n, int64_t m) {
   });
 
   return result;
+}
+
+Tensor full(const Type& dtype, IntList size, Scalar fill_value) {
+  if (dtype.is_sparse()) {
+    at::runtime_error("full(...) is not implemented for sparse types, got: %s", dtype.toString());
+  }
+  auto result = dtype.tensor(size);
+  return result.fill_(fill_value);
+}
+
+Tensor& full_out(Tensor& result, IntList size, Scalar fill_value) {
+  if (result.is_sparse()) {
+    at::runtime_error("full(...) is not implemented for sparse types, got: %s", result.type().toString());
+  }
+  result.resize_(size);
+  return result.fill_(fill_value);
+}
+
+Tensor full_like(const Tensor& self, Scalar fill_value) {
+  return at::native::full_like(self, fill_value, self.type());
+}
+
+Tensor full_like(const Tensor& self, Scalar fill_value, const Type& dtype) {
+  return at::native::full(dtype, self.sizes(), fill_value);
 }
 
 Tensor linspace(const Type& dtype, Scalar start, Scalar end, int64_t steps) {
@@ -233,7 +258,8 @@ Tensor zeros_like(const Tensor& self) {
 Tensor zeros_like(const Tensor& self, const Type& dtype) {
   if (dtype.is_sparse() && self.type().is_sparse()) {
     auto res = dtype.tensor();
-    res.resize_as_(self);
+    // resize_as_ requires the same exact type.
+    res.sparse_raw_resize_(self.sizes(), self._dimI(), self._dimV());
     res.zero_();
     return res;
   }

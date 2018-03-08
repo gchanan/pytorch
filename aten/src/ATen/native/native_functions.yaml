@@ -231,6 +231,18 @@
     CPU: eye_out_cpu
     CUDA: eye_out_cuda
 
+- func: full(Type dtype, IntList size, Scalar fill_value) -> Tensor
+  variants: function
+
+- func: full_out(Tensor result, IntList size, Scalar fill_value) -> Tensor
+  variants: function
+
+- func: full_like(Tensor self, Scalar fill_value) -> Tensor
+  variants: function
+
+- func: full_like(Tensor self, Scalar fill_value, *, Type dtype) -> Tensor
+  variants: function
+
 - func: hinge_embedding_loss(Tensor self, Tensor target, double margin, bool size_average, bool reduce) -> Tensor
   variants: function
 
