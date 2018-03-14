@@ -130,17 +130,15 @@ static void recursive_store(char* data, IntList sizes, IntList strides, int64_t 
 }
 
 static Tensor internal_new_from_data(const Type & type, int device, PyObject* data,
-                                     bool allow_variables, bool copy_variables, bool copy_numpy) {
+                                     bool copy_variables, bool copy_numpy) {
   if (THPUtils_checkString(data)) {
     throw TypeError("new(): invalid data type '%s'", Py_TYPE(data)->tp_name);
   }
 
-  if (allow_variables) {
-    if (THPVariable_Check(data)) {
-      auto var = reinterpret_cast<THPVariable*>(data)->cdata;
-      return copy_variables ? new_with_tensor_copy(type, var, device) :
-                              new_with_type_conversion(type, var, device);
-    }
+  if (THPVariable_Check(data)) {
+    auto var = reinterpret_cast<THPVariable*>(data)->cdata;
+    return copy_variables ? new_with_tensor_copy(type, var, device) :
+                            new_with_type_conversion(type, var, device);
   }
 
 #ifdef WITH_NUMPY
@@ -160,11 +158,11 @@ static Tensor internal_new_from_data(const Type & type, int device, PyObject* da
 }
 
 Tensor legacy_new_from_data(const Type & type, int device, PyObject *data) {
-  return internal_new_from_data(type, device, data, false, false, false);
+  return internal_new_from_data(type, device, data, false, false);
 }
 
 static Tensor new_from_data_copy(const Type & type, int device, PyObject *data) {
-  return internal_new_from_data(type, device, data, true, true, true);
+  return internal_new_from_data(type, device, data, true, true);
 }
 
 static Tensor legacy_new_from_sequence(const Type & type, int device, PyObject* data) {
@@ -378,18 +376,18 @@ Tensor new_sparse_coo_tensor(const Type& type, PyObject* args, PyObject* kwargs)
     check_is_sparse(sparse_type);
     const auto& dense_type = sparse_type.toBackend(dense_backend);
     const auto& index_type = dense_type.toScalarType(kLong);
-    // explanation of booleans: allow variables, do type conversion of them, copy numpy data
-    Tensor indices = internal_new_from_data(index_type, r.toInt64(3), r.pyobject(0), true, false, true);
-    Tensor values = internal_new_from_data(dense_type, r.toInt64(3), r.pyobject(1), true, false, true);
+    // explanation of booleans: do type conversion on variables, copy numpy data
+    Tensor indices = internal_new_from_data(index_type, r.toInt64(3), r.pyobject(0), false, true);
+    Tensor values = internal_new_from_data(dense_type, r.toInt64(3), r.pyobject(1), false, true);
     return set_requires_grad(sparse_type.sparse_coo_tensor(indices, values), r.toBool(4));
   } else if (r.idx == 1) {
     const auto& sparse_type = r.typeWithDefault(3, default_sparse_type);
     check_is_sparse(sparse_type);
     const auto& dense_type = sparse_type.toBackend(dense_backend);
     const auto& index_type = dense_type.toScalarType(kLong);
-    // explanation of booleans: allow variables, do type conversion of them, copy numpy data
-    Tensor indices = internal_new_from_data(index_type, r.toInt64(4), r.pyobject(0), true, false, true);
-    Tensor values = internal_new_from_data(dense_type, r.toInt64(4), r.pyobject(1), true, false, true);
+    // explanation of booleans: do type conversion on variables, copy numpy data
+    Tensor indices = internal_new_from_data(index_type, r.toInt64(4), r.pyobject(0), false, true);
+    Tensor values = internal_new_from_data(dense_type, r.toInt64(4), r.pyobject(1), false, true);
     return set_requires_grad(sparse_type.sparse_coo_tensor(indices, values, r.intlist(2)), r.toBool(5));
   }
   throw std::runtime_error("new_sparse_coo_tensor(): invalid arguments");
