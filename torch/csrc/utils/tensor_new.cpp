@@ -243,10 +243,15 @@ static void set_promote_types(ScalarType a, ScalarType b) {
 }
 
 static ScalarType infer_scalar_type(PyObject *obj) {
-  // FixMe: infer Bool when we have Bool ScalarType
-  bool has_long = false;
+  if (PyFloat_Check(obj)) {
+    return ScalarType::Double;
+  }
   if (THPUtils_checkLong(obj)) {
     return ScalarType::Long;
+  }
+  if (PyBool_Check(obj)) {
+    // TODO: infer Bool when we have Bool ScalarType
+    return ScalarType::Byte;
   }
   if (THPVariable_Check(obj)) {
     auto var = reinterpret_cast<THPVariable*>(obj)->cdata;
@@ -259,22 +264,22 @@ static ScalarType infer_scalar_type(PyObject *obj) {
   }
 #endif
   if (PySequence_Check(obj)) {
+    ScalarType scalarType = ScalarType::NumOptions;
     auto length = PySequence_Length(obj);
     if (length < 0) throw python_error();
     for (int i = 0; i < length; ++i) {
       THPObjectPtr handle(PySequence_GetItem(obj, i));
-      ScalarType scalarType = infer_scalar_type(handle.get());
+      ScalarType item_scalarType = infer_scalar_type(handle.get());
+      scalarType = (scalarType != ScalarType::NumOptions) ?
+          at::promoteTypes(scalarType, item_scalarType) : item_scalarType;
       if (scalarType == ScalarType::Double) {
-        return ScalarType::Double;
-      } else if (scalarType == ScalarType::Long) {
-        has_long = true;
-      } else {
-        throw TypeError("Got unexpected ScalarType");
+        // this won't change (unless we hit undefined, but that will fail later).
+        return scalarType;
       }
     }
+    return scalarType;
   }
-  if (!has_long) return ScalarType::Double;
-  else return ScalarType::Long;
+  at::runtime_error("Could not infer dtype of %s", Py_TYPE(obj)->tp_name);
 }
 
 static void recursive_store(char* data, IntList sizes, IntList strides, int64_t dim,
