@@ -100,6 +100,183 @@ static std::vector<int64_t> compute_sizes(PyObject* seq) {
   return sizes;
 }
 
+#ifdef WITH_NUMPY
+static ScalarType numpy_dtype_to_aten(int dtype) {
+  switch (dtype) {
+    case NPY_DOUBLE:
+    case NPY_FLOAT:
+    case NPY_HALF:
+      return kDouble;
+    case NPY_INT32:
+    case NPY_INT16:
+      return kLong;
+    case NPY_UINT8: return kByte;
+    default:
+      // Workaround: MSVC does not support two switch cases that have the same value
+      if (dtype == NPY_LONGLONG || dtype == NPY_INT64) {
+        return kLong;
+      } else {
+        break;
+      }
+  }
+  auto pytype = THPObjectPtr(PyArray_TypeObjectFromType(dtype));
+  if (!pytype) throw python_error();
+  throw TypeError(
+      "can't convert np.ndarray of type %s. The only supported types are: "
+      "double, float, float16, int64, int32, and uint8.",
+      ((PyTypeObject*)pytype.get())->tp_name);
+}
+#endif
+
+static ScalarType promote_table[static_cast<int>(ScalarType::NumOptions)][static_cast<int>(ScalarType::NumOptions)];
+
+
+static inline bool has_larger_max_float(ScalarType a, ScalarType b) {
+  double aMax = AT_DISPATCH_ALL_TYPES(CPU(a), "max", [&]() -> double {
+    return (double)std::numeric_limits<scalar_t>::max();
+  });
+  double bMax = AT_DISPATCH_ALL_TYPES(CPU(b), "max", [&]() -> double {
+    return (double)std::numeric_limits<scalar_t>::max();
+  });
+  return aMax > bMax;
+}
+
+static inline int64_t limit_max(ScalarType a) {
+  return AT_DISPATCH_ALL_TYPES(CPU(a), "max", [&]() -> int64_t {
+    return (int64_t)std::numeric_limits<scalar_t>::max();
+  });
+}
+
+static inline bool is_signed(ScalarType a) {
+  return AT_DISPATCH_ALL_TYPES(CPU(a), "max", [&]() -> int64_t {
+    return std::numeric_limits<scalar_t>::is_signed;
+  });
+}
+
+/*static inline has_larger_max_float(ScalarType a, ScalarType b) {
+  double aMax = AT_DISPATCH_ALL_TYPES(CPU(a), "max", [&]() -> double {
+    return (double)std::numeric_limits<scalar_t>::max();
+  });
+  double bMax = AT_DISPATCH_ALL_TYPES(CPU(b), "max", [&]() -> double {
+    return (double)std::max<scalar_t>::max();
+  });
+  return aMax > bMax;
+}*/
+
+static ScalarType smallest_floating_type(ScalarType s) {
+  switch(s) {
+    case ScalarType::Byte:
+    case ScalarType::Char:
+      // technically, Half can fit these, but then we'd have inconsistency on CPU vs GPU
+      return ScalarType::Float;
+    case ScalarType::Double:
+      return ScalarType::Double;
+    case ScalarType::Float:
+      return ScalarType::Float;
+    case ScalarType::Int:
+      return ScalarType::Double;
+    case ScalarType::Long:
+      return ScalarType::Double;
+    case ScalarType::Short:
+      return ScalarType::Int;
+    case ScalarType::Half: 
+      return ScalarType::Half;
+    default:
+      throw TypeError("unexpected scalar type");
+  }
+}
+
+static void set_promote_types(ScalarType a, ScalarType b) {
+  for (int i = 0; i < static_cast<int>(ScalarType::NumOptions); ++i) {
+    for (int j = 0; j < static_cast<int>(ScalarType::NumOptions); ++j) {
+      ScalarType si = static_cast<ScalarType>(i);
+      ScalarType sj = static_cast<ScalarType>(j);
+      
+      if (i == j) {
+        promote_table[ i ][ j ] = si;
+      } else if (si == ScalarType::Undefined || sj == ScalarType::Undefined) {  
+        promote_table[ i ][ j ] = ScalarType::Undefined;
+      } else if (at::isFloatingType(si) && at::isFloatingType(sj)) {
+        auto si_max = limit_max(si);
+        auto sj_max = limit_max(sj);
+        if (si_max > sj_max) {
+          promote_table[ i ][ j ] = si;
+        } else {
+          promote_table[ i ][ j ] = sj;
+        }
+      } else if (at::isIntegralType(si) && at::isIntegralType(sj)) {
+        // pick the bigger one, keep into account has negative
+        if (is_signed(si) == is_signed(sj)) {
+          auto si_max = limit_max(si);
+          auto sj_max = limit_max(sj);
+          if (si_max > sj_max) {
+            promote_table[ i ][ j ] = si;
+          } else {
+            promote_table[ i ][ j ] = sj;
+          }
+        } else if (!is_signed(si)) {
+          if (sj == ScalarType::Byte) {
+            promote_table[ i ][ j ] = ScalarType::Short;
+          } else {
+            promote_table[ i ][ j ] = sj;
+          }
+        } else if (!is_signed(sj)) {
+          if (si == ScalarType::Byte) {
+            promote_table[ i ][ j ] = ScalarType::Short;
+          } else {
+            promote_table[ i ][ j ] = sj;
+          }
+        }
+      } else {
+        ScalarType sif = smallest_floating_type(si);
+        ScalarType sjf = smallest_floating_type(si);
+        auto si_max = limit_max(sif);
+        auto sj_max = limit_max(sjf);
+        if (si_max > sj_max) {
+          promote_table[ i ][ j ] = sif;
+        } else {
+          promote_table[ i ][ j ] = sjf;
+        }
+      }
+    }
+  }  
+}
+
+static ScalarType infer_scalar_type(PyObject *obj) {
+  // FixMe: infer Bool when we have Bool ScalarType
+  bool has_long = false;
+  if (THPUtils_checkLong(obj)) {
+    return ScalarType::Long;
+  }
+  if (THPVariable_Check(obj)) {
+    auto var = reinterpret_cast<THPVariable*>(obj)->cdata;
+    return var.type().scalarType();
+  }
+#ifdef WITH_NUMPY
+  if (PyArray_Check(obj)) {
+    auto array = (PyArrayObject*)obj;
+    return numpy_dtype_to_aten(PyArray_TYPE(array));
+  }
+#endif
+  if (PySequence_Check(obj)) {
+    auto length = PySequence_Length(obj);
+    if (length < 0) throw python_error();
+    for (int i = 0; i < length; ++i) {
+      THPObjectPtr handle(PySequence_GetItem(obj, i));
+      ScalarType scalarType = infer_scalar_type(handle.get());
+      if (scalarType == ScalarType::Double) {
+        return ScalarType::Double;
+      } else if (scalarType == ScalarType::Long) {
+        has_long = true;
+      } else {
+        throw TypeError("Got unexpected ScalarType");
+      }
+    }
+  }
+  if (!has_long) return ScalarType::Double;
+  else return ScalarType::Long;
+}
+
 static void recursive_store(char* data, IntList sizes, IntList strides, int64_t dim,
                             ScalarType scalarType, int elementSize, PyObject* obj) {
   int64_t ndim = sizes.size();
@@ -125,7 +302,8 @@ static void recursive_store(char* data, IntList sizes, IntList strides, int64_t 
 }
 
 static Tensor internal_new_from_data(const Type & type, int device, PyObject* data,
-                                     bool allow_variables, bool copy_variables, bool copy_numpy) {
+                                     bool allow_variables, bool copy_variables, bool copy_numpy,
+                                     bool type_inference) {
   if (THPUtils_checkString(data)) {
     throw TypeError("new(): invalid data type '%s'", Py_TYPE(data)->tp_name);
   }
@@ -133,33 +311,37 @@ static Tensor internal_new_from_data(const Type & type, int device, PyObject* da
   if (allow_variables) {
     if (THPVariable_Check(data)) {
       auto var = reinterpret_cast<THPVariable*>(data)->cdata;
-      return copy_variables ? new_with_tensor_copy(type, var, device) :
-                              new_with_type_conversion(type, var, device);
+      const auto& type_to_use = type_inference ? var.type() : type;
+        return copy_variables ? new_with_tensor_copy(type_to_use, var, device) :
+                                new_with_type_conversion(type_to_use, var, device);
     }
   }
 
 #ifdef WITH_NUMPY
   if (PyArray_Check(data)) {
     auto tensor = autograd::make_variable(tensor_from_numpy(data), /*requires_grad=*/false);
-    return copy_numpy ? new_with_tensor_copy(type, tensor, device) :
-                        new_with_type_conversion(type, tensor, device);
+    const auto& type_to_use = type_inference ? tensor.type() : type;
+    return copy_numpy ? new_with_tensor_copy(type_to_use, tensor, device) :
+                        new_with_type_conversion(type_to_use, tensor, device);
   }
 #endif
 
   auto sizes = compute_sizes(data);
-  auto tensor = autograd::make_variable(CPU(type.scalarType()).tensor(sizes), /*requires_grad=*/false);
+  ScalarType scalarType = type_inference ? infer_scalar_type(data) : type.scalarType();
+  auto tensor = autograd::make_variable(CPU(scalarType).tensor(sizes), /*requires_grad=*/false);
   recursive_store(
       (char*)tensor.data_ptr(), tensor.sizes(), tensor.strides(), 0,
-      type.scalarType(), tensor.type().elementSizeInBytes(), data);
-  return new_with_type_conversion(type, tensor, device);
+      scalarType, tensor.type().elementSizeInBytes(), data);
+  const auto& type_to_use = type_inference ? type.toScalarType(scalarType) : type;
+  return new_with_type_conversion(type_to_use, tensor, device);
 }
 
 Tensor legacy_new_from_data(const Type & type, int device, PyObject *data) {
-  return internal_new_from_data(type, device, data, false, false, false);
+  return internal_new_from_data(type, device, data, false, false, false, false);
 }
 
 static Tensor new_from_data_copy(const Type & type, int device, PyObject *data) {
-  return internal_new_from_data(type, device, data, true, true, true);
+  return internal_new_from_data(type, device, data, true, true, true, false);
 }
 
 static Tensor legacy_new_from_sequence(const Type & type, int device, PyObject* data) {
@@ -356,13 +538,13 @@ static Tensor set_requires_grad(Tensor self, bool requires_grad) {
   return self;
 }
 
-Tensor new_sparse_coo_tensor(const Type& type, PyObject* args, PyObject* kwargs) {
+Tensor sparse_coo_tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs) {
   Backend sparse_backend = type.is_cuda() ? kSparseCUDA : kSparseCPU;
   const auto& default_sparse_type = type.toBackend(sparse_backend);
 
   static PythonArgParser parser({
-    "new_sparse_coo_tensor(PyObject* indices, PyObject* values, *, Type dtype=None, int64_t? device=-1, bool requires_grad=False)",
-    "new_sparse_coo_tensor(PyObject* indices, PyObject* values, IntList size, *, Type dtype=None, int64_t? device=-1, bool requires_grad=False)",
+    "sparse_coo_tensor(PyObject* indices, PyObject* values, *, Type dtype=None, int64_t? device=-1, bool requires_grad=False)",
+    "sparse_coo_tensor(PyObject* indices, PyObject* values, IntList size, *, Type dtype=None, int64_t? device=-1, bool requires_grad=False)",
   });
 
   ParsedArgs<6> parsed_args;
@@ -374,8 +556,8 @@ Tensor new_sparse_coo_tensor(const Type& type, PyObject* args, PyObject* kwargs)
     const auto& index_type = dense_type.toScalarType(kLong);
     AutoGPU autogpu(r.toInt64(3));
     // explanation of booleans: allow variables, do type conversion of them, copy numpy data
-    Tensor indices = internal_new_from_data(index_type, -1, r.pyobject(0), true, false, true);
-    Tensor values = internal_new_from_data(dense_type, -1, r.pyobject(1), true, false, true);
+    Tensor indices = internal_new_from_data(index_type, -1, r.pyobject(0), true, false, true, true);
+    Tensor values = internal_new_from_data(dense_type, -1, r.pyobject(1), true, false, true, true);
     return set_requires_grad(sparse_type.sparse_coo_tensor(indices, values), r.toBool(4));
   } else if (r.idx == 1) {
     const auto& sparse_type = r.typeWithDefault(3, default_sparse_type);
@@ -384,12 +566,28 @@ Tensor new_sparse_coo_tensor(const Type& type, PyObject* args, PyObject* kwargs)
     const auto& index_type = dense_type.toScalarType(kLong);
     AutoGPU autogpu(r.toInt64(4));
     // explanation of booleans: allow variables, do type conversion of them, copy numpy data
-    Tensor indices = internal_new_from_data(index_type, -1, r.pyobject(0), true, false, true);
-    Tensor values = internal_new_from_data(dense_type, -1, r.pyobject(1), true, false, true);
+    Tensor indices = internal_new_from_data(index_type, -1, r.pyobject(0), true, false, true, true);
+    Tensor values = internal_new_from_data(dense_type, -1, r.pyobject(1), true, false, true, true);
     return set_requires_grad(sparse_type.sparse_coo_tensor(indices, values, r.intlist(2)), r.toBool(5));
   }
-  throw std::runtime_error("new_sparse_coo_tensor(): invalid arguments");
+  throw std::runtime_error("sparse_coo_tensor(): invalid arguments");
 }
+
+Tensor tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs) {
+  static PythonArgParser parser({
+    "tensor(PyObject* data, *, Type dtype=None, int64_t? device=-1, bool requires_grad=False)",
+  });
+
+  ParsedArgs<4> parsed_args;
+  auto r = parser.parse(args, kwargs, parsed_args);
+  if (r.idx == 0) {
+    bool type_inference = r.isNone(1);
+    //return internal_new_from_data(type, device, data, true, true, true, false);
+    return set_requires_grad(internal_new_from_data(r.typeWithDefault(1, type), r.toInt64(2), r.pyobject(0), true, true, true, type_inference), r.toBool(3));
+  }
+  throw std::runtime_error("tensor(): invalid arguments");
+}
+
 
 Tensor new_tensor(const Type& type, PyObject* args, PyObject* kwargs) {
   static PythonArgParser parser({
