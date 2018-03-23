@@ -1398,16 +1398,17 @@ class TestTorch(TestCase):
         self.assertIs(torch.float64, torch.tensor(()).dtype)
         self.assertIs(torch.float64, torch.tensor(5.).dtype)
         self.assertIs(torch.int64, torch.tensor(5).dtype)
+        self.assertIs(torch.uint8, torch.tensor(True).dtype)
         self.assertIs(torch.int32, torch.tensor(5, dtype=torch.int32).dtype)
         self.assertIs(torch.float64, torch.tensor(((7, 5), (9, 5.))).dtype)
         self.assertIs(torch.float64, torch.tensor(((5., 5), (3, 5))).dtype)
-        self.assertIs(torch.float64, torch.tensor((3, 5, 7, 5.)).dtype)
         self.assertIs(torch.int64, torch.tensor(((5, 3), (3, 5))).dtype)
 
         if TEST_NUMPY:
             self.assertIs(torch.float64, torch.tensor(np.array(())).dtype)
             self.assertIs(torch.float64, torch.tensor(np.array(5.)).dtype)
             self.assertIs(torch.int64, torch.tensor(np.array(5)).dtype)
+            self.assertIs(torch.uint8, torch.tensor(np.array(3, dtype=np.uint8)).dtype)
             self.assertIs(torch.float64, torch.tensor(((7, np.array(5)), (np.array(9), 5.))).dtype)
             self.assertIs(torch.float64, torch.tensor(((7, 5), (9, np.array(5.)))).dtype)
             self.assertIs(torch.int64, torch.tensor(((5, np.array(3)), (np.array(3), 5))).dtype)
