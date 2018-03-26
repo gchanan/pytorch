@@ -128,120 +128,6 @@ static ScalarType numpy_dtype_to_aten(int dtype) {
 }
 #endif
 
-static ScalarType promote_table[static_cast<int>(ScalarType::NumOptions)][static_cast<int>(ScalarType::NumOptions)];
-
-
-static inline bool has_larger_max_float(ScalarType a, ScalarType b) {
-  double aMax = AT_DISPATCH_ALL_TYPES(CPU(a), "max", [&]() -> double {
-    return (double)std::numeric_limits<scalar_t>::max();
-  });
-  double bMax = AT_DISPATCH_ALL_TYPES(CPU(b), "max", [&]() -> double {
-    return (double)std::numeric_limits<scalar_t>::max();
-  });
-  return aMax > bMax;
-}
-
-static inline int64_t limit_max(ScalarType a) {
-  return AT_DISPATCH_ALL_TYPES(CPU(a), "max", [&]() -> int64_t {
-    return (int64_t)std::numeric_limits<scalar_t>::max();
-  });
-}
-
-static inline bool is_signed(ScalarType a) {
-  return AT_DISPATCH_ALL_TYPES(CPU(a), "max", [&]() -> int64_t {
-    return std::numeric_limits<scalar_t>::is_signed;
-  });
-}
-
-/*static inline has_larger_max_float(ScalarType a, ScalarType b) {
-  double aMax = AT_DISPATCH_ALL_TYPES(CPU(a), "max", [&]() -> double {
-    return (double)std::numeric_limits<scalar_t>::max();
-  });
-  double bMax = AT_DISPATCH_ALL_TYPES(CPU(b), "max", [&]() -> double {
-    return (double)std::max<scalar_t>::max();
-  });
-  return aMax > bMax;
-}*/
-
-static ScalarType smallest_floating_type(ScalarType s) {
-  switch(s) {
-    case ScalarType::Byte:
-    case ScalarType::Char:
-      // technically, Half can fit these, but then we'd have inconsistency on CPU vs GPU
-      return ScalarType::Float;
-    case ScalarType::Double:
-      return ScalarType::Double;
-    case ScalarType::Float:
-      return ScalarType::Float;
-    case ScalarType::Int:
-      return ScalarType::Double;
-    case ScalarType::Long:
-      return ScalarType::Double;
-    case ScalarType::Short:
-      return ScalarType::Int;
-    case ScalarType::Half: 
-      return ScalarType::Half;
-    default:
-      throw TypeError("unexpected scalar type");
-  }
-}
-
-static void set_promote_types(ScalarType a, ScalarType b) {
-  for (int i = 0; i < static_cast<int>(ScalarType::NumOptions); ++i) {
-    for (int j = 0; j < static_cast<int>(ScalarType::NumOptions); ++j) {
-      ScalarType si = static_cast<ScalarType>(i);
-      ScalarType sj = static_cast<ScalarType>(j);
-      
-      if (i == j) {
-        promote_table[ i ][ j ] = si;
-      } else if (si == ScalarType::Undefined || sj == ScalarType::Undefined) {  
-        promote_table[ i ][ j ] = ScalarType::Undefined;
-      } else if (at::isFloatingType(si) && at::isFloatingType(sj)) {
-        auto si_max = limit_max(si);
-        auto sj_max = limit_max(sj);
-        if (si_max > sj_max) {
-          promote_table[ i ][ j ] = si;
-        } else {
-          promote_table[ i ][ j ] = sj;
-        }
-      } else if (at::isIntegralType(si) && at::isIntegralType(sj)) {
-        // pick the bigger one, keep into account has negative
-        if (is_signed(si) == is_signed(sj)) {
-          auto si_max = limit_max(si);
-          auto sj_max = limit_max(sj);
-          if (si_max > sj_max) {
-            promote_table[ i ][ j ] = si;
-          } else {
-            promote_table[ i ][ j ] = sj;
-          }
-        } else if (!is_signed(si)) {
-          if (sj == ScalarType::Byte) {
-            promote_table[ i ][ j ] = ScalarType::Short;
-          } else {
-            promote_table[ i ][ j ] = sj;
-          }
-        } else if (!is_signed(sj)) {
-          if (si == ScalarType::Byte) {
-            promote_table[ i ][ j ] = ScalarType::Short;
-          } else {
-            promote_table[ i ][ j ] = sj;
-          }
-        }
-      } else {
-        ScalarType sif = smallest_floating_type(si);
-        ScalarType sjf = smallest_floating_type(si);
-        auto si_max = limit_max(sif);
-        auto sj_max = limit_max(sjf);
-        if (si_max > sj_max) {
-          promote_table[ i ][ j ] = sif;
-        } else {
-          promote_table[ i ][ j ] = sjf;
-        }
-      }
-    }
-  }  
-}
-
 static ScalarType infer_scalar_type(PyObject *obj) {
   if (PyFloat_Check(obj)) {
     return ScalarType::Double;
@@ -588,7 +474,6 @@ Tensor tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs) {
   auto r = parser.parse(args, kwargs, parsed_args);
   if (r.idx == 0) {
     bool type_inference = r.isNone(1);
-    //return internal_new_from_data(type, device, data, true, true, true, false);
     return set_requires_grad(internal_new_from_data(r.typeWithDefault(1, type), r.toInt64(2), r.pyobject(0), true, true, true, type_inference), r.toBool(3));
   }
   throw std::runtime_error("tensor(): invalid arguments");
