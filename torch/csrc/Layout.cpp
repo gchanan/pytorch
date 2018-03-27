@@ -1,0 +1,89 @@
+#include "Layout.h"
+
+#include <cstring>
+#include <structmember.h>
+#include "torch/csrc/Exceptions.h"
+#include "torch/csrc/utils/object_ptr.h"
+#include "torch/csrc/utils/python_strings.h"
+
+PyObject *THPLayoutClass = NULL;
+
+PyObject *THPLayout_New(at::Backend cdata, const std::string& name)
+{
+  auto type = (PyTypeObject*)&THPLayoutType;
+  std::cerr << "Type: " << type << std::endl;
+  std::cerr << type->tp_alloc(type, 0) << std::endl;
+  auto self = THPObjectPtr{type->tp_alloc(type, 0)};
+  if (!self) throw python_error();
+  auto self_ = reinterpret_cast<THPLayout*>(self.get());
+  std::strncpy (self_->name, name.c_str(), LAYOUT_NAME_LEN);
+  self_->name[LAYOUT_NAME_LEN] = '\0';
+  return self.release();
+}
+
+PyObject *THPLayout_repr(THPLayout *self)
+{
+  return THPUtils_packString(self->name);
+}
+
+PyObject *THPLayout_is_cuda(THPLayout *self)
+{
+  Py_RETURN_TRUE;
+}
+
+typedef PyObject *(*getter)(PyObject *, void *);
+
+static struct PyGetSetDef THPLayout_properties[] = {
+  {"is_cuda",      (getter)THPLayout_is_cuda, nullptr, nullptr, nullptr},
+  {nullptr}
+};
+
+PyTypeObject THPLayoutType = {
+  PyVarObject_HEAD_INIT(nullptr, 0)
+  "torch.layout",                        /* tp_name */
+  sizeof(THPLayout),                     /* tp_basicsize */
+  0,                                     /* tp_itemsize */
+  0,                                     /* tp_dealloc */
+  0,                                     /* tp_print */
+  0,                                     /* tp_getattr */
+  0,                                     /* tp_setattr */
+  0,                                     /* tp_reserved */
+  (reprfunc)THPLayout_repr,              /* tp_repr */
+  0,                                     /* tp_as_number */
+  0,                                     /* tp_as_sequence */
+  0,                                     /* tp_as_mapping */
+  0,                                     /* tp_hash  */
+  0,                                     /* tp_call */
+  0,                                     /* tp_str */
+  0,                                     /* tp_getattro */
+  0,                                     /* tp_setattro */
+  0,                                     /* tp_as_buffer */
+  Py_TPFLAGS_DEFAULT,                    /* tp_flags */
+  nullptr,                               /* tp_doc */
+  0,                                     /* tp_traverse */
+  0,                                     /* tp_clear */
+  0,                                     /* tp_richcompare */
+  0,                                     /* tp_weaklistoffset */
+  0,                                     /* tp_iter */
+  0,                                     /* tp_iternext */
+  0,                                     /* tp_methods */
+  0,                                     /* tp_members */
+  THPLayout_properties,                                     /* tp_getset */
+  0,                                     /* tp_base */
+  0,                                     /* tp_dict */
+  0,                                     /* tp_descr_get */
+  0,                                     /* tp_descr_set */
+  0,                                     /* tp_dictoffset */
+  0,                                     /* tp_init */
+  0,                                     /* tp_alloc */
+  0,                                     /* tp_new */
+};
+
+bool THPLayout_init(PyObject *module)
+{
+  if (PyType_Ready(&THPLayoutType) < 0)
+    return false;
+  Py_INCREF(&THPLayoutType);
+  PyModule_AddObject(module, "layout", (PyObject *)&THPLayoutType);
+  return true;
+}
