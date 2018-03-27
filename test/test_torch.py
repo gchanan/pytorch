@@ -1253,7 +1253,7 @@ class TestTorch(TestCase):
         self.assertEqual(output, expected)
 
     @staticmethod
-    def _test_dtypes(self, cpu_dtypes, cuda_dtypes, is_sparse):
+    def _test_dtypes(self, cpu_dtypes, cuda_dtypes):
         dtypes = cpu_dtypes + (cuda_dtypes if torch.cuda.is_available() else [])
 
         for dtype in dtypes:
@@ -1267,13 +1267,12 @@ class TestTorch(TestCase):
                     out = torch.zeros((2, 3), dtype=dtype)
                     self.assertIs(dtype, out.dtype)
             self.assertEqual(dtype in cuda_dtypes, dtype.is_cuda)
-            self.assertEqual(is_sparse, dtype.is_sparse)
 
     def test_dtypes(self):
         all_dtypes = torch.testing.get_all_dtypes()
-        cpu_dtypes = [d for d in all_dtypes if not d.is_cuda and not d.is_sparse]
-        cuda_dtypes = [d for d in all_dtypes if d.is_cuda and not d.is_sparse]
-        self._test_dtypes(self, cpu_dtypes, cuda_dtypes, False)
+        cpu_dtypes = [d for d in all_dtypes if not d.is_cuda]
+        cuda_dtypes = [d for d in all_dtypes if d.is_cuda]
+        self._test_dtypes(self, cpu_dtypes, cuda_dtypes)
 
     @staticmethod
     def _test_empty_full(self, cpu_dtypes, cuda_dtypes):
@@ -1314,7 +1313,7 @@ class TestTorch(TestCase):
                 check_value(torch.empty_like(v, dtype=int64_dtype, device=device, requires_grad=rg),
                             int64_dtype, device, None, rg)
 
-                if dtype is not torch.float16 and not dtype.is_sparse:
+                if dtype is not torch.float16:
                     fv = 3
                     v = torch.full(shape, fv, dtype=dtype, device=device, requires_grad=rg)
                     check_value(v, dtype, device, fv, rg)
@@ -1330,8 +1329,8 @@ class TestTorch(TestCase):
 
     def test_empty_full(self):
         all_dtypes = torch.testing.get_all_dtypes()
-        cpu_dtypes = [d for d in all_dtypes if not d.is_cuda and not d.is_sparse]
-        cuda_dtypes = [d for d in all_dtypes if d.is_cuda and not d.is_sparse]
+        cpu_dtypes = [d for d in all_dtypes if not d.is_cuda]
+        cuda_dtypes = [d for d in all_dtypes if d.is_cuda]
         self._test_empty_full(self, cpu_dtypes, cuda_dtypes)
 
     def test_dtype_out_match(self):
@@ -1366,8 +1365,6 @@ class TestTorch(TestCase):
         # don't support integral or sparse default types.
         self.assertRaises(TypeError, lambda: torch.set_default_tensor_type('torch.IntTensor'))
         self.assertRaises(TypeError, lambda: torch.set_default_tensor_type(torch.int64))
-        self.assertRaises(TypeError, lambda: torch.set_default_tensor_type(torch.sparse.int64))
-        self.assertRaises(TypeError, lambda: torch.set_default_tensor_type(torch.sparse.float64))
 
         torch.set_default_tensor_type(default_type)
 

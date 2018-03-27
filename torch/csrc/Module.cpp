@@ -20,11 +20,13 @@
 #include "torch/csrc/DynamicTypes.h"
 #include "torch/csrc/DataLoader.h"
 #include "torch/csrc/Generator.h"
+#include "torch/csrc/Layout.h"
 #include "torch/csrc/autograd/generated/python_nn_functions.h"
 #include "torch/csrc/utils/tensor_dtypes.h"
 #include "torch/csrc/autograd/python_variable.h"
 #include "torch/csrc/tensor/python_tensor.h"
 #include "torch/csrc/utils/python_strings.h"
+#include "torch/csrc/utils/tensor_layouts.h"
 #include "torch/csrc/utils/tensor_numpy.h"
 #include "torch/csrc/jit/python_tracer.h"
 #include "torch/csrc/jit/init.h"
@@ -80,6 +82,7 @@ static PyObject * THPModule_initExtension(PyObject *_unused, PyObject *shm_manag
     return NULL;
   }
   torch::utils::initializeDtypes();
+  torch::utils::initializeLayouts();
   torch::tensor::initialize_python_bindings();
   std::string path = THPUtils_unpackString(shm_manager_path);
   libshm_init(path.c_str());
@@ -446,6 +449,7 @@ static PyObject* initModule() {
   ASSERT_TRUE(THPException_init(module));
   THPSize_init(module);
   ASSERT_TRUE(THPDtype_init(module));
+  ASSERT_TRUE(THPLayout_init(module));
   ASSERT_TRUE(THPVariable_initModule(module));
   ASSERT_TRUE(THPFunction_initModule(module));
   ASSERT_TRUE(THPEngine_initModule(module));
