@@ -40,10 +40,6 @@ void initializeDtypes() {
   if (!torch_module) python_error();
   auto cuda_module = THPObjectPtr(PyImport_ImportModule("torch.cuda"));
   if (!cuda_module) python_error();
-  auto sparse_module = THPObjectPtr(PyImport_ImportModule("torch.sparse"));
-  if (!sparse_module) python_error();
-  auto cuda_sparse_module = THPObjectPtr(PyImport_ImportModule("torch.cuda.sparse"));
-  if (!cuda_sparse_module) python_error();
   auto& context = at::globalContext();
   for (auto type_pair : torch::utils::all_declared_types()) {
     at::Backend backend;
@@ -52,31 +48,23 @@ void initializeDtypes() {
     std::string primary_name, legacy_name;
     std::tie(primary_name, legacy_name) = getDtypeNames(scalarType);
     PyObject *module = nullptr;
-    bool is_cuda, is_sparse;
+    bool is_cuda;
     switch (backend) {
       case at::kCPU: {
         module = torch_module.get();
         is_cuda = false;
-        is_sparse = false;
         break;
       }
       case at::kCUDA: {
         module = cuda_module.get();
         is_cuda = true;
-        is_sparse = false;
         break;
       }
       case at::kSparseCPU: {
-        module = sparse_module.get();
-        is_cuda = false;
-        is_sparse = true;
-        break;
+        continue;
       }
       case at::kSparseCUDA: {
-        module = cuda_sparse_module.get();
-        is_cuda = true;
-        is_sparse = true;
-        break;
+        continue;
       }
       default: throw std::runtime_error("Unimplemented backend");
     }
@@ -84,7 +72,7 @@ void initializeDtypes() {
     auto baseType = context.type_registry[static_cast<int>(backend)][static_cast<int>(scalarType)].get();
     auto type = baseType ? torch::autograd::VariableType::getType(*baseType) : nullptr;
     std::string name = std::string(PyModule_GetName(module)) + '.' + primary_name;
-    PyObject *dtype = THPDtype_New(type, name, is_cuda, is_sparse);
+    PyObject *dtype = THPDtype_New(type, name, is_cuda);
     torch::registerDtypeObject((THPDtype*)dtype, backend, scalarType, type);
     Py_INCREF(dtype);
     if (PyModule_AddObject(module, primary_name.c_str(), dtype) != 0) {

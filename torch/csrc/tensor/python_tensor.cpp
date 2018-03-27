@@ -26,6 +26,8 @@ struct PyTensorType {
   PyTypeObject py_type;
   at::Type* aten_type;
   THPDtype *dtype;
+  bool is_sparse;
+  bool is_cuda;
   // The base tensor type i.e. `torch.Tensor`. All tensors are pass isinstance
   // checks on the base type.
   bool is_base_type;
@@ -41,7 +43,7 @@ static void py_bind_tensor_types(const std::vector<PyTensorType>& tensor_types);
 static void py_bind_torch_storage(const PyTensorType& py_type);
 
 static TypeError unavailable_type(const PyTensorType& type) {
-  const char* cuda_msg = type.dtype->is_cuda ? ". Torch not compiled with CUDA enabled." : "";
+  const char* cuda_msg = type.is_cuda ? ". Torch not compiled with CUDA enabled." : "";
   return TypeError("type %s not available%s", type.name, cuda_msg);
 }
 
@@ -51,7 +53,7 @@ static PyObject* Tensor_new(PyTypeObject *type, PyObject *args, PyObject *kwargs
   if (!tensor_type.aten_type) {
     throw unavailable_type(tensor_type);
   }
-  if (tensor_type.dtype->is_cuda) {
+  if (tensor_type.is_cuda) {
     torch::utils::cuda_lazy_init();
   }
   return THPVariable_Wrap(torch::utils::legacy_tensor_ctor(*tensor_type.aten_type, args, kwargs));
@@ -79,7 +81,7 @@ PyObject *Tensor_dtype(PyTensorType* self) {
 }
 
 PyObject *Tensor_is_cuda(PyTensorType* self) {
-  if (self->dtype->is_cuda) {
+  if (self->is_cuda) {
     Py_RETURN_TRUE;
   } else {
     Py_RETURN_FALSE;
@@ -87,7 +89,7 @@ PyObject *Tensor_is_cuda(PyTensorType* self) {
 }
 
 PyObject *Tensor_is_sparse(PyTensorType *self) {
-  if (self->dtype->is_sparse) {
+  if (self->is_sparse) {
     Py_RETURN_TRUE;
   } else {
     Py_RETURN_FALSE;
@@ -179,7 +181,11 @@ static THPObjectPtr get_storage_obj(const PyTensorType& py_type) {
 static void set_type(PyTensorType& type_obj, Backend backend, ScalarType scalarType) {
   auto baseType = globalContext().type_registry[static_cast<int>(backend)][static_cast<int>(scalarType)].get();
   type_obj.aten_type = baseType ? torch::autograd::VariableType::getType(*baseType) : nullptr;
-  type_obj.dtype = torch::getDtype(backend, scalarType);
+  type_obj.is_sparse = backend == kSparseCPU || backend == kSparseCUDA;
+  type_obj.is_cuda = backend == kCUDA || backend == kSparseCUDA;
+  if (!type_obj.is_sparse) {
+    type_obj.dtype = torch::getDtype(backend, scalarType);
+  }
 }
 
 static void set_name(PyTensorType& type_obj, const std::string& name) {
