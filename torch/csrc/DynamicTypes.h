@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <ATen/ATen.h>
 #include "torch/csrc/Dtype.h"
+#include "torch/csrc/Layout.h"
+
 
 namespace torch {
 
@@ -16,10 +18,12 @@ void registerStoragePyTypeObject(
     bool is_cuda, bool is_sparse);
 
 void registerDtypeObject(THPDtype *dtype, at::Backend backend, at::ScalarType scalarType, const at::Type* type);
+void registerLayoutObject(THPLayout *layout, at::Backend backend);
 
 PyObject* createPyObject(const at::Storage& storage);
 THPDtype* getDtype(const at::Type& type);
 THPDtype* getDtype(at::Backend backend, at::ScalarType scalarType);
+THPLayout* getLayout(at::Backend backend);
 std::unique_ptr<at::Storage> createStorage(PyObject* obj);
 
 bool isStorage(PyObject* obj);
