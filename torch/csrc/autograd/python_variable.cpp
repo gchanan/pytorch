@@ -421,7 +421,16 @@ PyObject *THPVariable_dtype(THPVariable *self)
 {
   HANDLE_TH_ERRORS
   auto& self_ = self->cdata;
-  return torch::autograd::utils::wrap(torch::getDtype(self_.type()));
+  return torch::autograd::utils::wrap(torch::getDtype(self_.type().is_cuda(), self_.type().scalarType()));
+  END_HANDLE_TH_ERRORS
+}
+
+static PyObject * THPVariable_layout(PyObject* self, PyObject* args) {
+  HANDLE_TH_ERRORS
+  auto& self_ = reinterpret_cast<THPVariable*>(self)->cdata;
+  auto layout = torch::getLayout(self_.type().backend());
+  Py_INCREF(layout);
+  return (PyObject*)layout;
   END_HANDLE_TH_ERRORS
 }
 
@@ -444,6 +453,7 @@ static struct PyGetSetDef THPVariable_properties[] = {
   {"is_cuda", (getter)THPVariable_is_cuda, nullptr, nullptr, nullptr},
   {"is_sparse", (getter)THPVariable_is_sparse, nullptr, nullptr, nullptr},
   {"dtype", (getter)THPVariable_dtype, NULL, NULL, NULL},
+  {"layout", (getter)THPVariable_layout, NULL, NULL, NULL},
   {nullptr}
 };
 
