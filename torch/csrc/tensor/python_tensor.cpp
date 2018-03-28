@@ -8,6 +8,7 @@
 #include "torch/csrc/Dtype.h"
 #include "torch/csrc/DynamicTypes.h"
 #include "torch/csrc/Exceptions.h"
+#include "torch/csrc/Layout.h"
 #include "torch/csrc/autograd/variable.h"
 #include "torch/csrc/autograd/python_variable.h"
 #include "torch/csrc/autograd/generated/VariableType.h"
@@ -25,7 +26,8 @@ using namespace torch::autograd;
 struct PyTensorType {
   PyTypeObject py_type;
   at::Type* aten_type;
-  THPDtype *dtype;
+  THPDtype* dtype;
+  THPLayout* layout;
   bool is_sparse;
   bool is_cuda;
   // The base tensor type i.e. `torch.Tensor`. All tensors are pass isinstance
@@ -80,6 +82,10 @@ PyObject *Tensor_dtype(PyTensorType* self) {
   return torch::autograd::utils::wrap(self->dtype);
 }
 
+PyObject *Tensor_layout(PyTensorType* self) {
+  return torch::autograd::utils::wrap(self->layout);
+}
+
 PyObject *Tensor_is_cuda(PyTensorType* self) {
   if (self->is_cuda) {
     Py_RETURN_TRUE;
@@ -105,6 +111,7 @@ typedef PyObject *(*getter)(PyObject *, void *);
 
 static struct PyGetSetDef metaclass_properties[] = {
   {"dtype",        (getter)Tensor_dtype, nullptr, nullptr, nullptr},
+  {"layout",       (getter)Tensor_layout, nullptr, nullptr, nullptr},
   {"is_cuda",      (getter)Tensor_is_cuda, nullptr, nullptr, nullptr},
   {"is_sparse",    (getter)Tensor_is_sparse, nullptr, nullptr, nullptr},
   {nullptr}
@@ -183,6 +190,7 @@ static void set_type(PyTensorType& type_obj, Backend backend, ScalarType scalarT
   type_obj.aten_type = baseType ? torch::autograd::VariableType::getType(*baseType) : nullptr;
   type_obj.is_sparse = backend == kSparseCPU || backend == kSparseCUDA;
   type_obj.is_cuda = backend == kCUDA || backend == kSparseCUDA;
+  type_obj.layout = torch::getLayout(backend);
   if (!type_obj.is_sparse) {
     type_obj.dtype = torch::getDtype(backend, scalarType);
   }
