@@ -41,7 +41,7 @@ namespace torch {
 
 enum class ParameterType {
   TENSOR, SCALAR, INT64, DOUBLE, TENSOR_LIST, INT_LIST, GENERATOR,
-  BOOL, STORAGE, PYOBJECT, TYPE
+  BOOL, STORAGE, PYOBJECT, TYPE, LAYOUT
 };
 
 struct FunctionParameter;
@@ -92,6 +92,8 @@ struct PythonArgs {
   inline std::unique_ptr<at::Storage> storage(int i);
   inline const at::Type& type(int i);
   inline const at::Type& typeWithDefault(int i, const at::Type& default_type);
+  inline const THPLayout& layout(int i);
+  inline const THPLayout& layoutWithDefault(int i, const THPLayout& defaultLayout);
   inline PyObject* pyobject(int i);
   inline int64_t toInt64(int i);
   inline int64_t toInt64WithDefault(int i, int64_t default_int);
@@ -140,6 +142,7 @@ struct FunctionParameter {
     int64_t default_int;
     double default_double;
     at::Type* default_type;
+    THPLayout* default_layout;
   };
 };
 
@@ -268,6 +271,15 @@ inline const at::Type& PythonArgs::type(int i) {
 inline const at::Type& PythonArgs::typeWithDefault(int i, const at::Type& default_type) {
   if (!args[i]) return default_type;
   return type(i);
+}
+
+inline const THPLayout& PythonArgs::layout(int i) {
+  return layoutWithDefault(i, *signature.params[i].default_layout);
+}
+
+inline const THPLayout& PythonArgs::layoutWithDefault(int i, const THPLayout& default_layout) {
+  if (!args[i]) return default_layout;
+  return *reinterpret_cast<THPLayout*>(args[i]);
 }
 
 inline int64_t PythonArgs::toInt64(int i) {

@@ -24,6 +24,7 @@ PyObject* createPyObject(const at::Storage& storage);
 THPDtype* getDtype(const at::Type& type);
 THPDtype* getDtype(at::Backend backend, at::ScalarType scalarType);
 THPLayout* getLayout(at::Backend backend);
+
 std::unique_ptr<at::Storage> createStorage(PyObject* obj);
 
 bool isStorage(PyObject* obj);
