@@ -33,6 +33,9 @@ static THPDtype* dtype_registry
   [static_cast<int>(at::Backend::NumOptions)]
   [static_cast<int>(at::ScalarType::NumOptions)] = {};
 
+static THPLayout* layout_registry
+  [static_cast<int>(at::Backend::NumOptions)] = {};
+
 static at::Backend get_backend(bool is_cuda, bool is_sparse) {
   if (is_cuda) {
     if (is_sparse){
@@ -73,6 +76,10 @@ void registerDtypeObject(THPDtype *dtype, at::Backend backend, at::ScalarType sc
   }
 }
 
+void registerLayoutObject(THPLayout *layout, at::Backend backend) {
+  layout_registry[static_cast<int>(backend)] = layout;
+}
+
 static PyTypeObject* getPyTypeObject(const at::Storage& storage)
 {
   auto it = attype_to_py_storage_type.find(&storage.type());
@@ -88,6 +95,15 @@ THPDtype* getDtype(const at::Type& type) {
     return it->second;
   }
   throw std::invalid_argument("unsupported at::Type");
+}
+
+THPLayout* getLayout(at::Backend backend) {
+  auto layout = layout_registry[static_cast<int>(backend)];
+  if (layout) {
+    return layout;
+  } else {
+    throw std::invalid_argument("unsupported at::Backend");
+  }
 }
 
 THPDtype* getDtype(at::Backend backend, at::ScalarType scalarType) {
