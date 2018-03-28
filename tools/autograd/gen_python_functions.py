@@ -207,6 +207,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
         'Generator *': 'generator',
         'Storage &': 'storage',
         'const Type &': 'type',
+        'const THPLayout &': 'layout',
         'int64_t': 'toInt64',
         'bool': 'toBool',
         'double': 'toDouble',
@@ -317,10 +318,13 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 formal_args.append('Tensor & {}'.format(arg['name']))
                 actuals.append('results[{}]'.format(i))
 
+        layout = None
+        parsed_type_dispatch = None
         # this goes after the outputs to match the signature generation.
         arg_idx = arg_idx if out_idx is None else out_idx + 1
         for arg in type_dispatched_args:
-            append_actuals_formals(*parse_arg(arg, arg_idx, unpack))
+            #append_actuals_formals(*parse_arg(arg, arg_idx, unpack))
+            parsed_type_dispatch = parse_arg(arg, arg_idx, unpack)
             arg_idx += 1
 
         # check python_binding_arguments
@@ -329,16 +333,29 @@ def create_python_bindings(python_functions, has_self, is_module=False):
         requires_grad = None
         python_binding_arguments = declaration.get('python_binding_arguments', [])
         if 'dtype' in (a['name'] for a in python_binding_arguments):
-            dtype_idx, device_idx, requires_grad_idx = (arg_idx, arg_idx + 1, arg_idx + 2)
+            if 'layout' in (a['name'] for a in python_binding_arguments):
+                dtype_idx, layout_idx, device_idx, requires_grad_idx = (arg_idx, arg_idx + 1, arg_idx + 2, arg_idx + 3)
+                print("layout_idx is", layout_idx)
+            else:
+                dtype_idx, device_idx, requires_grad_idx = (arg_idx, arg_idx + 1, arg_idx + 2)
         else:
-            device_idx, requires_grad_idx = (arg_idx, arg_idx + 1)
+            print("no dtype")
+            if 'layout' in (a['name'] for a in python_binding_arguments):
+                layout_idx, device_idx, requires_grad_idx = (arg_idx, arg_idx + 1, arg_idx + 2)
+            else:
+                device_idx, requires_grad_idx = (arg_idx, arg_idx + 1)
 
+        print("done before binding")
         for arg in python_binding_arguments:
             if arg['name'] == 'dtype' and arg['simple_type'] == 'Type':
                 # out(s) determines the dtype if it is present, so don't pass the dtype to the dispatch.
                 if len(outputs) == 0:
+                    parsed_type_dispatch = parse_arg(arg, arg_idx, unpack)
+                    arg_idx += 1
                     has_dtype_bind = True
-                    append_actuals_formals(*parse_arg(arg, dtype_idx))
+                    #append_actuals_formals(*parse_arg(arg, dtype_idx))
+                    parsed_type_dispatch = parse_arg(arg, arg_idx, unpack)
+
                 elif len(outputs) > 1:
                     raise RuntimeError("Not supported: dtype parameter with multiple outputs")
             elif arg['name'] == 'device' and arg['simple_type'] == 'int64_t':
@@ -347,21 +364,35 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                     append_actuals_formals(*parse_arg(arg, device_idx))
             elif arg['name'] == 'requires_grad' and arg['simple_type'] == 'bool':
                 requires_grad = parse_arg(arg, requires_grad_idx)[0]
+            elif arg['name'] == 'layout' and arg['simple_type'] == 'Layout':
+                if len(outputs) == 0:
+                    layout = parse_arg(arg, layout_idx)[0]
+                    if not parsed_type_dispatch:
+                        print("declaration", declaration)
+                    assert parsed_type_dispatch
+                    my_actuals = "torch::utils::toLayout({}, {})".format(parsed_type_dispatch[0], layout)
+                    actuals.append(my_actuals)
+                    formal_args.append(parsed_type_dispatch[1])
+                    print("layout is!", layout)
             else:
                 raise RuntimeError(("found {} in python_binding_arguments but only "
-                                   " \"bool requires_grad\" and \"Type dtype\" are supported".format(arg)))
+                                   " \"bool requires_grad\", \"Type dtype\", and \"Layout layout "
+                                   "are supported".format(arg)))
 
         env['unpack_args'] = []
         env['formal_args'] = formal_args
         env['actuals'] = actuals
+        print("!!!FORMALS", formal_args, "ACTUALS", actuals)
         has_any_dtype = has_dtype_bind or any(a['name'] == 'dtype' and a['simple_type'] == 'Type' for a in inputs)
         type_dispatched_name = type_dispatched_args[0]['name'] if len(type_dispatched_args) > 0 else None
         maybe_init_cuda = 'dtype' if has_any_dtype else type_dispatched_name
         env['initialize_cuda'] = 'maybe_initialize_cuda({});'.format(maybe_init_cuda) if maybe_init_cuda else []
         if 'call_args' in declaration:
+            print("call args", declaration)
             env['dispatch_args'] = declaration['call_args']
         else:
             env['dispatch_args'] = [arg['name'] for arg in declaration['arguments']]
+        # combine type and layout
         if 'Tensor' in declaration['method_of']:
             env['dispatch_args'] = [arg for arg in env['dispatch_args'] if arg != 'self']
             env['dispatch_call'] = 'self.{}'.format(declaration['name'])
@@ -434,6 +465,16 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 'is_type_dispatched': True,
             }
             python_binding_arguments.append(dtype_arg)
+        if has_tensor_return and not has_tensor_input_arg:
+            layout_arg = {
+                'default': 'torch.strided',
+                'dynamic_type': 'Layout',
+                'kwarg_only': True,
+                'name': 'layout',
+                'type': 'const THPLayout &',
+                'simple_type': 'Layout',
+            }
+            python_binding_arguments.append(layout_arg)
         if (not has_tensor_input_arg or name.endswith('_like')) and has_tensor_return:
             device_arg = {
                 'default': -1,
@@ -526,11 +567,13 @@ def group_declarations(declarations):
     # first group by signature ignoring out arguments
     for declaration in declarations:
         signature = get_python_signature(declaration, False)
+        print("signature1", signature)
         v = grouped[signature]
         if declaration['name'].endswith('_out'):
             v['out'] = declaration
             # prefer the signature with optional out=... arguments
             v['signature'] = get_python_signature(declaration, True)
+            print("signature2", v['signature'])
         else:
             v['base'] = declaration
             if 'signature' not in v:

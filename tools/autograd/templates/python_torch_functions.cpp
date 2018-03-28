@@ -14,6 +14,7 @@
 #include "torch/csrc/utils/python_arg_parser.h"
 #include "torch/csrc/utils/tensor_new.h"
 #include "torch/csrc/utils/tensor_numpy.h"
+#include "torch/csrc/utils/tensor_layouts.h"
 
 #include "python_torch_functions_dispatch.h"
 
@@ -32,6 +33,14 @@ static Tensor set_requires_grad(Tensor self, bool requires_grad) {
 
 static void check_out_type_matches(Tensor result, const at::Type &type) {
   if (result.type() != type) {
+    at::runtime_error("type corresponding to %s does not match type of out parameter (%s)",
+                      type.toString(), result.type().toString());
+  }
+}
+
+static void check_out_type_matches(Tensor result, const at::Type &type, const THPLayout& layout) {
+  const auto& result_type = torch::utils::toLayout(result.type(), layout);
+  if (result_type != type) {
     at::runtime_error("type corresponding to %s does not match type of out parameter (%s)",
                       type.toString(), result.type().toString());
   }

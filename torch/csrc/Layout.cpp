@@ -16,6 +16,7 @@ PyObject *THPLayout_New(at::Backend cdata, const std::string& name)
   auto self = THPObjectPtr{type->tp_alloc(type, 0)};
   if (!self) throw python_error();
   auto self_ = reinterpret_cast<THPLayout*>(self.get());
+  self_->is_strided = cdata == at::Backend::CPU || cdata == at::Backend::CUDA;
   std::strncpy (self_->name, name.c_str(), LAYOUT_NAME_LEN);
   self_->name[LAYOUT_NAME_LEN] = '\0';
   return self.release();

@@ -3,7 +3,6 @@
 #include "tensor_layouts.h"
 #include "torch/csrc/DynamicTypes.h"
 #include "torch/csrc/Exceptions.h"
-#include "torch/csrc/Layout.h"
 
 namespace torch { namespace utils {
 
@@ -26,6 +25,14 @@ void initializeLayouts() {
   }
   registerLayoutObject((THPLayout*)sparse_coo_layout, at::Backend::SparseCPU);
   registerLayoutObject((THPLayout*)sparse_coo_layout, at::Backend::SparseCUDA);
+}
+
+const at::Type& toLayout(const at::Type& type, const THPLayout& layout) {
+  if (layout.is_strided) {
+    return type.toBackend(type.is_cuda() ? at::Backend::CUDA : at::Backend::CPU);  
+  } else {
+    return type.toBackend(type.is_cuda() ? at::Backend::SparseCUDA : at::Backend::SparseCPU);
+  }  
 }
 
 }} // namespace torch::utils

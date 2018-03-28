@@ -7,6 +7,7 @@ const int LAYOUT_NAME_LEN = 64;
 
 struct THPLayout {
   PyObject_HEAD
+  bool is_strided;
   char name[LAYOUT_NAME_LEN + 1];
 };
 
