@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Python.h>
-#include "ATen/ATen.h"
+#include <string>
 
 const int LAYOUT_NAME_LEN = 64;
 
@@ -17,6 +17,6 @@ inline bool THPLayout_Check(PyObject *obj) {
   return Py_TYPE(obj) == &THPLayoutType;
 }
 
-PyObject * THPLayout_New(at::Backend cdata, const std::string& name);
+PyObject * THPLayout_New(bool is_strided, const std::string& name);
 
 bool THPLayout_init(PyObject *module);

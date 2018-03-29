@@ -18,6 +18,7 @@
 
 #include "THP.h"
 #include "torch/csrc/DynamicTypes.h"
+#include "torch/csrc/Dtype.h"
 #include "torch/csrc/DataLoader.h"
 #include "torch/csrc/Generator.h"
 #include "torch/csrc/Layout.h"

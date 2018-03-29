@@ -10,7 +10,7 @@ void initializeLayouts() {
   auto torch_module = THPObjectPtr(PyImport_ImportModule("torch"));
   if (!torch_module) python_error();
 
-  PyObject *strided_layout = THPLayout_New(at::kCPU, "torch.strided");
+  PyObject *strided_layout = THPLayout_New(true, "torch.strided");
   Py_INCREF(strided_layout);
   if (PyModule_AddObject(torch_module, "strided", strided_layout) != 0) {
     throw python_error();
@@ -19,7 +19,7 @@ void initializeLayouts() {
   registerLayoutObject((THPLayout*)strided_layout, at::Backend::CPU);
   registerLayoutObject((THPLayout*)strided_layout, at::Backend::CUDA);
 
-  PyObject *sparse_coo_layout = THPLayout_New(at::kSparseCPU, "torch.sparse_coo");
+  PyObject *sparse_coo_layout = THPLayout_New(false, "torch.sparse_coo");
   Py_INCREF(sparse_coo_layout);
   if (PyModule_AddObject(torch_module, "sparse_coo", sparse_coo_layout) != 0) {
     throw python_error();
