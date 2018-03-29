@@ -27,12 +27,4 @@ void initializeLayouts() {
   registerLayoutObject((THPLayout*)sparse_coo_layout, at::Backend::SparseCUDA);
 }
 
-const at::Type& toLayout(const at::Type& type, const THPLayout& layout) {
-  if (layout.is_strided) {
-    return type.toBackend(type.is_cuda() ? at::Backend::CUDA : at::Backend::CPU);
-  } else {
-    return type.toBackend(type.is_cuda() ? at::Backend::SparseCUDA : at::Backend::SparseCPU);
-  }
-}
-
 }} // namespace torch::utils
