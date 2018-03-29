@@ -15,6 +15,7 @@ void initializeLayouts() {
   if (PyModule_AddObject(torch_module, "strided", strided_layout) != 0) {
     throw python_error();
   }
+  // for now, let's look these up by Backend; we could create our own enum in the future.
   registerLayoutObject((THPLayout*)strided_layout, at::Backend::CPU);
   registerLayoutObject((THPLayout*)strided_layout, at::Backend::CUDA);
 
