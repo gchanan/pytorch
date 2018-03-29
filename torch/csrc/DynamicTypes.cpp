@@ -29,11 +29,11 @@ static std::unordered_map<std::string, at::ScalarType> attype_names = {
 
 static std::unordered_map<at::Type*, PyTypeObject*> attype_to_py_storage_type;
 static std::unordered_map<PyTypeObject*, at::Type*> py_storage_type_to_attype;
-static std::unordered_map<const at::Type*, THPDtype*> attype_to_dtype;
 
+static const int NumBoolOptions = 2;
 static THPDtype* dtype_registry
-  [static_cast<int>(at::Backend::NumOptions)]
-  [static_cast<int>(at::ScalarType::NumOptions)] = {};
+  [static_cast<int>(at::ScalarType::NumOptions)]
+  [NumBoolOptions] = {};
 
 static THPLayout* layout_registry
   [static_cast<int>(at::Backend::NumOptions)] = {};
@@ -71,11 +71,8 @@ void registerStoragePyTypeObject(PyTypeObject *pytype, const std::string& name, 
   }
 }
 
-void registerDtypeObject(THPDtype *dtype, at::Backend backend, at::ScalarType scalarType, const at::Type* type) {
-  dtype_registry[static_cast<int>(backend)][static_cast<int>(scalarType)] = dtype;
-  if (type != nullptr) {
-    attype_to_dtype[type] = dtype;
-  }
+void registerDtypeObject(THPDtype *dtype, at::ScalarType scalarType, bool is_cuda) {
+  dtype_registry[static_cast<int>(scalarType)][is_cuda] = dtype;
 }
 
 void registerLayoutObject(THPLayout *layout, at::Backend backend) {
@@ -104,9 +101,8 @@ at::Type& getType(const THPDtype &dtype, const THPLayout& layout) {
   return *var_type;
 }
 
-THPDtype* getDtype(bool is_cuda, at::ScalarType scalarType) {
-  at::Backend backend = is_cuda ? at::Backend::CUDA : at::Backend::CPU;
-  auto dtype = dtype_registry[static_cast<int>(backend)][static_cast<int>(scalarType)];
+THPDtype* getDtype(at::ScalarType scalarType, bool is_cuda) {
+  auto dtype = dtype_registry[static_cast<int>(scalarType)][is_cuda];
   if (!dtype) {
     throw std::invalid_argument("unsupported backend, scalarType");
   }

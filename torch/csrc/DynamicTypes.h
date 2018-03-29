@@ -16,7 +16,7 @@ void registerStoragePyTypeObject(
     PyTypeObject *pytype, const std::string& name,
     bool is_cuda, bool is_sparse);
 
-void registerDtypeObject(THPDtype *dtype, at::Backend backend, at::ScalarType scalarType, const at::Type* type);
+void registerDtypeObject(THPDtype *dtype, at::ScalarType scalarType, bool is_cuda);
 void registerLayoutObject(THPLayout *layout, at::Backend backend);
 
 PyObject* createPyObject(const at::Storage& storage);

@@ -40,7 +40,6 @@ void initializeDtypes() {
   if (!torch_module) python_error();
   auto cuda_module = THPObjectPtr(PyImport_ImportModule("torch.cuda"));
   if (!cuda_module) python_error();
-  auto& context = at::globalContext();
   for (auto type_pair : torch::utils::all_declared_types()) {
     at::Backend backend;
     at::ScalarType scalarType;
@@ -68,12 +67,9 @@ void initializeDtypes() {
       }
       default: throw std::runtime_error("Unimplemented backend");
     }
-    // use this rather than context.getType() because getType throws exceptions.
-    auto baseType = context.type_registry[static_cast<int>(backend)][static_cast<int>(scalarType)].get();
-    auto type = baseType ? torch::autograd::VariableType::getType(*baseType) : nullptr;
     std::string name = std::string(PyModule_GetName(module)) + '.' + primary_name;
     PyObject *dtype = THPDtype_New(scalarType, is_cuda, name);
-    torch::registerDtypeObject((THPDtype*)dtype, backend, scalarType, type);
+    torch::registerDtypeObject((THPDtype*)dtype, scalarType, is_cuda);
     Py_INCREF(dtype);
     if (PyModule_AddObject(module, primary_name.c_str(), dtype) != 0) {
       throw python_error();
