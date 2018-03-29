@@ -115,11 +115,11 @@ THPDtype* getDtype(bool is_cuda, at::ScalarType scalarType) {
 
 THPLayout* getLayout(at::Backend backend) {
   auto layout = layout_registry[static_cast<int>(backend)];
-  if (layout) {
-    return layout;
-  } else {
+  if (!layout) {
     throw std::invalid_argument("unsupported at::Backend");
   }
+
+  return layout;
 }
 
 PyObject* createPyObject(const at::Storage& storage)
