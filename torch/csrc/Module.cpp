@@ -81,8 +81,8 @@ static PyObject * THPModule_initExtension(PyObject *_unused, PyObject *shm_manag
     THPUtils_setError("initialization error - expected bytes/string object as shm_manager_path!");
     return NULL;
   }
-  torch::utils::initializeDtypes();
   torch::utils::initializeLayouts();
+  torch::utils::initializeDtypes();
   torch::tensor::initialize_python_bindings();
   std::string path = THPUtils_unpackString(shm_manager_path);
   libshm_init(path.c_str());

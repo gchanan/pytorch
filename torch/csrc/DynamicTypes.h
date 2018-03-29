@@ -21,8 +21,8 @@ void registerDtypeObject(THPDtype *dtype, at::Backend backend, at::ScalarType sc
 void registerLayoutObject(THPLayout *layout, at::Backend backend);
 
 PyObject* createPyObject(const at::Storage& storage);
-THPDtype* getDtype(const at::Type& type);
-THPDtype* getDtype(at::Backend backend, at::ScalarType scalarType);
+THPDtype* getDtype(bool is_cuda, at::ScalarType scalarType);
+at::Type& getType(const THPDtype &dtype, const THPLayout& layout);
 THPLayout* getLayout(at::Backend backend);
 std::unique_ptr<at::Storage> createStorage(PyObject* obj);
 

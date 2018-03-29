@@ -8,27 +8,22 @@
 #include "torch/csrc/utils/tensor_dtypes.h"
 #include "torch/csrc/utils/tensor_types.h"
 
-PyObject * THPDtype_New(at::Type* cdata, const std::string& name, bool is_cuda)
+PyObject * THPDtype_New(at::ScalarType scalar_type, bool is_cuda, const std::string& name)
 {
   auto type = (PyTypeObject*)&THPDtypeType;
   auto self = THPObjectPtr{type->tp_alloc(type, 0)};
   if (!self) throw python_error();
   auto self_ = reinterpret_cast<THPDtype*>(self.get());
-  self_->cdata = cdata;
+  self_->scalar_type = scalar_type;
+  self_->is_cuda = is_cuda;
   std::strncpy (self_->name, name.c_str(), DTYPE_NAME_LEN);
   self_->name[DTYPE_NAME_LEN] = '\0';
-  self_->is_cuda = is_cuda;
   return self.release();
 }
 
 PyObject *THPDtype_repr(THPDtype *self)
 {
   return THPUtils_packString(self->name);
-}
-
-PyObject *THPDtype_get_cdata(THPDtype *self)
-{
-  return PyLong_FromVoidPtr(self->cdata);
 }
 
 PyObject *THPDtype_is_cuda(THPDtype *self)
@@ -43,7 +38,6 @@ PyObject *THPDtype_is_cuda(THPDtype *self)
 typedef PyObject *(*getter)(PyObject *, void *);
 
 static struct PyGetSetDef THPDtype_properties[] = {
-  {"_cdata",       (getter)THPDtype_get_cdata, nullptr, nullptr, nullptr},
   {"is_cuda",      (getter)THPDtype_is_cuda, nullptr, nullptr, nullptr},
   {nullptr}
 };

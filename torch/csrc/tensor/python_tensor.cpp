@@ -191,9 +191,7 @@ static void set_type(PyTensorType& type_obj, Backend backend, ScalarType scalarT
   type_obj.is_sparse = backend == kSparseCPU || backend == kSparseCUDA;
   type_obj.is_cuda = backend == kCUDA || backend == kSparseCUDA;
   type_obj.layout = torch::getLayout(backend);
-  if (!type_obj.is_sparse) {
-    type_obj.dtype = torch::getDtype(backend, scalarType);
-  }
+  type_obj.dtype = torch::getDtype(type_obj.is_cuda, scalarType);
 }
 
 static void set_name(PyTensorType& type_obj, const std::string& name) {

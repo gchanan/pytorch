@@ -3,9 +3,11 @@
 #include "DynamicTypes.h"
 #include "PythonTypes.h"
 #include "Exceptions.h"
+#include "torch/csrc/autograd/generated/VariableType.h"
 
 #include <vector>
 #include <unordered_map>
+#include <sstream>
 
 #ifdef WITH_CUDA
 #include <THC/THC.h>
@@ -89,12 +91,26 @@ static PyTypeObject* getPyTypeObject(const at::Storage& storage)
   throw std::invalid_argument("unsupported Storage type");
 }
 
-THPDtype* getDtype(const at::Type& type) {
-  auto it = attype_to_dtype.find(&type);
-  if (it != attype_to_dtype.end()) {
-    return it->second;
+at::Type& getType(const THPDtype &dtype, const THPLayout& layout) {
+  auto var_type = torch::autograd::VariableType::getType(at::getType(get_backend(dtype.is_cuda, !layout.is_strided), dtype.scalar_type));
+  if (!var_type) {
+    std::ostringstream oss;
+    oss << "Error attempting to use dtype " << dtype.name << " with layout " << layout.name << ".";
+    if (dtype.is_cuda) {
+      oss << "  Torch not compiled with CUDA enabled." << std::endl;
+    }
+    throw std::runtime_error(oss.str());
   }
-  throw std::invalid_argument("unsupported at::Type");
+  return *var_type;
+}
+
+THPDtype* getDtype(bool is_cuda, at::ScalarType scalarType) {
+  at::Backend backend = is_cuda ? at::Backend::CUDA : at::Backend::CPU;
+  auto dtype = dtype_registry[static_cast<int>(backend)][static_cast<int>(scalarType)];
+  if (!dtype) {
+    throw std::invalid_argument("unsupported backend, scalarType");
+  }
+  return dtype;
 }
 
 THPLayout* getLayout(at::Backend backend) {
@@ -104,14 +120,6 @@ THPLayout* getLayout(at::Backend backend) {
   } else {
     throw std::invalid_argument("unsupported at::Backend");
   }
-}
-
-THPDtype* getDtype(at::Backend backend, at::ScalarType scalarType) {
-  auto dtype = dtype_registry[static_cast<int>(backend)][static_cast<int>(scalarType)];
-  if (!dtype) {
-    throw std::invalid_argument("unsupported backend, scalarType");
-  }
-  return dtype;
 }
 
 PyObject* createPyObject(const at::Storage& storage)

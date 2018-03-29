@@ -72,7 +72,7 @@ if (r.isNone(${out_idx})) {
   ${call_dispatch}
 } else {
   if (!r.isNone(${type_idx})) {
-    check_out_type_matches(r.tensor(${out_idx}), r.type(${type_idx}), r.layout(${layout_idx}));
+    check_out_type_matches(r.tensor(${out_idx}), r.dtype(${type_idx}), r.layout(${layout_idx}));
   }
   ${call_dispatch_out}
 }
@@ -206,7 +206,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
         'Tensor &': 'tensor',
         'Generator *': 'generator',
         'Storage &': 'storage',
-        'const Type &': 'type',
+        'const Type &': 'dtype',
         'const THPLayout &': 'layout',
         'int64_t': 'toInt64',
         'bool': 'toBool',
@@ -258,7 +258,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
         outputs = [arg for arg in declaration['arguments'] if is_output(arg)]
 
         def get_type_dispatched(args):
-            return [arg for arg in args if arg.get('is_type_dispatched')]
+            return [arg for arg in args if arg['simple_type'] == 'Type']
         type_dispatched_actual_args = get_type_dispatched(declaration['arguments'])
         type_dispatched_bindings = get_type_dispatched(declaration['python_binding_arguments'])
         assert len(type_dispatched_actual_args + type_dispatched_bindings) <= 1
@@ -312,7 +312,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
 
         unpack = any(arg.get('python_default_init') for arg in inputs)
         for arg in inputs:
-            if arg.get('is_type_dispatched'):
+            if arg.get('is_type_dispatched') or arg['simple_type'] == 'Type':
                 continue
             if has_self and arg['name'] == 'self':
                 formal_args.append('Tensor & self')
@@ -363,7 +363,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 if len(outputs) == 0:
                     layout = parse_arg(arg, layout_idx)[0]
                     assert parsed_type_dispatch
-                    actuals.append("torch::utils::toLayout({}, {})".format(parsed_type_dispatch[0], layout))
+                    actuals.append("torch::getType({}, {})".format(parsed_type_dispatch[0], layout))
                     formal_args.append(parsed_type_dispatch[1])
             else:
                 raise RuntimeError(("found {} in python_binding_arguments but only "
@@ -432,6 +432,8 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 has_tensor_input_arg = True
             if arg.get('is_type_dispatched'):
                 has_type_dispatched = True
+            if arg['simple_type'] == 'Type':
+                has_type_dispatched = True
             if arg['name'] == 'requires_grad':
                 raise ValueError("argument named requires_grad not supported")
 
@@ -454,7 +456,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 'is_type_dispatched': True,
             }
             python_binding_arguments.append(dtype_arg)
-        if has_tensor_return and not has_tensor_input_arg:
+        if (not has_tensor_input_arg or (name.endswith('_like') and has_type_dispatched)) and has_tensor_return:
             layout_arg = {
                 'default': 'torch.strided',
                 'dynamic_type': 'Layout',
@@ -582,7 +584,7 @@ def get_python_signature(declaration, include_out):
     positional = True
 
     def get_typed_arg(arg):
-        typename = arg['simple_type']
+        typename = arg['simple_type'] if arg['simple_type'] != 'Type' else 'Dtype'
         if arg.get('is_nullable'):
             typename = '{}?'.format(typename)
         if arg.get('size') is not None:
