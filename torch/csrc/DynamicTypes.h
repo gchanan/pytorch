@@ -9,7 +9,6 @@
 #include "torch/csrc/Dtype.h"
 #include "torch/csrc/Layout.h"
 
-
 namespace torch {
 
 // Register a PyTypeObject* with the given attributes
@@ -21,11 +20,11 @@ void registerDtypeObject(THPDtype *dtype, at::Backend backend, at::ScalarType sc
 void registerLayoutObject(THPLayout *layout, at::Backend backend);
 
 PyObject* createPyObject(const at::Storage& storage);
-THPDtype* getDtype(bool is_cuda, at::ScalarType scalarType);
-at::Type& getType(const THPDtype &dtype, const THPLayout& layout);
-THPLayout* getLayout(at::Backend backend);
 std::unique_ptr<at::Storage> createStorage(PyObject* obj);
-
 bool isStorage(PyObject* obj);
+
+THPDtype* getDtype(bool is_cuda, at::ScalarType scalarType);
+THPLayout* getLayout(at::Backend backend);
+at::Type& getType(const THPDtype &dtype, const THPLayout& layout);
 
 }  // namespace torch
