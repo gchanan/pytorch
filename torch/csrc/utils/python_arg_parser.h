@@ -93,7 +93,6 @@ struct PythonArgs {
   inline const THPDtype& dtype(int i);
   inline const THPDtype& dtypeWithDefault(int i, const THPDtype& default_dtype);
   inline const THPLayout& layout(int i);
-  inline const THPLayout& layoutWithDefault(int i, const THPLayout& default_layout);
   inline PyObject* pyobject(int i);
   inline int64_t toInt64(int i);
   inline int64_t toInt64WithDefault(int i, int64_t default_int);
@@ -269,11 +268,7 @@ inline const THPDtype& PythonArgs::dtype(int i) {
 }
 
 inline const THPLayout& PythonArgs::layout(int i) {
-  return layoutWithDefault(i, *signature.params[i].default_layout);
-}
-
-inline const THPLayout& PythonArgs::layoutWithDefault(int i, const THPLayout& default_layout) {
-  if (!args[i]) return default_layout;
+  if (!args[i]) return *signature.params[i].default_layout;
   return *reinterpret_cast<THPLayout*>(args[i]);
 }
 
