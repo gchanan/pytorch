@@ -163,7 +163,7 @@ void FunctionParameter::set_default_str(const std::string& str) {
     if (str == "None") {
       default_dtype = nullptr;
     } else if (str == "torch.int64") {
-      default_dtype = torch::getDtype(false, kLong);
+      default_dtype = torch::getDtype(kLong, false);
     } else {
       throw std::runtime_error("invalid default value for dtype: " + str);
     }

@@ -102,7 +102,7 @@ static PyObject * THPVariable__promote_types(PyObject* self, PyObject* args, PyO
                         d1.is_cuda ? "true" : "false", d2.is_cuda ? "true" : "false");
     }
     ScalarType promoted = at::promoteTypes(d1.scalar_type, d2.scalar_type);
-    return torch::autograd::utils::wrap(torch::getDtype(d1.is_cuda, promoted));
+    return torch::autograd::utils::wrap(torch::getDtype(promoted, d1.is_cuda));
   }
   Py_RETURN_NONE;
   END_HANDLE_TH_ERRORS

@@ -260,7 +260,7 @@ inline const THPDtype& PythonArgs::dtype(int i) {
     auto dtype = signature.params[i].default_dtype;
     if (!dtype) {
       const auto& type = torch::tensor::get_default_tensor_type();
-      dtype = torch::getDtype(type.is_cuda(), type.scalarType());
+      dtype = torch::getDtype(type.scalarType(), type.is_cuda());
     }
     return *dtype;
   }

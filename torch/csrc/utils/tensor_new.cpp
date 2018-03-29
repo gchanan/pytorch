@@ -371,7 +371,7 @@ Tensor legacy_tensor_new(const Type& type, PyObject* args, PyObject* kwargs) {
 }
 
 static const Type& typeWithDefault(PythonArgs& r, int64_t idx, const Type& type) {
-  auto dtype = r.dtypeWithDefault(idx, *torch::getDtype(type.is_cuda(), type.scalarType()));
+  auto dtype = r.dtypeWithDefault(idx, *torch::getDtype(type.scalarType(), type.is_cuda()));
   return torch::getType(dtype, *torch::getLayout(type.backend()));
 }
 

@@ -23,7 +23,7 @@ PyObject* createPyObject(const at::Storage& storage);
 std::unique_ptr<at::Storage> createStorage(PyObject* obj);
 bool isStorage(PyObject* obj);
 
-THPDtype* getDtype(bool is_cuda, at::ScalarType scalarType);
+THPDtype* getDtype(at::ScalarType scalarType, bool is_cuda);
 THPLayout* getLayout(at::Backend backend);
 at::Type& getType(const THPDtype &dtype, const THPLayout& layout);
 
