@@ -368,15 +368,13 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                     formal_args.append(parsed_type_args[1])
             else:
                 raise RuntimeError(("found {} in python_binding_arguments but only "
-                                    "\"bool requires_grad\", \"Type dtype\", and \"Layout layout\" "
+                                    "\"bool requires_grad\", \"Dtype dtype\", and \"Layout layout\" "
                                     "are supported".format(arg)))
 
         env['unpack_args'] = []
         env['formal_args'] = formal_args
         env['actuals'] = actuals
-        has_any_dtype = any(a['name'] == 'dtype' and a['simple_type'] == 'Type' for a in inputs)
-        type_arg_name = type_args[0]['name'] if len(type_args) > 0 else None
-        maybe_init_cuda = 'dtype' if has_any_dtype else type_arg_name
+        maybe_init_cuda = type_args[0]['name'] if type_args else None
         env['initialize_cuda'] = 'maybe_initialize_cuda({});'.format(maybe_init_cuda) if maybe_init_cuda else []
         if 'call_args' in declaration:
             env['dispatch_args'] = declaration['call_args']
@@ -424,17 +422,15 @@ def create_python_bindings(python_functions, has_self, is_module=False):
     def get_python_binding_arguments(declaration):
         python_binding_arguments = []
         has_tensor_input_arg = False
-        has_type_dispatched = False
+        has_type_input_arg = False
         for arg in declaration['arguments']:
             if arg.get('output', False):
                 continue
             typename = arg['simple_type']
             if typename in ['Tensor', 'TensorList']:
                 has_tensor_input_arg = True
-            if arg.get('is_type_dispatched'):
-                has_type_dispatched = True
             if arg['simple_type'] == 'Type':
-                has_type_dispatched = True
+                has_type_input_arg = True
             if arg['name'] == 'requires_grad':
                 raise ValueError("argument named requires_grad not supported")
 
@@ -445,7 +441,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 # produce a compile-time error that is obvious
                 has_tensor_return = True
 
-        if has_tensor_return and not has_tensor_input_arg and not has_type_dispatched:
+        if has_tensor_return and not has_tensor_input_arg and not has_type_input_arg:
             default_type = get_type_default(declaration)
             dtype_arg = {
                 'default': default_type,
@@ -457,7 +453,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 'is_type_dispatched': True,
             }
             python_binding_arguments.append(dtype_arg)
-        if (not has_tensor_input_arg or (name.endswith('_like') and has_type_dispatched)) and has_tensor_return:
+        if (not has_tensor_input_arg or (name.endswith('_like') and has_type_input_arg)) and has_tensor_return:
             layout_arg = {
                 'default': 'torch.strided',
                 'dynamic_type': 'Layout',
