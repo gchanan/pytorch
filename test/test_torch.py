@@ -1331,7 +1331,8 @@ class TestTorch(TestCase):
                     check_value(v.new_full(shape, fv + 3, dtype=int64_dtype, device=device, requires_grad=rg),
                                 int64_dtype, layout, device, fv + 3, rg)
                     check_value(torch.full_like(v, fv + 4), dtype, layout, device, fv + 4, False)
-                    check_value(torch.full_like(v, fv + 5, dtype=int64_dtype, layout=layout, device=device, requires_grad=rg),
+                    check_value(torch.full_like(v, fv + 5,
+                                                dtype=int64_dtype, layout=layout, device=device, requires_grad=rg),
                                 int64_dtype, layout, device, fv + 5, rg)
 
     def test_empty_full(self):
