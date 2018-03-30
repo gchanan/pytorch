@@ -257,18 +257,18 @@ def create_python_bindings(python_functions, has_self, is_module=False):
         inputs = [arg for arg in declaration['arguments'] if not is_output(arg)]
         outputs = [arg for arg in declaration['arguments'] if is_output(arg)]
 
-        def get_type_dispatched(args):
+        def get_type_args(args):
             return [arg for arg in args if arg['simple_type'] == 'Type']
-        type_dispatched_actual_args = get_type_dispatched(declaration['arguments'])
-        type_dispatched_bindings = get_type_dispatched(declaration['python_binding_arguments'])
-        assert len(type_dispatched_actual_args + type_dispatched_bindings) <= 1
-        if type_dispatched_bindings and len(outputs) == 0:
+        type_actual_args = get_type_args(declaration['arguments'])
+        type_binding_args = get_type_args(declaration['python_binding_arguments'])
+        assert len(type_actual_args + type_binding_args) <= 1
+        if type_binding_args and len(outputs) == 0:
             # out(s) determines the dtype if it is present, so only use this if there are no outputs.
-            type_dispatched_args = type_dispatched_bindings
+            type_args = type_binding_args
         else:
-            type_dispatched_args = type_dispatched_actual_args
+            type_args = type_actual_args
 
-        if type_dispatched_args and len(outputs) > 1:
+        if type_args and len(outputs) > 1:
                 raise RuntimeError("Not supported: type dispatched parameter with multiple outputs")
 
         def parse_arg(arg, arg_index, unpack_args=False):
@@ -332,9 +332,9 @@ def create_python_bindings(python_functions, has_self, is_module=False):
 
         layout = None
         parsed_type_dispatch = None
-        # this goes after the outputs to match the signature generation.
+        # type args goes after the outputs to match the signature generation.
         arg_idx = arg_idx if out_idx is None else out_idx + 1
-        for arg in type_dispatched_args:
+        for arg in type_args:
             parsed_type_dispatch = parse_arg(arg, arg_idx, unpack)
             arg_idx += 1
 
@@ -360,7 +360,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
             elif arg['name'] == 'requires_grad' and arg['simple_type'] == 'bool':
                 requires_grad = parse_arg(arg, requires_grad_idx)[0]
             elif arg['name'] == 'layout' and arg['simple_type'] == 'Layout':
-                # out(s) determines the type if it is present, so only use this if there are no outputs.
+                # out(s) determines the type and layout if it is present, so only use this if there are no outputs.
                 if len(outputs) == 0:
                     layout = parse_arg(arg, layout_idx)[0]
                     assert parsed_type_dispatch
@@ -375,8 +375,8 @@ def create_python_bindings(python_functions, has_self, is_module=False):
         env['formal_args'] = formal_args
         env['actuals'] = actuals
         has_any_dtype = any(a['name'] == 'dtype' and a['simple_type'] == 'Type' for a in inputs)
-        type_dispatched_name = type_dispatched_args[0]['name'] if len(type_dispatched_args) > 0 else None
-        maybe_init_cuda = 'dtype' if has_any_dtype else type_dispatched_name
+        type_arg_name = type_args[0]['name'] if len(type_args) > 0 else None
+        maybe_init_cuda = 'dtype' if has_any_dtype else type_arg_name
         env['initialize_cuda'] = 'maybe_initialize_cuda({});'.format(maybe_init_cuda) if maybe_init_cuda else []
         if 'call_args' in declaration:
             env['dispatch_args'] = declaration['call_args']
