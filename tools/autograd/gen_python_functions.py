@@ -312,7 +312,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
 
         unpack = any(arg.get('python_default_init') for arg in inputs)
         for arg in inputs:
-            if arg.get('is_type_dispatched') or arg['simple_type'] == 'Type':
+            if arg['simple_type'] == 'Type':
                 continue
             if has_self and arg['name'] == 'self':
                 formal_args.append('Tensor & self')
@@ -332,10 +332,10 @@ def create_python_bindings(python_functions, has_self, is_module=False):
 
         layout = None
         parsed_type_dispatch = None
-        # type args goes after the outputs to match the signature generation.
+        # type args go after the outputs to match the signature generation.
         arg_idx = arg_idx if out_idx is None else out_idx + 1
         for arg in type_args:
-            parsed_type_dispatch = parse_arg(arg, arg_idx, unpack)
+            parsed_type_args = parse_arg(arg, arg_idx, unpack)
             arg_idx += 1
 
         # check python_binding_arguments
@@ -363,9 +363,9 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 # out(s) determines the type and layout if it is present, so only use this if there are no outputs.
                 if len(outputs) == 0:
                     layout = parse_arg(arg, layout_idx)[0]
-                    assert parsed_type_dispatch
-                    actuals.append("torch::getType({}, {})".format(parsed_type_dispatch[0], layout))
-                    formal_args.append(parsed_type_dispatch[1])
+                    assert parsed_type_args
+                    actuals.append("torch::getType({}, {})".format(parsed_type_args[0], layout))
+                    formal_args.append(parsed_type_args[1])
             else:
                 raise RuntimeError(("found {} in python_binding_arguments but only "
                                     "\"bool requires_grad\", \"Type dtype\", and \"Layout layout\" "
