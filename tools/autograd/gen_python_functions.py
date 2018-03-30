@@ -102,7 +102,7 @@ PY_VARIABLE_METHOD_DEF = CodeTemplate("""\
 UNPACK_SELF = "auto& self_ = reinterpret_cast<THPVariable*>(self)->cdata;"
 
 PYTHON_FUNCTION_SIGNATURE = CodeTemplate("""\
-${name}(${typed_args})""")
+${name}(${py_formal_args})""")
 
 # XXX: if you got here because of an assertion failure, it doesn't mean
 # it's enough to just extend the list here. Before you do this, make sure
@@ -580,12 +580,12 @@ def group_declarations(declarations):
 
 def get_python_signature(declaration, include_out):
     # Compute the Python function signature for argument parsing
-    typed_args = []
+    py_formal_args = []
     output_args = []
-    type_dispatch_args = []
+    type_args = []
     positional = True
 
-    def get_typed_arg(arg):
+    def get_py_formal_arg(arg):
         typename = arg['simple_type'] if arg['simple_type'] != 'Type' else 'Dtype'
         if arg.get('is_nullable'):
             typename = '{}?'.format(typename)
@@ -612,14 +612,14 @@ def get_python_signature(declaration, include_out):
         if arg.get('output', False):
             output_args.append(arg)
             continue
-        if arg.get('is_type_dispatched', False):
-            type_dispatch_args.append(arg)
+        if arg['simple_type'] == 'Type':
+            type_args.append(arg)
             continue
         if arg.get('kwarg_only', False) and positional:
-            typed_args.append('*')
+            py_formal_args.append('*')
             positional = False
-        param = get_typed_arg(arg)
-        typed_args.append(param)
+        param = get_py_formal_arg(arg)
+        py_formal_args.append(param)
 
     # add output arguments
     name = declaration['name']
@@ -629,35 +629,35 @@ def get_python_signature(declaration, include_out):
     if len(output_args) > 0 and include_out:
         assert declaration['name'].endswith('_out')
         if positional:
-            typed_args.append('*')
+            py_formal_args.append('*')
             positional = False
         typenames = [arg['simple_type'] for arg in output_args]
         if len(typenames) > 1:
             typename = 'TensorList[{}]'.format(len(typenames))
         else:
             typename = typenames[0]
-        typed_args.append(typename + ' out=None')
+        py_formal_args.append(typename + ' out=None')
 
     # we could put this in the loop above but we want to ensure both type dispatched args
     # and python binding arguments are after the out argument; this matches the case
     # where there is a python binding argument dtype, which is necessary to match
     # the function signatures between the out and non-out variant.
-    assert len(type_dispatch_args) <= 1
-    for arg in type_dispatch_args:
-        if positional:  # assume type_dispatch_args should be kwarg_only.
-            typed_args.append('*')
+    assert len(type_args) <= 1
+    for arg in type_args:
+        if positional:  # assume type_args should be kwarg_only.
+            py_formal_args.append('*')
             positional = False
-        typed_args.append(get_typed_arg(arg))
+        py_formal_args.append(get_py_formal_arg(arg))
 
     if len(declaration['python_binding_arguments']) > 0:
         for arg in declaration['python_binding_arguments']:
             if arg.get('kwarg_only', False) and positional:
-                typed_args.append('*')
+                py_formal_args.append('*')
                 positional = False
-            typed_args.append(get_typed_arg(arg))
+            py_formal_args.append(get_py_formal_arg(arg))
 
     # Python function signature.
     # This is the string that we give to FunctionParameter, which is
     # then parsed into the actual structure which we do parsing
     # with.
-    return PYTHON_FUNCTION_SIGNATURE.substitute(name=name, typed_args=typed_args)
+    return PYTHON_FUNCTION_SIGNATURE.substitute(name=name, py_formal_args=py_formal_args)
