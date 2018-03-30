@@ -441,7 +441,12 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 # produce a compile-time error that is obvious
                 has_tensor_return = True
 
-        if has_tensor_return and not has_tensor_input_arg and not has_type_input_arg:
+        is_like_function = name.endswith('_like')
+        is_typed_like_function = is_like_function and has_type_input_arg
+        is_factory_function = has_tensor_return and not has_tensor_input_arg
+        is_factory_or_like_function = has_tensor_return and (not has_tensor_input_arg or is_like_function)
+
+        if is_factory_function and not has_type_input_arg:
             default_type = get_type_default(declaration)
             dtype_arg = {
                 'default': default_type,
@@ -453,7 +458,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 'is_type_dispatched': True,
             }
             python_binding_arguments.append(dtype_arg)
-        if (not has_tensor_input_arg or (name.endswith('_like') and has_type_input_arg)) and has_tensor_return:
+        if is_factory_function or is_typed_like_function:
             layout_arg = {
                 'default': 'torch.strided',
                 'dynamic_type': 'Layout',
@@ -463,7 +468,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 'simple_type': 'Layout',
             }
             python_binding_arguments.append(layout_arg)
-        if (not has_tensor_input_arg or name.endswith('_like')) and has_tensor_return:
+        if is_factory_or_like_function:
             device_arg = {
                 'default': -1,
                 'default_init': -1,
