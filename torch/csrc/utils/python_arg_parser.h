@@ -35,13 +35,14 @@
 #include "torch/csrc/tensor/python_tensor.h"
 #include "torch/csrc/utils/object_ptr.h"
 #include "torch/csrc/utils/python_numbers.h"
+#include "torch/csrc/utils/python_strings.h"
 #include "torch/csrc/utils/numpy_stub.h"
 
 namespace torch {
 
 enum class ParameterType {
   TENSOR, SCALAR, INT64, DOUBLE, TENSOR_LIST, INT_LIST, GENERATOR,
-  BOOL, STORAGE, PYOBJECT, DTYPE, LAYOUT
+  BOOL, STORAGE, PYOBJECT, DTYPE, LAYOUT, DEVICE_INT64
 };
 
 struct FunctionParameter;
@@ -93,6 +94,7 @@ struct PythonArgs {
   inline const THPDtype& dtype(int i);
   inline const THPDtype& dtypeWithDefault(int i, const THPDtype& default_dtype);
   inline const THPLayout& layout(int i);
+  inline int64_t deviceInt64(int i);
   inline PyObject* pyobject(int i);
   inline int64_t toInt64(int i);
   inline int64_t toInt64WithDefault(int i, int64_t default_int);
@@ -270,6 +272,29 @@ inline const THPDtype& PythonArgs::dtype(int i) {
 inline const THPLayout& PythonArgs::layout(int i) {
   if (!args[i]) return *signature.params[i].default_layout;
   return *reinterpret_cast<THPLayout*>(args[i]);
+}
+
+inline int64_t PythonArgs::deviceInt64(int i) {
+  if (!args[i]) return signature.params[i].default_int;
+  if (THPUtils_checkLong(args[i])) {
+    return THPUtils_unpackLong(args[i]);  
+  }
+  if (THPUtils_checkString(args[i])) {
+    std::string device_str = THPUtils_unpackString(args[i]);
+    if (device_str == "cpu:0") {
+      return -1;  
+    } else {
+      std::string cuda_prefix("cuda:");
+      if (device_str.compare(0, cuda_prefix.length(), cuda_prefix)) {
+        int device_int = std::stoi(device_str.substr(cuda_prefix.length()));
+        if (device_int < 0) {
+          throw std::runtime_error("Invalid device ordinal: " + device_str.substr(cuda_prefix.length()));
+        }
+        return device_int;
+      }
+    }
+    throw std::runtime_error("Invalid device string: " + device_str);  
+  }
 }
 
 inline int64_t PythonArgs::toInt64(int i) {
