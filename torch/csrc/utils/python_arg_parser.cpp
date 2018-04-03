@@ -25,8 +25,7 @@ static std::unordered_map<std::string, ParameterType> type_map = {
   {"PyObject*", ParameterType::PYOBJECT},
   {"Dtype", ParameterType::DTYPE},
   {"Layout", ParameterType::LAYOUT},
-  {"DeviceInt64", ParameterType::DEVICE_INT64},
-  {"Device", ParameterType::DEVICE_INT64},
+  {"Device", ParameterType::DEVICE},
 };
 
 FunctionParameter::FunctionParameter(const std::string& fmt, bool keyword_only)
@@ -113,7 +112,7 @@ bool FunctionParameter::check(PyObject* obj) {
     case ParameterType::PYOBJECT: return true;
     case ParameterType::DTYPE: return THPDtype_Check(obj);
     case ParameterType::LAYOUT: return THPLayout_Check(obj);
-    case ParameterType::DEVICE_INT64: return THPUtils_checkLong(obj) || THPUtils_checkString(obj);
+    case ParameterType::DEVICE: return THPUtils_checkLong(obj) || THPUtils_checkString(obj);
     default: throw std::runtime_error("unknown parameter type");
   }
 }
@@ -132,7 +131,6 @@ std::string FunctionParameter::type_name() const {
     case ParameterType::PYOBJECT: return "object";
     case ParameterType::DTYPE: return "torch.dtype";
     case ParameterType::LAYOUT: return "torch.layout";
-    case ParameterType::DEVICE_INT64: return "device";
     case ParameterType::DEVICE: return "device";
     default: throw std::runtime_error("unknown parameter type");
   }
@@ -180,10 +178,10 @@ void FunctionParameter::set_default_str(const std::string& str) {
     } else {
       throw std::runtime_error("invalid default value for dtype: " + str);
     }
-  } else if (type_ == ParameterType::DEVICE_INT64) {
+  } else if (type_ == ParameterType::DEVICE) {
     default_int = atol(str.c_str());
   } else if (type_ == ParameterType::DEVICE) {
-    if (str == "None") {
+    if (str == "None" || str == "-1") {
       default_device = nullptr;
     } else {
       throw std::runtime_error("invalid device: " + str);
