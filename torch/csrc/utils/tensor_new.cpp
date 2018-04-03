@@ -221,11 +221,11 @@ static Tensor legacy_new_from_sequence(const Type & type, int device, PyObject* 
 
 static Tensor legacy_sparse_tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs) {
   static PythonArgParser parser({
-    "new(*, Device? device=-1)",
-    "new(IntList size, *, Device? device=-1)",
+    "new(*, Device? device=None)",
+    "new(IntList size, *, Device? device=None)",
     "new(*, int64_t cdata)|hidden",
-    "new(Tensor indices, Tensor values, *, Device? device=-1)",
-    "new(Tensor indices, Tensor values, IntList size, *, Device? device=-1)",
+    "new(Tensor indices, Tensor values, *, Device? device=None)",
+    "new(Tensor indices, Tensor values, IntList size, *, Device? device=None)",
   });
   ParsedArgs<4> parsed_args;
   auto r = parser.parse(args, kwargs, parsed_args);
@@ -255,12 +255,12 @@ static Tensor legacy_sparse_tensor_ctor(const Type& type, PyObject* args, PyObje
 
 Tensor legacy_tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs) {
   static PythonArgParser parser({
-    "new(*, Device? device=-1)",
-    "new(IntList size, *, Device? device=-1)",
+    "new(*, Device? device=None)",
+    "new(IntList size, *, Device? device=None)",
     "new(Storage storage)",
     "new(*, int64_t cdata)|hidden",
     "new(Tensor other)",
-    "new(PyObject* data, *, Device? device=-1)",
+    "new(PyObject* data, *, Device? device=None)",
   });
 
   if (type.is_sparse()) {
@@ -295,11 +295,11 @@ Tensor legacy_tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs) {
 
 static Tensor legacy_sparse_tensor_new(const Type& type, PyObject* args, PyObject* kwargs) {
   static PythonArgParser parser({
-    "new(*, Device? device=-1)",
-    "new(IntList size, *, Device? device=-1)",
+    "new(*, Device? device=None)",
+    "new(IntList size, *, Device? device=None)",
     "new(*, int64_t cdata)|hidden",
-    "new(Tensor indices, Tensor values, *, Device? device=-1)",
-    "new(Tensor indices, Tensor values, IntList size, *, Device? device=-1)",
+    "new(Tensor indices, Tensor values, *, Device? device=None)",
+    "new(Tensor indices, Tensor values, IntList size, *, Device? device=None)",
   });
   ParsedArgs<5> parsed_args;
   auto r = parser.parse(args, kwargs, parsed_args);
@@ -333,12 +333,12 @@ static Tensor legacy_sparse_tensor_new(const Type& type, PyObject* args, PyObjec
 
 Tensor legacy_tensor_new(const Type& type, PyObject* args, PyObject* kwargs) {
   static PythonArgParser parser({
-    "new(*, Device? device=-1)",
-    "new(IntList size, *, Device? device=-1)",
+    "new(*, Device? device=None)",
+    "new(IntList size, *, Device? device=None)",
     "new(Storage storage)",
     "new(*, int64_t cdata)|hidden",
     "new(Tensor other)",  // this doesn't have a dtype/device because it creates an alias.
-    "new(PyObject* data, *, Device? device=-1)",
+    "new(PyObject* data, *, Device? device=None)",
   });
 
   if (type.is_sparse()) {
@@ -386,8 +386,8 @@ Tensor sparse_coo_tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs
   const auto& default_sparse_type = type.toBackend(sparse_backend);
 
   static PythonArgParser parser({
-    "sparse_coo_tensor(PyObject* indices, PyObject* values, *, Dtype dtype=None, Device? device=-1, bool requires_grad=False)",
-    "sparse_coo_tensor(PyObject* indices, PyObject* values, IntList size, *, Dtype dtype=None, Device? device=-1, bool requires_grad=False)",
+    "sparse_coo_tensor(PyObject* indices, PyObject* values, *, Dtype dtype=None, Device? device=None, bool requires_grad=False)",
+    "sparse_coo_tensor(PyObject* indices, PyObject* values, IntList size, *, Dtype dtype=None, Device? device=None, bool requires_grad=False)",
   });
 
   ParsedArgs<6> parsed_args;
@@ -420,7 +420,7 @@ Tensor sparse_coo_tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs
 
 Tensor tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs) {
   static PythonArgParser parser({
-    "tensor(PyObject* data, *, Dtype dtype=None, Device? device=-1, bool requires_grad=False)",
+    "tensor(PyObject* data, *, Dtype dtype=None, Device? device=None, bool requires_grad=False)",
   });
 
   ParsedArgs<4> parsed_args;
@@ -436,7 +436,7 @@ Tensor tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs) {
 
 Tensor new_tensor(const Type& type, PyObject* args, PyObject* kwargs) {
   static PythonArgParser parser({
-    "new_tensor(PyObject* data, *, Dtype dtype=None, Device? device=-1, bool requires_grad=False)",
+    "new_tensor(PyObject* data, *, Dtype dtype=None, Device? device=None, bool requires_grad=False)",
   });
 
   ParsedArgs<4> parsed_args;
@@ -450,7 +450,7 @@ Tensor new_tensor(const Type& type, PyObject* args, PyObject* kwargs) {
 
 Tensor new_empty(const at::Type& type, PyObject* args, PyObject* kwargs) {
   static PythonArgParser parser({
-    "new_empty(IntList size, *, Dtype dtype=None, Device? device=-1, bool requires_grad=False)",
+    "new_empty(IntList size, *, Dtype dtype=None, Device? device=None, bool requires_grad=False)",
   });
 
   ParsedArgs<4> parsed_args;
@@ -464,7 +464,7 @@ Tensor new_empty(const at::Type& type, PyObject* args, PyObject* kwargs) {
 
 Tensor new_full(const at::Type& type, PyObject* args, PyObject* kwargs) {
   static PythonArgParser parser({
-    "new_full(IntList size, Scalar fill_value, *, Dtype dtype=None, Device? device=-1, bool requires_grad=False)",
+    "new_full(IntList size, Scalar fill_value, *, Dtype dtype=None, Device? device=None, bool requires_grad=False)",
   });
 
   ParsedArgs<5> parsed_args;
@@ -478,7 +478,7 @@ Tensor new_full(const at::Type& type, PyObject* args, PyObject* kwargs) {
 
 Tensor new_ones(const at::Type& type, PyObject* args, PyObject* kwargs) {
   static PythonArgParser parser({
-    "new_ones(IntList size, *, Dtype dtype=None, Device? device=-1, bool requires_grad=False)",
+    "new_ones(IntList size, *, Dtype dtype=None, Device? device=None, bool requires_grad=False)",
   });
 
   ParsedArgs<4> parsed_args;
@@ -492,7 +492,7 @@ Tensor new_ones(const at::Type& type, PyObject* args, PyObject* kwargs) {
 
 Tensor new_zeros(const at::Type& type, PyObject* args, PyObject* kwargs) {
   static PythonArgParser parser({
-    "new_zeros(IntList size, *, Dtype dtype=None, Device? device=-1, bool requires_grad=False)",
+    "new_zeros(IntList size, *, Dtype dtype=None, Device? device=None, bool requires_grad=False)",
   });
 
   ParsedArgs<4> parsed_args;

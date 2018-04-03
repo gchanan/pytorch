@@ -181,7 +181,7 @@ void FunctionParameter::set_default_str(const std::string& str) {
   } else if (type_ == ParameterType::DEVICE) {
     default_int = atol(str.c_str());
   } else if (type_ == ParameterType::DEVICE) {
-    if (str == "None" || str == "-1") {
+    if (str == "None") {
       default_device = nullptr;
     } else {
       throw std::runtime_error("invalid device: " + str);

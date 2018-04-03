@@ -475,8 +475,8 @@ def create_python_bindings(python_functions, has_self, is_module=False):
             python_binding_arguments.append(layout_arg)
         if is_factory_or_like_function:
             device_arg = {
-                'default': -1,
-                'default_init': -1,
+                'default': 'None',
+                'default_init': 'None',
                 'dynamic_type': 'Device',
                 'kwarg_only': True,
                 'name': 'device',
