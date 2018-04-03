@@ -25,6 +25,7 @@ static std::unordered_map<std::string, ParameterType> type_map = {
   {"PyObject*", ParameterType::PYOBJECT},
   {"Dtype", ParameterType::DTYPE},
   {"Layout", ParameterType::LAYOUT},
+  {"DeviceInt64", ParameterType::DEVICE_INT64},
   {"Device", ParameterType::DEVICE_INT64},
 };
 
@@ -132,6 +133,7 @@ std::string FunctionParameter::type_name() const {
     case ParameterType::DTYPE: return "torch.dtype";
     case ParameterType::LAYOUT: return "torch.layout";
     case ParameterType::DEVICE_INT64: return "device";
+    case ParameterType::DEVICE: return "device";
     default: throw std::runtime_error("unknown parameter type");
   }
 }
@@ -180,6 +182,12 @@ void FunctionParameter::set_default_str(const std::string& str) {
     }
   } else if (type_ == ParameterType::DEVICE_INT64) {
     default_int = atol(str.c_str());
+  } else if (type_ == ParameterType::DEVICE) {
+    if (str == "None") {
+      default_device = nullptr;
+    } else {
+      throw std::runtime_error("invalid device: " + str);
+    }
   }
 }
 

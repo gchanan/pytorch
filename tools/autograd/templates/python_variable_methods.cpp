@@ -320,8 +320,11 @@ static PyObject * THPVariable_cuda(PyObject* self, PyObject* args, PyObject* kwa
   auto r = parser.parse(args, kwargs, parsed_args);
   auto backend = self_.is_sparse() ? at::kSparseCUDA : at::kCUDA;
   auto& type = self_.type().toBackend(backend);
-  auto device = r.deviceInt64(0);
-  // TODO: don't allow CPU device
+  auto device_obj = r.device(0);
+  if (!device_obj.is_cuda) {
+    throw std::runtime_error("Invalid device, must be cuda device");
+  }
+  auto device = device_obj.device_index;
   return THPVariable_Wrap(torch::utils::dispatch_type_conversion(self_, type, device, r.toBool(1)));
   END_HANDLE_TH_ERRORS
 }

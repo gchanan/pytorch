@@ -209,7 +209,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
         'Storage &': 'storage',
         'const Type &': 'dtype',
         'const THPLayout &': 'layout',
-        'Device': 'deviceInt64',
+        'Device': 'device',
         'int64_t': 'toInt64',
         'bool': 'toBool',
         'double': 'toDouble',
@@ -289,7 +289,8 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 expr = 'r.{}({}, {})'.format(unpack_with_default, arg_index, default_expr)
             else:
                 unpack = unpack_methods.get(typename, typename.lower())
-                expr = 'r.{}({})'.format(unpack, arg_index)
+                suffix = '' if typename != 'Device' else '.device_index'
+                expr = 'r.{}({}){}'.format(unpack, arg_index, suffix)
 
             if unpack_args:
                 body.append('auto {} = {};'.format(name, expr))

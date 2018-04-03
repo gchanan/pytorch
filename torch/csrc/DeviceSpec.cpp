@@ -28,9 +28,7 @@ PyObject *THPDeviceSpec_repr(THPDeviceSpec *self)
 
 int THPDeviceSpec_pyinit(PyObject *self, PyObject *args, PyObject *kwds)
 {
-  HANDLE_TH_ERRORS
-  Py_RETURN_NONE;
-  END_HANDLE_TH_ERRORS
+  return 0;
 }
 
 PyTypeObject THPDeviceSpecType = {

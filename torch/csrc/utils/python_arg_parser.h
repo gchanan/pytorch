@@ -33,6 +33,7 @@
 #include "torch/csrc/autograd/python_variable.h"
 #include "torch/csrc/autograd/generated/VariableType.h"
 #include "torch/csrc/tensor/python_tensor.h"
+#include "torch/csrc/utils/device.h"
 #include "torch/csrc/utils/object_ptr.h"
 #include "torch/csrc/utils/python_numbers.h"
 #include "torch/csrc/utils/python_strings.h"
@@ -42,7 +43,7 @@ namespace torch {
 
 enum class ParameterType {
   TENSOR, SCALAR, INT64, DOUBLE, TENSOR_LIST, INT_LIST, GENERATOR,
-  BOOL, STORAGE, PYOBJECT, DTYPE, LAYOUT, DEVICE_INT64
+  BOOL, STORAGE, PYOBJECT, DTYPE, LAYOUT, DEVICE_INT64, DEVICE
 };
 
 struct FunctionParameter;
@@ -95,6 +96,7 @@ struct PythonArgs {
   inline const THPDtype& dtypeWithDefault(int i, const THPDtype& default_dtype);
   inline const THPLayout& layout(int i);
   inline int64_t deviceInt64(int i);
+  inline utils::Device device(int i);
   inline PyObject* pyobject(int i);
   inline int64_t toInt64(int i);
   inline int64_t toInt64WithDefault(int i, int64_t default_int);
@@ -144,6 +146,7 @@ struct FunctionParameter {
     double default_double;
     THPDtype* default_dtype;
     THPLayout* default_layout;
+    utils::Device* default_device;
   };
 };
 
@@ -290,6 +293,27 @@ inline int64_t PythonArgs::deviceInt64(int i) {
         throw std::runtime_error("Invalid device ordinal: " + device_str.substr(cuda_prefix.length()));
       }
       return device_int;
+    }
+  }
+  throw std::runtime_error("Invalid device string: " + device_str);
+}
+
+inline utils::Device PythonArgs::device(int i) {
+  if (!args[i]) return utils::Device(true, -1); //return signature.params[i].default_device;
+  if (THPUtils_checkLong(args[i])) {
+    return utils::Device(true, THPUtils_unpackLong(args[i]));
+  }
+  std::string device_str = THPUtils_unpackString(args[i]);
+  if (device_str == "cpu:0") {
+    return utils::Device(false, -1);
+  } else {
+    std::string cuda_prefix("cuda:");
+    if (device_str.compare(0, cuda_prefix.length(), cuda_prefix) == 0) {
+      int device_int = std::stoi(device_str.substr(cuda_prefix.length()));
+      if (device_int < 0) {
+        throw std::runtime_error("Invalid device ordinal: " + device_str.substr(cuda_prefix.length()));
+      }
+      return utils::Device(true, device_int);
     }
   }
   throw std::runtime_error("Invalid device string: " + device_str);
