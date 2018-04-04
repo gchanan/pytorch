@@ -8,7 +8,7 @@
 #include "torch/csrc/utils/python_arg_parser.h"
 #include "torch/csrc/utils/python_strings.h"
 
-PyObject *THPDeviceSpec_New(THPDeviceType device_type, int64_t device_index, bool is_default)
+PyObject *THPDeviceSpec_New(torch::DeviceType device_type, int64_t device_index, bool is_default)
 {
   auto type = (PyTypeObject*)&THPDeviceSpecType;
   auto self = THPObjectPtr{type->tp_alloc(type, 0)};
@@ -20,11 +20,11 @@ PyObject *THPDeviceSpec_New(THPDeviceType device_type, int64_t device_index, boo
   return self.release();
 }
 
-static inline std::string deviceTypeString(THPDeviceType device_type) {
+static inline std::string deviceTypeString(torch::DeviceType device_type) {
   switch (device_type) {
-    case THPDeviceType::CUDA:
+    case torch::DeviceType::CUDA:
       return "cuda";
-    case THPDeviceType::CPU:
+    case torch::DeviceType::CPU:
       return "cpu";
     default:
       throw std::runtime_error("unexpected device type");
@@ -45,47 +45,26 @@ PyObject *THPDeviceSpec_repr(THPDeviceSpec *self)
 PyObject *THPDeviceSpec_pynew(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
   HANDLE_TH_ERRORS
-  /*static torch::PythonArgParser parser({
-    "DeviceSpec(String str)",
+  static torch::PythonArgParser parser({
+    "DeviceSpec(Device device)",
     "DeviceSpec(String device_type, int64_t device_index)"
-    "DeviceSpec(int64_t device_index)"
   });
   torch::ParsedArgs<2> parsed_args;
   auto r = parser.parse(args, kwargs, parsed_args);
   if (r.idx == 0) {
-    auto str = r.string(0);
-    std::string cpu_prefix("cpu:");
-    std::string cuda_prefix("cuda:");
-    if (str == "cpu" || str == "cuda") {
-      return THPDeviceSpec_New(str, -1, true);
-    } else if (str.compare(0, cpu_prefix.length(), cpu_prefix) == 0) {
-      auto device_index = std::stoi(str.substr(cuda_prefix.length()));
-      if (device_index < 0) {
-        throw std::runtime_error("device index must be positive");
-      }
-      return THPDeviceSpec_New("cuda", device_index, false);
-    } else if (str.compare(0, cuda_prefix.length(), cuda_prefix) == 0) {
-      auto device_index = std::stoi(str.substr(cuda_prefix.length()));
-      if (device_index < 0) {
-        throw std::runtime_error("device index must be positive");
-      }
-      return THPDeviceSpec_New("cuda", device_index, false);
-    }
-    throw torch::TypeError("only \"cuda\" and \"cpu\" are valid device types, got %s", str.c_str());
+    auto device = r.device(0);
+    return THPDeviceSpec_New(device.device_type, device.device_index, device.is_default);
   } else if (r.idx == 1) {
+    auto as_device = r.device(0);  // this works, because device can take strings
     auto device_type = r.string(0);
-    if (device_type != "cuda" && device_type != "cpu") {
-      throw torch::TypeError("only \"cuda\" and \"cpu\" are valid device types, got %s", device_type.c_str());
-    }
     auto device_index = r.toInt64(1);
-    if (device_index < 0) {
-      throw std::runtime_error("device index must be positive");
+    if (!as_device.is_default) {
+      throw std::runtime_error("device_type must not include index because index is passed explicitly " + device_type);
     }
-    return THPDeviceSpec_New(device_type, device_index, false);
-  } else if (r.idx == 2) {
-    auto device_index = r.toInt64(0);
-    return THPDeviceSpec_New("cuda", device_index, device_index == -1);
-  }*/
+    // make sure this is constructible
+    auto device = torch::Device(as_device.device_type, device_index, false);
+    return THPDeviceSpec_New(device.device_type, device.device_index, device.is_default);
+  }
   Py_RETURN_NONE;
   END_HANDLE_TH_ERRORS
 }
@@ -112,7 +91,7 @@ PyObject *THPDeviceSpec_device_index(THPDeviceSpec *self)
 PyObject *THPDeviceSpec_cuda_device_index(THPDeviceSpec *self)
 {
   HANDLE_TH_ERRORS
-  if (self->device_type == THPDeviceType::CUDA) {
+  if (self->device_type == torch::DeviceType::CUDA) {
     return THPUtils_packInt64(self->device_index);
   }
   std::ostringstream oss;

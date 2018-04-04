@@ -34,6 +34,7 @@
 #include "torch/csrc/autograd/python_variable.h"
 #include "torch/csrc/autograd/generated/VariableType.h"
 #include "torch/csrc/tensor/python_tensor.h"
+#include "torch/csrc/utils/device.h"
 #include "torch/csrc/utils/object_ptr.h"
 #include "torch/csrc/utils/python_numbers.h"
 #include "torch/csrc/utils/python_strings.h"
@@ -43,7 +44,7 @@ namespace torch {
 
 enum class ParameterType {
   TENSOR, SCALAR, INT64, DOUBLE, TENSOR_LIST, INT_LIST, GENERATOR,
-  BOOL, STORAGE, PYOBJECT, DTYPE, LAYOUT, DEVICESPEC, STRING
+  BOOL, STORAGE, PYOBJECT, DTYPE, LAYOUT, DEVICE, STRING
 };
 
 struct FunctionParameter;
@@ -95,7 +96,7 @@ struct PythonArgs {
   inline const THPDtype& dtype(int i);
   inline const THPDtype& dtypeWithDefault(int i, const THPDtype& default_dtype);
   inline const THPLayout& layout(int i);
-  inline const THPDeviceSpec& deviceSpec(int i);
+  inline Device device(int i);
   inline std::string string(int i);
   inline PyObject* pyobject(int i);
   inline int64_t toInt64(int i);
@@ -276,28 +277,30 @@ inline const THPLayout& PythonArgs::layout(int i) {
   return *reinterpret_cast<THPLayout*>(args[i]);
 }
 
-inline const THPDeviceSpec& PythonArgs::deviceSpec(int i) {
-  if (!args[i]) return *(THPDeviceSpec*)THPDeviceSpec_New(THPDeviceType::CPU, -1, true);
+inline Device PythonArgs::device(int i) {
+  if (!args[i]) return Device(DeviceType::CPU, -1, true);
   if (THPDeviceSpec_Check(args[i])) {
-    return *reinterpret_cast<THPDeviceSpec*>(args[i]);
+    auto device_spec = reinterpret_cast<THPDeviceSpec*>(args[i]);
+    return Device(device_spec->device_type, device_spec->device_index, device_spec->is_default);
   }
   if (THPUtils_checkLong(args[i])) {
-    return *(THPDeviceSpec*)THPDeviceSpec_New(THPDeviceType::CUDA, THPUtils_unpackLong(args[i]), false);
+    return Device(DeviceType::CUDA, THPUtils_unpackLong(args[i]), false);
   }
   std::string device_str = THPUtils_unpackString(args[i]);
-  if (device_str == "cpu:0") {
-    return *(THPDeviceSpec*)THPDeviceSpec_New(THPDeviceType::CUDA, 0, false);
-  } else {
-    std::string cuda_prefix("cuda:");
-    if (device_str.compare(0, cuda_prefix.length(), cuda_prefix) == 0) {
-      int device_int = std::stoi(device_str.substr(cuda_prefix.length()));
-      if (device_int < 0) {
-        throw std::runtime_error("Invalid device ordinal: " + device_str.substr(cuda_prefix.length()));
-      }
-      return *(THPDeviceSpec*)THPDeviceSpec_New(THPDeviceType::CUDA, device_int, false);
-    }
+  std::string cpu_prefix("cpu:");
+  std::string cuda_prefix("cuda:");
+  if (device_str == "cpu") {
+    return Device(DeviceType::CPU, -1, true);
+  } else if (device_str == "cuda") {
+    return Device(DeviceType::CUDA, -1, true);
+  } else if (device_str.compare(0, cpu_prefix.length(), cpu_prefix) == 0) {
+    auto device_index = std::stoi(device_str.substr(cpu_prefix.length()));
+    return Device(DeviceType::CPU, device_index, false);
+  } else if (device_str.compare(0, cuda_prefix.length(), cuda_prefix) == 0) {
+    auto device_index = std::stoi(device_str.substr(cuda_prefix.length()));
+    return Device(DeviceType::CUDA, device_index, false);
   }
-  throw std::runtime_error("Invalid device string: " + device_str);
+  throw torch::TypeError("only \"cuda\" and \"cpu\" are valid device types, got %s", device_str.c_str());
 }
 
 inline std::string PythonArgs::string(int i) {
