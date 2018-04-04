@@ -441,7 +441,7 @@ static PyObject * THPVariable_device(THPVariable* self, PyObject* args) {
     oss << "cuda:" << self_.get_device();
   }
   else {
-    oss << "cpu:0";
+    oss << "cpu";
   }
   return THPUtils_packString(oss.str().c_str());
   END_HANDLE_TH_ERRORS

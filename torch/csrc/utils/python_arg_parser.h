@@ -26,9 +26,9 @@
 #include <vector>
 #include <ATen/ATen.h>
 
-#include "torch/csrc/DynamicTypes.h"
 #include "torch/csrc/DeviceSpec.h"
 #include "torch/csrc/Dtype.h"
+#include "torch/csrc/DynamicTypes.h"
 #include "torch/csrc/Exceptions.h"
 #include "torch/csrc/Generator.h"
 #include "torch/csrc/autograd/python_variable.h"
@@ -278,7 +278,7 @@ inline const THPLayout& PythonArgs::layout(int i) {
 }
 
 inline Device PythonArgs::device(int i) {
-  if (!args[i]) return Device(DeviceType::CPU, -1, true);
+  if (!args[i]) return Device(DeviceType::CPU, -1, true);  // TODO: use CUDA is default type is a cuda type.
   if (THPDeviceSpec_Check(args[i])) {
     auto device_spec = reinterpret_cast<THPDeviceSpec*>(args[i]);
     return Device(device_spec->device_type, device_spec->device_index, device_spec->is_default);

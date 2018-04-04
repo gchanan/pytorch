@@ -289,7 +289,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 expr = 'r.{}({}, {})'.format(unpack_with_default, arg_index, default_expr)
             else:
                 unpack = unpack_methods.get(typename, typename.lower())
-                suffix = '' if typename != 'const Device &' else '.device_index'
+                suffix = '' if typename != 'const Device &' else '.autogpu_index'
                 expr = 'r.{}({}){}'.format(unpack, arg_index, suffix)
 
             if unpack_args:
