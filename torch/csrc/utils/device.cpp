@@ -9,12 +9,12 @@ Device::Device(DeviceType device_type, int64_t device_index, bool is_default)
     switch (device_type) {
       case DeviceType::CPU:
         if (device_index != 0) {
-          throw std::runtime_error("cpu device index must be 0");
+          throw std::runtime_error("cpu device index must be 0, got " + std::to_string(device_index));
         }
         break;
       case DeviceType::CUDA:
         if (device_index < 0) {
-          throw std::runtime_error("device index must be positive");
+          throw std::runtime_error("device index must be positive, got " + std::to_string(device_index));
         }
         break;
       default:
