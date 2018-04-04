@@ -27,13 +27,13 @@
 #include <ATen/ATen.h>
 
 #include "torch/csrc/DynamicTypes.h"
+#include "torch/csrc/DeviceSpec.h"
 #include "torch/csrc/Dtype.h"
 #include "torch/csrc/Exceptions.h"
 #include "torch/csrc/Generator.h"
 #include "torch/csrc/autograd/python_variable.h"
 #include "torch/csrc/autograd/generated/VariableType.h"
 #include "torch/csrc/tensor/python_tensor.h"
-#include "torch/csrc/utils/device.h"
 #include "torch/csrc/utils/object_ptr.h"
 #include "torch/csrc/utils/python_numbers.h"
 #include "torch/csrc/utils/python_strings.h"
@@ -43,7 +43,7 @@ namespace torch {
 
 enum class ParameterType {
   TENSOR, SCALAR, INT64, DOUBLE, TENSOR_LIST, INT_LIST, GENERATOR,
-  BOOL, STORAGE, PYOBJECT, DTYPE, LAYOUT, DEVICE
+  BOOL, STORAGE, PYOBJECT, DTYPE, LAYOUT, DEVICESPEC, STRING
 };
 
 struct FunctionParameter;
@@ -95,7 +95,8 @@ struct PythonArgs {
   inline const THPDtype& dtype(int i);
   inline const THPDtype& dtypeWithDefault(int i, const THPDtype& default_dtype);
   inline const THPLayout& layout(int i);
-  inline utils::Device device(int i);
+  inline const THPDeviceSpec& deviceSpec(int i);
+  inline std::string string(int i);
   inline PyObject* pyobject(int i);
   inline int64_t toInt64(int i);
   inline int64_t toInt64WithDefault(int i, int64_t default_int);
@@ -145,7 +146,6 @@ struct FunctionParameter {
     double default_double;
     THPDtype* default_dtype;
     THPLayout* default_layout;
-    utils::Device* default_device;
   };
 };
 
@@ -276,14 +276,17 @@ inline const THPLayout& PythonArgs::layout(int i) {
   return *reinterpret_cast<THPLayout*>(args[i]);
 }
 
-inline utils::Device PythonArgs::device(int i) {
-  if (!args[i]) return utils::Device(true, -1); //return signature.params[i].default_device;
+inline const THPDeviceSpec& PythonArgs::deviceSpec(int i) {
+  if (!args[i]) return *(THPDeviceSpec*)THPDeviceSpec_New(THPDeviceType::CPU, -1, true);
+  if (THPDeviceSpec_Check(args[i])) {
+    return *reinterpret_cast<THPDeviceSpec*>(args[i]);
+  }
   if (THPUtils_checkLong(args[i])) {
-    return utils::Device(true, THPUtils_unpackLong(args[i]));
+    return *(THPDeviceSpec*)THPDeviceSpec_New(THPDeviceType::CUDA, THPUtils_unpackLong(args[i]), false);
   }
   std::string device_str = THPUtils_unpackString(args[i]);
   if (device_str == "cpu:0") {
-    return utils::Device(false, -1);
+    return *(THPDeviceSpec*)THPDeviceSpec_New(THPDeviceType::CUDA, 0, false);
   } else {
     std::string cuda_prefix("cuda:");
     if (device_str.compare(0, cuda_prefix.length(), cuda_prefix) == 0) {
@@ -291,10 +294,15 @@ inline utils::Device PythonArgs::device(int i) {
       if (device_int < 0) {
         throw std::runtime_error("Invalid device ordinal: " + device_str.substr(cuda_prefix.length()));
       }
-      return utils::Device(true, device_int);
+      return *(THPDeviceSpec*)THPDeviceSpec_New(THPDeviceType::CUDA, device_int, false);
     }
   }
   throw std::runtime_error("Invalid device string: " + device_str);
+}
+
+inline std::string PythonArgs::string(int i) {
+  if (!args[i]) return "";
+  return THPUtils_unpackString(args[i]);
 }
 
 inline int64_t PythonArgs::toInt64(int i) {

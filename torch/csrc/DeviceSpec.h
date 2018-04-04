@@ -3,12 +3,13 @@
 #include <Python.h>
 #include <string>
 
-const int DEVICE_TYPE_LEN = 64;
+enum class THPDeviceType {CPU=0, CUDA=1};
 
 struct THPDeviceSpec {
   PyObject_HEAD
-  char device_type[DEVICE_TYPE_LEN + 1];
+  THPDeviceType device_type;
   int64_t device_index;
+  bool is_default;
 };
 
 extern PyTypeObject THPDeviceSpecType;
@@ -17,6 +18,6 @@ inline bool THPDeviceSpec_Check(PyObject *obj) {
   return Py_TYPE(obj) == &THPDeviceSpecType;
 }
 
-PyObject * THPDeviceSpec_New(const std::string& device_type, int64_t device_index);
+PyObject * THPDeviceSpec_New(THPDeviceType device_type, int64_t device_index, bool is_default);
 
 void THPDeviceSpec_init(PyObject *module);

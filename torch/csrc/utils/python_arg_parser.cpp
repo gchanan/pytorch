@@ -25,7 +25,8 @@ static std::unordered_map<std::string, ParameterType> type_map = {
   {"PyObject*", ParameterType::PYOBJECT},
   {"Dtype", ParameterType::DTYPE},
   {"Layout", ParameterType::LAYOUT},
-  {"Device", ParameterType::DEVICE},
+  {"DeviceSpec", ParameterType::DEVICESPEC},
+  {"String", ParameterType::STRING},
 };
 
 FunctionParameter::FunctionParameter(const std::string& fmt, bool keyword_only)
@@ -112,7 +113,9 @@ bool FunctionParameter::check(PyObject* obj) {
     case ParameterType::PYOBJECT: return true;
     case ParameterType::DTYPE: return THPDtype_Check(obj);
     case ParameterType::LAYOUT: return THPLayout_Check(obj);
-    case ParameterType::DEVICE: return THPUtils_checkLong(obj) || THPUtils_checkString(obj);
+    case ParameterType::DEVICESPEC:
+      return THPUtils_checkLong(obj) || THPUtils_checkString(obj) || THPDeviceSpec_Check(obj);
+    case ParameterType::STRING: return THPUtils_checkString(obj);
     default: throw std::runtime_error("unknown parameter type");
   }
 }
@@ -131,7 +134,8 @@ std::string FunctionParameter::type_name() const {
     case ParameterType::PYOBJECT: return "object";
     case ParameterType::DTYPE: return "torch.dtype";
     case ParameterType::LAYOUT: return "torch.layout";
-    case ParameterType::DEVICE: return "device";
+    case ParameterType::DEVICESPEC: return "device";
+    case ParameterType::STRING: return "str";
     default: throw std::runtime_error("unknown parameter type");
   }
 }
@@ -178,13 +182,14 @@ void FunctionParameter::set_default_str(const std::string& str) {
     } else {
       throw std::runtime_error("invalid default value for dtype: " + str);
     }
-  } else if (type_ == ParameterType::DEVICE) {
-    default_int = atol(str.c_str());
-  } else if (type_ == ParameterType::DEVICE) {
+  } else if (type_ == ParameterType::DEVICESPEC) {
     if (str == "None") {
-      default_device = nullptr;
     } else {
       throw std::runtime_error("invalid device: " + str);
+    }
+  } else if (type_ == ParameterType::STRING) {
+    if (str != "None" || str != "") {
+      throw std::runtime_error("invalid default string: " + str);
     }
   }
 }
