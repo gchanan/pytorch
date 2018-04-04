@@ -34,6 +34,17 @@ static inline std::string deviceTypeString(torch::DeviceType device_type) {
 PyObject *THPDeviceSpec_repr(THPDeviceSpec *self)
 {
   std::ostringstream oss;
+  oss << "DeviceSpec(device_type=\'" << deviceTypeString(self->device_type) << "\'";
+  if (!self->is_default) {
+    oss << ", device_index=" << self->device_index;
+  }
+  oss << ")";
+  return THPUtils_packString(oss.str().c_str());
+}
+
+PyObject *THPDeviceSpec_str(THPDeviceSpec *self)
+{
+  std::ostringstream oss;
   if (!self->is_default) {
     oss << deviceTypeString(self->device_type) << ":" << self->device_index;
   } else {
@@ -47,7 +58,7 @@ PyObject *THPDeviceSpec_pynew(PyTypeObject *type, PyObject *args, PyObject *kwar
   HANDLE_TH_ERRORS
   static torch::PythonArgParser parser({
     "DeviceSpec(Device device)",
-    "DeviceSpec(String device_type, int64_t device_index)"
+    "DeviceSpec(String device_type, int64_t? device_index=-1)"
   });
   torch::ParsedArgs<2> parsed_args;
   auto r = parser.parse(args, kwargs, parsed_args);
@@ -57,12 +68,14 @@ PyObject *THPDeviceSpec_pynew(PyTypeObject *type, PyObject *args, PyObject *kwar
   } else if (r.idx == 1) {
     auto as_device = r.device(0);  // this works, because device can take strings
     auto device_type = r.string(0);
-    auto device_index = r.toInt64(1);
     if (!as_device.is_default) {
       throw std::runtime_error("device_type must not include index because index is passed explicitly " + device_type);
     }
+
+    auto is_default = r.isNone(1);
+    auto device_index = r.toInt64WithDefault(1, -1);
     // make sure this is constructible
-    auto device = torch::Device(as_device.device_type, device_index, false);
+    auto device = torch::Device(as_device.device_type, device_index, is_default);
     return THPDeviceSpec_New(device.device_type, device.device_index, device.is_default);
   }
   Py_RETURN_NONE;
@@ -126,7 +139,7 @@ PyTypeObject THPDeviceSpecType = {
   0,                                     /* tp_as_mapping */
   0,                                     /* tp_hash  */
   0,                                     /* tp_call */
-  0,                                     /* tp_str */
+  (reprfunc)THPDeviceSpec_str,           /* tp_str */
   0,                                     /* tp_getattro */
   0,                                     /* tp_setattro */
   0,                                     /* tp_as_buffer */
