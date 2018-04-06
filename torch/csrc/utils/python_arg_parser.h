@@ -44,7 +44,7 @@ namespace torch {
 
 enum class ParameterType {
   TENSOR, SCALAR, INT64, DOUBLE, TENSOR_LIST, INT_LIST, GENERATOR,
-  BOOL, STORAGE, PYOBJECT, DTYPE, LAYOUT, DEVICE, STRING
+  BOOL, STORAGE, PYOBJECT, DTYPE, SCALAR_TYPE, LAYOUT, DEVICE, STRING
 };
 
 struct FunctionParameter;
@@ -95,6 +95,8 @@ struct PythonArgs {
   inline std::unique_ptr<at::Storage> storage(int i);
   inline const THPDtype& dtype(int i);
   inline const THPDtype& dtypeWithDefault(int i, const THPDtype& default_dtype);
+  inline at::ScalarType scalartype(int i);
+  inline at::ScalarType scalartypeWithDefault(int i, at::ScalarType default_scalartype);
   inline const THPLayout& layout(int i);
   inline Device device(int i);
   inline int64_t deviceInt64(int i);
@@ -147,6 +149,7 @@ struct FunctionParameter {
     int64_t default_int;
     double default_double;
     THPDtype* default_dtype;
+    at::ScalarType default_scalartype;
     THPLayout* default_layout;
   };
 };
@@ -271,6 +274,23 @@ inline const THPDtype& PythonArgs::dtype(int i) {
     return *dtype;
   }
   return *reinterpret_cast<THPDtype*>(args[i]);
+}
+
+inline at::ScalarType PythonArgs::scalartypeWithDefault(int i, at::ScalarType default_scalartype) {
+  if (!args[i]) return default_scalartype;
+  return scalartype(i);
+}
+
+inline at::ScalarType PythonArgs::scalartype(int i) {
+  if (!args[i]) {
+    auto scalartype = signature.params[i].default_scalartype;
+    if (scalartype == at::ScalarType::Undefined) {
+      const auto& type = torch::tensor::get_default_tensor_type();
+      return type.scalarType();
+    }
+    return scalartype;
+  }
+  return reinterpret_cast<THPDtype*>(args[i])->scalar_type;
 }
 
 inline const THPLayout& PythonArgs::layout(int i) {
