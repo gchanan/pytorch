@@ -221,6 +221,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
         'int64_t': 'toInt64WithDefault',
         'bool': 'setDefaultBool',
         'double': 'setDefaultDouble',
+        'const Type &': 'dtypeWithDefault',
     }
 
     def first_tensor_arg(arguments):
