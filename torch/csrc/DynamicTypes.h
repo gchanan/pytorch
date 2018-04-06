@@ -26,6 +26,6 @@ bool isStorage(PyObject* obj);
 
 THPDtype* getDtype(at::ScalarType scalarType);
 THPLayout* getLayout(at::Backend backend);
-at::Type& getType(const THPDtype &dtype, const THPLayout& layout, DeviceType device_type);
+at::Type& getType(at::ScalarType scalarType, const THPLayout& layout, DeviceType deviceType);
 
 }  // namespace torch

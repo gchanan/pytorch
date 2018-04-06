@@ -372,10 +372,10 @@ Tensor legacy_tensor_new(const Type& type, PyObject* args, PyObject* kwargs) {
 }
 
 static const Type& typeWithDefault(PythonArgs& r, int64_t dtype_idx, int64_t device_idx, const Type& type) {
-  auto dtype = r.dtypeWithDefault(dtype_idx, *torch::getDtype(type.scalarType()));
+  auto scalartype = r.scalartypeWithDefault(dtype_idx, type.scalarType());
   auto types_device_type = type.is_cuda() ? DeviceType::CUDA : DeviceType::CPU;
   auto device_type = r.isNone(device_idx) ? types_device_type : r.device(device_idx).type;
-  return torch::getType(dtype, *torch::getLayout(type.backend()), device_type);
+  return torch::getType(scalartype, *torch::getLayout(type.backend()), device_type);
 }
 
 static Tensor set_requires_grad(Tensor self, bool requires_grad) {
@@ -388,8 +388,8 @@ Tensor sparse_coo_tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs
   const auto& default_sparse_type = type.toBackend(sparse_backend);
 
   static PythonArgParser parser({
-    "sparse_coo_tensor(PyObject* indices, PyObject* values, *, Dtype dtype=None, Device? device=None, bool requires_grad=False)",
-    "sparse_coo_tensor(PyObject* indices, PyObject* values, IntList size, *, Dtype dtype=None, Device? device=None, bool requires_grad=False)",
+    "sparse_coo_tensor(PyObject* indices, PyObject* values, *, ScalarType dtype=None, Device? device=None, bool requires_grad=False)",
+    "sparse_coo_tensor(PyObject* indices, PyObject* values, IntList size, *, ScalarType dtype=None, Device? device=None, bool requires_grad=False)",
   });
 
   ParsedArgs<6> parsed_args;
@@ -422,7 +422,7 @@ Tensor sparse_coo_tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs
 
 Tensor tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs) {
   static PythonArgParser parser({
-    "tensor(PyObject* data, *, Dtype dtype=None, Device? device=None, bool requires_grad=False)",
+    "tensor(PyObject* data, *, ScalarType dtype=None, Device? device=None, bool requires_grad=False)",
   });
 
   ParsedArgs<4> parsed_args;
@@ -438,7 +438,7 @@ Tensor tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs) {
 
 Tensor new_tensor(const Type& type, PyObject* args, PyObject* kwargs) {
   static PythonArgParser parser({
-    "new_tensor(PyObject* data, *, Dtype dtype=None, Device? device=None, bool requires_grad=False)",
+    "new_tensor(PyObject* data, *, ScalarType dtype=None, Device? device=None, bool requires_grad=False)",
   });
 
   ParsedArgs<4> parsed_args;
@@ -452,7 +452,7 @@ Tensor new_tensor(const Type& type, PyObject* args, PyObject* kwargs) {
 
 Tensor new_empty(const at::Type& type, PyObject* args, PyObject* kwargs) {
   static PythonArgParser parser({
-    "new_empty(IntList size, *, Dtype dtype=None, Device? device=None, bool requires_grad=False)",
+    "new_empty(IntList size, *, ScalarType dtype=None, Device? device=None, bool requires_grad=False)",
   });
 
   ParsedArgs<4> parsed_args;
@@ -466,7 +466,7 @@ Tensor new_empty(const at::Type& type, PyObject* args, PyObject* kwargs) {
 
 Tensor new_full(const at::Type& type, PyObject* args, PyObject* kwargs) {
   static PythonArgParser parser({
-    "new_full(IntList size, Scalar fill_value, *, Dtype dtype=None, Device? device=None, bool requires_grad=False)",
+    "new_full(IntList size, Scalar fill_value, *, ScalarType dtype=None, Device? device=None, bool requires_grad=False)",
   });
 
   ParsedArgs<5> parsed_args;
@@ -480,7 +480,7 @@ Tensor new_full(const at::Type& type, PyObject* args, PyObject* kwargs) {
 
 Tensor new_ones(const at::Type& type, PyObject* args, PyObject* kwargs) {
   static PythonArgParser parser({
-    "new_ones(IntList size, *, Dtype dtype=None, Device? device=None, bool requires_grad=False)",
+    "new_ones(IntList size, *, ScalarType dtype=None, Device? device=None, bool requires_grad=False)",
   });
 
   ParsedArgs<4> parsed_args;
@@ -494,7 +494,7 @@ Tensor new_ones(const at::Type& type, PyObject* args, PyObject* kwargs) {
 
 Tensor new_zeros(const at::Type& type, PyObject* args, PyObject* kwargs) {
   static PythonArgParser parser({
-    "new_zeros(IntList size, *, Dtype dtype=None, Device? device=None, bool requires_grad=False)",
+    "new_zeros(IntList size, *, ScalarType dtype=None, Device? device=None, bool requires_grad=False)",
   });
 
   ParsedArgs<4> parsed_args;
