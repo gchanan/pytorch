@@ -178,7 +178,7 @@ static void set_type(PyTensorType& type_obj, Backend backend, ScalarType scalarT
   auto baseType = globalContext().type_registry[static_cast<int>(backend)][static_cast<int>(scalarType)].get();
   type_obj.aten_type = baseType ? torch::autograd::VariableType::getType(*baseType) : nullptr;
   type_obj.layout = torch::getLayout(backend);
-  type_obj.dtype = torch::getDtype(scalarType, backend == kCUDA || backend == kSparseCUDA);
+  type_obj.dtype = torch::getDtype(scalarType);
 }
 
 static void set_name(PyTensorType& type_obj, const std::string& name) {
