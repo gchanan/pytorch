@@ -23,7 +23,6 @@ static std::unordered_map<std::string, ParameterType> type_map = {
   {"bool", ParameterType::BOOL},
   {"Storage", ParameterType::STORAGE},
   {"PyObject*", ParameterType::PYOBJECT},
-  {"Dtype", ParameterType::DTYPE},
   {"ScalarType", ParameterType::SCALAR_TYPE},
   {"Layout", ParameterType::LAYOUT},
   {"Device", ParameterType::DEVICE},
@@ -112,7 +111,6 @@ bool FunctionParameter::check(PyObject* obj) {
     case ParameterType::BOOL: return PyBool_Check(obj);
     case ParameterType::STORAGE: return isStorage(obj);
     case ParameterType::PYOBJECT: return true;
-    case ParameterType::DTYPE: return THPDtype_Check(obj);
     case ParameterType::SCALAR_TYPE: return THPDtype_Check(obj);
     case ParameterType::LAYOUT: return THPLayout_Check(obj);
     case ParameterType::DEVICE:
@@ -134,7 +132,6 @@ std::string FunctionParameter::type_name() const {
     case ParameterType::BOOL: return "bool";
     case ParameterType::STORAGE: return "torch.Storage";
     case ParameterType::PYOBJECT: return "object";
-    case ParameterType::DTYPE: return "torch.dtype";
     case ParameterType::SCALAR_TYPE: return "torch.dtype";
     case ParameterType::LAYOUT: return "torch.layout";
     case ParameterType::DEVICE: return "torch.device";
@@ -168,14 +165,6 @@ void FunctionParameter::set_default_str(const std::string& str) {
   } else if (type_ == ParameterType::INT_LIST) {
     if (str != "None") {
       default_intlist.assign(size, std::stoi(str));
-    }
-  } else if (type_ == ParameterType::DTYPE) {
-    if (str == "None") {
-      default_dtype = nullptr;
-    } else if (str == "torch.int64") {
-      default_dtype = torch::getDtype(kLong);
-    } else {
-      throw std::runtime_error("invalid default value for dtype: " + str);
     }
   } else if (type_ == ParameterType::SCALAR_TYPE) {
     if (str == "None") {
