@@ -8,14 +8,13 @@
 #include "torch/csrc/utils/tensor_dtypes.h"
 #include "torch/csrc/utils/tensor_types.h"
 
-PyObject * THPDtype_New(at::ScalarType scalar_type, bool is_cuda, const std::string& name)
+PyObject * THPDtype_New(at::ScalarType scalar_type, const std::string& name)
 {
   auto type = (PyTypeObject*)&THPDtypeType;
   auto self = THPObjectPtr{type->tp_alloc(type, 0)};
   if (!self) throw python_error();
   auto self_ = reinterpret_cast<THPDtype*>(self.get());
   self_->scalar_type = scalar_type;
-  self_->is_cuda = is_cuda;
   std::strncpy (self_->name, name.c_str(), DTYPE_NAME_LEN);
   self_->name[DTYPE_NAME_LEN] = '\0';
   return self.release();
@@ -25,32 +24,6 @@ PyObject *THPDtype_repr(THPDtype *self)
 {
   return THPUtils_packString(self->name);
 }
-
-PyObject *THPDtype_is_cuda(THPDtype *self)
-{
-  if (self->is_cuda) {
-    Py_RETURN_TRUE;
-  } else {
-    Py_RETURN_FALSE;
-  }
-}
-
-PyObject *THPDtype_is_floating_point(THPDtype *self)
-{
-  if (at::isFloatingType(self->scalar_type)) {
-    Py_RETURN_TRUE;
-  } else {
-    Py_RETURN_FALSE;
-  }
-}
-
-typedef PyObject *(*getter)(PyObject *, void *);
-
-static struct PyGetSetDef THPDtype_properties[] = {
-  {"is_cuda",      (getter)THPDtype_is_cuda, nullptr, nullptr, nullptr},
-  {"is_floating_point", (getter)THPDtype_is_floating_point, nullptr, nullptr, nullptr},
-  {nullptr}
-};
 
 PyTypeObject THPDtypeType = {
   PyVarObject_HEAD_INIT(nullptr, 0)
@@ -82,7 +55,7 @@ PyTypeObject THPDtypeType = {
   0,                                     /* tp_iternext */
   0,                                     /* tp_methods */
   0,                                     /* tp_members */
-  THPDtype_properties,                   /* tp_getset */
+  0,                                     /* tp_getset */
   0,                                     /* tp_base */
   0,                                     /* tp_dict */
   0,                                     /* tp_descr_get */
