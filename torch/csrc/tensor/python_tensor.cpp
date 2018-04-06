@@ -51,7 +51,7 @@ static PyObject* Tensor_new(PyTypeObject *type, PyObject *args, PyObject *kwargs
   if (!tensor_type.aten_type) {
     throw unavailable_type(tensor_type);
   }
-  if (tensor_type.dtype->is_cuda) {
+  if (tensor_type.aten_type->is_cuda()) {
     torch::utils::cuda_lazy_init();
   }
   return THPVariable_Wrap(torch::utils::legacy_tensor_ctor(*tensor_type.aten_type, args, kwargs));
@@ -79,7 +79,7 @@ PyObject *Tensor_layout(PyTensorType* self) {
 }
 
 PyObject *Tensor_is_cuda(PyTensorType* self) {
-  if (self->dtype->is_cuda) {
+  if (self->aten_type->is_cuda()) {
     Py_RETURN_TRUE;
   } else {
     Py_RETURN_FALSE;
