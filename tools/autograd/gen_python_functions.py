@@ -473,7 +473,6 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 'simple_type': 'Layout',
             }
             python_binding_arguments.append(layout_arg)
-        if is_factory_or_like_function:
             device_arg = {
                 'default': 'None',
                 'default_init': 'None',
@@ -484,6 +483,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 'simple_type': 'Device'
             }
             python_binding_arguments.append(device_arg)
+        if is_factory_or_like_function:
             requires_grad_arg = {
                 'default': False,
                 'dynamic_type': 'bool',
