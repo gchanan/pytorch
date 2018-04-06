@@ -24,6 +24,7 @@ static std::unordered_map<std::string, ParameterType> type_map = {
   {"Storage", ParameterType::STORAGE},
   {"PyObject*", ParameterType::PYOBJECT},
   {"Dtype", ParameterType::DTYPE},
+  {"ScalarType", ParameterType::SCALAR_TYPE},
   {"Layout", ParameterType::LAYOUT},
   {"Device", ParameterType::DEVICE},
   {"String", ParameterType::STRING},
@@ -112,6 +113,7 @@ bool FunctionParameter::check(PyObject* obj) {
     case ParameterType::STORAGE: return isStorage(obj);
     case ParameterType::PYOBJECT: return true;
     case ParameterType::DTYPE: return THPDtype_Check(obj);
+    case ParameterType::SCALAR_TYPE: return THPDtype_Check(obj);
     case ParameterType::LAYOUT: return THPLayout_Check(obj);
     case ParameterType::DEVICE:
       return THPUtils_checkLong(obj) || THPUtils_checkString(obj) || THPDevice_Check(obj);
@@ -133,6 +135,7 @@ std::string FunctionParameter::type_name() const {
     case ParameterType::STORAGE: return "torch.Storage";
     case ParameterType::PYOBJECT: return "object";
     case ParameterType::DTYPE: return "torch.dtype";
+    case ParameterType::SCALAR_TYPE: return "torch.dtype";
     case ParameterType::LAYOUT: return "torch.layout";
     case ParameterType::DEVICE: return "torch.device";
     case ParameterType::STRING: return "str";
@@ -174,13 +177,21 @@ void FunctionParameter::set_default_str(const std::string& str) {
     } else {
       throw std::runtime_error("invalid default value for dtype: " + str);
     }
+  } else if (type_ == ParameterType::SCALAR_TYPE) {
+    if (str == "None") {
+      default_scalartype = at::ScalarType::Undefined;
+    } else if (str == "kLong") {
+      default_scalartype = at::ScalarType::Long;
+    } else {
+      throw std::runtime_error("invalid default value for ScalarType: " + str);
+    }
   } else if (type_ == ParameterType::LAYOUT) {
     if (str == "torch.strided") {
       default_layout = torch::getLayout(at::Backend::CPU);
     } else if (str == "torch.sparse_coo") {
       default_layout = torch::getLayout(at::Backend::SparseCPU);
     } else {
-      throw std::runtime_error("invalid default value for dtype: " + str);
+      throw std::runtime_error("invalid default value for layout: " + str);
     }
   } else if (type_ == ParameterType::DEVICE) {
     if (str != "None") {
