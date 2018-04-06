@@ -73,7 +73,7 @@ if (r.isNone(${out_idx})) {
   ${call_dispatch}
 } else {
   if (!r.isNone(${type_idx})) {
-    check_out_type_matches(r.tensor(${out_idx}), r.dtype(${type_idx}), r.layout(${layout_idx}),
+    check_out_type_matches(r.tensor(${out_idx}), r.scalartype(${type_idx}), r.layout(${layout_idx}),
                            r.device(${device_idx}), r.isNone(${device_idx}));
   }
   ${call_dispatch_out}
@@ -208,7 +208,7 @@ def create_python_bindings(python_functions, has_self, is_module=False):
         'Tensor &': 'tensor',
         'Generator *': 'generator',
         'Storage &': 'storage',
-        'const Type &': 'dtype',
+        'const Type &': 'scalartype',
         'const THPLayout &': 'layout',
         'const Device &': 'deviceInt64',
         'int64_t': 'toInt64',
@@ -222,7 +222,8 @@ def create_python_bindings(python_functions, has_self, is_module=False):
         'int64_t': 'toInt64WithDefault',
         'bool': 'setDefaultBool',
         'double': 'setDefaultDouble',
-        'const Type &': 'dtypeWithDefault',
+        'const Type &': 'scalartypeWithDefault',
+        'ScalarType': 'scalartypeWithDefault',
     }
 
     def first_tensor_arg(arguments):
@@ -375,8 +376,8 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                 requires_grad = parse_arg(arg, requires_grad_idx)[0]
             else:
                 raise RuntimeError(("found {} in python_binding_arguments but only "
-                                    "\"bool requires_grad\", \"Dtype dtype\", \"Layout layout\", \"Device device\" "
-                                    "are supported".format(arg)))
+                                    "\"bool requires_grad\", \"ScalarType dtype\", \"Layout layout\", "
+                                    "\"Device device\" are supported".format(arg)))
 
         env['unpack_args'] = []
         env['formal_args'] = formal_args
@@ -593,7 +594,7 @@ def get_python_signature(declaration, include_out):
     positional = True
 
     def get_py_formal_arg(arg):
-        typename = arg['simple_type'] if arg['simple_type'] != 'Type' else 'Dtype'
+        typename = arg['simple_type'] if arg['simple_type'] != 'Type' else 'ScalarType'
         if arg.get('is_nullable'):
             typename = '{}?'.format(typename)
         if arg.get('size') is not None:

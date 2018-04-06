@@ -60,17 +60,18 @@ AT_FORALL_SCALAR_TYPES(DEFINE_CAST_OP)
 #undef DEFINE_CAST_OP
 
 Tensor empty_like(const Tensor& self) {
-  return at::native::empty_like(self, self.type());
+  return at::native::empty_like(self, self.type().scalarType());
 }
 
-Tensor empty_like(const Tensor& self, const Type& dtype) {
-  if (dtype.is_sparse() && self.type().is_sparse()) {
-    auto res = dtype.tensor();
+Tensor empty_like(const Tensor& self, ScalarType dtype) {
+  const auto& type = self.type().toScalarType(dtype);
+  if (self.type().is_sparse()) {
+    auto res = type.tensor();
     // resize_as_ requires the same exact type.
     res.sparse_raw_resize_(self.sizes(), self._dimI(), self._dimV());
     return res;
   }
-  return at::native::empty(dtype, self.sizes());
+  return at::native::empty(type, self.sizes());
 }
 
 Tensor eye(const Type& dtype, int64_t n, int64_t m) {
@@ -119,11 +120,11 @@ Tensor& full_out(Tensor& result, IntList size, Scalar fill_value) {
 }
 
 Tensor full_like(const Tensor& self, Scalar fill_value) {
-  return at::native::full_like(self, fill_value, self.type());
+  return at::native::full_like(self, fill_value, self.type().scalarType());
 }
 
-Tensor full_like(const Tensor& self, Scalar fill_value, const Type& dtype) {
-  return at::native::full(dtype, self.sizes(), fill_value);
+Tensor full_like(const Tensor& self, Scalar fill_value, ScalarType dtype) {
+  return at::native::full(self.type().toScalarType(dtype), self.sizes(), fill_value);
 }
 
 Tensor linspace(const Type& dtype, Scalar start, Scalar end, int64_t steps) {
@@ -156,8 +157,8 @@ Tensor ones_like(const Tensor& self) {
   return at::native::ones(self.type(), self.sizes());
 }
 
-Tensor ones_like(const Tensor& self, const Type& dtype) {
-  return at::native::ones(dtype, self.sizes());
+Tensor ones_like(const Tensor& self, ScalarType dtype) {
+  return at::native::ones(self.type().toScalarType(dtype), self.sizes());
 }
 
 Tensor rand(const Type& dtype, IntList size, Generator* generator) {
@@ -171,11 +172,11 @@ Tensor& rand_out(Tensor& result, IntList size, Generator* generator) {
 }
 
 Tensor rand_like(const Tensor& self) {
-  return at::native::rand_like(self, self.type());
+  return at::native::rand_like(self, self.type().scalarType());
 }
 
-Tensor rand_like(const Tensor& self, const Type& dtype) {
-  return at::native::rand(dtype, self.sizes());
+Tensor rand_like(const Tensor& self, ScalarType dtype) {
+  return at::native::rand(self.type().toScalarType(dtype), self.sizes());
 }
 
 Tensor randn(const Type& dtype, IntList size, Generator* generator) {
@@ -189,11 +190,11 @@ Tensor& randn_out(Tensor& result, IntList size, Generator* generator) {
 }
 
 Tensor randn_like(const Tensor& self) {
-  return at::native::randn_like(self, self.type());
+  return at::native::randn_like(self, self.type().scalarType());
 }
 
-Tensor randn_like(const Tensor& self, const Type& dtype) {
-  return at::native::randn(dtype, self.sizes(), nullptr);
+Tensor randn_like(const Tensor& self, ScalarType dtype) {
+  return at::native::randn(self.type().toScalarType(dtype), self.sizes(), nullptr);
 }
 
 namespace {
@@ -272,17 +273,18 @@ Tensor& zeros_out(Tensor& result, IntList size) {
 }
 
 Tensor zeros_like(const Tensor& self) {
-  return at::native::zeros_like(self, self.type());
+  return at::native::zeros_like(self, self.type().scalarType());
 }
 
-Tensor zeros_like(const Tensor& self, const Type& dtype) {
-  if (dtype.is_sparse() && self.type().is_sparse()) {
-    auto res = dtype.tensor();
+Tensor zeros_like(const Tensor& self, ScalarType dtype) {
+  const auto& type = self.type().toScalarType(dtype);
+  if (self.type().is_sparse()) {
+    auto res = type.tensor();
     // resize_as_ requires the same exact type.
     res.sparse_raw_resize_(self.sizes(), self._dimI(), self._dimV());
     return res;
   }
-  return at::native::zeros(dtype, self.sizes());
+  return at::native::zeros(type, self.sizes());
 }
 
 }
