@@ -1680,6 +1680,19 @@ class TestTorch(TestCase):
         self.assertIs(torch.cuda.float64, torch.tensor(0.).dtype)
         torch.set_default_tensor_type(saved_dtype)
 
+    @unittest.skipIf(not torch.cuda.is_available(), 'no CUDA')
+    def test_tensor_factory_cuda_type(self):
+        saved_dtype = torch.get_default_dtype()
+        torch.set_default_tensor_type(torch.cuda.FloatTensor)
+        x = torch.zeros((5, 5))
+        self.assertIs(torch.float32, x.dtype)
+        self.assertTrue(x.is_cuda)
+        torch.set_default_tensor_type(torch.cuda.DoubleTensor)
+        x = torch.zeros((5, 5))
+        self.assertIs(torch.float64, x.dtype)
+        self.assertTrue(x.is_cuda)
+        torch.set_default_tensor_type(saved_dtype)
+
     def test_new_tensor(self):
         expected = torch.autograd.Variable(torch.ByteTensor([1, 1]))
         # test data
