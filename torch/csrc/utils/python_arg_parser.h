@@ -44,7 +44,7 @@ namespace torch {
 
 enum class ParameterType {
   TENSOR, SCALAR, INT64, DOUBLE, TENSOR_LIST, INT_LIST, GENERATOR,
-  BOOL, STORAGE, PYOBJECT, DTYPE, LAYOUT, DEVICE, STRING
+  BOOL, STORAGE, PYOBJECT, SCALAR_TYPE, LAYOUT, DEVICE, STRING
 };
 
 struct FunctionParameter;
@@ -93,11 +93,14 @@ struct PythonArgs {
   inline std::vector<int64_t> intlistWithDefault(int i, std::vector<int64_t> default_intlist);
   inline at::Generator* generator(int i);
   inline std::unique_ptr<at::Storage> storage(int i);
-  inline const THPDtype& dtype(int i);
-  inline const THPDtype& dtypeWithDefault(int i, const THPDtype& default_dtype);
+  inline at::ScalarType scalartype(int i);
+  inline at::ScalarType scalartypeWithDefault(int i, at::ScalarType default_scalartype);
   inline const THPLayout& layout(int i);
+  inline const THPLayout& layoutWithDefault(int i, const THPLayout& default_layout);
   inline Device device(int i);
   inline int64_t deviceInt64(int i);
+  inline torch::DeviceType deviceType(int i);
+  inline torch::DeviceType deviceTypeWithDefault(int i, torch::DeviceType default_devicetype);
   inline std::string string(int i);
   inline PyObject* pyobject(int i);
   inline int64_t toInt64(int i);
@@ -146,7 +149,7 @@ struct FunctionParameter {
     bool default_bool;
     int64_t default_int;
     double default_double;
-    THPDtype* default_dtype;
+    at::ScalarType default_scalartype;
     THPLayout* default_layout;
   };
 };
@@ -256,26 +259,31 @@ inline std::vector<int64_t> PythonArgs::intlistWithDefault(int i, std::vector<in
   return res;
 }
 
-inline const THPDtype& PythonArgs::dtypeWithDefault(int i, const THPDtype& default_dtype) {
-  if (!args[i]) return default_dtype;
-  return dtype(i);
+inline at::ScalarType PythonArgs::scalartypeWithDefault(int i, at::ScalarType default_scalartype) {
+  if (!args[i]) return default_scalartype;
+  return scalartype(i);
 }
 
-inline const THPDtype& PythonArgs::dtype(int i) {
+inline at::ScalarType PythonArgs::scalartype(int i) {
   if (!args[i]) {
-    auto dtype = signature.params[i].default_dtype;
-    if (!dtype) {
+    auto scalartype = signature.params[i].default_scalartype;
+    if (scalartype == at::ScalarType::Undefined) {
       const auto& type = torch::tensor::get_default_tensor_type();
-      dtype = torch::getDtype(type.scalarType(), type.is_cuda());
+      return type.scalarType();
     }
-    return *dtype;
+    return scalartype;
   }
-  return *reinterpret_cast<THPDtype*>(args[i]);
+  return reinterpret_cast<THPDtype*>(args[i])->scalar_type;
 }
 
 inline const THPLayout& PythonArgs::layout(int i) {
   if (!args[i]) return *signature.params[i].default_layout;
   return *reinterpret_cast<THPLayout*>(args[i]);
+}
+
+inline const THPLayout& PythonArgs::layoutWithDefault(int i, const THPLayout& default_layout) {
+  if (!args[i]) return default_layout;
+  return layout(i);
 }
 
 static std::string cuda_str = "cuda";
@@ -284,7 +292,11 @@ static std::string cuda_prefix = "cuda:";
 static std::string cpu_prefix = "cpu:";
 
 inline Device PythonArgs::device(int i) {
-  if (!args[i]) return Device(DeviceType::CPU, -1, true);  // TODO: use CUDA if default type is a cuda type.
+  if (!args[i]) {
+    auto default_cuda = torch::tensor::get_default_tensor_type().is_cuda();
+    auto device_type = default_cuda ? torch::DeviceType::CUDA : torch::DeviceType::CPU;
+    return Device(device_type, -1, true);
+  }
   if (THPDevice_Check(args[i])) {
     auto device = reinterpret_cast<THPDevice*>(args[i]);
     return device->device;
@@ -311,6 +323,15 @@ inline Device PythonArgs::device(int i) {
 inline int64_t PythonArgs::deviceInt64(int i) {
   auto dev = device(i);
   return (dev.is_default || dev.type == DeviceType::CPU) ? -1 : dev.index;
+}
+
+inline torch::DeviceType PythonArgs::deviceType(int i) {
+  return device(i).type;
+}
+
+inline torch::DeviceType PythonArgs::deviceTypeWithDefault(int i, torch::DeviceType default_devicetype) {
+  if (!args[i]) return default_devicetype;
+  return deviceType(i);
 }
 
 inline std::string PythonArgs::string(int i) {
