@@ -1419,28 +1419,17 @@ class TestTorch(TestCase):
         self.assertEqual(output, expected)
 
     @staticmethod
-    def _test_dtypes(self, cpu_dtypes, cuda_dtypes, layout):
-        dtypes = cpu_dtypes + (cuda_dtypes if torch.cuda.is_available() else [])
-
+    def _test_dtypes(self, dtypes, layout, device):
         for dtype in dtypes:
-            # no ops on torch.float16 currently, cuda.float16 doesn't work on windows
             if dtype != torch.float16:
-                if dtype.is_cuda and torch.cuda.device_count() > 1:
-                    out = torch.zeros((2, 3), device=1, dtype=dtype, layout=layout)
-                    self.assertIs(dtype, out.dtype)
-                    self.assertIs(layout, out.layout)
-                    self.assertEqual(1, out.get_device())
-                else:
-                    out = torch.zeros((2, 3), dtype=dtype, layout=layout)
-                    self.assertIs(dtype, out.dtype)
-                    self.assertIs(layout, out.layout)
-            self.assertEqual(dtype in cuda_dtypes, dtype.is_cuda)
+                out = torch.zeros((2, 3), dtype=dtype, layout=layout, device=device)
+                self.assertIs(dtype, out.dtype)
+                self.assertIs(layout, out.layout)
+                self.assertEqual(device, out.device)
 
     def test_dtypes(self):
         all_dtypes = torch.testing.get_all_dtypes()
-        cpu_dtypes = [d for d in all_dtypes if not d.is_cuda]
-        cuda_dtypes = [d for d in all_dtypes if d.is_cuda]
-        self._test_dtypes(self, cpu_dtypes, cuda_dtypes, torch.strided)
+        self._test_dtypes(self, all_dtypes, torch.strided, torch.device('cpu'))
 
     def test_device(self):
         cpu = torch.device('cpu')
