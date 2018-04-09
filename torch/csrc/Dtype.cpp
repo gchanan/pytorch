@@ -20,6 +20,22 @@ PyObject * THPDtype_New(at::ScalarType scalar_type, const std::string& name)
   return self.release();
 }
 
+PyObject *THPDtype_is_floating_point(THPDtype *self)
+{
+  if (at::isFloatingType(self->scalar_type)) {
+    Py_RETURN_TRUE;
+  } else {
+    Py_RETURN_FALSE;
+  }
+}
+
+typedef PyObject *(*getter)(PyObject *, void *);
+
+static struct PyGetSetDef THPDtype_properties[] = {
+  {"is_floating_point", (getter)THPDtype_is_floating_point, nullptr, nullptr, nullptr},
+  {nullptr}
+};
+
 PyObject *THPDtype_repr(THPDtype *self)
 {
   return THPUtils_packString(self->name);
@@ -55,7 +71,7 @@ PyTypeObject THPDtypeType = {
   0,                                     /* tp_iternext */
   0,                                     /* tp_methods */
   0,                                     /* tp_members */
-  0,                                     /* tp_getset */
+  THPDtype_properties,                   /* tp_getset */
   0,                                     /* tp_base */
   0,                                     /* tp_dict */
   0,                                     /* tp_descr_get */
