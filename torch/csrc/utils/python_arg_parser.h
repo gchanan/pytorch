@@ -98,9 +98,8 @@ struct PythonArgs {
   inline const THPLayout& layout(int i);
   inline const THPLayout& layoutWithDefault(int i, const THPLayout& default_layout);
   inline Device device(int i);
+  inline Device deviceWithDefault(int i, const Device& default_device);
   inline int64_t deviceInt64(int i);
-  inline torch::DeviceType deviceType(int i);
-  inline torch::DeviceType deviceTypeWithDefault(int i, torch::DeviceType default_devicetype);
   inline std::string string(int i);
   inline PyObject* pyobject(int i);
   inline int64_t toInt64(int i);
@@ -320,18 +319,14 @@ inline Device PythonArgs::device(int i) {
   throw torch::TypeError("only \"cuda\" and \"cpu\" are valid device types, got %s", device_str.c_str());
 }
 
+inline Device PythonArgs::deviceWithDefault(int i, const Device& default_device) {
+  if (!args[i]) return default_device;
+  return device(i);
+}
+
 inline int64_t PythonArgs::deviceInt64(int i) {
   auto dev = device(i);
-  return (dev.is_default || dev.type == DeviceType::CPU) ? -1 : dev.index;
-}
-
-inline torch::DeviceType PythonArgs::deviceType(int i) {
-  return device(i).type;
-}
-
-inline torch::DeviceType PythonArgs::deviceTypeWithDefault(int i, torch::DeviceType default_devicetype) {
-  if (!args[i]) return default_devicetype;
-  return deviceType(i);
+  return dev.deviceInt64();
 }
 
 inline std::string PythonArgs::string(int i) {

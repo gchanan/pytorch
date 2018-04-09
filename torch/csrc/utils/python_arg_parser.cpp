@@ -175,7 +175,9 @@ void FunctionParameter::set_default_str(const std::string& str) {
       throw std::runtime_error("invalid default value for ScalarType: " + str);
     }
   } else if (type_ == ParameterType::LAYOUT) {
-    if (str == "torch.strided") {
+    if (str == "None") {
+      default_layout = nullptr;
+    } else if (str == "torch.strided") {
       default_layout = torch::getLayout(at::Backend::CPU);
     } else if (str == "torch.sparse_coo") {
       default_layout = torch::getLayout(at::Backend::SparseCPU);
