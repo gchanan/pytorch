@@ -88,7 +88,7 @@ static PyTypeObject* getPyTypeObject(const at::Storage& storage)
   throw std::invalid_argument("unsupported Storage type");
 }
 
-at::Type& getType(at::ScalarType scalarType, const THPLayout& layout, DeviceType deviceType) {
+at::Type& getType(at::ScalarType scalarType, const THPLayout& layout, const DeviceType& deviceType) {
   at::Backend backend = get_backend(deviceType == DeviceType::CUDA, !layout.is_strided);
   // use type_registry rather than context.getType() because getType throws exceptions.
   auto baseType = at::globalContext().type_registry[static_cast<int>(backend)]
