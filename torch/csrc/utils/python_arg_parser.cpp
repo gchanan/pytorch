@@ -23,7 +23,7 @@ static std::unordered_map<std::string, ParameterType> type_map = {
   {"bool", ParameterType::BOOL},
   {"Storage", ParameterType::STORAGE},
   {"PyObject*", ParameterType::PYOBJECT},
-  {"ScalarType", ParameterType::SCALAR_TYPE},
+  {"ScalarType", ParameterType::SCALARTYPE},
   {"Layout", ParameterType::LAYOUT},
   {"Device", ParameterType::DEVICE},
   {"String", ParameterType::STRING},
@@ -111,7 +111,7 @@ bool FunctionParameter::check(PyObject* obj) {
     case ParameterType::BOOL: return PyBool_Check(obj);
     case ParameterType::STORAGE: return isStorage(obj);
     case ParameterType::PYOBJECT: return true;
-    case ParameterType::SCALAR_TYPE: return THPDtype_Check(obj);
+    case ParameterType::SCALARTYPE: return THPDtype_Check(obj);
     case ParameterType::LAYOUT: return THPLayout_Check(obj);
     case ParameterType::DEVICE:
       return THPUtils_checkLong(obj) || THPUtils_checkString(obj) || THPDevice_Check(obj);
@@ -132,7 +132,7 @@ std::string FunctionParameter::type_name() const {
     case ParameterType::BOOL: return "bool";
     case ParameterType::STORAGE: return "torch.Storage";
     case ParameterType::PYOBJECT: return "object";
-    case ParameterType::SCALAR_TYPE: return "torch.dtype";
+    case ParameterType::SCALARTYPE: return "torch.dtype";
     case ParameterType::LAYOUT: return "torch.layout";
     case ParameterType::DEVICE: return "torch.device";
     case ParameterType::STRING: return "str";
@@ -166,7 +166,7 @@ void FunctionParameter::set_default_str(const std::string& str) {
     if (str != "None") {
       default_intlist.assign(size, std::stoi(str));
     }
-  } else if (type_ == ParameterType::SCALAR_TYPE) {
+  } else if (type_ == ParameterType::SCALARTYPE) {
     if (str == "None") {
       default_scalartype = at::ScalarType::Undefined;
     } else if (str == "torch.int64") {
