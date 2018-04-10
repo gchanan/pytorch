@@ -15,20 +15,14 @@
 namespace at {
 namespace native {
 
-Tensor cumsum(const Tensor& self, int64_t dim) {
-  auto scalarType = self.type().scalarType();
-  return at::cumsum(self, dim, at::isIntegralType(scalarType) ? ScalarType::Long : scalarType);
+Tensor cumsum(const Tensor& self, int64_t dim, optional<ScalarType> dtype) {
+  ScalarType scalarType = self.type().scalarType();
+  ScalarType defaultType = dtype.value_or(at::isIntegralType(scalarType) ? ScalarType::Long : scalarType);
+  return at::_cumsum(self.toType(dtype.value_or(defaultType)), dim);
 }
 
-Tensor cumsum(const Tensor& self, int64_t dim, ScalarType dtype) {
-  return at::_cumsum(self.toType(dtype), dim);
-}
-
-Tensor& cumsum_out(Tensor& result, const Tensor& self, int64_t dim) {
-  return at::_cumsum_out(result, self.toType(result.type().scalarType()), dim);
-}
-
-Tensor& cumsum_out(Tensor& result, const Tensor& self, int64_t dim, ScalarType dtype) {
+Tensor& cumsum_out(Tensor& result, const Tensor& self, int64_t dim, optional<ScalarType> dtype) {
+  // result type is favored over dtype
   return at::_cumsum_out(result, self.toType(result.type().scalarType()), dim);
 }
 
