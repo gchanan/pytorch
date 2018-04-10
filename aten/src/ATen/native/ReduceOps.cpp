@@ -16,7 +16,12 @@ namespace at {
 namespace native {
 
 Tensor cumsum(const Tensor& self, int64_t dim) {
-  return at::_cumsum(self, dim);
+  auto scalarType = self.type().scalarType();
+  return at::cumsum(self, dim, at::isIntegralType(scalarType) ? ScalarType::Long : scalarType);
+}
+
+Tensor cumsum(const Tensor& self, int64_t dim, ScalarType dtype) {
+  return at::_cumsum(self.toType(dtype), dim);
 }
 
 Tensor& cumsum_out(Tensor& result, const Tensor& self, int64_t dim) {

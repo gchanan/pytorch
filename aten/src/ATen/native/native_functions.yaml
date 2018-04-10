@@ -250,7 +250,10 @@
       name: grad_grid
   variants: function
 
+
 - func: cumsum(Tensor self, int64_t dim) -> Tensor
+
+- func: cumsum(Tensor self, int64_t dim, *, ScalarType dtype) -> Tensor
 
 - func: cumsum_out(Tensor result, Tensor self, int64_t dim) -> Tensor
   variants: function
