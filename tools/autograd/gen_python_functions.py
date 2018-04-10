@@ -373,7 +373,9 @@ def create_python_bindings(python_functions, has_self, is_module=False):
                     assert parsed_type_args
                     assert layout
                     device_arg = parse_arg(arg, device_idx, True)
-                    # add type and device formals, actuals
+                    # add type, device formals and corresponding actuals.
+                    # The type actual isthe ATen type mapped from (ScalarType, Layout, Device)
+                    # The device actual is the corresponding AutoGPU index for the Device.
                     formal_args.append(parsed_type_args[1])
                     formal_args.append(device_arg[1])
                     actuals.append("torch::getType({}, {}, {}.type)".format(parsed_type_args[0], layout, device_arg[0]))
