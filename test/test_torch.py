@@ -1362,6 +1362,56 @@ class TestTorch(TestCase):
         torch.cumprod(x, 1, out=res2)
         self.assertEqual(res1, res2)
 
+    def _test_reduce_integer_upcast(self, fn, has_out=True):
+        shape = (3, 4)
+        reduced_shape = fn(torch.ones(shape)).shape
+
+        def _test_out(dtype):
+            out = torch.ones(reduced_shape, dtype=dtype)
+            result = fn(x, out=out)
+            self.assertIs(out.dtype, result.dtype)
+            self.assertEqual(fn(x.type(other_dtype)), result)
+            # 'out' is favored over dtype
+            result = fn(x, out=out, dtype=dtype)
+            self.assertIs(out.dtype, result.dtype)
+            self.assertEqual(fn(x.type(other_dtype)), result)
+
+        for dtype in [dtype for dtype in torch.testing.get_all_dtypes() if dtype != torch.float16]:
+            x = torch.ones(shape, dtype=dtype)
+            expected_dtype = dtype if dtype.is_floating_point else torch.int64
+            self.assertIs(expected_dtype, fn(x).dtype)
+            self.assertEqual(fn(x.type(expected_dtype)), fn(x))
+
+            if dtype.is_floating_point:
+                other_dtype = torch.float32 if dtype == torch.float64 else torch.float64
+            else:
+                other_dtype = torch.int32 if dtype != torch.int32 else torch.int16
+            self.assertIs(other_dtype, fn(x, dtype=other_dtype).dtype)
+            self.assertEqual(fn(x.type(other_dtype)), fn(x, dtype=other_dtype))
+
+            # test mixed int/float
+            mixed_dtype = torch.int32 if dtype.is_floating_point else torch.float32
+            self.assertIs(mixed_dtype, fn(x, dtype=mixed_dtype).dtype)
+            self.assertEqual(fn(x.type(mixed_dtype)), fn(x, dtype=mixed_dtype))
+
+            if has_out:
+                _test_out(other_dtype)
+                _test_out(mixed_dtype)
+
+    def test_sum_integer_upcast(self):
+        self._test_reduce_integer_upcast(lambda x, **kwargs: torch.sum(x, **kwargs), False)
+        self._test_reduce_integer_upcast(lambda x, **kwargs: torch.sum(x, 0, **kwargs))
+
+    def test_prod_integer_upcast(self):
+        self._test_reduce_integer_upcast(lambda x, **kwargs: torch.prod(x, **kwargs), False)
+        self._test_reduce_integer_upcast(lambda x, **kwargs: torch.prod(x, 0, **kwargs))
+
+    def test_cumsum_integer_upcast(self):
+        self._test_reduce_integer_upcast(lambda x, **kwargs: torch.cumsum(x, 0, **kwargs))
+
+    def test_cumprod_integer_upcast(self):
+        self._test_reduce_integer_upcast(lambda x, **kwargs: torch.cumprod(x, 0, **kwargs))
+
     def test_cross(self):
         x = torch.rand(100, 3, 100)
         y = torch.rand(100, 3, 100)
