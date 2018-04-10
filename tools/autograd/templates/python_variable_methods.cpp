@@ -565,7 +565,7 @@ static PyObject * THPVariable_type(PyObject* self, PyObject* args, PyObject* kwa
   } else {
     throw TypeError("dtype must be a type, str, or dtype object");
   }
-  auto self_device_type = self_.type().is_cuda() ? DeviceType::CUDA : DeviceType::CPU;
+  auto self_device_type = torch::getDeviceType(self_.type());
   auto& type = is_dtype ? torch::getType(r.scalartype(0), *torch::getLayout(self_.type().backend()), self_device_type) :
                           torch::utils::type_from_string(type_name);
   return THPVariable_Wrap(torch::utils::dispatch_type_conversion(self_, type, -1, r.toBool(1)));

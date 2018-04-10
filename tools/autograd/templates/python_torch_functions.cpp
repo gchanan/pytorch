@@ -36,7 +36,7 @@ static Tensor set_requires_grad(Tensor self, bool requires_grad) {
 
 static void check_out_type_matches(Tensor result, ScalarType scalarType, const THPLayout& layout,
                                    const Device& device, bool device_is_none) {
-  auto result_device_type = result.type().is_cuda() ? DeviceType::CUDA : DeviceType::CPU;
+  auto result_device_type = torch::getDeviceType(result.type());
   auto device_type = device_is_none ? result_device_type : device.type;
   const auto& type = torch::getType(scalarType, layout, device_type);
   if (result.type() != type) {

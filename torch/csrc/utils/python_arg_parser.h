@@ -292,8 +292,8 @@ static std::string cpu_prefix = "cpu:";
 
 inline Device PythonArgs::device(int i) {
   if (!args[i]) {
-    auto default_cuda = torch::tensor::get_default_tensor_type().is_cuda();
-    auto device_type = default_cuda ? torch::DeviceType::CUDA : torch::DeviceType::CPU;
+    const auto& default_tensor_type = torch::tensor::get_default_tensor_type();
+    const auto device_type = torch::getDeviceType(default_tensor_type);
     return Device(device_type, -1, true);
   }
   if (THPDevice_Check(args[i])) {

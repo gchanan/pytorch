@@ -373,7 +373,7 @@ Tensor legacy_tensor_new(const Type& type, PyObject* args, PyObject* kwargs) {
 
 static const Type& typeWithDefault(PythonArgs& r, int64_t dtype_idx, int64_t device_idx, const Type& type) {
   auto scalartype = r.scalartypeWithDefault(dtype_idx, type.scalarType());
-  auto types_device_type = type.is_cuda() ? DeviceType::CUDA : DeviceType::CPU;
+  auto types_device_type = torch::getDeviceType(type);
   auto device_type = r.isNone(device_idx) ? types_device_type : r.device(device_idx).type;
   return torch::getType(scalartype, *torch::getLayout(type.backend()), device_type);
 }
