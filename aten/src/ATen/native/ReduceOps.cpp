@@ -15,6 +15,22 @@
 namespace at {
 namespace native {
 
+Tensor cumsum(const Tensor& self, int64_t dim) {
+  return at::_cumsum(self, dim);
+}
+
+Tensor& cumsum_out(Tensor& result, const Tensor& self, int64_t dim) {
+  return at::_cumsum_out(result, self, dim);
+}
+
+Tensor cumprod(const Tensor& self, int64_t dim) {
+  return at::_cumprod(self, dim);
+}
+
+Tensor& cumprod_out(Tensor& result, const Tensor& self, int64_t dim) {
+  return at::_cumprod_out(result, self, dim);
+}
+
 // ALL REDUCE #################################################################
 
 Tensor _sum_cpu(const Tensor& self) {

@@ -2304,7 +2304,8 @@
           default: "false"
 ]]
 [[
-  name: cumsum
+  name: _cumsum
+  cname: cumsum
   variants:
     - method
     - function
@@ -2317,7 +2318,8 @@
       wrap_dim: self
 ]]
 [[
-  name: cumprod
+  name: _cumprod
+  cname: cumprod
   variants:
     - method
     - function
