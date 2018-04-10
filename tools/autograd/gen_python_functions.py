@@ -463,7 +463,6 @@ def create_python_bindings(python_functions, has_self, is_module=False):
 
         if is_factory_function and not has_type_input_arg:
             default_type = get_type_default(declaration)
-
             dtype_arg = {
                 'default': default_type,
                 'dynamic_type': 'Type',
