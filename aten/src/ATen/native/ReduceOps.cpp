@@ -153,13 +153,13 @@ Tensor &_prod_out_cuda(Tensor &result, const Tensor &self, int64_t dim,
 }
 
 Tensor sum(const Tensor &self, int64_t dim_, bool keepdim, optional<ScalarType> dtype) {
-  at::_sum(integer_upcast(self, dtype), dim_, keepdim);
+  return at::_sum(integer_upcast(self, dtype), dim_, keepdim);
 }
 
 Tensor _sum(const Tensor &self, int64_t dim_, bool keepdim) {
   int64_t dim = maybe_wrap_dim(dim_, self.dim());
   Tensor result = self.type().tensor();
-  return at::sum_out(result, self, dim, keepdim);
+  return at::_sum_out(result, self, dim, keepdim);
 }
 
 Tensor prod(const Tensor &self, int64_t dim_, bool keepdim, optional<ScalarType> dtype) {
@@ -169,7 +169,7 @@ Tensor prod(const Tensor &self, int64_t dim_, bool keepdim, optional<ScalarType>
 Tensor _prod(const Tensor &self, int64_t dim_, bool keepdim) {
   int64_t dim = maybe_wrap_dim(dim_, self.dim());
   Tensor result = self.type().tensor();
-  return at::prod_out(result, self, dim, keepdim);
+  return at::_prod_out(result, self, dim, keepdim);
 }
 
 // \DIM REDUCE ################################################################
