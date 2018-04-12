@@ -1352,7 +1352,7 @@ class TestTorch(TestCase):
         torch.cumprod(x, 1, out=res2)
         self.assertEqual(res1, res2)
 
-    def _test_reduce_integer_upcast(self, fn):
+    def _test_reduce_integer_upcast(self, fn, has_out=True):
         shape = (3, 4)
         reduced_shape = fn(torch.ones(shape)).shape
 
@@ -1379,10 +1379,22 @@ class TestTorch(TestCase):
             self.assertIs(other_dtype, fn(x, dtype=other_dtype).dtype)
             self.assertEqual(fn(x.type(other_dtype)), fn(x, dtype=other_dtype))
 
-            _test_out(other_dtype)
             # test mixed int/float
             mixed_dtype = torch.int32 if dtype.is_floating_point else torch.float32
-            _test_out(mixed_dtype)
+            self.assertIs(mixed_dtype, fn(x, dtype=mixed_dtype).dtype)
+            self.assertEqual(fn(x.type(mixed_dtype)), fn(x, dtype=mixed_dtype))
+
+            if has_out:
+                _test_out(other_dtype)
+                _test_out(mixed_dtype)
+
+    def test_sum_integer_upcast(self):
+        self._test_reduce_integer_upcast(lambda x, **kwargs: torch.sum(x, **kwargs))
+        self._test_reduce_integer_upcast(lambda x, **kwargs: torch.sum(x, 0, **kwargs))
+
+    def test_prod_integer_upcast(self):
+        self._test_reduce_integer_upcast(lambda x, **kwargs: torch.prod(x, **kwargs), False)
+        self._test_reduce_integer_upcast(lambda x, **kwargs: torch.prod(x, 0, **kwargs))
 
     def test_cumsum_integer_upcast(self):
         self._test_reduce_integer_upcast(lambda x, **kwargs: torch.cumsum(x, 0, **kwargs))

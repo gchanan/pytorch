@@ -495,10 +495,10 @@
   self: grad * exponent * self.pow(exponent - 1)
   exponent: grad * self.pow(exponent) * self.log()
 
-- name: prod(Tensor self, int64_t dim, bool keepdim)
+- name: _prod(Tensor self, int64_t dim, bool keepdim)
   self: prod_backward(grad, self, result, dim, keepdim)
 
-- name: prod(Tensor self)
+- name: _prod(Tensor self)
   self: prod_backward(grad, self, result)
 
 - name: pstrf(Tensor self, bool upper, Scalar tol)

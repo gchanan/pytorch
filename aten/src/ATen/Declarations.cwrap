@@ -2286,7 +2286,7 @@
         - THTensor* self
 ]]
 [[
-  name: _prod
+  name: _th_prod
   variants:
     - method
     - function

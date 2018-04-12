@@ -658,14 +658,21 @@
     CPU: _sqrt_out_cpu
     CUDA: _sqrt_out_cuda
 
-- func: prod(Tensor self) -> Tensor
+- func: prod(Tensor self, *, optional<ScalarType> dtype=nullopt) -> Tensor
+
+- func: _prod(Tensor self) -> Tensor
   dispatch:
     CPU: _prod_cpu
     CUDA: _prod_cuda
 
-- func: prod(Tensor self, int64_t dim, bool keepdim=False) -> Tensor
+- func: prod(Tensor self, int64_t dim, bool keepdim=False, *, optional<ScalarType> dtype=nullopt) -> Tensor
 
-- func: prod_out(Tensor result, Tensor self, int64_t dim, bool keepdim=False) -> Tensor
+- func: _prod(Tensor self, int64_t dim, bool keepdim=False) -> Tensor
+
+- func: prod_out(Tensor result, Tensor self, int64_t dim, bool keepdim=False, *, optional<ScalarType> dtype=nullopt) -> Tensor
+  variants: function
+
+- func: _prod_out(Tensor result, Tensor self, int64_t dim, bool keepdim=False) -> Tensor
   variants: function
   dispatch:
     CPU: _prod_out_cpu
