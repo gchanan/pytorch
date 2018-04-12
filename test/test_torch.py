@@ -1352,37 +1352,43 @@ class TestTorch(TestCase):
         torch.cumprod(x, 1, out=res2)
         self.assertEqual(res1, res2)
 
-    def test_reduce_integer_upcast(self):
+    def _test_reduce_integer_upcast(self, fn):
         shape = (3, 4)
-        reduced_shape = torch.cumsum(torch.ones(shape), 0).shape
+        reduced_shape = fn(torch.ones(shape), 0).shape
 
         def _test_out(dtype):
             out = torch.ones(reduced_shape, dtype=dtype)
-            result = torch.cumsum(x, 0, out=out)
+            result = fn(x, 0, out=out)
             self.assertIs(out.dtype, result.dtype)
-            self.assertEqual(torch.cumsum(x.type(other_dtype), 0), result)
+            self.assertEqual(fn(x.type(other_dtype), 0), result)
             # 'out' is favored over dtype
-            result = torch.cumsum(x, 0, out=out, dtype=dtype)
+            result = fn(x, 0, out=out, dtype=dtype)
             self.assertIs(out.dtype, result.dtype)
-            self.assertEqual(torch.cumsum(x.type(other_dtype), 0), result)
+            self.assertEqual(fn(x.type(other_dtype), 0), result)
 
         for dtype in [dtype for dtype in torch.testing.get_all_dtypes() if dtype != torch.float16]:
             x = torch.ones(shape, dtype=dtype)
             expected_dtype = dtype if dtype.is_floating_point else torch.int64
-            self.assertIs(expected_dtype, torch.cumsum(x, 0).dtype)
-            self.assertEqual(torch.cumsum(x.type(expected_dtype), 0), torch.cumsum(x, 0))
+            self.assertIs(expected_dtype, fn(x, 0).dtype)
+            self.assertEqual(fn(x.type(expected_dtype), 0), fn(x, 0))
 
             if dtype.is_floating_point:
                 other_dtype = torch.float32 if dtype == torch.float64 else torch.float64
             else:
                 other_dtype = torch.int32 if dtype != torch.int32 else torch.int16
-            self.assertIs(other_dtype, torch.cumsum(x, 0, dtype=other_dtype).dtype)
-            self.assertEqual(torch.cumsum(x.type(other_dtype), 0), torch.cumsum(x, 0, dtype=other_dtype))
+            self.assertIs(other_dtype, fn(x, 0, dtype=other_dtype).dtype)
+            self.assertEqual(fn(x.type(other_dtype), 0), fn(x, 0, dtype=other_dtype))
 
             _test_out(other_dtype)
             # test mixed int/float
             mixed_dtype = torch.int32 if dtype.is_floating_point else torch.float32
             _test_out(mixed_dtype)
+
+    def test_cumsum_integer_upcast(self):
+        self._test_reduce_integer_upcast(torch.cumsum)
+
+    def test_cumprod_integer_upcast(self):
+        self._test_reduce_integer_upcast(torch.cumprod)
 
     def test_cross(self):
         x = torch.rand(100, 3, 100)

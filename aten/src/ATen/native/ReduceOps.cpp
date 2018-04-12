@@ -26,12 +26,15 @@ Tensor& cumsum_out(Tensor& result, const Tensor& self, int64_t dim, optional<Sca
   return at::_cumsum_out(result, self.toType(result.type().scalarType()), dim);
 }
 
-Tensor cumprod(const Tensor& self, int64_t dim) {
-  return at::_cumprod(self, dim);
+Tensor cumprod(const Tensor& self, int64_t dim, optional<ScalarType> dtype) {
+  ScalarType scalarType = self.type().scalarType();
+  ScalarType defaultType = dtype.value_or(at::isIntegralType(scalarType) ? ScalarType::Long : scalarType);
+  return at::_cumprod(self.toType(dtype.value_or(defaultType)), dim);
 }
 
-Tensor& cumprod_out(Tensor& result, const Tensor& self, int64_t dim) {
-  return at::_cumprod_out(result, self, dim);
+Tensor& cumprod_out(Tensor& result, const Tensor& self, int64_t dim, optional<ScalarType> dtype) {
+  // result type is favored over dtype
+  return at::_cumprod_out(result, self.toType(result.type().scalarType()), dim);
 }
 
 // ALL REDUCE #################################################################

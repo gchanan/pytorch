@@ -253,10 +253,11 @@
 - func: cumsum(Tensor self, int64_t dim, *, optional<ScalarType> dtype=nullopt) -> Tensor
 
 - func: cumsum_out(Tensor result, Tensor self, int64_t dim, *, optional<ScalarType> dtype=nullopt) -> Tensor
+  variants: function
 
-- func: cumprod(Tensor self, int64_t dim) -> Tensor
+- func: cumprod(Tensor self, int64_t dim, *, optional<ScalarType> dtype=nullopt) -> Tensor
 
-- func: cumprod_out(Tensor result, Tensor self, int64_t dim) -> Tensor
+- func: cumprod_out(Tensor result, Tensor self, int64_t dim, *, optional<ScalarType> dtype=nullopt) -> Tensor
   variants: function
 
 - func: det(Tensor self) -> Tensor
