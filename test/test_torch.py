@@ -1389,7 +1389,7 @@ class TestTorch(TestCase):
                 _test_out(mixed_dtype)
 
     def test_sum_integer_upcast(self):
-        self._test_reduce_integer_upcast(lambda x, **kwargs: torch.sum(x, **kwargs))
+        self._test_reduce_integer_upcast(lambda x, **kwargs: torch.sum(x, **kwargs), False)
         self._test_reduce_integer_upcast(lambda x, **kwargs: torch.sum(x, 0, **kwargs))
 
     def test_prod_integer_upcast(self):

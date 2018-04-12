@@ -635,14 +635,21 @@
 
 - func: stride(Tensor self, int64_t dim) -> int64_t
 
-- func: sum(Tensor self) -> Tensor
+- func: sum(Tensor self, optional<ScalarType> dtype=nullopt) -> Tensor
+
+- func: _sum(Tensor self) -> Tensor
   dispatch:
     CPU: _sum_cpu
     CUDA: _sum_cuda
 
-- func: sum(Tensor self, int64_t dim, bool keepdim=False) -> Tensor
+- func: sum(Tensor self, int64_t dim, bool keepdim=False, optional<ScalarType> dtype=nullopt) -> Tensor
 
-- func: sum_out(Tensor result, Tensor self, int64_t dim, bool keepdim=False) -> Tensor
+- func: _sum(Tensor self, int64_t dim, bool keepdim=False) -> Tensor
+
+- func: sum_out(Tensor result, Tensor self, int64_t dim, bool keepdim=False, optional<ScalarType> dtype=nullopt) -> Tensor
+  variants: function
+
+- func: _sum_out(Tensor result, Tensor self, int64_t dim, bool keepdim=False) -> Tensor
   variants: function
   dispatch:
     CPU: _sum_out_cpu

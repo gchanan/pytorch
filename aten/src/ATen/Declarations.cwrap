@@ -2257,7 +2257,7 @@
         - THTensor* self
 ]]
 [[
-  name: _sum
+  name: _th_sum
   variants:
     - method
     - function
