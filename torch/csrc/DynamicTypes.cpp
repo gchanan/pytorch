@@ -96,7 +96,7 @@ at::Type& getType(at::ScalarType scalarType, const THPLayout& layout, const Devi
   if (!baseType) {
     std::ostringstream oss;
     oss << "Error attempting to use dtype " << getDtype(scalarType)->name << " with layout " << layout.name
-        << " and device type " << (deviceType == DeviceType::CPU ? : "CPU" : "CUDA") << ".";
+        << " and device type " << (deviceType == DeviceType::CPU ? "CPU" : "CUDA") << ".";
     if (deviceType == DeviceType::CPU && !torch::utils::cuda_enabled()) {
       oss << "  Torch not compiled with CUDA enabled." << std::endl;
     }
