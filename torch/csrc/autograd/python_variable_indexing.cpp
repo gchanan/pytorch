@@ -9,6 +9,7 @@
 #include "torch/csrc/autograd/variable.h"
 #include "torch/csrc/utils/python_compat.h"
 #include "torch/csrc/utils/python_numbers.h"
+#include "torch/csrc/utils/tensor_conversion_dispatch.h"
 #include "torch/csrc/utils/tensor_new.h"
 
 #include <ATen/ExpandUtils.h>
@@ -173,7 +174,27 @@ static std::vector<Tensor> asTensorList(const variable_list& v) {
 }
 
 static Variable dispatch_index(const Variable& self, const variable_list& indices) {
-  AutoNoGIL no_gil;
+  AutoGIL gil;
+  //AutoNoGIL no_gil;
+  //AutoGPU auto_gpu(self);
+  std::vector<Tensor> converted_indices(indices.size());
+  std::cerr << "converting indices" << std::endl;
+  int64_t device = self.is_cuda() ? self.get_device() : -1;
+  for(size_t i = 0; i < indices.size(); ++i) {
+    if (indices[i].defined()) {
+      converted_indices[i] = torch::utils::dispatch_type_conversion(indices[i], indices[i].type().toBackend(self.type().backend()), device, false);
+    } else {
+      converted_indices[i] = indices[i];  
+    }
+  }
+  //std::cerr << "done converting indices" << std::endl;
+  //AutoNoGIL no_gil;
+  //std::cerr << "done nogil" << std::endl;
+  //AutoGPU auto_gpu(self);
+  //std::cerr << "done auto gpu" << std::endl;
+  auto result = self.index(converted_indices);
+  //std::cerr << "done result" << std::endl;
+  //return result;
   AutoGPU auto_gpu(self);
   return self.index(asTensorList(indices));
 }
@@ -182,6 +203,11 @@ static Variable dispatch_index_put_(Variable& self, const variable_list& indices
   AutoNoGIL no_gil;
   AutoGPU auto_gpu(self);
   return self.index_put_(asTensorList(indices), value);
+  //std::vector<Tensor> converted_indices;
+  //for(const auto& var : indices) {
+  //  converted_indices.emplace_back(torch::utils::dispatch_type_conversion(var, self.type(), -1, false));
+  //}
+  //return self.index_put_(converted_indices, value);
 }
 
 static bool treatSequenceAsTuple(PyObject* index) {
@@ -247,74 +273,92 @@ static PyObject* applyBoolGetitem(const Variable& self, bool index) {
   }
 }
 
-static bool canDispatchToLegacyIndexing(const Variable& self, const variable_list& vars) {
-  // mask indexing
+enum class LegacyIndexingType {
+  None,
+  Mask,
+  Index,
+};
+
+static std::pair<LegacyIndexingType, int64_t>
+getLegacyIndexingType(const Variable& self, const variable_list& vars) {
+  if (true) return std::make_pair(LegacyIndexingType::None, -1);
+  // TODO: this could be that the broadcasted size is the same.
   if (vars.size() == 1 && vars[0].type().scalarType() == ScalarType::Byte && vars[0].is_same_size(self)) {
-    return true;
+    return std::make_pair(LegacyIndexingType::Mask, -1);
   }
 
   // single tensor indexing
   int num_defined_variables = 0;
-  for (auto& variable : vars) {
+  int64_t index_dim = -1;
+  for (size_t i = 0; i < vars.size(); i++) {
+    auto& variable = vars[i];
     auto is_defined = variable.defined();
     num_defined_variables += is_defined;
-    if (is_defined && (variable.dim() != 1 || variable.type().scalarType() != ScalarType::Long || variable.numel() == 0)) {
-      num_defined_variables = -1;
-      break;
+    if (is_defined) {
+      index_dim = (int64_t)i;
+      if (num_defined_variables > 1) {
+        break;
+      }
+      if (variable.dim() != 1 || variable.type().scalarType() != ScalarType::Long || variable.numel() == 0) {
+        num_defined_variables = -1;
+        break;
+      }
     }
   }
+
   if (num_defined_variables == 1) {
-    return true;
+    return std::make_pair(LegacyIndexingType::Index, index_dim);
   }
   // advanced indexing
-  return false;
+  return std::make_pair(LegacyIndexingType::None, -1);
 }
 
-static Variable dispatch_legacy_index(const Variable& self, const variable_list& vars) {
-  if (vars.size() == 1 && vars[0].type().scalarType() == ScalarType::Byte && vars[0].is_same_size(self)) {
-    auto mask = vars[0];
-    if (self.type().backend() != mask.type().backend())
-      mask = mask.toBackend(self.type().backend());
-    return self.masked_select(mask);
-  }
-
-  int64_t index_dim = -1;
-  for (size_t i = 0; i < vars.size(); i++) {
-    if (vars[i].defined()) {
-      index_dim = i;
-      break;
+static Variable dispatch_legacy_index(const Variable& self, const variable_list& vars,
+                                      std::pair<LegacyIndexingType, int64_t> legacyIndex) {
+  LegacyIndexingType indexingType = std::get<0>(legacyIndex);
+  switch(indexingType) {
+    case LegacyIndexingType::Mask: {
+      auto mask = vars[0];
+      if (self.type().backend() != mask.type().backend())
+        mask = mask.toBackend(self.type().backend());
+      return self.masked_select(mask);
+    }
+    case LegacyIndexingType::Index: {
+      int64_t index_dim = std::get<1>(legacyIndex);
+      auto index = vars[index_dim];
+      if (self.type().backend() != index.type().backend())
+        index = index.toBackend(self.type().backend());
+      return self.index_select(index_dim, index);
+    }
+    case LegacyIndexingType::None:
+    default: {
+      throw std::runtime_error("Unexpected indexing type");
     }
   }
-  auto index = vars[index_dim];
-  if (self.type().backend() != index.type().backend())
-    index = index.toBackend(self.type().backend());
-  return self.index_select(index_dim, index);
 }
 
-static Variable dispatch_legacy_index_put(Variable& self, const variable_list& vars, const Variable& value) {
-  auto value_ = value;
-  if (self.type().backend() != value_.type().backend())
-    value_ = value_.toBackend(self.type().backend());
-
-  if (vars.size() == 1 && vars[0].type().scalarType() == ScalarType::Byte && vars[0].is_same_size(self)) {
-    auto mask = vars[0];
-    if (self.type().backend() != mask.type().backend())
-      mask = mask.toBackend(self.type().backend());
-    return self.masked_fill_(mask, value_);
-  }
-
-  int64_t index_dim = -1;
-  for (size_t i = 0; i < vars.size(); i++) {
-    if (vars[i].defined()) {
-      index_dim = i;
-      break;
+static Variable dispatch_legacy_index_put(Variable& self, const variable_list& vars, const Variable& value,
+                                          std::pair<LegacyIndexingType, int64_t> legacyIndex) {
+  LegacyIndexingType indexingType = std::get<0>(legacyIndex);
+  switch(indexingType) {
+    case LegacyIndexingType::Mask: {
+      auto mask = vars[0];
+      if (self.type().backend() != mask.type().backend())
+        mask = mask.toBackend(self.type().backend());
+      return self.masked_fill_(mask, value);
+    }
+    case LegacyIndexingType::Index: {
+      int64_t index_dim = std::get<1>(legacyIndex);
+      auto index = vars[index_dim];
+      if (self.type().backend() != index.type().backend())
+        index = index.toBackend(self.type().backend());
+      return self.index_fill_(index_dim, index, value);
+    }
+    case LegacyIndexingType::None:
+    default: {
+      throw std::runtime_error("Unexpected indexing type");
     }
   }
-
-  auto index = vars[index_dim];
-  if (self.type().backend() != index.type().backend())
-    index = index.toBackend(self.type().backend());
-  return self.index_fill_(index_dim, index, value_);
 }
 
 PyObject* THPVariable_getitem(PyObject* self, PyObject* index) {
@@ -352,12 +396,15 @@ PyObject* THPVariable_getitem(PyObject* self, PyObject* index) {
   }
 
   // TODO move this to ATen
-  if (canDispatchToLegacyIndexing(sliced, variableIndices)) {
-    return wrap(dispatch_legacy_index(sliced, variableIndices));
+  auto legacy_index = getLegacyIndexingType(sliced, variableIndices);
+  if (std::get<0>(legacy_index) != LegacyIndexingType::None) {
+    return wrap(dispatch_legacy_index(sliced, variableIndices, legacy_index));
   }
 
   // indexing by tensors ("advanced" indexing)
-  return wrap(dispatch_index(sliced, variableIndices));
+  auto result = wrap(dispatch_index(sliced, variableIndices));
+  std::cerr << "got result2" << std::endl;
+  return result;
   Py_RETURN_NONE;
   END_HANDLE_TH_ERRORS
 }
@@ -426,8 +473,9 @@ int THPVariable_setitem(PyObject* self, PyObject* index, PyObject* py_value) {
   // we are being overly cautious here and only considering the *_fill_ variants
   // (value is a scalar), as there could be broadcasting in the value that could
   // happen and is not handled by masked_scatter_ and index_copy_
-  if (canDispatchToLegacyIndexing(sliced, variableIndices) && value.dim() == 0) {
-    dispatch_legacy_index_put(sliced, variableIndices, value);
+  auto legacy_index = getLegacyIndexingType(sliced, variableIndices);
+  if (std::get<0>(legacy_index) != LegacyIndexingType::None && value.dim() == 0) {
+    dispatch_legacy_index_put(sliced, variableIndices, value, legacy_index);
     return 0;
   }
 
