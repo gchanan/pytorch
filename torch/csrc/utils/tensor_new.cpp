@@ -445,15 +445,16 @@ Tensor tensor_ctor(const Type& type, PyObject* args, PyObject* kwargs) {
 Tensor as_tensor(const Type& type, PyObject* args, PyObject* kwargs) {
   // TODO: add requires_grad once we decide on semantics for sharing data.
   static PythonArgParser parser({
-    "as_tensor(PyObject* data, *, ScalarType dtype=None, Device? device=None)",
+    "as_tensor(PyObject* data, *, ScalarType dtype=None, Device? device=None, requires_grad=False)",
   });
 
-  ParsedArgs<3> parsed_args;
+  ParsedArgs<4> parsed_args;
   auto r = parser.parse(args, kwargs, parsed_args);
   if (r.idx == 0) {
     bool type_inference = r.isNone(1);
-    return internal_new_from_data(
-        typeWithDefault(r, 1, 2, type), r.deviceOptional(2), r.pyobject(0), false, false, type_inference);
+    return set_requires_grad(internal_new_from_data(
+        typeWithDefault(r, 1, 2, type), r.deviceOptional(2), r.pyobject(0), false, false, type_inference),
+        r.toBool(3));
   }
   throw std::runtime_error("tensor(): invalid arguments");
 }
