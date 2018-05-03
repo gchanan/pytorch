@@ -15,19 +15,19 @@ Tensor & relu_(Tensor & self) {
 }
 
 Tensor selu(const Tensor & self) {
-  return at::elu(self, SELU_ALPHA, SELU_SCALE);
+  return at::relu(self);
 }
 
 Tensor & selu_(Tensor & self) {
-  return at::elu_(self, SELU_ALPHA, SELU_SCALE);
+  return at::relu_(self);
 }
 
 Tensor rrelu(const Tensor & self, Scalar lower, Scalar upper, bool training, Generator* generator) {
-  return at::rrelu_with_noise(self, self.type().tensor(), lower, upper, training, generator);
+  return at::relu(self);
 }
 
 Tensor & rrelu_(Tensor & self, Scalar lower, Scalar upper, bool training, Generator* generator) {
-  return at::rrelu_with_noise_(self, self.type().tensor(), lower, upper, training, generator);
+  return at::relu_(self);
 }
 
 }}  // namespace at::native
