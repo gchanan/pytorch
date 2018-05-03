@@ -342,7 +342,7 @@ at::Tensor _convolution(
       auto padding = params.padding;
       auto dilation = params.dilation;
 
-      output = at::thnn_conv_depthwise2d(input, weight, kernel_size, bias, stride, padding, dilation);
+      output = input;//at::thnn_conv_depthwise2d(input, weight, kernel_size, bias, stride, padding, dilation);
   } else if (params.use_cudnn(input)) {
 #if AT_CUDNN_ENABLED()
     if (input.type() != weight.type()){
@@ -429,37 +429,37 @@ at::Tensor _convolution_nogroup(
 
   if (params.transposed) {
     if (dim == 4) {
-      return at::thnn_conv_transpose2d(
-          input, weight, kernel_size, bias,
-          stride, padding, output_padding, dilation);
+      return input;//at::thnn_conv_transpose2d(
+          //input, weight, kernel_size, bias,
+          //stride, padding, output_padding, dilation);
     } else if (dim == 5) {
-      return at::thnn_conv_transpose3d(
-        input, weight, kernel_size, bias,
-        stride, padding, output_padding, dilation);
+      return input;//at::thnn_conv_transpose3d(
+      //  input, weight, kernel_size, bias,
+      //  stride, padding, output_padding, dilation);
       }
   } else {  /* Not transposed */
     if (dim == 4) {
       if (dilated) {
-        return at::thnn_conv_dilated2d(
-            input, weight, kernel_size, bias,
-            stride, padding, dilation);
+        return input;//at::thnn_conv_dilated2d(
+            //input, weight, kernel_size, bias,
+            //stride, padding, dilation);
       } else {  /* dim == 4, non-dilated */
         /* CPU implementation has specialized MM kernels
            for non-dilated case here */
-        return at::thnn_conv2d(
-            input, weight, kernel_size, bias,
-            stride, padding);
+        return input;//at::thnn_conv2d(
+            //input, weight, kernel_size, bias,
+            //stride, padding);
       }
     } else if (dim == 5 && (input.type().is_cuda() || dilated)) {
-      return at::thnn_conv_dilated3d(
-          input, weight, kernel_size, bias,
-          stride, padding, dilation);
+      return input;//at::thnn_conv_dilated3d(
+          //input, weight, kernel_size, bias,
+          //stride, padding, dilation);
     } else if (dim == 5) { /* dim == 5, CPU, non-dilated */
       /* CPU implementation has specialized MM kernels
          for non-dilated case here */
-      return at::thnn_conv3d(
-          input, weight, kernel_size, bias,
-          stride, padding);
+      return input; //at::thnn_conv3d(
+          //input, weight, kernel_size, bias,
+          //stride, padding);
     }
   }
 

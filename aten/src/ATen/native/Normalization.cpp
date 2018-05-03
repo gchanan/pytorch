@@ -67,9 +67,9 @@ Tensor batch_norm(
                         training, momentum, eps));
   }
 #endif
-  return at::thnn_batch_norm(
-            input, weight, bias,
-            running_mean, running_var, training, momentum, eps);
+  return input;//at::thnn_batch_norm(
+            //input, weight, bias,
+            //running_mean, running_var, training, momentum, eps);
 }
 
 Tensor layer_norm(const Tensor& input, IntList normalized_shape,
