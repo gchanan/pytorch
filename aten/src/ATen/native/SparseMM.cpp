@@ -8,15 +8,15 @@
 
 #include "ATen/CPUFloatTensor.h"
 #include "ATen/CPUDoubleTensor.h"
-#include "ATen/SparseCPUFloatTensor.h"
-#include "ATen/SparseCPUDoubleTensor.h"
+//#include "ATen/SparseCPUFloatTensor.h"
+//#include "ATen/SparseCPUDoubleTensor.h"
 
 namespace at {
 namespace native {
 
 // Calling into TH for sspaddmm because ATen code generation currently
 // doesn't support Sparse x Dense operations on Sparse tensors
-template <class scalar_t>
+/*template <class scalar_t>
 void sspaddmm_TH_dispatch(Tensor & result, Scalar beta, const Tensor& self,
     Scalar alpha, const Tensor& mat1, const Tensor& mat2) {
  AT_ERROR("sspaddmm NYI for types ",
@@ -84,5 +84,5 @@ Tensor sspaddmm(const Tensor& self, const Tensor& mat1, const Tensor& mat2,
   self.type().sspaddmm_out(result, self, mat1, mat2, beta, alpha);
   return result;
 }
-
+*/
 }} // namespace at::native

@@ -143,7 +143,7 @@ backends = ['CPU']
 if not options.no_cuda:
     backends.append('CUDA')
 
-densities = ['Dense', 'Sparse']
+densities = ['Dense']
 
 # scalar_name, c_type, accreal, th_scalar_type, is_floating_type
 scalar_types = [
