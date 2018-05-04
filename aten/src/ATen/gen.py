@@ -266,7 +266,7 @@ def generate_storage_type_and_tensor(backend, density, scalar_type, declarations
         env['th_headers'] = [
             '#include <TH/TH.h>',
             '#include <TH/THTensor.hpp>',
-            '#include <THNN/THNN.h>',
+            #'#include <THNN/THNN.h>',
             '#undef THNN_',
             '#include <THS/THS.h>',
             '#include <THS/THSTensor.hpp>',
