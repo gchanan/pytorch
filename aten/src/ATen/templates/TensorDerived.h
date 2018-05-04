@@ -6,6 +6,7 @@ $th_headers
 #include "ATen/TensorImpl.h"
 #include "ATen/Context.h"
 #include "ATen/TensorMethods.h"
+#include "ATen/THTensorImpl.h"
 
 namespace at {
 
@@ -13,6 +14,7 @@ struct ${Tensor} final : public TensorImpl {
 public:
   explicit ${Tensor}(Context* context);
   ${Tensor}(Context* context, ${THTensor} * tensor);
+  ${Tensor}(Context* context, THTensorImpl *timpl);
   virtual ~${Tensor}();
   virtual const char * toString() const override;
   virtual IntList sizes() const override;
@@ -27,6 +29,7 @@ public:
 // can be protected
 public:
   ${THTensor} * tensor;
+  THTensorImpl *timpl;
   Context* context;
   friend struct ${Type};
 };

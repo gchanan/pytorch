@@ -9,6 +9,10 @@
 // Struct definition moved to THTensor.hpp
 typedef struct THTensor THTensor;
 
+namespace at {
+  class THTensorImpl;  
+}
+
 
 /**** access methods ****/
 TH_API THStorage* THTensor_(storage)(const THTensor *self);

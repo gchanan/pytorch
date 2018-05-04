@@ -21,11 +21,17 @@ ${Tensor}::${Tensor}(Context* context)
 ${Tensor}::${Tensor}(Context* context, ${THTensor} * tensor)
 : TensorImpl(&context->getType(Backend::${Backend},ScalarType::${ScalarName})),
   tensor(tensor),
+  timpl(nullptr),
   context(context) {}
 ${Tensor}::~${Tensor}() {
-  ${THTensor}_free(${state,} tensor);
+  // ${THTensor}_free(${state,} tensor);  FIXME
 }
 
+${Tensor}::${Tensor}(Context* context, THTensorImpl * timpl)
+: TensorImpl(&context->getType(Backend::${Backend},ScalarType::${ScalarName})),
+  tensor(nullptr),
+  timpl(timpl),
+  context(context) {}
 const char * ${Tensor}::toString() const {
   return "${Tensor}";
 }
