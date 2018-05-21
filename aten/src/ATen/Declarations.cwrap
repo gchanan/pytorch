@@ -2229,7 +2229,7 @@
         - THTensor* other
     - sparse: True
       cname: spcadd
-      #aten_dense_sparse: True
+      aten_dense_sparse: True
       arguments:
         - arg: THTensor* result
           output: True
@@ -2263,7 +2263,7 @@
         - THTensor* other
     - sparse: True
       cname: spcadd
-      #aten_dense_sparse: True
+      aten_dense_sparse: True
       arguments:
         - THTensor* self
         - THTensor* self
@@ -2665,7 +2665,7 @@
       - THTensor* mat2
     - sparse: True
       cname: spaddmm
-      #aten_dense_sparse: True
+      aten_dense_sparse: True
       arguments:
         - arg: THTensor* result
           output: True
@@ -2697,7 +2697,7 @@
       - THTensor* mat2
     - sparse: True
       cname: spaddmm
-      #aten_dense_sparse: True
+      aten_dense_sparse: True
       arguments:
         - arg: THTensor* self
         - arg: real beta
@@ -3812,7 +3812,7 @@
   name: _sparse_mask
   return: argument 0
   cname: sparseMask
-  #aten_dense_sparse: True
+  aten_dense_sparse: True
   arguments:
     - arg: THSTensor* result
       output: True
