@@ -10,7 +10,7 @@
 #include "ATen/${Backend}ByteTensor.h"
 #include "ATen/${Backend}IntTensor.h"
 #include "ATen/${Backend}LongTensor.h"
-//#include "ATen/${SparseTensor}.h"
+#include "ATen/${SparseTensor}.h"
 #include "ATen/${DenseTensor}.h"
 #include "ATen/${DenseBackend}LongTensor.h"
 #include "ATen/Allocator.h"
