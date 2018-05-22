@@ -475,8 +475,8 @@ else()
   INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
   find_package(CUDA 5.5 REQUIRED)
   add_subdirectory(src/THC)
-  add_subdirectory(src/THCUNN)
-  add_subdirectory(src/THCS)
+  #add_subdirectory(src/THCUNN)
+  #add_subdirectory(src/THCS)
 endif()
 
 IF (NOT NO_CUDA)
@@ -506,15 +506,15 @@ endif()
 
 set(cwrap_files
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ATen/Declarations.cwrap
-#  ${CMAKE_CURRENT_SOURCE_DIR}/src/THNN/generic/THNN.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/THCUNN/generic/THCUNN.h
+  #${CMAKE_CURRENT_SOURCE_DIR}/src/THNN/generic/THNN.h
+  #${CMAKE_CURRENT_SOURCE_DIR}/src/THCUNN/generic/THCUNN.h
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ATen/nn.yaml
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ATen/native/native_functions.yaml
 )
 
-include_directories(
+#include_directories(
 #${CMAKE_CURRENT_SOURCE_DIR}/src/THNN
-${CMAKE_CURRENT_SOURCE_DIR}/src/THCUNN)
+#${CMAKE_CURRENT_SOURCE_DIR}/src/THCUNN)
 
 add_subdirectory(src/ATen)
 include_directories(
