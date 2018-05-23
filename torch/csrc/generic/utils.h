@@ -11,7 +11,7 @@
 struct THPStorage;
 struct THSPTensor;
 
-typedef class THPPointer<THStorage>      THStoragePtr;
+typedef class THPPointer<THWStorage>      THStoragePtr;
 typedef class THPPointer<THTensor>       THTensorPtr;
 typedef class THPPointer<THPStorage>     THPStoragePtr;
 

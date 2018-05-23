@@ -152,7 +152,7 @@ static PyObject * THPStorage_(fromBuffer)(PyObject *_unused, PyObject *args, PyO
   }
 
   uint8_t* src = (uint8_t*) buffer.buf;
-  THStorage* storage = THWStorage_(newWithSize)(count);
+  THWStorage* storage = THWStorage_(newWithSize)(count);
 
 #if defined(TH_REAL_IS_BYTE) || defined(TH_REAL_IS_CHAR)
   memcpy(storage->data, src + offset, count);
@@ -192,7 +192,7 @@ static PyObject * THPStorage_(fromFile)(PyObject *_unused, PyObject *args, PyObj
   }
   if (shared)
     shared = TH_ALLOCATOR_MAPPED_SHARED;
-  THStorage *storage = THWStorage_(newWithMapping)(LIBRARY_STATE filename, size, shared);
+  THWStorage *storage = THWStorage_(newWithMapping)(LIBRARY_STATE filename, size, shared);
   return (PyObject*)THPStorage_(New)(storage);
   END_HANDLE_TH_ERRORS
 }
@@ -223,7 +223,7 @@ PyObject * THPStorage_(newWithFile)(PyObject *_unused, PyObject *file)
   int fd = PyObject_AsFileDescriptor(file);
   THPUtils_assert(fd != -1, "_new_with_file couldn't retrieve a file "
       "descriptor from given object");
-  THStorage *storage = THPStorage_(readFileRaw<int>)(fd, nullptr);
+  THWStorage *storage = THPStorage_(readFileRaw<int>)(fd, nullptr);
   if (storage == nullptr)
     return nullptr;
   PyObject *result = THPStorage_(New)(storage);
@@ -243,7 +243,7 @@ static PyObject *THPStorage_(setFromFile)(THPStorage *self, PyObject *args)
     // but it is currently unnecessary to support this.
     THPUtils_assert(offset == Py_None,
                     "_set_from_file: offset is NYI for filelike objects");
-    THStorage *storage = THPStorage_(readFileRaw<PyObject*>)(file, self->cdata);
+    THWStorage *storage = THPStorage_(readFileRaw<PyObject*>)(file, self->cdata);
     if (storage == nullptr) {
       return nullptr;
     }
@@ -258,7 +258,7 @@ static PyObject *THPStorage_(setFromFile)(THPStorage *self, PyObject *args)
   }
   THPUtils_assert(fd != -1, "_set_from_file couldn't retrieve a file "
       "descriptor from given object");
-  THStorage *storage = THPStorage_(readFileRaw<int>)(fd, self->cdata);
+  THWStorage *storage = THPStorage_(readFileRaw<int>)(fd, self->cdata);
   if (storage == nullptr)
     return nullptr;
   Py_INCREF(self);
@@ -283,7 +283,7 @@ PyObject * THPStorage_(_setCdata)(THPStorage *self, PyObject *new_cdata)
   THPUtils_assert(THPUtils_checkLong(new_cdata), "given an invalid argument to "
       "_set_cdata - expected an int or long, but got %s",
       THPUtils_typename(new_cdata));
-  THStorage *ptr = (THStorage*)PyLong_AsVoidPtr(new_cdata);
+  THWStorage *ptr = (THWStorage*)PyLong_AsVoidPtr(new_cdata);
   THWStorage_(retain)(LIBRARY_STATE ptr);
   THWStorage_(free)(LIBRARY_STATE self->cdata);
   self->cdata = ptr;
@@ -299,7 +299,7 @@ PyObject * THPStorage_(_rootStorage)(THPStorage *self)
   if (!(self->cdata->flag & TH_STORAGE_VIEW)) {
     return Py_BuildValue("(ON)", self, PyLong_FromLong(0));
   }
-  THStorage *root = self->cdata;
+  THWStorage *root = self->cdata;
   while (root->flag & TH_STORAGE_VIEW)
     root = root->view;
   size_t offset = self->cdata->data - root->data;

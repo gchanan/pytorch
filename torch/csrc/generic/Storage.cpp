@@ -4,7 +4,7 @@
 
 PyObject *THPStorageClass = NULL;
 
-PyObject * THPStorage_(New)(THStorage *ptr)
+PyObject * THPStorage_(New)(THWStorage *ptr)
 {
   TORCH_ASSERT(ptr);
   PyTypeObject *type = (PyTypeObject *)THPStorageClass;
@@ -23,7 +23,7 @@ static void THPStorage_(dealloc)(THPStorage* self)
   Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
-static THStorage* THPStorage_(newWithAllocator)(int64_t size, THAllocator* allocator)
+static THWStorage* THPStorage_(newWithAllocator)(int64_t size, THAllocator* allocator)
 {
 #if defined(THC_GENERIC_FILE) || defined(THD_GENERIC_FILE)
   THPUtils_setError(THPStorageStr " does not support custom allocators");
@@ -55,7 +55,7 @@ static PyObject * THPStorage_(pynew)(PyTypeObject *type, PyObject *args, PyObjec
     if (num_args == 0) {
       PyObject *cdata_ptr = PyDict_GetItemString(kwargs, "cdata");
       if (num_kwargs == 1 && cdata_ptr && THPUtils_checkLong(cdata_ptr)) {
-        THStorage *ptr = (THStorage*)PyLong_AsVoidPtr(cdata_ptr);
+        THWStorage *ptr = (THWStorage*)PyLong_AsVoidPtr(cdata_ptr);
         self->cdata = ptr;
         return (PyObject*)self.release();
       }
