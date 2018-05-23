@@ -11,7 +11,7 @@
 template<>
 void THPPointer<THStorage>::free() {
   if (ptr)
-    THStorage_(free)(LIBRARY_STATE ptr);
+    THWStorage_(free)(LIBRARY_STATE ptr);
 }
 
 template<>

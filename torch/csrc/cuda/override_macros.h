@@ -6,7 +6,7 @@
 #define THPTensorPtr THCPTensorPtr
 
 #define THStorage THCStorage
-#define THStorage_(NAME) THCStorage_(NAME)
+#define THWStorage_(NAME) THCStorage_(NAME)
 #define THTensor THCTensor
 #define THTensor_(NAME) THCTensor_(NAME)
 
