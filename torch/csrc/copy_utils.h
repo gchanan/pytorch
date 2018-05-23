@@ -54,7 +54,7 @@ inline PyObject * THPStorageCopyMethod(const THPCopyList& v, PyObject *self, PyO
   return self;
 }
 
-template <typename StorageDst, typename StorageSrc>
+template <typename StorageS, typename StorageDst, typename StorageSrc>
 void THPInsertStorageCopyFunction(
   THPCopyList& copyList,
   void (*copyFunc)(LIBRARY_STATE_TYPE StorageDst* x, StorageSrc* z),

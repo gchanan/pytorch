@@ -327,39 +327,39 @@ void THPStorage_(initCopyMethods)()
 #ifndef THD_GENERIC_FILE
   auto& h = THWStorage_(copy_functions);
   // copy from CPU types
-  THPInsertStorageCopyFunction(h, &THWStorage_(copyByte));
-  THPInsertStorageCopyFunction(h, &THWStorage_(copyChar));
-  THPInsertStorageCopyFunction(h, &THWStorage_(copyShort));
-  THPInsertStorageCopyFunction(h, &THWStorage_(copyInt));
-  THPInsertStorageCopyFunction(h, &THWStorage_(copyLong));
-  THPInsertStorageCopyFunction(h, &THWStorage_(copyHalf));
-  THPInsertStorageCopyFunction(h, &THWStorage_(copyFloat));
-  THPInsertStorageCopyFunction(h, &THWStorage_(copyDouble));
+  THPInsertStorageCopyFunction<THByteStorage>  (h, &THWStorage_(copyByte));
+  THPInsertStorageCopyFunction<THCharStorage>  (h, &THWStorage_(copyChar));
+  THPInsertStorageCopyFunction<THShortStorage> (h, &THWStorage_(copyShort));
+  THPInsertStorageCopyFunction<THIntStorage>   (h, &THWStorage_(copyInt));
+  THPInsertStorageCopyFunction<THLongStorage>  (h, &THWStorage_(copyLong));
+  THPInsertStorageCopyFunction<THHalfStorage>  (h, &THWStorage_(copyHalf));
+  THPInsertStorageCopyFunction<THFloatStorage> (h, &THWStorage_(copyFloat));
+  THPInsertStorageCopyFunction<THDoubleStorage>(h, &THWStorage_(copyDouble));
 #ifdef THC_GENERIC_FILE
   // copy from GPU types
-  THPInsertStorageCopyFunction(h, &THWStorage_(copyCudaByte));
-  THPInsertStorageCopyFunction(h, &THWStorage_(copyCudaChar));
-  THPInsertStorageCopyFunction(h, &THWStorage_(copyCudaShort));
-  THPInsertStorageCopyFunction(h, &THWStorage_(copyCudaInt));
-  THPInsertStorageCopyFunction(h, &THWStorage_(copyCudaLong));
-  THPInsertStorageCopyFunction(h, &THWStorage_(copyCudaFloat));
-  THPInsertStorageCopyFunction(h, &THWStorage_(copyCudaDouble));
+  THPInsertStorageCopyFunction<THCudaByteStorage>  (h, &THWStorage_(copyCudaByte));
+  THPInsertStorageCopyFunction<THCudaCharStorage>  (h, &THWStorage_(copyCudaChar));
+  THPInsertStorageCopyFunction<THCudaShortStorage> (h, &THWStorage_(copyCudaShort));
+  THPInsertStorageCopyFunction<THCudaIntStorage>   (h, &THWStorage_(copyCudaInt));
+  THPInsertStorageCopyFunction<THCudaLongStorage>  (h, &THWStorage_(copyCudaLong));
+  THPInsertStorageCopyFunction<THCudaStorage>      (h, &THWStorage_(copyCudaFloat));
+  THPInsertStorageCopyFunction<THCudaDoubleStorage>(h, &THWStorage_(copyCudaDouble));
 #ifdef CUDA_HALF_TENSOR
-  THPInsertStorageCopyFunction(h, &THWStorage_(copyCudaHalf));
+  THPInsertStorageCopyFunction<THCudaHalfStorage>  (h, &THWStorage_(copyCudaHalf));
 #endif
   // add CPU <- GPU copies to base type
   #define THCpuStorage_(name) TH_CONCAT_4(TH, Real, Storage_, name)
   extern THPCopyList THCpuStorage_(copy_functions);
   auto& b = THCpuStorage_(copy_functions);
-  THPInsertStorageCopyFunction(b, &THCpuStorage_(copyCudaByte));
-  THPInsertStorageCopyFunction(b, &THCpuStorage_(copyCudaChar));
-  THPInsertStorageCopyFunction(b, &THCpuStorage_(copyCudaShort));
-  THPInsertStorageCopyFunction(b, &THCpuStorage_(copyCudaInt));
-  THPInsertStorageCopyFunction(b, &THCpuStorage_(copyCudaLong));
-  THPInsertStorageCopyFunction(b, &THCpuStorage_(copyCudaFloat));
-  THPInsertStorageCopyFunction(b, &THCpuStorage_(copyCudaDouble));
+  THPInsertStorageCopyFunction<THCudaByteStorage>  (b, &THCpuStorage_(copyCudaByte));
+  THPInsertStorageCopyFunction<THCudaCharStorage>  (b, &THCpuStorage_(copyCudaChar));
+  THPInsertStorageCopyFunction<THCudaShortStorage> (b, &THCpuStorage_(copyCudaShort));
+  THPInsertStorageCopyFunction<THCudaIntStorage>   (b, &THCpuStorage_(copyCudaInt));
+  THPInsertStorageCopyFunction<THCudaLongStorage>  (b, &THCpuStorage_(copyCudaLong));
+  THPInsertStorageCopyFunction<THCudaStorage>      (b, &THCpuStorage_(copyCudaFloat));
+  THPInsertStorageCopyFunction<THCudaDoubleStorage>(b, &THCpuStorage_(copyCudaDouble));
 #ifdef CUDA_HALF_TENSOR
-  THPInsertStorageCopyFunction(b, &THCpuStorage_(copyCudaHalf));
+  THPInsertStorageCopyFunction<THCudaHalfStorage>  (b, &THCpuStorage_(copyCudaHalf));
 #endif
   #undef THCpuStorage_
 #endif
