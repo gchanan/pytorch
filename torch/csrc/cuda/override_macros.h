@@ -1,6 +1,6 @@
 #include "undef_macros.h"
 
-#define THStoragePtr THCStoragePtr
+#define THWStoragePtr THCStoragePtr
 #define THPStoragePtr THCPStoragePtr
 #define THTensorPtr THCTensorPtr
 #define THPTensorPtr THCPTensorPtr
