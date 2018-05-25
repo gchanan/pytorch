@@ -72,14 +72,14 @@ public:
       // make storage of size 0 actually a 1-length storage with 1 element
       // so that our 0-dim tensors get allocated as 1-dim inside TH
       one = 1;
-      storage.data = &one;
+      storage.data_ptr = &one;
       storage.size = 1;
     } else if (noelem_to_empty && is_noelem_tensor_size(ref)) {
-      storage.data = (int64_t*)(ref.data());
+      storage.data_ptr = (int64_t*)(ref.data());
       storage.size = 0;
     }
     else {
-      storage.data = (int64_t*)(ref.data());
+      storage.data_ptr = (int64_t*)(ref.data());
       storage.size = ref.size();
     }
     storage.refcount = 0;
