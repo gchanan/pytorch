@@ -4,13 +4,23 @@
 
 typedef struct THStorage
 {
-    real *data;
+    void *data_ptr;
     ptrdiff_t size;
     std::atomic<int> refcount;
     char flag;
     THAllocator *allocator;
     void *allocatorContext;
     struct THStorage *view;
+
+    template <typename T>
+    T * data() const {
+      return static_cast<T*>(this->data_ptr);
+    }
+
+    template <typename T>
+    T * data() {
+      return static_cast<T*>(this->data_ptr);
+    }
 } THStorage;
 
 #endif
