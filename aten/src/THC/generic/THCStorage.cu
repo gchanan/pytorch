@@ -24,9 +24,10 @@ void THCStorage_(resize)(THCState *state, THCStorage *self, ptrdiff_t size)
     THError("Trying to resize storage that is not resizable");
 
   if (self->allocator->realloc) {
+    real * data_ptr = self->data<real>();
     cudaError_t err = (*self->allocator->realloc)(
       self->allocatorContext,
-      (void**)&(self->data_ptr),
+      (void**)&(data_ptr),
       self->size * sizeof(real),
       size * sizeof(real), THCState_getCurrentStream(state));
     if (err != cudaSuccess) {

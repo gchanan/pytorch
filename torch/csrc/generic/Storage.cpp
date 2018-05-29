@@ -142,7 +142,7 @@ static PyObject * THPStorage_(pynew)(PyTypeObject *type, PyObject *args, PyObjec
         item = PySequence_GetItem(first_arg, i);
         real value = THPUtils_(unpackReal)(item.get());
 #if !defined(THC_GENERIC_FILE)
-        THStorage_(data)(LIBRARY_STATE self->cdata)[i] = value;
+        self->cdata->unsafeData<real>()[i] = value;
 #else
         // TODO: this might be slow - consider batched updates?
         THCStorage_(set)(LIBRARY_STATE self->cdata, i, value);
