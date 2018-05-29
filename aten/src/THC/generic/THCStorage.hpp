@@ -4,7 +4,7 @@
 
 typedef struct THCStorage
 {
-    real *data;
+    void *data_ptr;
     ptrdiff_t size;
     std::atomic<int> refcount;
     char flag;
@@ -12,6 +12,16 @@ typedef struct THCStorage
     void *allocatorContext;
     struct THCStorage *view;
     int device;
+
+    template <typename T>
+    T * data() const {
+      return static_cast<T*>(this->data_ptr);
+    }
+
+    template <typename T>
+    T * data() {
+      return static_cast<T*>(this->data_ptr);
+    }
 } THCStorage;
 
 #endif

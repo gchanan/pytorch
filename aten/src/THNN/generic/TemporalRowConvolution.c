@@ -161,7 +161,7 @@ static void THNN_(TemporalRowConvolution_updateOutput_frame)(
 	if (bias != NULL) {
 		for (i = 0; i < inputFrameSize; i++)
 			THVector_(fill)
-			        (THStorage_(output->storage) + output->storageOffset
+			        (THStorage_(data)(output->storage) + output->storageOffset
 			        + output->stride[0] * i,
 			        THTensor_(get1d)(bias, i), nOutputFrame);
 	}
