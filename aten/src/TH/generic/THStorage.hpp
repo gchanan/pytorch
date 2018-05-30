@@ -15,9 +15,10 @@ typedef struct THStorage
     template <typename T>
 
     inline T * data() const {
-      if (scalar_type != at::CTypeToScalarType<th::from_type<real>>::to()) {
+      auto scalar_type_T = at::CTypeToScalarType<th::from_type<T>>::to();
+      if (scalar_type != scalar_type_T) {
         AT_ERROR("Attempt to access Storage having data type ", at::toString(scalar_type),
-                 " as pointer of type ", typeid(T).name());
+                 " as data type ", at::toString(scalar_type_T));
       }
       return unsafeData<T>();
     }
