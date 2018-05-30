@@ -35,7 +35,7 @@ THStorage* THStorage_(newWithAllocator)(ptrdiff_t size,
 {
   THStorage *storage = static_cast<THStorage*>(THAlloc(sizeof(THStorage)));
   storage->scalar_type = at::CTypeToScalarType<th::from_type<real>>::to();
-  storage->data_ptr = static_cast<real*>(allocator->malloc(allocatorContext, sizeof(real)*size));
+  storage->data_ptr = allocator->malloc(allocatorContext, sizeof(real)*size);
   storage->size = size;
   new (&storage->refcount) std::atomic<int>(1);
   storage->flag = TH_STORAGE_REFCOUNTED | TH_STORAGE_RESIZABLE | TH_STORAGE_FREEMEM;
