@@ -24,17 +24,7 @@ typedef struct THCStorage
     }
 
     template <typename T>
-    inline T * data() {
-      static_cast<const struct THCStorage *>(this)->data<T>();
-    }
-
-    template <typename T>
     inline T * unsafeData() const {
-      return static_cast<T*>(this->data_ptr);
-    }
-
-    template <typename T>
-    inline T * unsafeData() {
       return static_cast<T*>(this->data_ptr);
     }
 } THCStorage;
