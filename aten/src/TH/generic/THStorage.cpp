@@ -34,6 +34,7 @@ THStorage* THStorage_(newWithAllocator)(ptrdiff_t size,
                                         void *allocatorContext)
 {
   THStorage *storage = static_cast<THStorage*>(THAlloc(sizeof(THStorage)));
+  storage->scalar_type = at::CTypeToScalarType<th::from_type<real>>::to();
   storage->data_ptr = static_cast<real*>(allocator->malloc(allocatorContext, sizeof(real)*size));
   storage->size = size;
   new (&storage->refcount) std::atomic<int>(1);
@@ -153,6 +154,7 @@ THStorage* THStorage_(newWithDataAndAllocator)(real* data, ptrdiff_t size,
                                                THAllocator* allocator,
                                                void* allocatorContext) {
   THStorage *storage = static_cast<THStorage*>(THAlloc(sizeof(THStorage)));
+  storage->scalar_type = at::CTypeToScalarType<th::from_type<real>>::to();
   storage->data_ptr = data;
   storage->size = size;
   storage->refcount = 1;

@@ -47,7 +47,7 @@ static PyObject * THPStorage_(sharedIncref)(THPStorage *self)
 
 static PyObject * THPStorage_(newTHView)(THStorage *base, ptrdiff_t offset, size_t size)
 {
-  void *data = base->data<char>() + offset;
+  void *data = (char*)base->data<real>() + offset;
   THStoragePtr view(THStorage_(newWithData)(LIBRARY_STATE (real*)data, size));
   view->flag = TH_STORAGE_REFCOUNTED | TH_STORAGE_VIEW;
   view->view = base;
@@ -247,7 +247,7 @@ static PyObject * THPStorage_(shareCuda)(THPStorage *self)
   if (THStorage_(data)(LIBRARY_STATE storage)) {
     size_t base_size;
     void *base_ptr = THCCachingAllocator_getBaseAllocation(THStorage_(data)(LIBRARY_STATE storage), &base_size);
-    ptrdiff_t offset = storage->data<char>() - (char*)base_ptr;
+    ptrdiff_t offset = (char*)storage->data<real>() - (char*)base_ptr;
 
     cudaIpcMemHandle_t handle;
     THCudaCheck(cudaIpcGetMemHandle(&handle, base_ptr));

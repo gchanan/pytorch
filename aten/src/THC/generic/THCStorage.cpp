@@ -62,6 +62,7 @@ THCStorage* THCStorage_(newWithAllocator)(THCState *state, ptrdiff_t size,
   THCStorage *storage = (THCStorage*)THAlloc(sizeof(THCStorage));
   memset(storage, 0, sizeof(THCStorage));
   new (&storage->refcount) std::atomic<int>(1);
+  storage->scalar_type = at::CTypeToScalarType<at::cuda::from_type<real>>::to();
   storage->flag = TH_STORAGE_REFCOUNTED | TH_STORAGE_RESIZABLE | TH_STORAGE_FREEMEM;
   storage->allocator = allocator;
   storage->allocatorContext = allocatorContext;
@@ -139,6 +140,7 @@ THCStorage* THCStorage_(newWithDataAndAllocator)(
   THCDeviceAllocator *allocator, void *allocatorContext) {
   THCStorage *storage = (THCStorage*)THAlloc(sizeof(THCStorage));
   memset(storage, 0, sizeof(THCStorage));
+  storage->scalar_type = at::CTypeToScalarType<at::cuda::from_type<real>>::to();
   storage->data_ptr = data;
   storage->size = size;
   storage->refcount = 1;
