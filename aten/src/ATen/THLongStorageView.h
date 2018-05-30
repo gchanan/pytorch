@@ -2,6 +2,7 @@
 
 #include "TH/TH.h"
 #include "TH/THStorage.hpp"
+#include "TH/THTypeConversion.hpp"
 
 namespace at {
 
@@ -82,6 +83,7 @@ public:
       storage.data_ptr = (int64_t*)(ref.data());
       storage.size = ref.size();
     }
+    storage.scalar_type = at::CTypeToScalarType<th::from_type<int64_t>>::to();
     storage.refcount = 0;
     storage.flag = 0;
     storage.allocator = nullptr;
