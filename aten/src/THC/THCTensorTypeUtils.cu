@@ -59,15 +59,7 @@ TensorUtils<TENSOR_TYPE>::resizeAs(THCState* state,                     \
                                    TENSOR_TYPE* dst,                    \
                                    TENSOR_TYPE* src) {                  \
   TENSOR_TYPE##_resizeAs(state, dst, src);                              \
-}                                                                       \
-                                                                        \
-void                                                                    \
-TensorUtils<TENSOR_TYPE>::squeeze1d(THCState *state,                    \
-                                    TENSOR_TYPE *dst,                   \
-                                    TENSOR_TYPE *src,                   \
-                                    int dimension) {                    \
-  TENSOR_TYPE##_squeeze1d(state, dst, src, dimension);                  \
-}                                                                       \
+}                                                                       \                                                             \
                                                                         \
 void                                                                    \
 TensorUtils<TENSOR_TYPE>::unsqueeze1d(THCState *state,                  \

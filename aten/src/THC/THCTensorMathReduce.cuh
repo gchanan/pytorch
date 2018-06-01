@@ -680,8 +680,8 @@ THC_reduceDimIndex(THCState *state,
   TensorUtils<TensorTypeK>::freeCopyTo(state, tgt1, tgt1_);
   TensorUtils<TensorTypeIndex>::freeCopyTo(state, tgt2, tgt2_);
   if (!keepdim) {
-    TensorUtils<TensorTypeK>::squeeze1d(state, tgt1_, tgt1_, dimension);
-    TensorUtils<TensorTypeIndex>::squeeze1d(state, tgt2_, tgt2_, dimension);
+    THCTensor_squeeze1d(state, tgt1_, tgt1_, dimension);
+    THCTensor_squeeze1d(state, tgt2_, tgt2_, dimension);
   }
 }
 

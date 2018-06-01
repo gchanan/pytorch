@@ -32,7 +32,7 @@ void THCTensor_free(THCState *state, THCTensor *self)
   }
 }
 
-int THCTensor_(nDimension)(THCState *state, const THCTensor *self)
+int THCTensor_nDimension(THCState *state, const THCTensor *self)
 {
   return self->nDimension;
 }
@@ -49,7 +49,7 @@ int64_t THCTensor_stride(THCState *state, const THCTensor *self, int dim)
   return self->stride[dim];
 }
 
-ptrdiff_t THCTensor_(nElement)(THCState *state, const THCTensor *self)
+ptrdiff_t THCTensor_nElement(THCState *state, const THCTensor *self)
 {
   if(self->nDimension == 0)
     return 0;
@@ -63,7 +63,7 @@ ptrdiff_t THCTensor_(nElement)(THCState *state, const THCTensor *self)
   }
 }
 
-int THCTensor_(getDevice)(THCState* state, const THCTensor* tensor) {
+int THCTensor_getDevice(THCState* state, const THCTensor* tensor) {
   if (!tensor->storage) return -1;
   return THCStorage_getDevice(state, tensor->storage);
 }
@@ -75,7 +75,7 @@ THLongStorage *THCTensor_newSizeOf(THCState *state, THCTensor *self)
   return size;
 }
 
-int THCTensor_(isContiguous)(THCState *state, const THCTensor *self)
+int THCTensor_isContiguous(THCState *state, const THCTensor *self)
 {
   int64_t z = 1;
   int d;
@@ -100,4 +100,26 @@ int THCTensor_allContiguous(THCState *state, const THCTensor **inputs, int numIn
     }
   }
   return 1;
+}
+
+void THCTensor_squeeze1d(THCState *state, THCTensor *self, THCTensor *src, int dimension)
+{
+  int d;
+
+  if(!src)
+    src = self;
+
+  THArgCheck(dimension < src->nDimension, 3, "dimension out of range");
+
+  THCTensor_(set)(state, self, src);
+
+  if(src->size[dimension] == 1 && src->nDimension > 1)
+  {
+    for(d = dimension; d < self->nDimension-1; d++)
+    {
+      self->size[d] = self->size[d+1];
+      self->stride[d] = self->stride[d+1];
+    }
+    self->nDimension--;
+  }
 }

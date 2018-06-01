@@ -566,24 +566,7 @@ void THCTensor_(squeeze)(THCState *state, THCTensor *self, THCTensor *src)
 
 void THCTensor_(squeeze1d)(THCState *state, THCTensor *self, THCTensor *src, int dimension)
 {
-  int d;
-
-  if(!src)
-    src = self;
-
-  THArgCheck(dimension < src->nDimension, 3, "dimension out of range");
-
-  THCTensor_(set)(state, self, src);
-
-  if(src->size[dimension] == 1 && src->nDimension > 1)
-  {
-    for(d = dimension; d < self->nDimension-1; d++)
-    {
-      self->size[d] = self->size[d+1];
-      self->stride[d] = self->stride[d+1];
-    }
-    self->nDimension--;
-  }
+  THCTensor_squeeze1d(state, self, src, dimension);
 }
 
 void THCTensor_(unsqueeze1d)(THCState *state, THCTensor *self, THCTensor *src, int dimension)
