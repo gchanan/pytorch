@@ -4,7 +4,6 @@
 #include "THStorage.h"
 #include "THTensorApply.h"
 
-#define THTensor          TH_CONCAT_3(TH,Real,Tensor)
 #define THTensor_(NAME)   TH_CONCAT_4(TH,Real,Tensor_,NAME)
 
 /* basics */
@@ -36,4 +35,8 @@
 /* lapack support */
 #include "generic/THTensorLapack.h"
 #include "THGenerateFloatTypes.h"
+
+// // This exists to have a data-type independent way of freeing (necessary for THPPointer).
+TH_API void THTensor_free(THTensor *self);
+
 #endif
