@@ -58,7 +58,6 @@ struct TensorUtils {
                           int in_dims, int64_t dimension, int keepdim); \
     static DATA_TYPE* getData(THCState* state, TENSOR_TYPE* t);         \
     static ptrdiff_t getNumElements(THCState* state, TENSOR_TYPE* t);   \
-    static int64_t getSize(THCState* state, TENSOR_TYPE* t, int dim);   \
     static int64_t getStride(THCState* state, TENSOR_TYPE* t, int dim); \
     static bool isContiguous(THCState* state, TENSOR_TYPE* t);          \
     static bool allContiguous(THCState* state, TENSOR_TYPE** inputs, int numInputs); \
@@ -125,7 +124,7 @@ getTensorInfo(THCState* state, TensorType* t) {
 
   int dims = THCTensor_nDimension(state, t);
   for (int i = 0; i < dims; ++i) {
-    sz[i] = TensorUtils<TensorType>::getSize(state, t, i);
+    sz[i] = THCTensor_size(state, t, i);
     st[i] = TensorUtils<TensorType>::getStride(state, t, i);
   }
 
