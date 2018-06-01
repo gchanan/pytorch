@@ -217,3 +217,12 @@ int THCTensor_canUse32BitIndexMath(THCState* state, const THCTensor* t, ptrdiff_
 
   return 1;
 }
+
+int THCTensor_all32BitIndexable(THCState* state, const THCTensor** inputs, int numInputs) {
+  for (int i = 0; i < numInputs; ++i) {
+    if (!THCTensor_canUse32BitIndexMath(state, inputs[i])) {
+      return 0;
+    }
+  }
+  return 1;
+}
