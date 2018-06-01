@@ -286,7 +286,7 @@ bool THC_reduceDim(THCState* state,
   ptrdiff_t inElements = TensorUtils<TensorType>::getNumElements(state, in);
 
   int64_t reductionSize = THCTensor_size(state, in, dim);
-  int64_t reductionStride = TensorUtils<TensorType>::getStride(state, in, dim);
+  int64_t reductionStride = THCTensor_stride(state, in, dim);
   ptrdiff_t outElements = inElements / reductionSize;
 
   if (THCTensor_nDimension(state, out) > MAX_CUTORCH_DIMS ||
