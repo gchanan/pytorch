@@ -91,3 +91,13 @@ int THCTensor_(isContiguous)(THCState *state, const THCTensor *self)
   }
   return 1;
 }
+
+int THCTensor_allContiguous(THCState *state, const THCTensor **inputs, int numInputs) {
+  THAssert(numInputs > 0);
+  for (int i = 0; i < numInputs; ++i) {
+    if (!THCTensor_isContiguous(state, inputs[i])) {
+      return 0;
+    }
+  }
+  return 1;
+}
