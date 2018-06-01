@@ -19,7 +19,7 @@ void THNN_(ELU_updateOutput)(
 
   if (inplace)
   {
-    THC_pointwiseApply1(state, input, ELUupdateOutputIP_functor<real>(negcoef, poscoef));
+    THC_pointwiseApply1<real>(state, input, ELUupdateOutputIP_functor<real>(negcoef, poscoef));
     THCTensor_(set)(state, output, input);
   }
   else

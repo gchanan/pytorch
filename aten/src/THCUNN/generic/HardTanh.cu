@@ -19,7 +19,7 @@ void THNN_(HardTanh_updateOutput)(
   if(inplace)
   {
     THCTensor_(set)(state, output, input);
-    THC_pointwiseApply1(state, output, hardtanhupdateOutput_functor<real>(min_val, max_val));
+    THC_pointwiseApply1<real>(state, output, hardtanhupdateOutput_functor<real>(min_val, max_val));
   }
   else
   {

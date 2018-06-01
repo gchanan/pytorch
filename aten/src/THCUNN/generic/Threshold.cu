@@ -18,7 +18,7 @@ void THNN_(Threshold_updateOutput)(
 
   if (inplace)
   {
-    THC_pointwiseApply1(state, input,
+    THC_pointwiseApply1<real>(state, input,
       ThresholdUpdateOutputIP<real>(threshold, val)
     );
     THCTensor_(set)(state, output, input);

@@ -184,12 +184,14 @@ inline bool getApplyGrid(THCState* state, uint64_t totalElements, dim3& grid) {
   return true;
 }
 
-template <typename TensorTypeA,
+template <typename ScalarTypeA,
+          typename TensorTypeA,
           typename Op>
 bool THC_pointwiseApply1(THCState* state,
                          TensorTypeA* a,
                          const Op& op,
                          TensorArgType aType = ReadWrite) {
+  static_assert(std::is_same<ScalarTypeA, typename TensorUtils<TensorTypeA>::DataType>::value, "ScalarType must match");
   if (TensorUtils<TensorTypeA>::getDims(state, a) > MAX_CUTORCH_DIMS) {
     return false;
   }

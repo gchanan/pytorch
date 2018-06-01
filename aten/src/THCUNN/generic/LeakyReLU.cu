@@ -17,7 +17,7 @@ void THNN_(LeakyReLU_updateOutput)(
 
   if (inplace)
   {
-    THC_pointwiseApply1(state, input, LeakyReLUUpdateOutputIP<real>(negval));
+    THC_pointwiseApply1<real>(state, input, LeakyReLUUpdateOutputIP<real>(negval));
     THCTensor_(set)(state, output, input);
   }
   else
