@@ -657,9 +657,9 @@ THC_reduceDimIndex(THCState *state,
   // Unsqueeze tgt1_/tgt_2 if necessary so that their contiguity traits
   // are preserved if they are the same size as the correct reduction output.
   int src_dims = THCTensor_nDimension(state, src);
-  TensorUtils<TensorTypeK>::preserveReduceDimSemantics(
+  THCTensor_preserveReduceDimSemantics(
       state, tgt1_, src_dims, dimension, keepdim);
-  TensorUtils<TensorTypeIndex>::preserveReduceDimSemantics(
+  THCTensor_preserveReduceDimSemantics(
       state, tgt2_, src_dims, dimension, keepdim);
 
   THLongStorage *dim = THCTensor_newSizeOf(state, src);
