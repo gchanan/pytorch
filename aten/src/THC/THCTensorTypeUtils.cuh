@@ -39,9 +39,6 @@ struct TensorUtils {
                                                                         \
     static TENSOR_TYPE* newTensor(THCState* state);                     \
     static TENSOR_TYPE* newContiguous(THCState* state, TENSOR_TYPE* t); \
-    static THLongStorage* newSizeOf(THCState* state, TENSOR_TYPE* t);   \
-    static void retain(THCState* state, TENSOR_TYPE* t);                \
-    static void free(THCState* state, TENSOR_TYPE* t);                  \
     static void freeCopyTo(THCState* state, TENSOR_TYPE* src,           \
                            TENSOR_TYPE* dst);                           \
     static void resize(THCState* state, TENSOR_TYPE* out,               \

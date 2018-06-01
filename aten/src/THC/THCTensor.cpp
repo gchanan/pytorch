@@ -67,3 +67,10 @@ int THCTensor_(getDevice)(THCState* state, const THCTensor* tensor) {
   if (!tensor->storage) return -1;
   return THCStorage_getDevice(state, tensor->storage);
 }
+
+THLongStorage *THCTensor_newSizeOf(THCState *state, THCTensor *self)
+{
+  THLongStorage *size = THLongStorage_newWithSize(self->nDimension);
+  THLongStorage_rawCopy(size, self->size);
+  return size;
+}

@@ -39,12 +39,6 @@ TensorUtils<TENSOR_TYPE>::newContiguous(THCState* state,                \
   return TENSOR_TYPE##_newContiguous(state, t);                         \
 }                                                                       \
                                                                         \
-THLongStorage*                                                          \
-TensorUtils<TENSOR_TYPE>::newSizeOf(THCState* state,                    \
-                                    TENSOR_TYPE* t) {                   \
-  return TENSOR_TYPE##_newSizeOf(state, t);                             \
-}                                                                       \
-                                                                        \
 void                                                                    \
 TensorUtils<TENSOR_TYPE>::freeCopyTo(THCState* state,                   \
                                      TENSOR_TYPE* src,                  \

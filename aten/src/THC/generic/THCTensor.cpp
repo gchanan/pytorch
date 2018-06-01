@@ -30,9 +30,7 @@ int64_t THCTensor_(stride)(THCState *state, const THCTensor *self, int dim)
 
 THLongStorage *THCTensor_(newSizeOf)(THCState *state, THCTensor *self)
 {
-  THLongStorage *size = THLongStorage_newWithSize(self->nDimension);
-  THLongStorage_rawCopy(size, self->size);
-  return size;
+  return THCTensor_newSizeOf(state, self);
 }
 
 THLongStorage *THCTensor_(newStrideOf)(THCState *state, THCTensor *self)
