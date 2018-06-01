@@ -15,7 +15,7 @@ ptrdiff_t THCTensor_(storageOffset)(THCState *state, const THCTensor *self)
 
 int THCTensor_(nDimension)(THCState *state, const THCTensor *self)
 {
-  return self->nDimension;
+  return THCTensor_nDimension(state, self);
 }
 
 int64_t THCTensor_(size)(THCState *state, const THCTensor *self, int dim)

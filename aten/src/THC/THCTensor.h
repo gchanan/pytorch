@@ -17,7 +17,8 @@ typedef struct THC_CLASS THCDescBuff
 #include "generic/THCTensor.h"
 #include "THCGenerateAllTypes.h"
 
-// This exists to have a data-type independent way of freeing (necessary for THPPointer).
-TH_API void THCTensor_free(THCState *state, THCTensor *self);
+THC_API void THCTensor_free(THCState *state, THCTensor *self);
+THC_API int THCTensor_nDimension(THCState *state, const THCTensor *self);
+
 
 #endif

@@ -25,3 +25,8 @@ void THCTensor_free(THCState *state, THCTensor *self)
     }
   }
 }
+
+int THCTensor_(nDimension)(THCState *state, const THCTensor *self)
+{
+  return self->nDimension;
+}
