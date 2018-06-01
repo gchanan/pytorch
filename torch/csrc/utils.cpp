@@ -198,6 +198,12 @@ void THPPointer<THPGenerator>::free() {
 
 template class THPPointer<THPGenerator>;
 
+template<>
+void THPPointer<THTensor>::free() {
+  if (ptr)
+    THTensor_free(LIBRARY_STATE ptr);
+}
+
 static bool backCompatBroadcastWarn = false;
 
 void setBackCompatBroadcastWarn(bool warn) {
