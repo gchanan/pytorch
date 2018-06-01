@@ -83,20 +83,7 @@ TensorUtils<TENSOR_TYPE>::getData(THCState* state,                      \
   /* FIXME: no cast is required except for THCudaHalfTensor */          \
   return (DATA_TYPE*) TENSOR_TYPE##_data(state, t);                     \
 }                                                                       \
-                                                                        \
-bool                                                                    \
-TensorUtils<TENSOR_TYPE>::allContiguous(THCState* state,                \
-                                        TENSOR_TYPE** inputs,           \
-                                        int numInputs) {                \
-  THAssert(numInputs > 0);                                                \
-  for (int i = 0; i < numInputs; ++i) {                                 \
-    if (!TensorUtils<TENSOR_TYPE>::isContiguous(state, inputs[i])) {    \
-      return false;                                                     \
-    }                                                                   \
-  }                                                                     \
-  return true;                                                          \
-}                                                                       \
-                                                                        \
+
 /* Due to the resize semantics of ops with `out=` keywords, if       */ \
 /* the output `tensor` has the same shape as the output of the       */ \
 /* reduction operation, then any noncontiguities in the output       */ \

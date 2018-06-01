@@ -193,7 +193,7 @@ void THCTensor_(catArray)(THCState *state, THCTensor *result,
       !hasEmptyInput &&
       THCTensor_(nDimension)(state, result) <= CAT_ARRAY_MAX_INPUT_DIMS &&
       TensorUtils<THCTensor>::canUse32BitIndexMath(state, result) &&
-      TensorUtils<THCTensor>::allContiguous(state, inputs, numInputs) &&
+      THCTensor_allContiguous(state, inputs, numInputs) &&
       TensorUtils<THCTensor>::all32BitIndexable(state, inputs, numInputs) &&
       THCTensor_allSameDevice(state, (const _THCTensor **)inputs, numInputs)) {
 
