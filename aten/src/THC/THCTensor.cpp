@@ -192,3 +192,28 @@ void THCTensor_resizeAs(THCState *state, THCTensor *self, THCTensor *src)
   if(!isSame)
     THCTensor_resizeNd(state, self, src->nDimension, src->size, NULL);
 }
+
+int THCTensor_canUse32BitIndexMath(THCState* state, const THCTensor* t, ptrdiff_t max_elem) {
+  ptrdiff_t elements = THCTensor_nElement(state, t);
+  if (elements >= max_elem) {
+    return 0;
+  }
+
+  ptrdiff_t offset = 0;
+  ptrdiff_t linearId = elements - 1;
+
+  for (int i = THCTensor_nDimension(state, t) - 1; i >= 0; --i) {
+    ptrdiff_t curDimIndex =
+      linearId % THCTensor_size(state, t, i);
+    ptrdiff_t curDimOffset = curDimIndex *
+      THCTensor_stride(state, t, i);
+    offset += curDimOffset;
+    linearId /= THCTensor_size(state, t, i);
+  }
+
+  if (offset >= max_elem) {
+    return 0;
+  }
+
+  return 1;
+}

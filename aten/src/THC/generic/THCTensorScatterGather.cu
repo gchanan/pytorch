@@ -45,9 +45,9 @@ void THCTensor_(gather)(THCState* state, THCTensor *tensor,
     tensor = THCTensor_(newContiguous)(state, tensor);
   }
 
-  if (TensorUtils<THCTensor>::canUse32BitIndexMath(state, tensor) &&
-      TensorUtils<THCTensor>::canUse32BitIndexMath(state, src) &&
-      TensorUtils<THCudaLongTensor>::canUse32BitIndexMath(state, index)) {
+  if (THCTensor_canUse32BitIndexMath(state, tensor) &&
+      THCTensor_canUse32BitIndexMath(state, src) &&
+      THCTensor_canUse32BitIndexMath(state, index)) {
     TensorInfo<real, unsigned int> tensorInfo =
       getTensorInfo<THCTensor, unsigned int>(state, tensor);
     TensorInfo<real, unsigned int> srcInfo =
@@ -138,9 +138,9 @@ void THCTensor_(scatter)(THCState* state, THCTensor *tensor, int dim, THCudaLong
     tensor = THCTensor_(newContiguous)(state, tensor);
   }
 
-  if (TensorUtils<THCTensor>::canUse32BitIndexMath(state, tensor) &&
-      TensorUtils<THCTensor>::canUse32BitIndexMath(state, src) &&
-      TensorUtils<THCudaLongTensor>::canUse32BitIndexMath(state, index)) {
+  if (THCTensor_canUse32BitIndexMath(state, tensor) &&
+      THCTensor_canUse32BitIndexMath(state, src) &&
+      THCTensor_canUse32BitIndexMath(state, index)) {
     TensorInfo<real, unsigned int> tensorInfo =
       getTensorInfo<THCTensor, unsigned int>(state, tensor);
     TensorInfo<real, unsigned int> srcInfo =
@@ -225,9 +225,9 @@ void THCTensor_(scatterAdd)(THCState* state, THCTensor *tensor, int dim, THCudaL
     tensor = THCTensor_(newContiguous)(state, tensor);
   }
 
-  if (TensorUtils<THCTensor>::canUse32BitIndexMath(state, tensor) &&
-      TensorUtils<THCTensor>::canUse32BitIndexMath(state, src) &&
-      TensorUtils<THCudaLongTensor>::canUse32BitIndexMath(state, index)) {
+  if (THCTensor_canUse32BitIndexMath(state, tensor) &&
+      THCTensor_canUse32BitIndexMath(state, src) &&
+      THCTensor_canUse32BitIndexMath(state, index)) {
     TensorInfo<real, unsigned int> tensorInfo =
       getTensorInfo<THCTensor, unsigned int>(state, tensor);
     TensorInfo<real, unsigned int> srcInfo =
@@ -310,8 +310,8 @@ THCTensor_(scatterFill)(THCState* state, THCTensor *tensor,
     tensor = THCTensor_(newContiguous)(state, tensor);
   }
 
-  if (TensorUtils<THCTensor>::canUse32BitIndexMath(state, tensor) &&
-      TensorUtils<THCudaLongTensor>::canUse32BitIndexMath(state, index)) {
+  if (THCTensor_canUse32BitIndexMath(state, tensor) &&
+      THCTensor_canUse32BitIndexMath(state, index)) {
     TensorInfo<real, unsigned int> tensorInfo =
       getTensorInfo<THCTensor, unsigned int>(state, tensor);
     TensorInfo<int64_t, unsigned int> indexInfo =

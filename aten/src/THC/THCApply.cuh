@@ -257,7 +257,7 @@ bool THC_pointwiseApply1(THCState* state,
   // and the resulting non-linear offset is all computable using 32-bit math?)
   // We also use unsigned index math in the kernel, as signed div/mod has
   // additional overhead.
-  if (TensorUtils<TensorTypeA>::canUse32BitIndexMath(state, a)) {
+  if (THCTensor_canUse32BitIndexMath(state, a)) {
     TensorInfo<typename TensorUtils<TensorTypeA>::DataType, unsigned int> aInfo =
       getTensorInfo<TensorTypeA, unsigned int>(state, a);
     rearrangeDims(&aInfo);
@@ -415,8 +415,8 @@ bool THC_pointwiseApply2(THCState* state,
   }                                         \
 }
 
-  if (TensorUtils<TensorTypeA>::canUse32BitIndexMath(state, a) &&
-      TensorUtils<TensorTypeB>::canUse32BitIndexMath(state, b)) {
+  if (THCTensor_canUse32BitIndexMath(state, a) &&
+      THCTensor_canUse32BitIndexMath(state, b)) {
     TensorInfo<typename TensorUtils<TensorTypeA>::DataType, unsigned int> aInfo =
       getTensorInfo<TensorTypeA, unsigned int>(state, a);
 
@@ -621,9 +621,9 @@ bool THC_pointwiseApply3(THCState* state,
   }                                         \
 }
 
-  if (TensorUtils<TensorTypeA>::canUse32BitIndexMath(state, a) &&
-      TensorUtils<TensorTypeB>::canUse32BitIndexMath(state, b) &&
-      TensorUtils<TensorTypeC>::canUse32BitIndexMath(state, c)) {
+  if (THCTensor_canUse32BitIndexMath(state, a) &&
+      THCTensor_canUse32BitIndexMath(state, b) &&
+      THCTensor_canUse32BitIndexMath(state, c)) {
     TensorInfo<typename TensorUtils<TensorTypeA>::DataType, unsigned int> aInfo =
       getTensorInfo<TensorTypeA, unsigned int>(state, a);
 

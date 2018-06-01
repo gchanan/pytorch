@@ -416,8 +416,8 @@ bool THC_reduceDim(THCState* state,
     }                                                     \
   }
 
-  if (TensorUtils<TensorType>::canUse32BitIndexMath(state, out) &&
-      TensorUtils<TensorType>::canUse32BitIndexMath(state, in)) {
+  if (THCTensor_canUse32BitIndexMath(state, out) &&
+      THCTensor_canUse32BitIndexMath(state, in)) {
     TensorInfo<typename TensorUtils<TensorType>::DataType,
                unsigned int> outInfo =
       getTensorInfo<TensorType, unsigned int>(state, out);

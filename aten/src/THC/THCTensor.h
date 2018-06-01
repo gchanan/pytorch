@@ -32,5 +32,7 @@ THC_API void THCTensor_unsqueeze1d(THCState *state, THCTensor *self, THCTensor *
 THC_API int THCTensor_allSameDevice(THCState* state, const THCTensor ** nputs, int numInputs);
 THC_API void THCTensor_resize(THCState *state, THCTensor *tensor, THLongStorage *size, THLongStorage *stride);
 THC_API void THCTensor_resizeAs(THCState *state, THCTensor *tensor, THCTensor *src);
+/* Can we use 32 bit math for indexing? */    
+THC_API int THCTensor_canUse32BitIndexMath(THCState* state, const THCTensor* t, ptrdiff_t max_elem);
 
 #endif
