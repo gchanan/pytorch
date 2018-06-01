@@ -24,7 +24,7 @@ void THNN_(HardTanh_updateOutput)(
   else
   {
     THCTensor_(resizeAs)(state, output, input);
-    THC_pointwiseApply2(state, output, input,
+    THC_pointwiseApply2<real, real>(state, output, input,
                                hardtanhupdateOutput_functor<real>(min_val, max_val));
   }
 }
@@ -47,7 +47,7 @@ void THNN_(HardTanh_updateGradInput)(
   if (inplace)
   {
     THCTensor_(set)(state, gradInput, gradOutput);
-    THC_pointwiseApply2(state, gradInput, input,
+    THC_pointwiseApply2<real, real>(state, gradInput, input,
                                  hardtanhupdateGradInput_functor<real>(min_val, max_val));
   }
   else

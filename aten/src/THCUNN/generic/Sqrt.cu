@@ -13,7 +13,7 @@ void THNN_(Sqrt_updateOutput)(
   real eps = ScalarConvert<accreal, real>::to(eps_);
   THCUNN_assertSameGPU(state, 2, input, output);
   THCTensor_(resizeAs)(state, output, input);
-  THC_pointwiseApply2(state, output, input, sqrtupdateOutput_functor<real>(eps));
+  THC_pointwiseApply2<real, real>(state, output, input, sqrtupdateOutput_functor<real>(eps));
 }
 
 void THNN_(Sqrt_updateGradInput)(

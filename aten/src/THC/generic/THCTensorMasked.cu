@@ -12,8 +12,8 @@ THCTensor_(maskedFill)(THCState* state,
              THCudaByteTensor_nElement(state, mask),
              2, "sizes do not match");
 
-  if (!THC_pointwiseApply2(state, tensor, mask,
-                           TensorMaskedFillOp<real, unsigned char>(value))) {
+  if (!THC_pointwiseApply2<real, uint8_t>(state, tensor, mask,
+                                          TensorMaskedFillOp<real, unsigned char>(value))) {
     THArgCheck(false, 2, CUTORCH_DIM_WARNING);
   }
 

@@ -11,7 +11,7 @@ void THNN_(Abs_updateOutput)(
 {
   THCUNN_assertSameGPU(state, 2, input, output);
   THCTensor_(resizeAs)(state, output, input);
-  THC_pointwiseApply2(state, output, input, absupdateOutput_functor<real>());
+  THC_pointwiseApply2<real, real>(state, output, input, absupdateOutput_functor<real>());
 }
 
 void THNN_(Abs_updateGradInput)(

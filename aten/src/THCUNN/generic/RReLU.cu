@@ -52,7 +52,7 @@ void THNN_(RReLU_updateOutput)(
     else
     {
       THCTensor_(resizeAs)(state, output, input);
-      THC_pointwiseApply2(state, output, input, RReLUUpdateOutputEval_functor<real>(negSlope));
+      THC_pointwiseApply2<real, real>(state, output, input, RReLUUpdateOutputEval_functor<real>(negSlope));
     }
   }
 }
@@ -93,7 +93,7 @@ void THNN_(RReLU_updateGradInput)(
     const real negSlope = ScalarConvert<double, real>::to((lower + upper) / 2);
     if (inplace)
     {
-      THC_pointwiseApply2(state, gradOutput, input, RReLUupdateGradInputEvalIP_functor<real>(negSlope));
+      THC_pointwiseApply2<real, real>(state, gradOutput, input, RReLUupdateGradInputEvalIP_functor<real>(negSlope));
       THCTensor_(set)(state, gradInput, gradOutput);
     }
     else

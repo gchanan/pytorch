@@ -25,7 +25,7 @@ void THNN_(ELU_updateOutput)(
   else
   {
     THCTensor_(resizeAs)(state, output, input);
-    THC_pointwiseApply2(state, output, input, ELUupdateOutput_functor<real>(negcoef, poscoef));
+    THC_pointwiseApply2<real, real>(state, output, input, ELUupdateOutput_functor<real>(negcoef, poscoef));
   }
 }
 

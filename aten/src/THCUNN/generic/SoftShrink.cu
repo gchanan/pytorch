@@ -13,7 +13,7 @@ void THNN_(SoftShrink_updateOutput)(
   real lambda = ScalarConvert<accreal, real>::to(lambda_);
   THCUNN_assertSameGPU(state, 2, input, output);
   THCTensor_(resizeAs)(state, output, input);
-  THC_pointwiseApply2(state, output, input, SoftShrinkUpdateOutput<real>(lambda));
+  THC_pointwiseApply2<real, real>(state, output, input, SoftShrinkUpdateOutput<real>(lambda));
   THCudaCheck(cudaGetLastError());
 }
 

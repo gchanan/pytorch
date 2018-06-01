@@ -23,7 +23,7 @@ void THNN_(LeakyReLU_updateOutput)(
   else
   {
     THCTensor_(resizeAs)(state, output, input);
-    THC_pointwiseApply2(state, output, input, LeakyReLUUpdateOutput<real>(negval));
+    THC_pointwiseApply2<real, real>(state, output, input, LeakyReLUUpdateOutput<real>(negval));
   }
 
   THCudaCheck(cudaGetLastError());
@@ -44,7 +44,7 @@ void THNN_(LeakyReLU_updateGradInput)(
 
   if (inplace)
   {
-    THC_pointwiseApply2(state, gradOutput, input, LeakyReLUUpdateGradInputIP<real>(negval));
+    THC_pointwiseApply2<real, real>(state, gradOutput, input, LeakyReLUUpdateGradInputIP<real>(negval));
     THCTensor_(set)(state, gradInput, gradOutput);
   }
   else

@@ -16,7 +16,7 @@ void THNN_(PReLU_updateOutput)(
 
   if (nOutputPlane == 1)
   {
-    THC_pointwiseApply2(state, output, input, PReLUUpdateOutput<real>(w));
+    THC_pointwiseApply2<real, real>(state, output, input, PReLUUpdateOutput<real>(w));
   }
   else
   {
