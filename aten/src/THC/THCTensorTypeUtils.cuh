@@ -57,7 +57,6 @@ struct TensorUtils {
                           THCState *state, TENSOR_TYPE *tensor,         \
                           int in_dims, int64_t dimension, int keepdim); \
     static DATA_TYPE* getData(THCState* state, TENSOR_TYPE* t);         \
-    static ptrdiff_t getNumElements(THCState* state, TENSOR_TYPE* t);   \
     static bool isContiguous(THCState* state, TENSOR_TYPE* t);          \
     static bool allContiguous(THCState* state, TENSOR_TYPE** inputs, int numInputs); \
     static int getDevice(THCState* state, TENSOR_TYPE* t);              \

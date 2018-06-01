@@ -27,10 +27,10 @@ THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
   static_assert(std::is_same<ScalarTypeDst, typename TensorUtils<TensorTypeDst>::DataType>::value, "ScalarTypeDst must match");
   static_assert(std::is_same<ScalarTypeSrc, typename TensorUtils<TensorTypeSrc>::DataType>::value, "ScalarTypeSrc must match");
 
-  ptrdiff_t totalElements = TensorUtils<TensorTypeDst>::getNumElements(state, dst);
+  ptrdiff_t totalElements = THCTensor_nElement(state, dst);
 
   THArgCheck(totalElements ==
-             TensorUtils<TensorTypeSrc>::getNumElements(state, src),
+             THCTensor_nElement(state, src),
              2, "sizes do not match");
 
   if (THCTensor_nDimensionstate, dst) == 0) {
