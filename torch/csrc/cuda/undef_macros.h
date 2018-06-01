@@ -46,7 +46,6 @@
 
 #undef THSTensor
 #undef THSTensor_
-#undef THSTensorPtr
 #undef THSPTensorPtr
 
 

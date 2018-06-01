@@ -29,7 +29,6 @@
 #define THPTensorStateless THCPTensorStateless
 
 
-#define THSTensorPtr THCSTensorPtr
 #define THSPTensorPtr THCSPTensorPtr
 #define THSTensor THCSTensor
 #define THSTensor_(NAME) THCSTensor_(NAME)
