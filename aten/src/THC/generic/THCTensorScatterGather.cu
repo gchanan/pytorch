@@ -42,7 +42,7 @@ void THCTensor_(gather)(THCState* state, THCTensor *tensor,
   THArgCheck(getApplyGrid(state, totalElements, grid, curDevice), 1, CUTORCH_DIM_WARNING);
 
   THCTensor* oldTensor = NULL;
-  if (TensorUtils<THCTensor>::maybeOverlappingIndices(state, tensor)) {
+  if (THCTensor_maybeOverlappingIndices(state, tensor)) {
     oldTensor = tensor;
     tensor = THCTensor_(newContiguous)(state, tensor);
   }
@@ -137,7 +137,7 @@ void THCTensor_(scatter)(THCState* state, THCTensor *tensor, int dim, THCudaLong
   THArgCheck(getApplyGrid(state, totalElements, grid, curDevice), 1, CUTORCH_DIM_WARNING);
 
   THCTensor* oldTensor = NULL;
-  if (TensorUtils<THCTensor>::maybeOverlappingIndices(state, tensor)) {
+  if (THCTensor_maybeOverlappingIndices(state, tensor)) {
     oldTensor = tensor;
     tensor = THCTensor_(newContiguous)(state, tensor);
   }
@@ -226,7 +226,7 @@ void THCTensor_(scatterAdd)(THCState* state, THCTensor *tensor, int dim, THCudaL
   THArgCheck(getApplyGrid(state, totalElements, grid, curDevice), 1, CUTORCH_DIM_WARNING);
 
   THCTensor* oldTensor = NULL;
-  if (TensorUtils<THCTensor>::maybeOverlappingIndices(state, tensor)) {
+  if (THCTensor_maybeOverlappingIndices(state, tensor)) {
     oldTensor = tensor;
     tensor = THCTensor_(newContiguous)(state, tensor);
   }
@@ -313,7 +313,7 @@ THCTensor_(scatterFill)(THCState* state, THCTensor *tensor,
   THArgCheck(getApplyGrid(state, totalElements, grid, curDevice), 1, CUTORCH_DIM_WARNING);
 
   THCTensor* oldTensor = NULL;
-  if (TensorUtils<THCTensor>::maybeOverlappingIndices(state, tensor)) {
+  if (THCTensor_maybeOverlappingIndices(state, tensor)) {
     oldTensor = tensor;
     tensor = THCTensor_(newContiguous)(state, tensor);
   }

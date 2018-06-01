@@ -55,3 +55,7 @@ THC_API bool THCTensor_allSameDevice(THCState* state, const _THCTensor ** inputs
 THC_API bool THCTensor_canUse32BitIndexMath(THCState* state, const _THCTensor* t, ptrdiff_t max_elem=INT32_MAX);
 /* Are all tensors 32-bit indexable? */
 THC_API bool THCTensor_all32BitIndexable(THCState* state, const _THCTensor** inputs, int numInputs);
+/* Returns false if there is no possibility that the tensor    */
+/* has more than one index that references the same datapoint, */
+/* true otherwise.                                             */
+THC_API THCTensor_maybeOverlappingIndices(THCState* state, const _THCTensor* t);
