@@ -21,12 +21,6 @@
 #include "torch/csrc/cuda/THCP.h"
 #endif
 
-template<>
-void THPPointer<THStorage>::free() {
-  if (ptr)
-    THStorage_free(ptr);
-}
-
 int THPUtils_getCallable(PyObject *arg, PyObject **result) {
   if (!PyCallable_Check(arg))
     return 0;
