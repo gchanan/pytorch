@@ -287,20 +287,3 @@ bool THCTensor_allSameDevice(THCState* state, const _THCTensor ** inputs, int nu
   }
   return true;
 }
-
-int THCTensor_(isContiguous)(THCState *state, const THCTensor *self)
-{
-  int64_t z = 1;
-  int d;
-  for(d = self->nDimension-1; d >= 0; d--)
-  {
-    if(self->size[d] != 1)
-    {
-      if(self->stride[d] == z)
-        z *= self->size[d];
-      else
-        return 0;
-    }
-  }
-  return 1;
-}

@@ -83,7 +83,7 @@ TensorUtils<TENSOR_TYPE>::getData(THCState* state,                      \
   /* FIXME: no cast is required except for THCudaHalfTensor */          \
   return (DATA_TYPE*) TENSOR_TYPE##_data(state, t);                     \
 }                                                                       \
-
+                                                                        \
 /* Due to the resize semantics of ops with `out=` keywords, if       */ \
 /* the output `tensor` has the same shape as the output of the       */ \
 /* reduction operation, then any noncontiguities in the output       */ \
