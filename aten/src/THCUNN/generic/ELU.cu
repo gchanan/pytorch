@@ -44,7 +44,7 @@ void THNN_(ELU_updateGradInput)(
   THCUNN_assertSameGPU(state, 3, output, gradOutput, gradInput);
 
   THCTensor_(resizeAs)(state, gradInput, output);
-  THC_pointwiseApply3(state, gradInput, output, gradOutput, ELUupdateGradInput_functor<real>(negcoef, poscoef));
+  THC_pointwiseApply3<real, real, real>(state, gradInput, output, gradOutput, ELUupdateGradInput_functor<real>(negcoef, poscoef));
 }
 
 #endif

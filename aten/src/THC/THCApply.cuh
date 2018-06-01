@@ -506,7 +506,10 @@ bool THC_pointwiseApply2(THCState* state,
   return true;
 }
 
-template <typename TensorTypeA,
+template <typename ScalarTypeA,
+          typename ScalarTypeB,
+          typename ScalarTypeC,
+          typename TensorTypeA,
           typename TensorTypeB,
           typename TensorTypeC,
           typename Op>
@@ -518,6 +521,10 @@ bool THC_pointwiseApply3(THCState* state,
                          TensorArgType aType = ReadWrite,
                          TensorArgType bType = ReadOnly,
                          TensorArgType cType = ReadOnly) {
+  static_assert(std::is_same<ScalarTypeA, typename TensorUtils<TensorTypeA>::DataType>::value, "ScalarTypeA must match");
+  static_assert(std::is_same<ScalarTypeB, typename TensorUtils<TensorTypeB>::DataType>::value, "ScalarTypeB must match");
+  static_assert(std::is_same<ScalarTypeC, typename TensorUtils<TensorTypeC>::DataType>::value, "ScalarTypeB must match");
+
   ptrdiff_t totalElements = TensorUtils<TensorTypeA>::getNumElements(state, a);
 
   if (totalElements != TensorUtils<TensorTypeB>::getNumElements(state, b) ||

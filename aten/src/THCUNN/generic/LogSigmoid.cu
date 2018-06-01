@@ -25,7 +25,7 @@ void THNN_(LogSigmoid_updateGradInput)(
   THCUNN_check_nElement(state, input, gradOutput);
   THCUNN_assertSameGPU(state, 3, input, gradOutput, gradInput);
   THCTensor_(resizeAs)(state, gradInput, input);
-  THC_pointwiseApply3(state, gradInput, input, gradOutput, logSigmoid_updateGradInput_functor<real>());
+  THC_pointwiseApply3<real, real, real>(state, gradInput, input, gradOutput, logSigmoid_updateGradInput_functor<real>());
 }
 
 #endif

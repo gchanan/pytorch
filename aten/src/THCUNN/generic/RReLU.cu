@@ -99,7 +99,7 @@ void THNN_(RReLU_updateGradInput)(
     else
     {
       THCTensor_(resizeAs)(state, gradInput, input);
-      THC_pointwiseApply3(state, gradInput, gradOutput, input, RReLUupdateGradInputEval_functor<real>(negSlope));
+      THC_pointwiseApply3<real, real, real>(state, gradInput, gradOutput, input, RReLUupdateGradInputEval_functor<real>(negSlope));
     }
   }
 

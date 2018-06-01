@@ -259,7 +259,7 @@ THC_API int THCTensor_(equal)(THCState *state, THCTensor *self_, THCTensor *src_
   THLongStorage *size = THCTensor_(newSizeOf)(state, self_);
   THCudaByteTensor *buf = THCudaByteTensor_newWithSize(state, size, NULL);
 
-  if (!THC_pointwiseApply3(state, buf, self_, src_, TensorEQOp<real, unsigned char>())) {
+  if (!THC_pointwiseApply3<uint8_t, real, real>(state, buf, self_, src_, TensorEQOp<real, unsigned char>())) {
     THArgCheck(false, 2, CUTORCH_DIM_WARNING);
   }
 
