@@ -42,11 +42,6 @@ struct TensorUtils {
     static TENSOR_TYPE* newContiguous(THCState* state, TENSOR_TYPE* t); \
     static void freeCopyTo(THCState* state, TENSOR_TYPE* src,           \
                            TENSOR_TYPE* dst);                           \
-    static void resize(THCState* state, TENSOR_TYPE* out,               \
-                       THLongStorage* sizes,                            \
-                       THLongStorage* strides);                         \
-    static void resizeAs(THCState* state, TENSOR_TYPE* dst,             \
-                         TENSOR_TYPE* src);                             \
     static void preserveReduceDimSemantics(                             \
                           THCState *state, TENSOR_TYPE *tensor,         \
                           int in_dims, int64_t dimension, int keepdim); \

@@ -46,21 +46,6 @@ TensorUtils<TENSOR_TYPE>::freeCopyTo(THCState* state,                   \
   TENSOR_TYPE##_freeCopyTo(state, src, dst);                            \
 }                                                                       \
                                                                         \
-void                                                                    \
-TensorUtils<TENSOR_TYPE>::resize(THCState* state,                       \
-                                 TENSOR_TYPE* out,                      \
-                                 THLongStorage* sizes,                  \
-                                 THLongStorage* strides) {              \
-  TENSOR_TYPE##_resize(state, out, sizes, strides);                     \
-}                                                                       \
-                                                                        \
-void                                                                    \
-TensorUtils<TENSOR_TYPE>::resizeAs(THCState* state,                     \
-                                   TENSOR_TYPE* dst,                    \
-                                   TENSOR_TYPE* src) {                  \
-  TENSOR_TYPE##_resizeAs(state, dst, src);                              \
-}                                                                       \
-                                                                        \
 DATA_TYPE*                                                              \
 TensorUtils<TENSOR_TYPE>::getData(THCState* state,                      \
                                   TENSOR_TYPE* t) {                     \
