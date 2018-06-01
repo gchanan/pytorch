@@ -545,16 +545,7 @@ void THTensor_(sparseMask)(THSTensor *r_, THTensor *t, THSTensor *mask) {
 
 void THSTensor_(free)(THSTensor *self)
 {
-  if(!self)
-    return;
-  if(--self->refcount == 0)
-  {
-    THFree(self->size);
-    THLongTensor_free(self->indices);
-    THTensor_(free)(self->values);
-    self->refcount.~atomic<int>();
-    THFree(self);
-  }
+  THSTensor_free(self);
 }
 
 void THSTensor_(retain)(THSTensor *self)

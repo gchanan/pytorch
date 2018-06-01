@@ -5,6 +5,17 @@
 // Moved to THSTensor.hpp
 typedef struct THSTensor THSTensor;
 
+// These used to be distinct types; for some measure of backwards compatibility and documentation
+// alias these to the single THSTensor type.
+#define THSFloatTensor THSTensor
+#define THSDoubleTensor THSTensor
+#define THSHalfTensor THSTensor
+#define THSByteTensor THSTensor
+#define THSCharTensor THSTensor
+#define THSShortTensor THSTensor
+#define THSIntTensor THSTensor
+#define THSLongTensor THSTensor
+
 /**** access methods ****/
 TH_API int THSTensor_(nDimension)(const THSTensor *self);
 TH_API int THSTensor_(nDimensionI)(const THSTensor *self);

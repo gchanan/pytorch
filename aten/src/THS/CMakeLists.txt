@@ -12,6 +12,7 @@ INSTALL(FILES
   THSGenerateFloatTypes.h
   THSGenerateIntTypes.h
   THSTensor.h
+  THSTensor.hpp
   DESTINATION "${ATEN_INSTALL_INCLUDE_SUBDIR}/THS")
 
 INSTALL(FILES
