@@ -459,7 +459,7 @@ void dispatchTakePutImpl(THCState *state, TensorType *a, TensorType *b, THCudaLo
 
   auto aInfo = getTensorInfo<real, TensorType, IndexType>(state, a);
   aInfo.collapseDims();
-  auto numel = TensorUtils<TensorType>::getNumElements(state, a);
+  auto numel = THCTensor_nElement(state, a);
   if (aInfo.isContiguous()) {
     auto op = Op<real, IndexType, -2>(aInfo, numel, start, end);
     THC_pointwiseApply2<real, int64_t>(state, b, index, op);

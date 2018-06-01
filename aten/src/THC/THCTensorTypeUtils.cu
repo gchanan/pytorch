@@ -102,21 +102,6 @@ TensorUtils<TENSOR_TYPE>::getData(THCState* state,                      \
   return (DATA_TYPE*) TENSOR_TYPE##_data(state, t);                     \
 }                                                                       \
                                                                         \
-ptrdiff_t                                                               \
-TensorUtils<TENSOR_TYPE>::getNumElements(THCState* state,               \
-                                         TENSOR_TYPE* t) {              \
-  return TENSOR_TYPE##_nElement(state, t);                              \
-}                                                                       \
-                                                                        \
-                                                                        \
-int64_t                                                                 \
-TensorUtils<TENSOR_TYPE>::getStride(THCState* state,                    \
-                                    TENSOR_TYPE* t,                     \
-                                    int dim) {                          \
-  return TENSOR_TYPE##_stride(state, t, dim);                           \
-}                                                                       \
-                                                                        \
-                                                                        \
 bool                                                                    \
 TensorUtils<TENSOR_TYPE>::isContiguous(THCState* state,                 \
                                        TENSOR_TYPE* t) {                \
@@ -235,7 +220,7 @@ bool                                                                    \
 TensorUtils<TENSOR_TYPE>::canUse32BitIndexMath(THCState* state,         \
                                                TENSOR_TYPE* t,          \
                                                ptrdiff_t max_elem) {    \
-  ptrdiff_t elements = TensorUtils<TENSOR_TYPE>::getNumElements(state, t);   \
+  ptrdiff_t elements = THCTensor_nElement(state, t);                    \
   if (elements >= max_elem) {                                           \
     return false;                                                       \
   }                                                                     \
