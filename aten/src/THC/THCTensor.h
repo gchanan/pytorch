@@ -17,6 +17,7 @@ typedef struct THC_CLASS THCDescBuff
 #include "generic/THCTensor.h"
 #include "THCGenerateAllTypes.h"
 
+THC_API void THCTensor_retain(THCState *state, THCTensor *self);
 THC_API void THCTensor_free(THCState *state, THCTensor *self);
 THC_API int THCTensor_nDimension(THCState *state, const THCTensor *self);
 THC_API int64_t THCTensor_size(THCState *state, const THCTensor *self, int dim);

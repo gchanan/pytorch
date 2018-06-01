@@ -46,12 +46,6 @@ TensorUtils<TENSOR_TYPE>::newSizeOf(THCState* state,                    \
 }                                                                       \
                                                                         \
 void                                                                    \
-TensorUtils<TENSOR_TYPE>::retain(THCState* state,                       \
-                                 TENSOR_TYPE* t) {                      \
-  TENSOR_TYPE##_retain(state, t);                                       \
-}                                                                       \
-                                                                        \
-void                                                                    \
 TensorUtils<TENSOR_TYPE>::freeCopyTo(THCState* state,                   \
                                      TENSOR_TYPE* src,                  \
                                      TENSOR_TYPE* dst) {                \

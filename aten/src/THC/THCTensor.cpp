@@ -7,6 +7,12 @@
 #include "generic/THCTensor.cpp"
 #include "THCGenerateAllTypes.h"
 
+void THCTensor_retain(THCState *state, THCTensor *self)
+{
+  if(self->flag & TH_TENSOR_REFCOUNTED)
+    self->refcount++;
+}
+
 void THCTensor_free(THCState *state, THCTensor *self)
 {
   if(!self)
