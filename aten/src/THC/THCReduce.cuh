@@ -285,7 +285,7 @@ bool THC_reduceDim(THCState* state,
   static_assert(std::is_same<ScalarType, typename TensorUtils<TensorType>::DataType>::value, "ScalarType must match");
   ptrdiff_t inElements = TensorUtils<TensorType>::getNumElements(state, in);
 
-  int64_t reductionSize = TensorUtils<TensorType>::getSize(state, in, dim);
+  int64_t reductionSize = THCTensor_size(state, in, dim);
   int64_t reductionStride = TensorUtils<TensorType>::getStride(state, in, dim);
   ptrdiff_t outElements = inElements / reductionSize;
 
