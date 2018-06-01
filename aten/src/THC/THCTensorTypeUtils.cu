@@ -127,12 +127,6 @@ TensorUtils<TENSOR_TYPE>::preserveReduceDimSemantics(                   \
   }                                                                     \
 }                                                                       \
                                                                         \
-int                                                                     \
-TensorUtils<TENSOR_TYPE>::getDevice(THCState* state,                    \
-                                    TENSOR_TYPE* t) {                   \
-  return TENSOR_TYPE##_getDevice(state, t);                             \
-}                                                                       \
-                                                                        \
 bool                                                                    \
 TensorUtils<TENSOR_TYPE>::allSameDevice(THCState* state,                \
                                         TENSOR_TYPE** inputs,           \
