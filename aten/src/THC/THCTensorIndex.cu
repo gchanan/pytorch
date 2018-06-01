@@ -471,7 +471,7 @@ void dispatchTakePutImpl(THCState *state, TensorType *a, TensorType *b, THCudaLo
 
 template<typename real, template<class, class, int> class Op, typename TensorType>
 void dispatchTakePut(THCState *state, TensorType *a, TensorType *b, THCudaLongTensor *index) {
-  if (TensorUtils<TensorType>::canUse32BitIndexMath(state, a, INT_MAX)) {
+  if (THCTensor_canUse32BitIndexMath(state, a, INT_MAX)) {
     dispatchTakePutImpl<int32_t, real, Op>(state, a, b, index);
   } else {
     dispatchTakePutImpl<int64_t, real, Op>(state, a, b, index);

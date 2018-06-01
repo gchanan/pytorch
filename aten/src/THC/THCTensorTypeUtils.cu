@@ -129,39 +129,11 @@ TensorUtils<TENSOR_TYPE>::maybeOverlappingIndices(THCState* state,      \
 }                                                                       \
                                                                         \
 bool                                                                    \
-TensorUtils<TENSOR_TYPE>::canUse32BitIndexMath(THCState* state,         \
-                                               TENSOR_TYPE* t,          \
-                                               ptrdiff_t max_elem) {    \
-  ptrdiff_t elements = THCTensor_nElement(state, t);                    \
-  if (elements >= max_elem) {                                           \
-    return false;                                                       \
-  }                                                                     \
-                                                                        \
-  ptrdiff_t offset = 0;                                                 \
-  ptrdiff_t linearId = elements - 1;                                    \
-                                                                        \
-  for (int i = THCTensor_nDimension(state, t) - 1; i >= 0; --i) { \
-    ptrdiff_t curDimIndex =                                             \
-      linearId % THCTensor_size(state, t, i);                           \
-    ptrdiff_t curDimOffset = curDimIndex *                              \
-      THCTensor_stride(state, t, i);                                    \
-    offset += curDimOffset;                                             \
-    linearId /= THCTensor_size(state, t, i);                            \
-  }                                                                     \
-                                                                        \
-  if (offset >= max_elem) {                                             \
-    return false;                                                       \
-  }                                                                     \
-                                                                        \
-  return true;                                                          \
-}                                                                       \
-                                                                        \
-bool                                                                    \
 TensorUtils<TENSOR_TYPE>::all32BitIndexable(THCState* state,            \
                                             TENSOR_TYPE** inputs,       \
                                             int numInputs) {            \
   for (int i = 0; i < numInputs; ++i) {                                 \
-    if (!TensorUtils<TENSOR_TYPE>::canUse32BitIndexMath(state, inputs[i])) { \
+    if (!THCTensor_canUse32BitIndexMath(state, inputs[i])) {            \
       return false;                                                     \
     }                                                                   \
   }                                                                     \

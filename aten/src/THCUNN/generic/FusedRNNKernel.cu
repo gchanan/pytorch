@@ -65,7 +65,7 @@ bool THNN_(canUse32BitIndexMath)(THCState *state, int count, ...)
 
   for (int arg=0; arg < count; ++arg){
     THCTensor *tens = va_arg(list, THCTensor*);
-    if (!TensorUtils<THCTensor>::canUse32BitIndexMath(state, tens)){
+    if (!THCTensor_canUse32BitIndexMath(state, tens)){
       va_end(list);
       return false;
     }

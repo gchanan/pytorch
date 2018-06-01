@@ -50,3 +50,6 @@ THC_API void THCTensor_free(THCState *state, _THCTensor *self);
 
 THC_API int THCTensor_getDevice(THCState* state, const _THCTensor* tensor);
 THC_API bool THCTensor_allSameDevice(THCState* state, const _THCTensor ** inputs, int numInputs);
+
+/* Can we use 32 bit math for indexing? */
+THC_API int THCTensor_canUse32BitIndexMath(THCState* state, const _THCTensor* t, ptrdiff_t max_ele=INT32_MAX);
