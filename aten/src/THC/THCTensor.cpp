@@ -42,3 +42,17 @@ int64_t THCTensor_stride(THCState *state, const THCTensor *self, int dim)
   THArgCheck((dim >= 0) && (dim < self->nDimension), 2, "out of range");
   return self->stride[dim];
 }
+
+ptrdiff_t THCTensor_(nElement)(THCState *state, const THCTensor *self)
+{
+  if(self->nDimension == 0)
+    return 0;
+  else
+  {
+    ptrdiff_t nElement = 1;
+    int d;
+    for(d = 0; d < self->nDimension; d++)
+      nElement *= self->size[d];
+    return nElement;
+  }
+}

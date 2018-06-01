@@ -281,7 +281,7 @@ bool THC_reduceDim(THCState* state,
                    AccT init,
                    int dim,
                    int keepdim) {
-  ptrdiff_t inElements = TensorUtils<TensorType>::getNumElements(state, in);
+  ptrdiff_t inElements = THCTensor_nElement(state, in);
 
   int64_t reductionSize = THCTensor_size(state, in, dim);
   int64_t reductionStride = THCTensor_stride(state, in, dim);

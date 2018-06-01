@@ -202,7 +202,7 @@ bool THC_pointwiseApply1(THCState* state,
   const dim3 block = getApplyBlock();
 
   dim3 grid;
-  ptrdiff_t totalElements = TensorUtils<TensorTypeA>::getNumElements(state, a);
+  ptrdiff_t totalElements = THCTensor_nElement(state, a);
 
   if (!getApplyGrid(state, totalElements, grid)) {
     return false;
@@ -324,8 +324,8 @@ bool THC_pointwiseApply2(THCState* state,
                          const Op& op,
                          TensorArgType aType = ReadWrite,
                          TensorArgType bType = ReadOnly) {
-  ptrdiff_t totalElements = TensorUtils<TensorTypeA>::getNumElements(state, a);
-  if (totalElements != TensorUtils<TensorTypeB>::getNumElements(state, b)) {
+  ptrdiff_t totalElements = THCTensor_nElement(state, a);
+  if (totalElements != THCTensor_nElement(state, b)) {
     return false;
   }
 
@@ -511,10 +511,10 @@ bool THC_pointwiseApply3(THCState* state,
                          TensorArgType aType = ReadWrite,
                          TensorArgType bType = ReadOnly,
                          TensorArgType cType = ReadOnly) {
-  ptrdiff_t totalElements = TensorUtils<TensorTypeA>::getNumElements(state, a);
+  ptrdiff_t totalElements = THCTensor_nElement(state, a);
 
-  if (totalElements != TensorUtils<TensorTypeB>::getNumElements(state, b) ||
-      totalElements != TensorUtils<TensorTypeC>::getNumElements(state, c)) {
+  if (totalElements != THCTensor_nElement(state, b) ||
+      totalElements != THCTensor_nElement(state, c)) {
     return false;
   }
 

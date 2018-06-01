@@ -230,7 +230,7 @@ bool THC_reduceAll(THCState* state,
                    AccT init,
                    AccT* out,
                    int outOnDevice) {
-  ptrdiff_t inElements = TensorUtils<TensorType>::getNumElements(state, in);
+  ptrdiff_t inElements = THCTensor_nElement(state, in);
 
   if (THCTensor_nDimension(state, in) > MAX_CUTORCH_DIMS) {
     return false;

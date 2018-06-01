@@ -678,16 +678,7 @@ int THCTensor_(isSameSizeAs)(THCState *state, const THCTensor *self, const THCTe
 
 ptrdiff_t THCTensor_(nElement)(THCState *state, const THCTensor *self)
 {
-  if(self->nDimension == 0)
-    return 0;
-  else
-  {
-    ptrdiff_t nElement = 1;
-    int d;
-    for(d = 0; d < self->nDimension; d++)
-      nElement *= self->size[d];
-    return nElement;
-  }
+  THCTensor_nElement(state, self);
 }
 
 void THCTensor_(retain)(THCState *state, THCTensor *self)

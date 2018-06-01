@@ -21,6 +21,7 @@ THC_API void THCTensor_free(THCState *state, THCTensor *self);
 THC_API int THCTensor_nDimension(THCState *state, const THCTensor *self);
 THC_API int64_t THCTensor_size(THCState *state, const THCTensor *self, int dim);
 THC_API int64_t THCTensor_stride(THCState *state, const THCTensor *self, int dim);
+THC_API ptrdiff_t THCTensor_nElement(THCState *state, const THCTensor *self);
 
 
 #endif
