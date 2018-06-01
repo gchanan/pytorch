@@ -151,3 +151,44 @@ void THCTensor_unsqueeze1d(THCState *state, THCTensor *self, THCTensor *src, int
   }
   self->size[dimension] = 1;
 }
+
+int THCTensor_allSameDevice(THCState* state, const THCTensor ** nputs, int numInputs) {
+  THAssert(numInputs > 0);
+  int device = THCTensor_getDevice(state, inputs[0]);
+  for (int i = 1; i < numInputs; ++i) {
+    if (THCTensor_getDevice(state, inputs[i]) != device) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+void THCTensor_resize(THCState *state, THCTensor *self, THLongStorage *size, THLongStorage *stride)
+{
+  THArgCheck(size != NULL, 2, "invalid size");
+  if(stride)
+    THArgCheck(stride->size == size->size, 3, "invalid stride");
+
+  THCTensor_resizeNd(state, self, size->size, THLongStorage_data(size), (stride ? THLongStorage_data(stride) : NULL));
+}
+
+void THCTensor_resizeAs(THCState *state, THCTensor *self, THCTensor *src)
+{
+  int isSame = 0;
+  int d;
+  if(self->nDimension == src->nDimension)
+  {
+    isSame = 1;
+    for(d = 0; d < self->nDimension; d++)
+    {
+      if(self->size[d] != src->size[d])
+      {
+        isSame = 0;
+        break;
+      }
+    }
+  }
+
+  if(!isSame)
+    THCTensor_resizeNd(state, self, src->nDimension, src->size, NULL);
+}

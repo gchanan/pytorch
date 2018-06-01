@@ -296,32 +296,12 @@ THCTensor *THCTensor_(newFoldBatchDim)(THCState *state, THCTensor *input) {
 /* Resize */
 void THCTensor_(resize)(THCState *state, THCTensor *self, THLongStorage *size, THLongStorage *stride)
 {
-  THArgCheck(size != NULL, 2, "invalid size");
-  if(stride)
-    THArgCheck(stride->size == size->size, 3, "invalid stride");
-
-  THCTensor_(resizeNd)(state, self, size->size, THLongStorage_data(size), (stride ? THLongStorage_data(stride) : NULL));
+  return THCTensor_resize(state, self, size, stride);
 }
 
 void THCTensor_(resizeAs)(THCState *state, THCTensor *self, THCTensor *src)
 {
-  int isSame = 0;
-  int d;
-  if(self->nDimension == src->nDimension)
-  {
-    isSame = 1;
-    for(d = 0; d < self->nDimension; d++)
-    {
-      if(self->size[d] != src->size[d])
-      {
-        isSame = 0;
-        break;
-      }
-    }
-  }
-
-  if(!isSame)
-    THCTensor_(resizeNd)(state, self, src->nDimension, src->size, NULL);
+  return THCTensor_resizeAs(state, self, src);
 }
 
 void THCTensor_(resize1d)(THCState *state, THCTensor *tensor, int64_t size0)

@@ -136,7 +136,7 @@ THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
         // Types are different
         // Copy into the new format, contiguous, on the source device
         srcContig = TensorUtils<TensorTypeDst>::newTensor(state);
-        TensorUtils<TensorTypeDst>::resizeAs(state, srcContig, dst);
+        THCTensor_resizeAs(state, srcContig, dst);
 
         bool succ =
           THC_pointwiseApply2(

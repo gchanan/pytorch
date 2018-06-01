@@ -46,21 +46,6 @@ TensorUtils<TENSOR_TYPE>::freeCopyTo(THCState* state,                   \
   TENSOR_TYPE##_freeCopyTo(state, src, dst);                            \
 }                                                                       \
                                                                         \
-void                                                                    \
-TensorUtils<TENSOR_TYPE>::resize(THCState* state,                       \
-                                 TENSOR_TYPE* out,                      \
-                                 THLongStorage* sizes,                  \
-                                 THLongStorage* strides) {              \
-  TENSOR_TYPE##_resize(state, out, sizes, strides);                     \
-}                                                                       \
-                                                                        \
-void                                                                    \
-TensorUtils<TENSOR_TYPE>::resizeAs(THCState* state,                     \
-                                   TENSOR_TYPE* dst,                    \
-                                   TENSOR_TYPE* src) {                  \
-  TENSOR_TYPE##_resizeAs(state, dst, src);                              \
-}                                                                       \
-                                                                        \
 DATA_TYPE*                                                              \
 TensorUtils<TENSOR_TYPE>::getData(THCState* state,                      \
                                   TENSOR_TYPE* t) {                     \
@@ -84,20 +69,6 @@ TensorUtils<TENSOR_TYPE>::preserveReduceDimSemantics(                   \
   if (out_dims > 0 && !keepdim && out_dims == in_dims - 1) {            \
     THCTensor_unsqueeze1d(state, tensor, tensor, dimension);\
   }                                                                     \
-}                                                                       \
-                                                                        \
-bool                                                                    \
-TensorUtils<TENSOR_TYPE>::allSameDevice(THCState* state,                \
-                                        TENSOR_TYPE** inputs,           \
-                                        int numInputs) {                \
-  THAssert(numInputs > 0);                                              \
-  int device = TensorUtils<TENSOR_TYPE>::getDevice(state, inputs[0]);   \
-  for (int i = 1; i < numInputs; ++i) {                                 \
-    if (TensorUtils<TENSOR_TYPE>::getDevice(state, inputs[i]) != device) {     \
-      return false;                                                     \
-    }                                                                   \
-  }                                                                     \
-  return true;                                                          \
 }                                                                       \
                                                                         \
 void                                                                    \

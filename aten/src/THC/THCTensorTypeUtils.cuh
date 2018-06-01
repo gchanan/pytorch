@@ -41,16 +41,10 @@ struct TensorUtils {
     static TENSOR_TYPE* newContiguous(THCState* state, TENSOR_TYPE* t); \
     static void freeCopyTo(THCState* state, TENSOR_TYPE* src,           \
                            TENSOR_TYPE* dst);                           \
-    static void resize(THCState* state, TENSOR_TYPE* out,               \
-                       THLongStorage* sizes,                            \
-                       THLongStorage* strides);                         \
-    static void resizeAs(THCState* state, TENSOR_TYPE* dst,             \
-                         TENSOR_TYPE* src);                             \
     static void preserveReduceDimSemantics(                             \
                           THCState *state, TENSOR_TYPE *tensor,         \
                           int in_dims, int64_t dimension, int keepdim); \
     static DATA_TYPE* getData(THCState* state, TENSOR_TYPE* t);         \
-    static bool allSameDevice(THCState* state, TENSOR_TYPE** inputs, int numInputs); \
     static void copyIgnoringOverlaps(THCState* state,                   \
                                      TENSOR_TYPE* dst, TENSOR_TYPE* src); \
     /* Returns false if there is no possibility that the tensor    */   \

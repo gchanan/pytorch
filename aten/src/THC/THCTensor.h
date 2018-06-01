@@ -29,5 +29,8 @@ THC_API int THCTensor_isContiguous(THCState *state, const THCTensor *self);
 THC_API int THCTensor_allContiguous(THCState *state, const THCTensor **inputs, int numInputs);
 THC_API void THCTensor_squeeze1d(THCState *state, THCTensor *self, THCTensor *src, int dimension_);
 THC_API void THCTensor_unsqueeze1d(THCState *state, THCTensor *self, THCTensor *src, int dimension_);
+THC_API int THCTensor_allSameDevice(THCState* state, const THCTensor ** nputs, int numInputs);
+THC_API void THCTensor_resize(THCState *state, THCTensor *tensor, THLongStorage *size, THLongStorage *stride);
+THC_API void THCTensor_resizeAs(THCState *state, THCTensor *tensor, THCTensor *src);
 
 #endif

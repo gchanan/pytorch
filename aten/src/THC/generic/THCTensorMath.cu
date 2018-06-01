@@ -195,7 +195,7 @@ void THCTensor_(catArray)(THCState *state, THCTensor *result,
       TensorUtils<THCTensor>::canUse32BitIndexMath(state, result) &&
       THCTensor_allContiguous(state, inputs, numInputs) &&
       TensorUtils<THCTensor>::all32BitIndexable(state, inputs, numInputs) &&
-      TensorUtils<THCTensor>::allSameDevice(state, inputs, numInputs)) {
+      THCTensor_allSameDevice(state, inputs, numInputs)) {
 
     // First, let's set up our kernel parameters. We start with a raw pointer to the storage
     // for the output Tensor.
