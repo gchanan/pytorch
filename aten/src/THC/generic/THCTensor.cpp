@@ -25,8 +25,7 @@ int64_t THCTensor_(size)(THCState *state, const THCTensor *self, int dim)
 
 int64_t THCTensor_(stride)(THCState *state, const THCTensor *self, int dim)
 {
-  THArgCheck((dim >= 0) && (dim < self->nDimension), 2, "out of range");
-  return self->stride[dim];
+  return THCTensor_stride(state, self, dim);
 }
 
 THLongStorage *THCTensor_(newSizeOf)(THCState *state, THCTensor *self)

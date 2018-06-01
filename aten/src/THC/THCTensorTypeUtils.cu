@@ -108,15 +108,6 @@ TensorUtils<TENSOR_TYPE>::getNumElements(THCState* state,               \
   return TENSOR_TYPE##_nElement(state, t);                              \
 }                                                                       \
                                                                         \
-                                                                        \
-int64_t                                                                 \
-TensorUtils<TENSOR_TYPE>::getStride(THCState* state,                    \
-                                    TENSOR_TYPE* t,                     \
-                                    int dim) {                          \
-  return TENSOR_TYPE##_stride(state, t, dim);                           \
-}                                                                       \
-                                                                        \
-                                                                        \
 bool                                                                    \
 TensorUtils<TENSOR_TYPE>::isContiguous(THCState* state,                 \
                                        TENSOR_TYPE* t) {                \
@@ -204,7 +195,7 @@ TensorUtils<TENSOR_TYPE>::maybeOverlappingIndices(THCState* state,      \
     if (size > 1) {                                                     \
       info[nonSize1Dims].size = size;                                   \
       info[nonSize1Dims].stride =                                       \
-        TensorUtils<TENSOR_TYPE>::getStride(state, t, i);               \
+        THCTensor_stride(state, t, i);                                  \
                                                                         \
       if (info[nonSize1Dims].stride < 1) {                              \
         return true;                                                    \
@@ -247,7 +238,7 @@ TensorUtils<TENSOR_TYPE>::canUse32BitIndexMath(THCState* state,         \
     ptrdiff_t curDimIndex =                                             \
       linearId % THCTensor_size(state, t, i);                           \
     ptrdiff_t curDimOffset = curDimIndex *                              \
-      TensorUtils<TENSOR_TYPE>::getStride(state, t, i);                 \
+      THCTensor_stride(state, t, i);                                    \
     offset += curDimOffset;                                             \
     linearId /= THCTensor_size(state, t, i);                            \
   }                                                                     \
