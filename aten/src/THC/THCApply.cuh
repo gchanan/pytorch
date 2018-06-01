@@ -190,11 +190,11 @@ bool THC_pointwiseApply1(THCState* state,
                          const Op& op,
                          TensorArgType aType = ReadWrite) {
   static_assert(std::is_same<ScalarTypeA, typename TensorUtils<TensorTypeA>::DataType>::value, "ScalarTypeA must match");
-  if (TensorUtils<TensorTypeA>::getDims(state, a) > MAX_CUTORCH_DIMS) {
+  if (THCTensor_nDimension(state, a) > MAX_CUTORCH_DIMS) {
     return false;
   }
 
-  if (TensorUtils<TensorTypeA>::getDims(state, a) == 0) {
+  if (THCTensor_nDimension(state, a) == 0) {
     // Zero-dim tensor; do nothing
     return true;
   }
@@ -336,12 +336,12 @@ bool THC_pointwiseApply2(THCState* state,
     return false;
   }
 
-  if (TensorUtils<TensorTypeA>::getDims(state, a) > MAX_CUTORCH_DIMS ||
-      TensorUtils<TensorTypeB>::getDims(state, b) > MAX_CUTORCH_DIMS) {
+  if (THCTensor_nDimension(state, a) > MAX_CUTORCH_DIMS ||
+      THCTensor_nDimension(state, b) > MAX_CUTORCH_DIMS) {
     return false;
   }
 
-  if (TensorUtils<TensorTypeA>::getDims(state, a) == 0) {
+  if (THCTensor_nDimension(state, a) == 0) {
     // Zero-dim tensor; do nothing
     return true;
   }
@@ -534,13 +534,13 @@ bool THC_pointwiseApply3(THCState* state,
     return false;
   }
 
-  if (TensorUtils<TensorTypeA>::getDims(state, a) > MAX_CUTORCH_DIMS ||
-      TensorUtils<TensorTypeB>::getDims(state, b) > MAX_CUTORCH_DIMS ||
-      TensorUtils<TensorTypeC>::getDims(state, c) > MAX_CUTORCH_DIMS) {
+  if (THCTensor_nDimension(state, a) > MAX_CUTORCH_DIMS ||
+      THCTensor_nDimension(state, b) > MAX_CUTORCH_DIMS ||
+      THCTensor_nDimension(state, c) > MAX_CUTORCH_DIMS) {
     return false;
   }
 
-  if (TensorUtils<TensorTypeA>::getDims(state, a) == 0) {
+  if (THCTensor_nDimension(state, a) == 0) {
     // Zero-dim tensor; do nothing
     return true;
   }

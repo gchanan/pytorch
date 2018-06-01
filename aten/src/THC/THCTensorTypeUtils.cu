@@ -122,11 +122,6 @@ TensorUtils<TENSOR_TYPE>::getStride(THCState* state,                    \
   return TENSOR_TYPE##_stride(state, t, dim);                           \
 }                                                                       \
                                                                         \
-int                                                                     \
-TensorUtils<TENSOR_TYPE>::getDims(THCState* state,                      \
-                                  TENSOR_TYPE* t) {                     \
-  return TENSOR_TYPE##_nDimension(state, t);                            \
-}                                                                       \
                                                                         \
 bool                                                                    \
 TensorUtils<TENSOR_TYPE>::isContiguous(THCState* state,                 \
@@ -159,7 +154,7 @@ void                                                                    \
 TensorUtils<TENSOR_TYPE>::preserveReduceDimSemantics(                   \
                           THCState *state, TENSOR_TYPE *tensor,         \
                           int in_dims, int64_t dimension, int keepdim) {\
-  int out_dims = TensorUtils<TENSOR_TYPE>::getDims(state, tensor);      \
+  int out_dims = THCTensor_nDimensionstate, tensor);      \
   if (out_dims > 0 && !keepdim && out_dims == in_dims - 1) {            \
     TensorUtils<TENSOR_TYPE>::unsqueeze1d(state, tensor, tensor, dimension);\
   }                                                                     \
@@ -207,7 +202,7 @@ TensorUtils<TENSOR_TYPE>::maybeOverlappingIndices(THCState* state,      \
   /* Extract size/stride arrays; only consider size >1 dims. */         \
   SizeAndStride info[MAX_CUTORCH_DIMS];                                 \
                                                                         \
-  int dims = TensorUtils<TENSOR_TYPE>::getDims(state, t);               \
+  int dims = THCTensor_nDimension(state, t);               \
   int nonSize1Dims = 0;                                                 \
   for (int i = 0; i < dims; ++i) {                                      \
     int64_t size = TensorUtils<TENSOR_TYPE>::getSize(state, t, i);      \
@@ -254,7 +249,7 @@ TensorUtils<TENSOR_TYPE>::canUse32BitIndexMath(THCState* state,         \
   ptrdiff_t offset = 0;                                                 \
   ptrdiff_t linearId = elements - 1;                                    \
                                                                         \
-  for (int i = TensorUtils<TENSOR_TYPE>::getDims(state, t) - 1; i >= 0; --i) { \
+  for (int i = THCTensor_nDimension(state, t) - 1; i >= 0; --i) { \
     ptrdiff_t curDimIndex =                                             \
       linearId % TensorUtils<TENSOR_TYPE>::getSize(state, t, i);        \
     ptrdiff_t curDimOffset = curDimIndex *                              \

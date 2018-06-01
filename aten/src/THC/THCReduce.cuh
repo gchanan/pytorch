@@ -289,12 +289,12 @@ bool THC_reduceDim(THCState* state,
   int64_t reductionStride = TensorUtils<TensorType>::getStride(state, in, dim);
   ptrdiff_t outElements = inElements / reductionSize;
 
-  if (TensorUtils<TensorType>::getDims(state, out) > MAX_CUTORCH_DIMS ||
-      TensorUtils<TensorType>::getDims(state, in) > MAX_CUTORCH_DIMS) {
+  if (THCTensor_nDimension(state, out) > MAX_CUTORCH_DIMS ||
+      THCTensor_nDimension(state, in) > MAX_CUTORCH_DIMS) {
     return false;
   }
 
-  if (TensorUtils<TensorType>::getDims(state, in) == 0) {
+  if (THCTensor_nDimension(state, in) == 0) {
     // Zero-dim tensor; do nothing
     return true;
   }
@@ -344,7 +344,7 @@ bool THC_reduceDim(THCState* state,
 
   // Preserve noncontiguities by unsqueezing out if necessary
   TensorUtils<TensorType>::preserveReduceDimSemantics(
-      state, out, TensorUtils<TensorType>::getDims(state, in), dim, keepdim);
+      state, out, THCTensor_nDimension(state, in), dim, keepdim);
 
   // Resize out
   THLongStorage* sizes = TensorUtils<TensorType>::newSizeOf(state, in);

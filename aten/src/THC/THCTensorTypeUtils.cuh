@@ -60,7 +60,6 @@ struct TensorUtils {
     static ptrdiff_t getNumElements(THCState* state, TENSOR_TYPE* t);   \
     static int64_t getSize(THCState* state, TENSOR_TYPE* t, int dim);   \
     static int64_t getStride(THCState* state, TENSOR_TYPE* t, int dim); \
-    static int getDims(THCState* state, TENSOR_TYPE* t);                \
     static bool isContiguous(THCState* state, TENSOR_TYPE* t);          \
     static bool allContiguous(THCState* state, TENSOR_TYPE** inputs, int numInputs); \
     static int getDevice(THCState* state, TENSOR_TYPE* t);              \
@@ -124,7 +123,7 @@ getTensorInfo(THCState* state, TensorType* t) {
   IndexType sz[MAX_CUTORCH_DIMS];
   IndexType st[MAX_CUTORCH_DIMS];
 
-  int dims = TensorUtils<TensorType>::getDims(state, t);
+  int dims = THCTensor_nDimension(state, t);
   for (int i = 0; i < dims; ++i) {
     sz[i] = TensorUtils<TensorType>::getSize(state, t, i);
     st[i] = TensorUtils<TensorType>::getStride(state, t, i);

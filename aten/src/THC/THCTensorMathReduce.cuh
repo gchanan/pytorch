@@ -290,7 +290,7 @@ __global__ void THCTensor_kernel_varOuterDim(T *tgt, T *src_, unsigned num_orows
 
 template<typename TensorTypeK, typename T, typename AccT, bool apply_sqrt>
 __host__ void THCTensor_varOuterDim(THCState *state, TensorTypeK *tgt, TensorTypeK *src, int64_t dimension, int flag) {
-  unsigned ndim = TensorUtils<TensorTypeK>::getDims(state, src);
+  unsigned ndim = THCTensor_nDimension(state, src);
   // Treat all outer dimensions (i.e. dim < dimension) as one.
   unsigned num_orows = 1;
   for (int64_t dim = 0; dim < dimension; dim++) {
@@ -436,7 +436,7 @@ __global__ void THCTensor_kernel_varInnermostDim(T *tgt, T *src_, unsigned num_r
 
 template<typename TensorTypeK, typename T, typename AccT, bool apply_sqrt>
 __host__ void THCTensor_varInnermostDim(THCState *state, TensorTypeK *tgt, TensorTypeK *src, int flag) {
-  unsigned ndim = TensorUtils<TensorTypeK>::getDims(state, src);
+  unsigned ndim = THCTensor_nDimension(state, src);
   // Treat all outer dimensions as a single dimension.
   unsigned num_rows = 1;
   for (unsigned dim = 0; dim < ndim - 1; dim++) {
@@ -509,7 +509,7 @@ THC_transformReduceOuterDimIndex(THCState *state,
                                  int64_t rdim,
                                  const thrust::pair<ScalarTypeK, ScalarTypeIndex>& init,
                                  BinaryFunction binary_op) {
-  unsigned ndim = TensorUtils<TensorTypeK>::getDims(state, src);
+  unsigned ndim = THCTensor_nDimension(state, src);
   unsigned num_orows = 1;
   for (int64_t dim = 0; dim < rdim; dim++) {
     num_orows *= TensorUtils<TensorTypeK>::getSize(state, src, dim);
@@ -612,7 +612,7 @@ THC_transformReduceInnermostDimIndex(THCState *state,
                                      TensorTypeK *src,
                                      const thrust::pair<ScalarTypeK, ScalarTypeIndex>& init,
                                      BinaryFunction binary_op) {
-  unsigned ndim = TensorUtils<TensorTypeK>::getDims(state, src);
+  unsigned ndim = THCTensor_nDimension(state, src);
   unsigned num_rows = 1;
   for (unsigned dim = 0; dim < ndim - 1; dim++) {
     num_rows *= TensorUtils<TensorTypeK>::getSize(state, src, dim);
@@ -650,13 +650,13 @@ THC_reduceDimIndex(THCState *state,
   static_assert(std::is_same<ScalarTypeK, typename TensorUtils<TensorTypeK>::DataType>::value, "ScalarTypeK must match");
   static_assert(std::is_same<ScalarTypeIndex, typename TensorUtils<TensorTypeIndex>::DataType>::value, "ScalarTypeIndex must match");
   THArgCheck(dimension >= 0 &&
-             dimension < TensorUtils<TensorTypeK>::getDims(state, src),
+             dimension < THCTensor_nDimension(state, src),
              3, "dimension out of range");
 
 
   // Unsqueeze tgt1_/tgt_2 if necessary so that their contiguity traits
   // are preserved if they are the same size as the correct reduction output.
-  int src_dims = TensorUtils<TensorTypeK>::getDims(state, src);
+  int src_dims = THCTensor_nDimension(state, src);
   TensorUtils<TensorTypeK>::preserveReduceDimSemantics(
       state, tgt1_, src_dims, dimension, keepdim);
   TensorUtils<TensorTypeIndex>::preserveReduceDimSemantics(
@@ -672,7 +672,7 @@ THC_reduceDimIndex(THCState *state,
   TensorTypeIndex *tgt2 = TensorUtils<TensorTypeIndex>::newContiguous(state, tgt2_);
   src = TensorUtils<TensorTypeK>::newContiguous(state, src);
 
-  if (dimension == TensorUtils<TensorTypeK>::getDims(state, src) - 1) {
+  if (dimension == THCTensor_nDimension(state, src) - 1) {
     THC_transformReduceInnermostDimIndex(state, tgt1, tgt2, src, init, binary_op);
   } else {
     THC_transformReduceOuterDimIndex(state, tgt1, tgt2, src, dimension, init, binary_op);

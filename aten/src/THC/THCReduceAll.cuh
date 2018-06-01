@@ -234,11 +234,11 @@ bool THC_reduceAll(THCState* state,
   static_assert(std::is_same<ScalarType, typename TensorUtils<TensorType>::DataType>::value, "ScalarTypeA must match");
   ptrdiff_t inElements = TensorUtils<TensorType>::getNumElements(state, in);
 
-  if (TensorUtils<TensorType>::getDims(state, in) > MAX_CUTORCH_DIMS) {
+  if (THCTensor_nDimension(state, in) > MAX_CUTORCH_DIMS) {
     return false;
   }
 
-  if (TensorUtils<TensorType>::getDims(state, in) == 0) {
+  if (THCTensor_nDimension(state, in) == 0) {
     // Zero-dim tensor; do nothing
     *out = init;
     return true;
