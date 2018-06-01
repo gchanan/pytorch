@@ -52,12 +52,6 @@ TensorUtils<TENSOR_TYPE>::retain(THCState* state,                       \
 }                                                                       \
                                                                         \
 void                                                                    \
-TensorUtils<TENSOR_TYPE>::free(THCState* state,                         \
-                               TENSOR_TYPE* t) {                        \
-  TENSOR_TYPE##_free(state, t);                                         \
-}                                                                       \
-                                                                        \
-void                                                                    \
 TensorUtils<TENSOR_TYPE>::freeCopyTo(THCState* state,                   \
                                      TENSOR_TYPE* src,                  \
                                      TENSOR_TYPE* dst) {                \
