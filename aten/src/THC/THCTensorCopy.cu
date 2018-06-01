@@ -47,8 +47,8 @@ THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
   // contiguous).
   // -AND: both tensors have the same type.
   bool sameType = isSameType<TensorTypeSrc, TensorTypeDst>();
-  bool srcContig = TensorUtils<TensorTypeSrc>::isContiguous(state, src);
-  bool dstContig = TensorUtils<TensorTypeDst>::isContiguous(state, dst);
+  bool srcContig = THCTensor_isContiguous(state, src);
+  bool dstContig = THCTensor_isContiguous(state, dst);
   bool memcpyEligible =
     ((srcContig && dstContig) || (totalElements == 1)) && sameType;
 
