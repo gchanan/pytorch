@@ -26,3 +26,7 @@ void THCStorage_free(THCState *state, THCStorage *self)
     THFree(self);
   }
 }
+
+int THCStorage_getDevice(THCState* state, const THCStorage* storage) {
+  return storage->device;
+}

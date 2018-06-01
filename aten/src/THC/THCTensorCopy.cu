@@ -49,8 +49,8 @@ THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
   bool memcpyEligible =
     ((srcContig && dstContig) || (totalElements == 1)) && sameType;
 
-  int srcDev = TensorUtils<TensorTypeSrc>::getDevice(state, src);
-  int dstDev = TensorUtils<TensorTypeDst>::getDevice(state, dst);
+  int srcDev = THCTensor_getDevice(state, src);
+  int dstDev = THCTensor_getDevice(state, dst);
   int oldDev = curGPU();
 
   // Try to enable p2p access. This also handles the case srcDev == dstDev.

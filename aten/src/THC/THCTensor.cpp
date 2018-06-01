@@ -62,3 +62,8 @@ ptrdiff_t THCTensor_(nElement)(THCState *state, const THCTensor *self)
     return nElement;
   }
 }
+
+int THCTensor_(getDevice)(THCState* state, const THCTensor* tensor) {
+  if (!tensor->storage) return -1;
+  return THCStorage_getDevice(state, tensor->storage);
+}
