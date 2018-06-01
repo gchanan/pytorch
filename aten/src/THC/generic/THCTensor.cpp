@@ -615,19 +615,7 @@ void THCTensor_(unsqueeze1d)(THCState *state, THCTensor *self, THCTensor *src, i
 
 int THCTensor_(isContiguous)(THCState *state, const THCTensor *self)
 {
-  int64_t z = 1;
-  int d;
-  for(d = self->nDimension-1; d >= 0; d--)
-  {
-    if(self->size[d] != 1)
-    {
-      if(self->stride[d] == z)
-        z *= self->size[d];
-      else
-        return 0;
-    }
-  }
-  return 1;
+  THCTensor_isContiguous(state, self);
 }
 
 int THCTensor_(isSize)(THCState *state, const THCTensor *self, const THLongStorage *dims)

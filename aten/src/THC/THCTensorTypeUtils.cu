@@ -85,12 +85,6 @@ TensorUtils<TENSOR_TYPE>::getData(THCState* state,                      \
 }                                                                       \
                                                                         \
 bool                                                                    \
-TensorUtils<TENSOR_TYPE>::isContiguous(THCState* state,                 \
-                                       TENSOR_TYPE* t) {                \
-  return TENSOR_TYPE##_isContiguous(state, t);                          \
-}                                                                       \
-                                                                        \
-bool                                                                    \
 TensorUtils<TENSOR_TYPE>::allContiguous(THCState* state,                \
                                         TENSOR_TYPE** inputs,           \
                                         int numInputs) {                \

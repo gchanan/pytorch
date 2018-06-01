@@ -25,7 +25,6 @@ THC_API int64_t THCTensor_stride(THCState *state, const THCTensor *self, int dim
 THC_API ptrdiff_t THCTensor_nElement(THCState *state, const THCTensor *self);
 THC_API int THCTensor_getDevice(THCState* state, const THCTensor* tensor);
 THC_API THLongStorage *THCTensor_newSizeOf(THCState *state, THCTensor *self);
-
-
+THC_API int THCTensor_isContiguous(THCState *state, const THCTensor *self);
 
 #endif
