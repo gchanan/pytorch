@@ -59,14 +59,6 @@ TensorUtils<TENSOR_TYPE>::resizeAs(THCState* state,                     \
                                    TENSOR_TYPE* dst,                    \
                                    TENSOR_TYPE* src) {                  \
   TENSOR_TYPE##_resizeAs(state, dst, src);                              \
-}                                                                       \                                                             \
-                                                                        \
-void                                                                    \
-TensorUtils<TENSOR_TYPE>::unsqueeze1d(THCState *state,                  \
-                                    TENSOR_TYPE *dst,                   \
-                                    TENSOR_TYPE *src,                   \
-                                    int dimension) {                    \
-  TENSOR_TYPE##_unsqueeze1d(state, dst, src, dimension);                \
 }                                                                       \
                                                                         \
 DATA_TYPE*                                                              \
@@ -90,7 +82,7 @@ TensorUtils<TENSOR_TYPE>::preserveReduceDimSemantics(                   \
                           int in_dims, int64_t dimension, int keepdim) {\
   int out_dims = THCTensor_nDimensionstate, tensor);      \
   if (out_dims > 0 && !keepdim && out_dims == in_dims - 1) {            \
-    TensorUtils<TENSOR_TYPE>::unsqueeze1d(state, tensor, tensor, dimension);\
+    THCTensor_unsqueeze1d(state, tensor, tensor, dimension);\
   }                                                                     \
 }                                                                       \
                                                                         \

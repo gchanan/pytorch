@@ -46,8 +46,6 @@ struct TensorUtils {
                        THLongStorage* strides);                         \
     static void resizeAs(THCState* state, TENSOR_TYPE* dst,             \
                          TENSOR_TYPE* src);                             \
-    static void unsqueeze1d(THCState *state, TENSOR_TYPE *dst,          \
-                          TENSOR_TYPE *src, int dimension);             \
     static void preserveReduceDimSemantics(                             \
                           THCState *state, TENSOR_TYPE *tensor,         \
                           int in_dims, int64_t dimension, int keepdim); \

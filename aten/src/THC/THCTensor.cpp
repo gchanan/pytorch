@@ -123,3 +123,31 @@ void THCTensor_squeeze1d(THCState *state, THCTensor *self, THCTensor *src, int d
     self->nDimension--;
   }
 }
+
+
+void THCTensor_unsqueeze1d(THCState *state, THCTensor *self, THCTensor *src, int dimension)
+{
+  int d;
+
+  if(!src)
+    src = self;
+
+  THArgCheck((dimension >= 0) && (dimension <= src->nDimension), 3, "dimension out of range");
+  THArgCheck(src->nDimension > 0, 3, "cannot unsqueeze empty tensor");
+
+  THCTensor_(set)(state, self, src);
+
+  self->size = (int64_t*)THRealloc(self->size, sizeof(int64_t)*(self->nDimension+1));
+  self->stride = (int64_t*)THRealloc(self->stride, sizeof(int64_t)*(self->nDimension+1));
+  self->nDimension++;
+  for (d = self->nDimension-1; d > dimension; d--) {
+    self->size[d] = self->size[d-1];
+    self->stride[d] = self->stride[d-1];
+  }
+  if (dimension+1 < self->nDimension) {
+    self->stride[dimension] = self->size[dimension+1] * self->stride[dimension+1];
+  } else {
+    self->stride[dimension] = 1;
+  }
+  self->size[dimension] = 1;
+}
