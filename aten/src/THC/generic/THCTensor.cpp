@@ -700,21 +700,7 @@ void THCTensor_(retain)(THCState *state, THCTensor *self)
 
 void THCTensor_(free)(THCState *state, THCTensor *self)
 {
-  if(!self)
-    return;
-
-  if(self->flag & TH_TENSOR_REFCOUNTED)
-  {
-    if(--self->refcount == 0)
-    {
-      THFree(self->size);
-      THFree(self->stride);
-      if(self->storage)
-        THCStorage_(free)(state, self->storage);
-      self->refcount.~atomic<int>();
-      THFree(self);
-    }
-  }
+  THCTensor_free(state, self);
 }
 
 void THCTensor_(freeCopyTo)(THCState *state, THCTensor *self, THCTensor *dst)
