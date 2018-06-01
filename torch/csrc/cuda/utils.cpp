@@ -34,3 +34,9 @@ std::vector <THCStream*> THPUtils_PySequence_to_THCStreamList(PyObject *obj) {
   return streams;
 }
 #endif
+
+template<>
+void THPPointer<THStorage>::free() {
+  if (ptr)
+    THCStorage_free(LIBRARY_STATE ptr);
+}

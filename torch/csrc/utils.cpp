@@ -199,6 +199,12 @@ void THPPointer<THPGenerator>::free() {
 template class THPPointer<THPGenerator>;
 
 template<>
+void THPPointer<THStorage>::free() {
+  if (ptr)
+    THStorage_free(ptr);
+}
+
+template<>
 void THPPointer<THTensor>::free() {
   if (ptr)
     THTensor_free(LIBRARY_STATE ptr);

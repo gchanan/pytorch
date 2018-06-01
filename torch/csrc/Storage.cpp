@@ -24,9 +24,3 @@
 
 #include "generic/Storage.cpp"
 #include <TH/THGenerateHalfType.h>
-
-template<>
-void THPPointer<THStorage>::free() {
-  if (ptr)
-    THStorage_free(ptr);
-}
