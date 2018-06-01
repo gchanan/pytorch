@@ -459,7 +459,7 @@ bool THC_reduceDim(THCState* state,
 
 
   if (!keepdim) {
-    TensorUtils<TensorType>::squeeze1d(state, out, out, dim);
+    THCTensor_squeeze1d(state, out, out, dim);
   }
   return true;
 }
