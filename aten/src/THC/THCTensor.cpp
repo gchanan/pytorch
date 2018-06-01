@@ -226,3 +226,19 @@ int THCTensor_all32BitIndexable(THCState* state, const THCTensor** inputs, int n
   }
   return 1;
 }
+
+/* Due to the resize semantics of ops with `out=` keywords, if       */
+/* the output `tensor` has the same shape as the output of the       */
+/* reduction operation, then any noncontiguities in the output       */
+/* `tensor` should be preserved. This needs to be special cased b/c  */
+/* otherwise, when keepdim=False, the implementations of reduction   */
+/* ops resize `tensor` to the reduced size with keepdim=True, and    */
+/* then later squeeze `tensor` to the correct output size, breaking  */
+/* the contiguity guarantees of the resize semantics.                */
+void THCTensor_preserveReduceDimSemantics(THCState *state, THCTensor *tensor,
+                                          int in_dims, int64_t dimension, int keepdim) {
+  int out_dims = THCTensor_nDimensionstate, tensor);
+  if (out_dims > 0 && !keepdim && out_dims == in_dims - 1) {
+    THCTensor_unsqueeze1d(state, tensor, tensor, dimension);
+  }
+}

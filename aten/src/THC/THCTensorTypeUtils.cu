@@ -52,24 +52,6 @@ TensorUtils<TENSOR_TYPE>::getData(THCState* state,                      \
   /* FIXME: no cast is required except for THCudaHalfTensor */          \
   return (DATA_TYPE*) TENSOR_TYPE##_data(state, t);                     \
 }                                                                       \
-
-/* Due to the resize semantics of ops with `out=` keywords, if       */ \
-/* the output `tensor` has the same shape as the output of the       */ \
-/* reduction operation, then any noncontiguities in the output       */ \
-/* `tensor` should be preserved. This needs to be special cased b/c  */ \
-/* otherwise, when keepdim=False, the implementations of reduction   */ \
-/* ops resize `tensor` to the reduced size with keepdim=True, and    */ \
-/* then later squeeze `tensor` to the correct output size, breaking  */ \
-/* the contiguity guarantees of the resize semantics.                */ \
-void                                                                    \
-TensorUtils<TENSOR_TYPE>::preserveReduceDimSemantics(                   \
-                          THCState *state, TENSOR_TYPE *tensor,         \
-                          int in_dims, int64_t dimension, int keepdim) {\
-  int out_dims = THCTensor_nDimensionstate, tensor);      \
-  if (out_dims > 0 && !keepdim && out_dims == in_dims - 1) {            \
-    THCTensor_unsqueeze1d(state, tensor, tensor, dimension);\
-  }                                                                     \
-}                                                                       \
                                                                         \
 void                                                                    \
 TensorUtils<TENSOR_TYPE>::copyIgnoringOverlaps(THCState* state,         \

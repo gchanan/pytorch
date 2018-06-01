@@ -37,4 +37,6 @@ THC_API int THCTensor_canUse32BitIndexMath(THCState* state, const THCTensor* t, 
 /* Are all tensors 32-bit indexable? */
 THC_API int THCTensor_all32BitIndexable(THCState* state, const THCTensor** inputs, int numInputs);
 
+THC_API void THCTensor_preserveReduceDimSemantics(THCState *state, THCTensor *tensor, int in_dims,
+                                                  int64_t dimension, int keepdim);
 #endif

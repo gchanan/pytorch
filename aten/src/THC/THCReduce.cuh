@@ -341,7 +341,7 @@ bool THC_reduceDim(THCState* state,
   // Resize out to correspond to the reduced size with keepdim=True.
 
   // Preserve noncontiguities by unsqueezing out if necessary
-  TensorUtils<TensorType>::preserveReduceDimSemantics(
+  THCTensor_preserveReduceDimSemantics(
       state, out, THCTensor_nDimension(state, in), dim, keepdim);
 
   // Resize out
