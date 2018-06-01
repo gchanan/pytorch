@@ -288,10 +288,10 @@ bool THCTensor_allSameDevice(THCState* state, const _THCTensor ** inputs, int nu
   return true;
 }
 
-int THCTensor_canUse32BitIndexMath(THCState* state, const _THCTensor* t, ptrdiff_t max_elem) {
+bool THCTensor_canUse32BitIndexMath(THCState* state, const _THCTensor* t, ptrdiff_t max_elem) {
   ptrdiff_t elements = THCTensor_nElement(state, t);
   if (elements >= max_elem) {
-    return 0;
+    return false;
   }
 
   ptrdiff_t offset = 0;
@@ -307,8 +307,17 @@ int THCTensor_canUse32BitIndexMath(THCState* state, const _THCTensor* t, ptrdiff
   }
 
   if (offset >= max_elem) {
-    return 0;
+    return false;
   }
 
-  return 1;
+  return true;
+}
+
+bool THCTensor_all32BitIndexable(THCState* state, const _THCTensor** inputs, int numInputs) {
+  for (int i = 0; i < numInputs; ++i) {
+    if (!THCTensor_canUse32BitIndexMath(state, inputs[i])) {
+      return false;
+    }
+  }
+  return true;
 }

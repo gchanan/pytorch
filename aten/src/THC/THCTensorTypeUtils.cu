@@ -127,18 +127,6 @@ TensorUtils<TENSOR_TYPE>::maybeOverlappingIndices(THCState* state,      \
                                                                         \
   return false;                                                         \
 }                                                                       \
-                                                                        \
-bool                                                                    \
-TensorUtils<TENSOR_TYPE>::all32BitIndexable(THCState* state,            \
-                                            TENSOR_TYPE** inputs,       \
-                                            int numInputs) {            \
-  for (int i = 0; i < numInputs; ++i) {                                 \
-    if (!THCTensor_canUse32BitIndexMath(state, inputs[i])) {            \
-      return false;                                                     \
-    }                                                                   \
-  }                                                                     \
-  return true;                                                          \
-}
 
 IMPL_TENSOR_UTILS(THCudaByteTensor, uint8_t)
 IMPL_TENSOR_UTILS(THCudaCharTensor, int8_t)
