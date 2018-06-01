@@ -165,12 +165,12 @@ THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
                     copyStream));
 
       // We are done with the src
-      TensorUtils<TensorTypeDst>::free(state, srcContig);
+      THCTensor_free(state, srcContig);
 
       if (dst != dstContig) {
         TensorUtils<TensorTypeDst>::freeCopyTo(state, dstContig, dst);
       } else {
-        TensorUtils<TensorTypeDst>::free(state, dstContig);
+        THCTensor_free(state, dstContig);
       }
 
       // We're still on srcDev at this point

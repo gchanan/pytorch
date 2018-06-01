@@ -676,7 +676,7 @@ THC_reduceDimIndex(THCState *state,
     THC_transformReduceOuterDimIndex(state, tgt1, tgt2, src, dimension, init, binary_op);
   }
 
-  TensorUtils<TensorTypeK>::free(state, src);
+  THCTensor_free(state, src);
   TensorUtils<TensorTypeK>::freeCopyTo(state, tgt1, tgt1_);
   TensorUtils<TensorTypeIndex>::freeCopyTo(state, tgt2, tgt2_);
   if (!keepdim) {

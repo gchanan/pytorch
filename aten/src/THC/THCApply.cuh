@@ -308,7 +308,7 @@ bool THC_pointwiseApply1(THCState* state,
     // instead, it will recursively try and invoke ourselves to make
     // oldA contiguous.
     TensorUtils<TensorTypeA>::copyIgnoringOverlaps(state, oldA, a);
-    TensorUtils<TensorTypeA>::free(state, a);
+    THCTensor_free(state, a);
     a = oldA;
   }
 
@@ -483,7 +483,7 @@ bool THC_pointwiseApply2(THCState* state,
     // instead, it will recursively try and invoke ourselves to make
     // oldA contiguous.
     TensorUtils<TensorTypeA>::copyIgnoringOverlaps(state, oldA, a);
-    TensorUtils<TensorTypeA>::free(state, a);
+    THCTensor_free(state, a);
     a = oldA;
   }
 
@@ -492,7 +492,7 @@ bool THC_pointwiseApply2(THCState* state,
     // instead, it will recursively try and invoke ourselves to make
     // oldB contiguous.
     TensorUtils<TensorTypeB>::copyIgnoringOverlaps(state, oldB, b);
-    TensorUtils<TensorTypeB>::free(state, b);
+    THCTensor_free(state, b);
     b = oldB;
   }
 
@@ -706,7 +706,7 @@ bool THC_pointwiseApply3(THCState* state,
     // instead, it will recursively try and invoke ourselves to make
     // oldA contiguous.
     TensorUtils<TensorTypeA>::copyIgnoringOverlaps(state, oldA, a);
-    TensorUtils<TensorTypeA>::free(state, a);
+    THCTensor_free(state, a);
     a = oldA;
   }
 
@@ -715,7 +715,7 @@ bool THC_pointwiseApply3(THCState* state,
     // instead, it will recursively try and invoke ourselves to make
     // oldB contiguous.
     TensorUtils<TensorTypeB>::copyIgnoringOverlaps(state, oldB, b);
-    TensorUtils<TensorTypeB>::free(state, b);
+    THCTensor_free(state, b);
     b = oldB;
   }
 
@@ -724,7 +724,7 @@ bool THC_pointwiseApply3(THCState* state,
     // instead, it will recursively try and invoke ourselves to make
     // oldC contiguous.
     TensorUtils<TensorTypeC>::copyIgnoringOverlaps(state, oldC, c);
-    TensorUtils<TensorTypeC>::free(state, c);
+    THCTensor_free(state, c);
     c = oldC;
   }
 
