@@ -615,9 +615,9 @@ THC_transformReduceInnermostDimIndex(THCState *state,
   unsigned ndim = THCTensor_nDimension(state, src);
   unsigned num_rows = 1;
   for (unsigned dim = 0; dim < ndim - 1; dim++) {
-    num_rows *= TensorUtils<TensorTypeK>::getSize(state, src, dim);
+    num_rows *= THCTensor_size(state, src, dim);
   }
-  unsigned row_size = TensorUtils<TensorTypeK>::getSize(state, src, ndim - 1);
+  unsigned row_size = THCTensor_size(state, src, ndim - 1);
 
   dim3 threads(16, 32);
   dim3 grid(min(1024, THCCeilDiv(num_rows, threads.y)));
