@@ -39,4 +39,8 @@ THC_API int THCTensor_all32BitIndexable(THCState* state, const THCTensor** input
 
 THC_API void THCTensor_preserveReduceDimSemantics(THCState *state, THCTensor *tensor, int in_dims,
                                                   int64_t dimension, int keepdim);
+/* Returns false if there is no possibility that the tensor    */
+/* has more than one index that references the same datapoint, */
+/* true otherwise.                                             */
+THC_API THCTensor_maybeOverlappingIndices(THCState* state, const THCTensor* t) {
 #endif

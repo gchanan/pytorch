@@ -216,7 +216,7 @@ bool THC_pointwiseApply1(THCState* state,
   TensorTypeA* oldA = NULL;
 
   if (aType == ReadWrite &&
-      TensorUtils<TensorTypeA>::maybeOverlappingIndices(state, a)) {
+      THCTensor_maybeOverlappingIndices(state, a)) {
     // Must perform in contiguous space
     oldA = a;
     a = TensorUtils<TensorTypeA>::newContiguous(state, a);
@@ -355,13 +355,13 @@ bool THC_pointwiseApply2(THCState* state,
   TensorTypeB* oldB = NULL;
 
   if (aType == ReadWrite &&
-      TensorUtils<TensorTypeA>::maybeOverlappingIndices(state, a)) {
+      THCTensor_maybeOverlappingIndices(state, a)) {
     // Must perform in contiguous space
     oldA = a;
     a = TensorUtils<TensorTypeA>::newContiguous(state, a);
   }
   if (bType == ReadWrite &&
-      TensorUtils<TensorTypeB>::maybeOverlappingIndices(state, b)) {
+      THCTensor_maybeOverlappingIndices(state, b)) {
     // Must perform in contiguous space
     oldB = b;
     b = TensorUtils<TensorTypeB>::newContiguous(state, b);
@@ -546,19 +546,19 @@ bool THC_pointwiseApply3(THCState* state,
   TensorTypeC* oldC = NULL;
 
   if (aType == ReadWrite &&
-      TensorUtils<TensorTypeA>::maybeOverlappingIndices(state, a)) {
+      THCTensor_maybeOverlappingIndices(state, a)) {
     // Must perform in contiguous space
     oldA = a;
     a = TensorUtils<TensorTypeA>::newContiguous(state, a);
   }
   if (bType == ReadWrite &&
-      TensorUtils<TensorTypeB>::maybeOverlappingIndices(state, b)) {
+      THCTensor_maybeOverlappingIndices(state, b)) {
     // Must perform in contiguous space
     oldB = b;
     b = TensorUtils<TensorTypeB>::newContiguous(state, b);
   }
   if (cType == ReadWrite &&
-      TensorUtils<TensorTypeC>::maybeOverlappingIndices(state, c)) {
+      THCTensor_maybeOverlappingIndices(state, c)) {
     // Must perform in contiguous space
     oldC = c;
     c = TensorUtils<TensorTypeC>::newContiguous(state, c);

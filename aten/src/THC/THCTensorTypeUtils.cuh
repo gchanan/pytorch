@@ -44,10 +44,6 @@ struct TensorUtils {
     static DATA_TYPE* getData(THCState* state, TENSOR_TYPE* t);         \
     static void copyIgnoringOverlaps(THCState* state,                   \
                                      TENSOR_TYPE* dst, TENSOR_TYPE* src); \
-    /* Returns false if there is no possibility that the tensor    */   \
-    /* has more than one index that references the same datapoint, */   \
-    /* true otherwise.                                             */   \
-    static bool maybeOverlappingIndices(THCState* state, TENSOR_TYPE* t);    \
   }
 
 TENSOR_UTILS(THCudaByteTensor, uint8_t, int64_t);
