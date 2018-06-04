@@ -450,7 +450,7 @@ THCTensor_(max)(THCState *state,
     thrust::make_pair<real, int64_t>(
       THCNumerics<real>::min(), 0);
 
-  return THC_reduceDimIndex(
+  return THC_reduceDimIndex<real, int64_t>(
     state, values, indices, src, dimension, keepdim, init,
     MaxValuePair<real, int64_t>());
 }
@@ -469,7 +469,7 @@ THCTensor_(min)(THCState *state,
     thrust::make_pair<real, int64_t>(
       THCNumerics<real>::max(), 0);
 
-  return THC_reduceDimIndex(
+  return THC_reduceDimIndex<real, int64_t>(
     state, values, indices, src, dimension, keepdim, init,
     MinValuePair<real, int64_t>());
 }
