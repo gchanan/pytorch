@@ -21,9 +21,12 @@ struct CopyOp {
 };
 
 // Copy for the same type to the same type
-template <typename TensorTypeDst, typename TensorTypeSrc>
+template <typename ScalarTypeDst, typename ScalarTypeSrc, typename TensorTypeDst, typename TensorTypeSrc>
 void
 THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
+  static_assert(std::is_same<ScalarTypeDst, typename TensorUtils<TensorTypeDst>::DataType>::value, "ScalarTypeDst must match");
+  static_assert(std::is_same<ScalarTypeSrc, typename TensorUtils<TensorTypeSrc>::DataType>::value, "ScalarTypeSrc must match");
+
   ptrdiff_t totalElements = TensorUtils<TensorTypeDst>::getNumElements(state, dst);
 
   THArgCheck(totalElements ==
