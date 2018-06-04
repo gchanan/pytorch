@@ -422,24 +422,24 @@ bool THC_reduceDim(THCState* state,
       TensorUtils<TensorType>::canUse32BitIndexMath(state, in)) {
     TensorInfo<ScalarType,
                unsigned int> outInfo =
-      getTensorInfo<TensorType, unsigned int>(state, out);
+      getTensorInfo<ScalarType, TensorType, unsigned int>(state, out);
     outInfo.collapseDims();
 
     TensorInfo<ScalarType,
                unsigned int> inInfo =
-      getTensorInfo<TensorType, unsigned int>(state, in);
+      getTensorInfo<ScalarType, TensorType, unsigned int>(state, in);
     inInfo.reduceDim(dim);
     inInfo.collapseDims();
     HANDLE_OUT_CASE(unsigned int, outInfo.dims, inInfo.dims);
   } else {
     TensorInfo<ScalarType,
                uint64_t> outInfo =
-      getTensorInfo<TensorType, uint64_t>(state, out);
+      getTensorInfo<ScalarType, TensorType, uint64_t>(state, out);
     outInfo.collapseDims();
 
     TensorInfo<ScalarType,
                uint64_t> inInfo =
-      getTensorInfo<TensorType, uint64_t>(state, in);
+      getTensorInfo<ScalarType, TensorType, uint64_t>(state, in);
     inInfo.reduceDim(dim);
     inInfo.collapseDims();
 

@@ -261,7 +261,7 @@ bool THC_pointwiseApply1(THCState* state,
   // additional overhead.
   if (TensorUtils<TensorTypeA>::canUse32BitIndexMath(state, a)) {
     TensorInfo<ScalarTypeA, unsigned int> aInfo =
-      getTensorInfo<TensorTypeA, unsigned int>(state, a);
+      getTensorInfo<ScalarTypeA, TensorTypeA, unsigned int>(state, a);
     rearrangeDims(&aInfo);
     aInfo.collapseDims();
 #if CUDA_VERSION < 9000
@@ -272,7 +272,7 @@ bool THC_pointwiseApply1(THCState* state,
     HANDLE_A_CASE(unsigned int, aInfo.dims);
   } else {
     TensorInfo<ScalarTypeA, uint64_t> aInfo =
-      getTensorInfo<TensorTypeA, uint64_t>(state, a);
+      getTensorInfo<ScalarTypeA, TensorTypeA, uint64_t>(state, a);
     rearrangeDims(&aInfo);
     aInfo.collapseDims();
 
@@ -425,10 +425,10 @@ bool THC_pointwiseApply2(THCState* state,
   if (TensorUtils<TensorTypeA>::canUse32BitIndexMath(state, a) &&
       TensorUtils<TensorTypeB>::canUse32BitIndexMath(state, b)) {
     TensorInfo<ScalarTypeA, unsigned int> aInfo =
-      getTensorInfo<TensorTypeA, unsigned int>(state, a);
+      getTensorInfo<ScalarTypeA, TensorTypeA, unsigned int>(state, a);
 
     TensorInfo<ScalarTypeB, unsigned int> bInfo =
-      getTensorInfo<TensorTypeB, unsigned int>(state, b);
+      getTensorInfo<ScalarTypeB, TensorTypeB, unsigned int>(state, b);
 
     rearrangeDims(&aInfo, &bInfo);
     aInfo.collapseDims();
@@ -441,10 +441,10 @@ bool THC_pointwiseApply2(THCState* state,
     HANDLE_A_CASE(unsigned int, aInfo.dims, bInfo.dims);
   } else {
     TensorInfo<ScalarTypeA, uint64_t> aInfo =
-      getTensorInfo<TensorTypeA, uint64_t>(state, a);
+      getTensorInfo<ScalarTypeA, TensorTypeA, uint64_t>(state, a);
 
     TensorInfo<ScalarTypeB, uint64_t> bInfo =
-      getTensorInfo<TensorTypeB, uint64_t>(state, b);
+      getTensorInfo<ScalarTypeB, TensorTypeB, uint64_t>(state, b);
 
     rearrangeDims(&aInfo, &bInfo);
     aInfo.collapseDims();
@@ -639,13 +639,13 @@ bool THC_pointwiseApply3(THCState* state,
       TensorUtils<TensorTypeB>::canUse32BitIndexMath(state, b) &&
       TensorUtils<TensorTypeC>::canUse32BitIndexMath(state, c)) {
     TensorInfo<ScalarTypeA, unsigned int> aInfo =
-      getTensorInfo<TensorTypeA, unsigned int>(state, a);
+      getTensorInfo<ScalarTypeA, TensorTypeA, unsigned int>(state, a);
 
     TensorInfo<ScalarTypeB, unsigned int> bInfo =
-      getTensorInfo<TensorTypeB, unsigned int>(state, b);
+      getTensorInfo<ScalarTypeB, TensorTypeB, unsigned int>(state, b);
 
     TensorInfo<ScalarTypeC, unsigned int> cInfo =
-      getTensorInfo<TensorTypeC, unsigned int>(state, c);
+      getTensorInfo<ScalarTypeC, TensorTypeC, unsigned int>(state, c);
 
     rearrangeDims(&aInfo, &bInfo, &cInfo);
     aInfo.collapseDims();
@@ -659,13 +659,13 @@ bool THC_pointwiseApply3(THCState* state,
     HANDLE_A_CASE(unsigned int, aInfo.dims, bInfo.dims, cInfo.dims);
   } else {
     TensorInfo<ScalarTypeA, uint64_t> aInfo =
-      getTensorInfo<TensorTypeA, uint64_t>(state, a);
+      getTensorInfo<ScalarTypeA, TensorTypeA, uint64_t>(state, a);
 
     TensorInfo<ScalarTypeB, uint64_t> bInfo =
-      getTensorInfo<TensorTypeB, uint64_t>(state, b);
+      getTensorInfo<ScalarTypeB, TensorTypeB, uint64_t>(state, b);
 
     TensorInfo<ScalarTypeC, uint64_t> cInfo =
-      getTensorInfo<TensorTypeC, uint64_t>(state, c);
+      getTensorInfo<ScalarTypeC, TensorTypeC, uint64_t>(state, c);
 
     rearrangeDims(&aInfo, &bInfo, &cInfo);
     aInfo.collapseDims();

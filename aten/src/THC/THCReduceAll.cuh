@@ -285,14 +285,14 @@ bool THC_reduceAll(THCState* state,
 
   if (TensorUtils<TensorType>::canUse32BitIndexMath(state, in)) {
     TensorInfo<ScalarType, unsigned int> inInfo =
-      getTensorInfo<TensorType, unsigned int>(state, in);
+      getTensorInfo<ScalarType, TensorType, unsigned int>(state, in);
     inInfo.collapseDims();
 
     HANDLE_IN_CASE(unsigned int, inInfo.dims);
   } else {
     TensorInfo<ScalarType,
                uint64_t> inInfo =
-      getTensorInfo<TensorType, uint64_t>(state, in);
+      getTensorInfo<ScalarType, TensorType, uint64_t>(state, in);
     inInfo.collapseDims();
 
     /*
