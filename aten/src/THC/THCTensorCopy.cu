@@ -165,7 +165,7 @@ THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
                     TensorUtils<TensorTypeDst>::getData(state, dstContig),
                     TensorUtils<TensorTypeDst>::getData(state, srcContig),
                     totalElements *
-                    sizeof(typename TensorUtils<TensorTypeDst>::DataType),
+                    sizeof(ScalarTypeDst),
                     cudaMemcpyDeviceToDevice,
                     copyStream));
 
