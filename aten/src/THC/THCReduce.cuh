@@ -362,7 +362,7 @@ bool THC_reduceDim(THCState* state,
   // index can be similarly collapsed. That is what this unrolling is for.
 #define HANDLE_CASE(TYPE, OUT, IN)                                      \
   if (contigReduction) {                                                \
-    kernelReduceContigDim<typename TensorUtils<TensorType>::DataType,   \
+    kernelReduceContigDim<ScalarType,                                   \
                           TYPE, AccT, ModifyOp, ReduceOp, FinalizeOp,   \
                           OUT, IN>                                      \
       <<<grid, block, smemSize, THCState_getCurrentStream(state)>>>     \
@@ -371,7 +371,7 @@ bool THC_reduceDim(THCState* state,
   } else {                                                              \
     if(block.y == 1){                                                   \
         kernelReduceNoncontigDim<                                       \
-                          typename TensorUtils<TensorType>::DataType,   \
+                          ScalarType,                                   \
                           TYPE, AccT, ModifyOp, ReduceOp, FinalizeOp,   \
                           OUT, IN>                                      \
         <<<grid, block, 0, THCState_getCurrentStream(state)>>>          \
@@ -379,7 +379,7 @@ bool THC_reduceDim(THCState* state,
         (TYPE) outElements, init, modifyOp, reduceOp, finalizeOp);      \
     }else{                                                              \
         kernelReduceNoncontigDim_shared<                                \
-                          typename TensorUtils<TensorType>::DataType,   \
+                          ScalarType,                                   \
                           TYPE, AccT, ModifyOp, ReduceOp, FinalizeOp,   \
                           OUT, IN>                                      \
         <<<grid, block, 0, THCState_getCurrentStream(state)>>>          \
@@ -420,24 +420,24 @@ bool THC_reduceDim(THCState* state,
 
   if (TensorUtils<TensorType>::canUse32BitIndexMath(state, out) &&
       TensorUtils<TensorType>::canUse32BitIndexMath(state, in)) {
-    TensorInfo<typename TensorUtils<TensorType>::DataType,
+    TensorInfo<ScalarType,
                unsigned int> outInfo =
       getTensorInfo<TensorType, unsigned int>(state, out);
     outInfo.collapseDims();
 
-    TensorInfo<typename TensorUtils<TensorType>::DataType,
+    TensorInfo<ScalarType,
                unsigned int> inInfo =
       getTensorInfo<TensorType, unsigned int>(state, in);
     inInfo.reduceDim(dim);
     inInfo.collapseDims();
     HANDLE_OUT_CASE(unsigned int, outInfo.dims, inInfo.dims);
   } else {
-    TensorInfo<typename TensorUtils<TensorType>::DataType,
+    TensorInfo<ScalarType,
                uint64_t> outInfo =
       getTensorInfo<TensorType, uint64_t>(state, out);
     outInfo.collapseDims();
 
-    TensorInfo<typename TensorUtils<TensorType>::DataType,
+    TensorInfo<ScalarType,
                uint64_t> inInfo =
       getTensorInfo<TensorType, uint64_t>(state, in);
     inInfo.reduceDim(dim);
