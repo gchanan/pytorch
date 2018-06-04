@@ -267,7 +267,8 @@ inline bool getContigReduceGrid(ptrdiff_t elements, dim3& grid) {
 
 // Performs a reduction out[..., 0, ...] = reduce_i(modify(in[..., i, ...])) for
 // all in where i and the out's 0 are indexed at dimension `dim`
-template <typename TensorType, 
+template <typename ScalarType,
+typename TensorType,
 typename ModifyOp, 
 typename ReduceOp,
 typename FinalizeOp,
@@ -281,6 +282,7 @@ bool THC_reduceDim(THCState* state,
                    AccT init,
                    int dim,
                    int keepdim) {
+  static_assert(std::is_same<ScalarType, typename TensorUtils<TensorType>::DataType>::value, "ScalarType must match");
   ptrdiff_t inElements = TensorUtils<TensorType>::getNumElements(state, in);
 
   int64_t reductionSize = TensorUtils<TensorType>::getSize(state, in, dim);
