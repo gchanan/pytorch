@@ -157,11 +157,11 @@ THCTensor_(varall)(THCState *state, THCTensor *self, int biased)
   accreal mean = THCTensor_(meanall)(state, self);
 
   accreal val;
-  if (!THC_reduceAll(state, self,
-                     SquareFunctor<accreal>(mean),
-                     ReduceAdd<accreal>(),
-                     scalar_cast<accreal>(0),
-                     &val, 0)) {
+  if (!THC_reduceAll<real>(state, self,
+                           SquareFunctor<accreal>(mean),
+                           ReduceAdd<accreal>(),
+                           scalar_cast<accreal>(0),
+                           &val, 0)) {
     THArgCheck(false, 1, CUTORCH_DIM_WARNING);
   }
 
@@ -227,36 +227,36 @@ THCTensor_(normall)(THCState *state, THCTensor *self, real _value)
   accreal result;
 
   if (THCNumerics<accreal>::eq(value, scalar_cast<accreal>(0))) {
-    THC_reduceAll(state, self,
-                  TensorNonZeroOp<accreal>{},
-                  ReduceAdd<accreal>{},
-                  scalar_cast<accreal>(0),
-                  &result, 0);
+    THC_reduceAll<real>(state, self,
+                        TensorNonZeroOp<accreal>{},
+                        ReduceAdd<accreal>{},
+                        scalar_cast<accreal>(0),
+                        &result, 0);
   } else if (THCNumerics<accreal>::eq(value, scalar_cast<accreal>(1))) {
-    THC_reduceAll(state, self,
-                  TensorNormOp<accreal, 1>{value},
-                  ReduceAdd<accreal>{},
-                  scalar_cast<accreal>(0),
-                  &result, 0);
+    THC_reduceAll<real>(state, self,
+                        TensorNormOp<accreal, 1>{value},
+                        ReduceAdd<accreal>{},
+                        scalar_cast<accreal>(0),
+                        &result, 0);
   } else if (THCNumerics<accreal>::eq(value, scalar_cast<accreal>(2))) {
-    THC_reduceAll(state, self,
-                  TensorNormOp<accreal, 2>{value},
-                  ReduceAdd<accreal>{},
-                  scalar_cast<accreal>(0),
-                  &result, 0);
+    THC_reduceAll<real>(state, self,
+                        TensorNormOp<accreal, 2>{value},
+                        ReduceAdd<accreal>{},
+                        scalar_cast<accreal>(0),
+                        &result, 0);
     result = THCNumerics<accreal>::sqrt(result);
   } else if (THCNumerics<accreal>::eq(value, scalar_cast<accreal>(INFINITY))) {
-    THC_reduceAll(state, self,
-                  TensorNormOp<accreal, 1>{value},
-                  ReduceMax<accreal>{},
-                  scalar_cast<accreal>(0),
-                  &result, 0);
+    THC_reduceAll<real>(state, self,
+                        TensorNormOp<accreal, 1>{value},
+                        ReduceMax<accreal>{},
+                        scalar_cast<accreal>(0),
+                        &result, 0);
   } else {
-    THC_reduceAll(state, self,
-                  TensorNormOp<accreal, -1>{value},
-                  ReduceAdd<accreal>{},
-                  scalar_cast<accreal>(0),
-                  &result, 0);
+    THC_reduceAll<real>(state, self,
+                        TensorNormOp<accreal, -1>{value},
+                        ReduceAdd<accreal>{},
+                        scalar_cast<accreal>(0),
+                        &result, 0);
     result = THCNumerics<accreal>::pow(result, 
                                        THCNumerics<accreal>::cinv(value));
   }
@@ -297,11 +297,11 @@ THC_API accreal
 THCTensor_(sumall)(THCState *state, THCTensor *self) {
   THCAssertSameGPU(THCTensor_(checkGPU)(state, 1, self));
   accreal val;
-  if (!THC_reduceAll(state, self,
-                     thrust::identity<accreal>{},
-                     ReduceAdd<accreal>{},
-                     scalar_cast<accreal>(0),
-                     &val, 0)) {
+  if (!THC_reduceAll<real>(state, self,
+                           thrust::identity<accreal>{},
+                           ReduceAdd<accreal>{},
+                           scalar_cast<accreal>(0),
+                           &val, 0)) {
     THArgCheck(false, 1, CUTORCH_DIM_WARNING);
   }
 
@@ -313,11 +313,11 @@ THC_API accreal
 THCTensor_(prodall)(THCState *state, THCTensor *self) {
   THCAssertSameGPU(THCTensor_(checkGPU)(state, 1, self));
   accreal val;
-  if (!THC_reduceAll(state, self,
-                     thrust::identity<accreal>{},
-                     ReduceMultiply<accreal>{},
-                     scalar_cast<accreal>(1),
-                     &val, 0)) {
+  if (!THC_reduceAll<real>(state, self,
+                           thrust::identity<accreal>{},
+                           ReduceMultiply<accreal>{},
+                           scalar_cast<accreal>(1),
+                           &val, 0)) {
     THArgCheck(false, 1, CUTORCH_DIM_WARNING);
   }
 
@@ -337,10 +337,10 @@ THC_API real
 THCTensor_(minall)(THCState *state, THCTensor *self) {
   THCAssertSameGPU(THCTensor_(checkGPU)(state, 1, self));
   accreal val;
-  if (!THC_reduceAll(state, self,
-                     thrust::identity<accreal>{},
-                     ReduceMin<accreal>{},
-                     THCNumerics<accreal>::max(), &val, 0)) {
+  if (!THC_reduceAll<real>(state, self,
+                           thrust::identity<accreal>{},
+                           ReduceMin<accreal>{},
+                           THCNumerics<accreal>::max(), &val, 0)) {
     THArgCheck(false, 1, CUTORCH_DIM_WARNING);
   }
 
@@ -352,10 +352,10 @@ THC_API real
 THCTensor_(maxall)(THCState *state, THCTensor *self) {
   THCAssertSameGPU(THCTensor_(checkGPU)(state, 1, self));
   accreal val;
-  if (!THC_reduceAll(state, self,
-                     thrust::identity<accreal>{},
-                     ReduceMax<accreal>{},
-                     THCNumerics<accreal>::min(), &val, 0)) {
+  if (!THC_reduceAll<real>(state, self,
+                           thrust::identity<accreal>{},
+                           ReduceMax<accreal>{},
+                           THCNumerics<accreal>::min(), &val, 0)) {
     THArgCheck(false, 1, CUTORCH_DIM_WARNING);
   }
 

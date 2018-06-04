@@ -5,10 +5,10 @@ THC_API int
 THCudaByteTensor_logicalAndAll(THCState *state, THCudaByteTensor *self) {
   THCAssertSameGPU(THCudaByteTensor_checkGPU(state, 1, self));
   unsigned char result;
-  if (!THC_reduceAll(state, self,
-                     thrust::identity<unsigned char>(),
-                     LogicalAll(),
-                     (unsigned char) 1, &result, 0)) {
+  if (!THC_reduceAll<uint8_t>(state, self,
+                              thrust::identity<unsigned char>(),
+                              LogicalAll(),
+                              (unsigned char) 1, &result, 0)) {
     THArgCheck(false, 1, CUTORCH_DIM_WARNING);
   }
 
@@ -19,10 +19,10 @@ THC_API int
 THCudaByteTensor_logicalAnyAll(THCState *state, THCudaByteTensor *self) {
   THCAssertSameGPU(THCudaByteTensor_checkGPU(state, 1, self));
   unsigned char result;
-  if (!THC_reduceAll(state, self,
-                     thrust::identity<unsigned char>(),
-                     LogicalAny(),
-                     (unsigned char) 0, &result, 0)) {
+  if (!THC_reduceAll<uint8_t>(state, self,
+                              thrust::identity<unsigned char>(),
+                              LogicalAny(),
+                              (unsigned char) 0, &result, 0)) {
     THArgCheck(false, 1, CUTORCH_DIM_WARNING);
   }
 
