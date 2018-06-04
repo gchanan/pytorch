@@ -98,7 +98,7 @@ THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
                   TensorUtils<TensorTypeDst>::getData(state, dst),
                   TensorUtils<TensorTypeSrc>::getData(state, src),
                   totalElements *
-                  sizeof(typename TensorUtils<TensorTypeDst>::DataType),
+                  sizeof(ScalarTypeDst),
                   cudaMemcpyDeviceToDevice,
                   copyStream));
   } else {
@@ -116,11 +116,11 @@ THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
     // might be worth it to avoid non-coalesced reads or writes.
     if (p2pEnabled) {
       bool succ =
-        THC_pointwiseApply2<typename TensorUtils<TensorTypeDst>::DataType,
-                            typename TensorUtils<TensorTypeSrc>::DataType>(
+        THC_pointwiseApply2<ScalarTypeDst,
+                            ScalarTypeSrc>(
           state, dst, src,
-          CopyOp<typename TensorUtils<TensorTypeDst>::DataType,
-                 typename TensorUtils<TensorTypeSrc>::DataType>());
+          CopyOp<ScalarTypeDst,
+                 ScalarTypeSrc>());
 
       THArgCheck(succ, 2, CUTORCH_DIM_WARNING);
     } else {
@@ -143,11 +143,11 @@ THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
         TensorUtils<TensorTypeDst>::resizeAs(state, srcContig, dst);
 
         bool succ =
-          THC_pointwiseApply2<typename TensorUtils<TensorTypeDst>::DataType,
-                              typename TensorUtils<TensorTypeSrc>::DataType>(
+          THC_pointwiseApply2<ScalarTypeDst,
+                              ScalarTypeSrc>(
             state, srcContig, src,
-            CopyOp<typename TensorUtils<TensorTypeDst>::DataType,
-                   typename TensorUtils<TensorTypeSrc>::DataType>());
+            CopyOp<ScalarTypeDst,
+                   ScalarTypeSrc>());
 
         THArgCheck(succ, 2, CUTORCH_DIM_WARNING);
       }
