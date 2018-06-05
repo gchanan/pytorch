@@ -6,3 +6,7 @@
 
 #include "generic/THCTensor.cpp"
 #include "THCGenerateAllTypes.h"
+
+int THCTensor_nDimension(THCState *state, const _THCTensor *self) {
+  return self->nDimension;
+}
