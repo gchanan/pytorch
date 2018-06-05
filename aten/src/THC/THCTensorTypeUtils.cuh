@@ -5,7 +5,7 @@
 #include <assert.h>
 #include "THCGeneral.h"
 #include "THCHalf.h"
-#include "THCTensor.h"
+#include "THCTensor.hpp"
 #include "THCTensorInfo.cuh"
 
 /// A utility for accessing THCuda*Tensor types in a generic manner
