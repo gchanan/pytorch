@@ -20,21 +20,17 @@ int THCTensor_(nDimension)(THCState *state, const THCTensor *self)
 
 int64_t THCTensor_(size)(THCState *state, const THCTensor *self, int dim)
 {
-  THArgCheck((dim >= 0) && (dim < self->nDimension), 2, "out of range");
-  return self->size[dim];
+  return THCTensor_size(state, self, dim);
 }
 
 int64_t THCTensor_(stride)(THCState *state, const THCTensor *self, int dim)
 {
-  THArgCheck((dim >= 0) && (dim < self->nDimension), 2, "out of range");
-  return self->stride[dim];
+  return THCTensor_stride(state, self, dim);
 }
 
 THLongStorage *THCTensor_(newSizeOf)(THCState *state, THCTensor *self)
 {
-  THLongStorage *size = THLongStorage_newWithSize(self->nDimension);
-  THLongStorage_rawCopy(size, self->size);
-  return size;
+  return THCTensor_newSizeOf(state, self);
 }
 
 THLongStorage *THCTensor_(newStrideOf)(THCState *state, THCTensor *self)
@@ -619,19 +615,7 @@ void THCTensor_(unsqueeze1d)(THCState *state, THCTensor *self, THCTensor *src, i
 
 int THCTensor_(isContiguous)(THCState *state, const THCTensor *self)
 {
-  int64_t z = 1;
-  int d;
-  for(d = self->nDimension-1; d >= 0; d--)
-  {
-    if(self->size[d] != 1)
-    {
-      if(self->stride[d] == z)
-        z *= self->size[d];
-      else
-        return 0;
-    }
-  }
-  return 1;
+  return THCTensor_isContiguous(state, self);
 }
 
 int THCTensor_(isSize)(THCState *state, const THCTensor *self, const THLongStorage *dims)
@@ -680,41 +664,17 @@ int THCTensor_(isSameSizeAs)(THCState *state, const THCTensor *self, const THCTe
 
 ptrdiff_t THCTensor_(nElement)(THCState *state, const THCTensor *self)
 {
-  if(self->nDimension == 0)
-    return 0;
-  else
-  {
-    ptrdiff_t nElement = 1;
-    int d;
-    for(d = 0; d < self->nDimension; d++)
-      nElement *= self->size[d];
-    return nElement;
-  }
+  return THCTensor_nElement(state, self);
 }
 
 void THCTensor_(retain)(THCState *state, THCTensor *self)
 {
-  if(self->flag & TH_TENSOR_REFCOUNTED)
-    self->refcount++;
+  THCTensor_retain(state, self);
 }
 
 void THCTensor_(free)(THCState *state, THCTensor *self)
 {
-  if(!self)
-    return;
-
-  if(self->flag & TH_TENSOR_REFCOUNTED)
-  {
-    if(--self->refcount == 0)
-    {
-      THFree(self->size);
-      THFree(self->stride);
-      if(self->storage)
-        THCStorage_(free)(state, self->storage);
-      self->refcount.~atomic<int>();
-      THFree(self);
-    }
-  }
+  THCTensor_free(state, self);
 }
 
 void THCTensor_(freeCopyTo)(THCState *state, THCTensor *self, THCTensor *dst)
