@@ -7,6 +7,8 @@
 #include "generic/THCTensor.cpp"
 #include "THCGenerateAllTypes.h"
 
+#include "THCTensorInfo.cuh"
+
 int THCTensor_nDimension(THCState *state, const _THCTensor *self) {
   return self->nDimension;
 }
@@ -336,6 +338,28 @@ void THCTensor_preserveReduceDimSemantics(THCState *state, _THCTensor *tensor,
   if (out_dims > 0 && !keepdim && out_dims == in_dims - 1) {
     THCTensor_unsqueeze1d(state, tensor, tensor, dimension);
   }
+}
+
+namespace {
+
+struct SizeAndStride {
+  int64_t size;
+  int64_t stride;
+};
+
+/*
+ A comparator that will sort SizeAndStride structs by stride,
+ in ascending order.
+ */
+int compareSizeAndStride(const void* a, const void* b) {
+  const SizeAndStride* aS = (const SizeAndStride*) a;
+  const SizeAndStride* bS = (const SizeAndStride*) b;
+
+  if (aS->stride < bS->stride) return -1;
+  if (aS->stride == bS->stride) return 0;
+  return 1;
+}
+
 }
 
 /* Returns false if there is no possibility that the tensor    */

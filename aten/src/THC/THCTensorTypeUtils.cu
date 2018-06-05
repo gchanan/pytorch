@@ -4,28 +4,6 @@
 #include "THCHalf.h"
 #include <stdlib.h>
 
-namespace {
-
-struct SizeAndStride {
-  int64_t size;
-  int64_t stride;
-};
-
-/* 
- A comparator that will sort SizeAndStride structs by stride,
- in ascending order.
- */
-int compareSizeAndStride(const void* a, const void* b) {
-  const SizeAndStride* aS = (const SizeAndStride*) a;
-  const SizeAndStride* bS = (const SizeAndStride*) b;
-  
-  if (aS->stride < bS->stride) return -1;
-  if (aS->stride == bS->stride) return 0;
-  return 1;
-}
-
-}
-
 #define IMPL_TENSOR_UTILS(TENSOR_TYPE, DATA_TYPE)                       \
                                                                         \
 TENSOR_TYPE*                                                            \
