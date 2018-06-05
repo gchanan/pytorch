@@ -124,7 +124,7 @@ getTensorInfo(THCState* state, TensorType* t) {
   int dims = THCTensor_nDimension(state, t);
   for (int i = 0; i < dims; ++i) {
     sz[i] = THCTensor_size(state, t, i);
-    st[i] = TensorUtils<TensorType>::getStride(state, t, i);
+    st[i] = THCTensor_stride(state, t, i);
   }
 
   return TensorInfo<ScalarType, IndexType>(

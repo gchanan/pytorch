@@ -434,7 +434,7 @@ void THNN_(LSTM_forw_ind_wrap)(
       (state, 5, input, hidden, hy, cy, cx);
   }
 
-  ptrdiff_t totalElements = TensorUtils<THCTensor>::getNumElements(state, cx);
+  ptrdiff_t totalElements = THCTensor_nElement(state, cx);
 
   const dim3 block = getApplyBlock();
   dim3 grid;
@@ -529,7 +529,7 @@ void THNN_(LSTM_back_ind_wrap)(
   int maxDim = THNN_(minIndexType)
     (state, 7, storage, gradInGates, cx, cy,
      gradOutput, gradOutputCell, gradInputCx);
-  ptrdiff_t totalElements = TensorUtils<THCTensor>::getNumElements(state, gradOutput);
+  ptrdiff_t totalElements = THCTensor_nElement(state, gradOutput);
 
   const dim3 block = getApplyBlock();
   dim3 grid;
@@ -620,7 +620,7 @@ void THNN_(GRU_forw_ind_wrap)(
       (state, 5, input, hidden, hx, hy, storage);
   }
 
-  ptrdiff_t totalElements = TensorUtils<THCTensor>::getNumElements(state, hx);
+  ptrdiff_t totalElements = THCTensor_nElement(state, hx);
 
   const dim3 block = getApplyBlock();
   dim3 grid;
@@ -719,7 +719,7 @@ void THNN_(GRU_back_ind_wrap)(
 
   int maxDim = THNN_(minIndexType)(state, 5, gradInInput, gradInHidden, gradOutput,
                                    gradInputHx, storage);
-  ptrdiff_t totalElements = TensorUtils<THCTensor>::getNumElements(state, gradOutput);
+  ptrdiff_t totalElements = THCTensor_nElement(state, gradOutput);
 
   const dim3 block = getApplyBlock();
   dim3 grid;
