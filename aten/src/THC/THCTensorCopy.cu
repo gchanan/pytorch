@@ -1,3 +1,4 @@
+#include "THCTensor.hpp"
 #include "THCApply.cuh"
 #include "THCHalf.h"
 #include "THCNumerics.cuh"
@@ -33,7 +34,7 @@ THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
              THCTensor_nElement(state, src),
              2, "sizes do not match");
 
-  if (THCTensor_nDimensionstate, dst) == 0) {
+  if (THCTensor_nDimension(state, dst) == 0) {
     // Zero-dim tensor; copy nothing
     return;
   }

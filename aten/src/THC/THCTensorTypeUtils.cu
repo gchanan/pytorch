@@ -133,7 +133,7 @@ void                                                                    \
 TensorUtils<TENSOR_TYPE>::preserveReduceDimSemantics(                   \
                           THCState *state, TENSOR_TYPE *tensor,         \
                           int in_dims, int64_t dimension, int keepdim) {\
-  int out_dims = THCTensor_nDimensionstate, tensor);      \
+  int out_dims = THCTensor_nDimension(state, tensor);                   \
   if (out_dims > 0 && !keepdim && out_dims == in_dims - 1) {            \
     TensorUtils<TENSOR_TYPE>::unsqueeze1d(state, tensor, tensor, dimension);\
   }                                                                     \
