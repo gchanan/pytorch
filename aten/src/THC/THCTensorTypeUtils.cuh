@@ -60,7 +60,6 @@ struct TensorUtils {
     static DATA_TYPE* getData(THCState* state, TENSOR_TYPE* t);         \
     static bool isContiguous(THCState* state, TENSOR_TYPE* t);          \
     static bool allContiguous(THCState* state, TENSOR_TYPE** inputs, int numInputs); \
-    static bool allSameDevice(THCState* state, TENSOR_TYPE** inputs, int numInputs); \
     static void copyIgnoringOverlaps(THCState* state,                   \
                                      TENSOR_TYPE* dst, TENSOR_TYPE* src); \
     /* Returns false if there is no possibility that the tensor    */   \

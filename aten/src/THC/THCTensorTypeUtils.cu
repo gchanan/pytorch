@@ -127,20 +127,6 @@ TensorUtils<TENSOR_TYPE>::preserveReduceDimSemantics(                   \
   }                                                                     \
 }                                                                       \
                                                                         \
-bool                                                                    \
-TensorUtils<TENSOR_TYPE>::allSameDevice(THCState* state,                \
-                                        TENSOR_TYPE** inputs,           \
-                                        int numInputs) {                \
-  THAssert(numInputs > 0);                                              \
-  int device = TensorUtils<TENSOR_TYPE>::getDevice(state, inputs[0]);   \
-  for (int i = 1; i < numInputs; ++i) {                                 \
-    if (TensorUtils<TENSOR_TYPE>::getDevice(state, inputs[i]) != device) {     \
-      return false;                                                     \
-    }                                                                   \
-  }                                                                     \
-  return true;                                                          \
-}                                                                       \
-                                                                        \
 void                                                                    \
 TensorUtils<TENSOR_TYPE>::copyIgnoringOverlaps(THCState* state,         \
                                                TENSOR_TYPE* dst,        \
