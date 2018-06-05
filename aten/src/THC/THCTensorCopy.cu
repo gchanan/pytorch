@@ -33,7 +33,7 @@ THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
              TensorUtils<TensorTypeSrc>::getNumElements(state, src),
              2, "sizes do not match");
 
-  if (THCTensor_nDimensionstate, dst) == 0) {
+  if (THCTensor_nDimension(state, dst) == 0) {
     // Zero-dim tensor; copy nothing
     return;
   }

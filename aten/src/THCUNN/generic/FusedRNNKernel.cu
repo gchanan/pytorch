@@ -18,10 +18,10 @@ void THNN_(FusedRNNAssertSizes)(THCState *state, int factor, int count, ...)
              THCTensor_(nElement)(state, hidden),
              3, "Input and Hidden tensor sizes should be the same.");
 
-  THAssertMsg(TensorUtils<THCTensor>::getDims(state, input) <= MAX_CUTORCH_DIMS,
+  THAssertMsg(THCTensor_nDimension(state, input) <= MAX_CUTORCH_DIMS,
               "Tensor dimension is too large.");
 
-  THAssertMsg(TensorUtils<THCTensor>::getDims(state, hidden) <= MAX_CUTORCH_DIMS,
+  THAssertMsg(THCTensor_nDimension(state, hidden) <= MAX_CUTORCH_DIMS,
               "Tensor dimension is too large.");
 
   for (int arg=2; arg < count; ++arg){
@@ -29,7 +29,7 @@ void THNN_(FusedRNNAssertSizes)(THCState *state, int factor, int count, ...)
     THArgCheck(THCTensor_(nElement)(state, input) ==
                THCTensor_(nElement)(state, tens)*factor,
                3, "A pointwise tensor was not the right size, should have 1/%u the elements of input/hidden tensor.", arg, factor);
-    THAssertMsg(TensorUtils<THCTensor>::getDims(state, tens) <= MAX_CUTORCH_DIMS,
+    THAssertMsg(THCTensor_nDimension(state, tens) <= MAX_CUTORCH_DIMS,
          "Tensor dimension is too large.");
   }
 
@@ -42,13 +42,13 @@ int THNN_(minIndexType)(THCState *state, int count, ...)
   va_start(list, count);
 
   THCTensor* tens = va_arg(list, THCTensor*);
-  int startDim = TensorUtils<THCTensor>::getDims(state, tens);
+  int startDim = THCTensor_nDimension(state, tens);
   bool canCollapse = THCTensor_(isContiguous)(state,tens);
 
   for (int arg=1; arg < count; ++arg){
     tens = va_arg(list, THCTensor*);
     canCollapse = canCollapse && THCTensor_(isContiguous)(state, tens);
-    if(TensorUtils<THCTensor>::getDims(state, tens) != startDim){
+    if(THCTensor_nDimension(state, tens) != startDim){
       va_end(list);
       return -1;
     }
