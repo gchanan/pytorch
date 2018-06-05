@@ -287,9 +287,3 @@ bool THCTensor_allSameDevice(THCState* state, const _THCTensor ** inputs, int nu
   }
   return true;
 }
-
-int64_t THCTensor_size(THCState *state, const THCTensor *self, int dim)
-{
-  THArgCheck((dim >= 0) && (dim < self->nDimension), 2, "out of range");
-  return self->size[dim];
-}
