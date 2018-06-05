@@ -331,7 +331,7 @@ bool THCTensor_all32BitIndexable(THCState* state, const _THCTensor** inputs, int
 /* that there exists an ordering of the tensor's dimensions    */
 /* that is nicely "nested," with each dimension contained      */
 /* within the next one.                                        */
-int THCTensor_maybeOverlappingIndices(THCState* state, const _THCTensor* t) {
+bool THCTensor_maybeOverlappingIndices(THCState* state, const _THCTensor* t) {
   /* Extract size/stride arrays; only consider size >1 dims. */
   SizeAndStride info[MAX_CUTORCH_DIMS];
 
@@ -346,7 +346,7 @@ int THCTensor_maybeOverlappingIndices(THCState* state, const _THCTensor* t) {
         THCTensor_stride(state, t, i);
 
       if (info[nonSize1Dims].stride < 1) {
-        return 1;
+        return true;
       }
 
       ++nonSize1Dims;
@@ -355,7 +355,7 @@ int THCTensor_maybeOverlappingIndices(THCState* state, const _THCTensor* t) {
 
   /* Short-circuits if tensor is a single element.             */
   if (nonSize1Dims == 0) {
-    return 0;
+    return false;
   }
 
   /* Ascending order (innermost dimension in sorted view is at [0]) */
@@ -363,9 +363,9 @@ int THCTensor_maybeOverlappingIndices(THCState* state, const _THCTensor* t) {
 
   for (int i = 0; i < (nonSize1Dims - 1); ++i) {
     if (((info[i].size - 1) * info[i].stride) >= info[i + 1].stride) {
-      return 1;
+      return true;
     }
   }
 
-  return 0;
+  return false;
 }

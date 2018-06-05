@@ -58,4 +58,4 @@ THC_API bool THCTensor_all32BitIndexable(THCState* state, const _THCTensor** inp
 /* Returns false if there is no possibility that the tensor    */
 /* has more than one index that references the same datapoint, */
 /* true otherwise.                                             */
-THC_API THCTensor_maybeOverlappingIndices(THCState* state, const _THCTensor* t);
+THC_API bool THCTensor_maybeOverlappingIndices(THCState* state, const _THCTensor* t);
