@@ -6,12 +6,6 @@
 
 #define IMPL_TENSOR_UTILS(TENSOR_TYPE, DATA_TYPE)                       \
                                                                         \
-TENSOR_TYPE*                                                            \
-TensorUtils<TENSOR_TYPE>::newContiguous(THCState* state,                \
-                                        TENSOR_TYPE* t) {               \
-  return TENSOR_TYPE##_newContiguous(state, t);                         \
-}                                                                       \
-                                                                        \
 void                                                                    \
 TensorUtils<TENSOR_TYPE>::copyIgnoringOverlaps(THCState* state,         \
                                                TENSOR_TYPE* dst,        \

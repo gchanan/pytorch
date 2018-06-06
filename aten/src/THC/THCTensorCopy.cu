@@ -134,7 +134,7 @@ THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
       if (sameType) {
         srcContig =
           (TensorTypeDst*) // this is actually the same type as src
-          TensorUtils<TensorTypeSrc>::newContiguous(state, src);
+          THCTensor_newContiguous(state, src);
 
       } else {
         // Types are different
@@ -156,7 +156,7 @@ THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
       // Make sure the dst is contiguous
       THCudaCheck(cudaSetDevice(dstDev));
       TensorTypeDst* dstContig =
-        TensorUtils<TensorTypeDst>::newContiguous(state, dst);
+        (TensorTypeDst*)THCTensor_newContiguous(state, dst);
 
       // Now, we are ready for a cross-device memcpy of contiguous
       // data, of the same layout and type

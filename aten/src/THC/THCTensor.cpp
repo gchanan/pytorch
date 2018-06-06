@@ -56,8 +56,18 @@ _THCTensor *THCTensor_new(THCState *state, at::ScalarType scalar_type) {
 _THCTensor *THCTensor_newClone(THCState *state, _THCTensor *self) {
   _THCTensor *tensor = THCTensor_new(state, self->storage->scalar_type);
   THCTensor_resizeAs(state, tensor, self);
-  THCTensor_copy(state, tensor, self);
+  THCTensor_copySame(state, tensor, self);
   return tensor;
+}
+
+_THCTensor *THCTensor_newContiguous(THCState *state, _THCTensor *self)
+{
+  if(!THCTensor_isContiguous(state, self)) {
+    return THCTensor_newClone(state, self);
+  } else {
+    THCTensor_retain(state, self);
+    return self;
+  }
 }
 
 void THCTensor_resize(THCState *state, _THCTensor *self, THLongStorage *size, THLongStorage *stride) {
