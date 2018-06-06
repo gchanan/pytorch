@@ -1,6 +1,7 @@
 #include "THCApply.cuh"
 #include "THCHalf.h"
 #include "THCNumerics.cuh"
+#include "THCTensorCopy.cuh"
 
 inline int curGPU() {
   int curDev;
@@ -8,24 +9,10 @@ inline int curGPU() {
   return curDev;
 }
 
-// Copy operator for the pointwise apply kernel
-template <typename TypeDst, typename TypeSrc>
-struct CopyOp {
-  __device__ __forceinline__ void operator()(TypeDst* dst, TypeSrc* src) {
-#if __CUDA_ARCH__ >= 350
-    *dst = ScalarConvert<TypeSrc, TypeDst>::to(__ldg(src));
-#else
-    *dst = ScalarConvert<TypeSrc, TypeDst>::to(*src);
-#endif
-  }
-};
-
 // Copy for the same type to the same type
 template <typename ScalarTypeDst, typename ScalarTypeSrc, typename TensorTypeDst, typename TensorTypeSrc>
 void
 THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
-  static_assert(std::is_same<ScalarTypeDst, typename TensorUtils<TensorTypeDst>::DataType>::value, "ScalarTypeDst must match");
-  static_assert(std::is_same<ScalarTypeSrc, typename TensorUtils<TensorTypeSrc>::DataType>::value, "ScalarTypeSrc must match");
 
   ptrdiff_t totalElements = THCTensor_nElement(state, dst);
 

@@ -647,8 +647,6 @@ THC_reduceDimIndex(THCState *state,
                    const thrust::pair<ScalarTypeK, ScalarTypeIndex>& init,
                    BinaryFunction binary_op)
 {
-  static_assert(std::is_same<ScalarTypeK, typename TensorUtils<TensorTypeK>::DataType>::value, "ScalarTypeK must match");
-  static_assert(std::is_same<ScalarTypeIndex, typename TensorUtils<TensorTypeIndex>::DataType>::value, "ScalarTypeIndex must match");
   THArgCheck(dimension >= 0 &&
              dimension < THCTensor_nDimension(state, src),
              3, "dimension out of range");

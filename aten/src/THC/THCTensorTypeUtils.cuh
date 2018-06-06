@@ -85,7 +85,6 @@ TENSOR_UTILS(THCudaHalfTensor, half, float);
 template <typename ScalarType, typename TensorType, typename IndexType>
 TensorInfo<ScalarType, IndexType>
 getTensorInfo(THCState* state, TensorType* t) {
-  static_assert(std::is_same<ScalarType, typename TensorUtils<TensorType>::DataType>::value, "ScalarType must match");
   IndexType sz[MAX_CUTORCH_DIMS];
   IndexType st[MAX_CUTORCH_DIMS];
 
