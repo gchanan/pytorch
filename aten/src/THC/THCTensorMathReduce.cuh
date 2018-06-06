@@ -668,9 +668,9 @@ THC_reduceDimIndex(THCState *state,
   THCTensor_resize(state, tgt2_, dim, NULL);
   THLongStorage_free(dim);
 
-  TensorTypeK *tgt1 = TensorUtils<TensorTypeK>::newContiguous(state, tgt1_);
-  TensorTypeIndex *tgt2 = TensorUtils<TensorTypeIndex>::newContiguous(state, tgt2_);
-  src = TensorUtils<TensorTypeK>::newContiguous(state, src);
+  TensorTypeK *tgt1 = (TensorTypeK*)THCTensor_newContiguous(state, tgt1_);
+  TensorTypeIndex *tgt2 = (TensorTypeIndex*)THCTensor_newContiguous(state, tgt2_);
+  src = (TensorTypeK*)THCTensor_newContiguous(state, src);
 
   if (dimension == THCTensor_nDimension(state, src) - 1) {
     THC_transformReduceInnermostDimIndex(state, tgt1, tgt2, src, init, binary_op);

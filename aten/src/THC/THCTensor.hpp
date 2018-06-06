@@ -42,6 +42,7 @@ THC_API THLongStorage *THCTensor_newSizeOf(THCState *state, _THCTensor *self);
 
 THC_API _THCTensor *THCTensor_new(THCState *state, at::ScalarType scalar_type);
 THC_API _THCTensor *THCTensor_newClone(THCState *state, _THCTensor *self);
+THC_API _THCTensor *THCTensor_newContiguous(THCState *state, _THCTensor *self);
 
 THC_API void THCTensor_resize(THCState *state, _THCTensor *tensor, THLongStorage *size, THLongStorage *stride);
 THC_API void THCTensor_resizeAs(THCState *state, _THCTensor *tensor, _THCTensor *src);

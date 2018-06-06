@@ -60,6 +60,16 @@ _THCTensor *THCTensor_newClone(THCState *state, _THCTensor *self) {
   return tensor;
 }
 
+_THCTensor *THCTensor_newContiguous(THCState *state, _THCTensor *self)
+{
+  if(!THCTensor_isContiguous(state, self)) {
+    return THCTensor_newClone(state, self);
+  } else {
+    THCTensor_retain(state, self);
+    return self;
+  }
+}
+
 void THCTensor_resize(THCState *state, _THCTensor *self, THLongStorage *size, THLongStorage *stride) {
   THArgCheck(size != NULL, 2, "invalid size");
   if(stride)
