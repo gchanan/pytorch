@@ -8,20 +8,23 @@ THCTensor_(copy)(THCState* state, THCTensor* dst, THCTensor* src) {
   THC_copyTensor<real, real, THCTensor, THCTensor>(state, dst, src);
 }
 
-THC_API void
-THCTensor_(copyIgnoringOverlaps)(THCState* state, THCTensor* dst, THCTensor* src) {
+template <>
+void THCTensor_copyIgnoringOverlaps<real>(THCState* state, _THCTensor* dst, _THCTensor* src) {
   // Called when we are copying into an overlapping index `dst`, but
   // we don't care which writer wins. Hacky but it works.
   // This is itself invoked by pointwiseApply2 / THCTensor_copy in
   // case that there are write overlaps.
   // FIXME: really, overlapping writes should be illegal/an error in Torch
-  THC_pointwiseApply2<real,
-                      real>(
+  THC_pointwiseApply2<real, real>(
     state, dst, src,
-    CopyOp<real,
-           real>(),
+    CopyOp<real, real>(),
     ReadOnly, /* ignore overwrites */
     ReadOnly);
+}
+
+THC_API void
+THCTensor_(copyIgnoringOverlaps)(THCState* state, THCTensor* dst, THCTensor* src) {
+  THCTensor_copyIgnoringOverlaps<real>(state, dst, src);
 }
 
 #define IMPLEMENT_THC_CUDA_TENSOR_COPY(TYPEC, TYPECUDA, SCALARC)        \
