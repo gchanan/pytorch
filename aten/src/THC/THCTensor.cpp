@@ -53,33 +53,11 @@ _THCTensor *THCTensor_new(THCState *state, at::ScalarType scalar_type) {
   }
 }
 
-void THCTensor_copySame(THCState* state,  _THCTensor *self, _THCTensor *src) {
-  if (self->storage->scalar_type != src->storage->scalar_type) {
-    AT_ERROR("Scalar types must match, got: ", at::toString(self->storage->scalar_type),
-                                               at::toString(src->storage->scalar_type));
-  }
-  switch(self->storage->scalar_type) {
-    case at::ScalarType::Byte:
-      return THCudaByteTensor_copy(state, (THCudaByteTensor*)self, (THCudaByteTensor*)src);
-    case at::ScalarType::Char:
-      return THCudaCharTensor_copy(state, (THCudaCharTensor*)self, (THCudaCharTensor*)src);
-    case at::ScalarType::Short:
-      return THCudaShortTensor_copy(state, (THCudaShortTensor*)self, (THCudaShortTensor*)src);
-    case at::ScalarType::Int:
-      return THCudaIntTensor_copy(state, (THCudaIntTensor*)self, (THCudaIntTensor*)src);
-    case at::ScalarType::Long:
-      return THCudaLongTensor_copy(state, (THCudaLongTensor*)self, (THCudaLongTensor*)src);
-#ifdef CUDA_HALF_TENSOR
-    case at::ScalarType::Half:
-      return THCudaHalfTensor_copy(state, (THCudaHalfTensor*)self, (THCudaHalfTensor*)src);
-#endif
-    case at::ScalarType::Float:
-      return THCudaTensor_copy(state, (THCudaTensor*)self, (THCudaTensor*)src);
-    case at::ScalarType::Double:
-      return THCudaDoubleTensor_copy(state, (THCudaDoubleTensor*)self, (THCudaDoubleTensor*)src);
-    default:
-      AT_ERROR("unexpected ScalarType: ", at::toString(self->storage->scalar_type));
-  }
+_THCTensor *THCTensor_newClone(THCState *state, _THCTensor *self) {
+  _THCTensor *tensor = THCTensor_new(state, self->storage->scalar_type);
+  THCTensor_resizeAs(state, tensor, self);
+  THCTensor_copy(state, tensor, self);
+  return tensor;
 }
 
 void THCTensor_resize(THCState *state, _THCTensor *self, THLongStorage *size, THLongStorage *stride) {
@@ -465,4 +443,41 @@ bool THCTensor_maybeOverlappingIndices(THCState* state, const _THCTensor* t) {
   }
 
   return false;
+}
+
+void THCTensor_copySame(THCState* state,  _THCTensor *self, _THCTensor *src) {
+  if (self->storage->scalar_type != src->storage->scalar_type) {
+    AT_ERROR("Scalar types must match, got: ", at::toString(self->storage->scalar_type),
+                                               at::toString(src->storage->scalar_type));
+  }
+  switch(self->storage->scalar_type) {
+    case at::ScalarType::Byte:
+      return THCudaByteTensor_copy(state, (THCudaByteTensor*)self, (THCudaByteTensor*)src);
+    case at::ScalarType::Char:
+      return THCudaCharTensor_copy(state, (THCudaCharTensor*)self, (THCudaCharTensor*)src);
+    case at::ScalarType::Short:
+      return THCudaShortTensor_copy(state, (THCudaShortTensor*)self, (THCudaShortTensor*)src);
+    case at::ScalarType::Int:
+      return THCudaIntTensor_copy(state, (THCudaIntTensor*)self, (THCudaIntTensor*)src);
+    case at::ScalarType::Long:
+      return THCudaLongTensor_copy(state, (THCudaLongTensor*)self, (THCudaLongTensor*)src);
+#ifdef CUDA_HALF_TENSOR
+    case at::ScalarType::Half:
+      return THCudaHalfTensor_copy(state, (THCudaHalfTensor*)self, (THCudaHalfTensor*)src);
+#endif
+    case at::ScalarType::Float:
+      return THCudaTensor_copy(state, (THCudaTensor*)self, (THCudaTensor*)src);
+    case at::ScalarType::Double:
+      return THCudaDoubleTensor_copy(state, (THCudaDoubleTensor*)self, (THCudaDoubleTensor*)src);
+    default:
+      AT_ERROR("unexpected ScalarType: ", at::toString(self->storage->scalar_type));
+  }
+}
+
+void THCTensor_freeCopySameTo(THCState *state, _THCTensor *self, _THCTensor *dst)
+{
+  if(self != dst)
+    THCTensor_copySame(state, dst, self);
+
+  THCTensor_free(state, self);
 }
