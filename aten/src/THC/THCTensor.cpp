@@ -53,6 +53,13 @@ _THCTensor *THCTensor_new(THCState *state, at::ScalarType scalar_type) {
   }
 }
 
+_THCTensor *THCTensor_newClone(THCState *state, _THCTensor *self) {
+  _THCTensor *tensor = THCTensor_new(state, self->storage->scalar_type);
+  THCTensor_resizeAs(state, tensor, self);
+  THCTensor_copy(state, tensor, self);
+  return tensor;
+}
+
 void THCTensor_resize(THCState *state, _THCTensor *self, THLongStorage *size, THLongStorage *stride) {
   THArgCheck(size != NULL, 2, "invalid size");
   if(stride)
@@ -465,4 +472,12 @@ void THCTensor_copySame(THCState* state,  _THCTensor *self, _THCTensor *src) {
     default:
       AT_ERROR("unexpected ScalarType: ", at::toString(self->storage->scalar_type));
   }
+}
+
+void THCTensor_freeCopySameTo(THCState *state, _THCTensor *self, _THCTensor *dst)
+{
+  if(self != dst)
+    THCTensor_copySame(state, dst, self);
+
+  THCTensor_free(state, self);
 }

@@ -39,8 +39,6 @@ struct TensorUtils {
     typedef ACC_DATA_TYPE AccDataType;                                  \
                                                                         \
     static TENSOR_TYPE* newContiguous(THCState* state, TENSOR_TYPE* t); \
-    static void freeCopyTo(THCState* state, TENSOR_TYPE* src,           \
-                           TENSOR_TYPE* dst);                           \
     static void copyIgnoringOverlaps(THCState* state,                   \
                                      TENSOR_TYPE* dst, TENSOR_TYPE* src); \
   }

@@ -13,13 +13,6 @@ TensorUtils<TENSOR_TYPE>::newContiguous(THCState* state,                \
 }                                                                       \
                                                                         \
 void                                                                    \
-TensorUtils<TENSOR_TYPE>::freeCopyTo(THCState* state,                   \
-                                     TENSOR_TYPE* src,                  \
-                                     TENSOR_TYPE* dst) {                \
-  TENSOR_TYPE##_freeCopyTo(state, src, dst);                            \
-}                                                                       \
-                                                                        \
-void                                                                    \
 TensorUtils<TENSOR_TYPE>::copyIgnoringOverlaps(THCState* state,         \
                                                TENSOR_TYPE* dst,        \
                                                TENSOR_TYPE* src) {      \

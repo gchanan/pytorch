@@ -174,7 +174,7 @@ THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
       THCTensor_free(state, srcContig);
 
       if (dst != dstContig) {
-        TensorUtils<TensorTypeDst>::freeCopyTo(state, dstContig, dst);
+        THCTensor_freeCopySameTo(state, dstContig, dst);
       } else {
         THCTensor_free(state, dstContig);
       }
