@@ -139,7 +139,8 @@ THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
       } else {
         // Types are different
         // Copy into the new format, contiguous, on the source device
-        srcContig = TensorUtils<TensorTypeDst>::newTensor(state);
+        srcContig = (TensorTypeDst*)THCTensor_new(state,
+                                                  at::CTypeToScalarType<at::cuda::from_type<ScalarTypeDst>>::to());
         THCTensor_resizeAs(state, srcContig, dst);
 
         bool succ =
