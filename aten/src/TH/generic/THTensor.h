@@ -16,8 +16,7 @@ struct THTensor;
 #define THFloatTensor THTensor
 #define THDoubleTensor THTensor
 #define THHalfTensor THTensor
-//#define THByteTensor THTensor
-typedef struct THTensor THByteTensor;
+#define THByteTensor THTensor
 #define THCharTensor THTensor
 #define THShortTensor THTensor
 #define THIntTensor THTensor
