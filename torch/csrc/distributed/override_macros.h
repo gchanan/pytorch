@@ -7,7 +7,7 @@
 
 #define THWStorage THDStorage
 #define THWStorage_(NAME) THDStorage_(NAME)
-#define THTensor THDTensor
+#define THWTensor THDTensor
 #define THWTensor_(NAME) THDTensor_(NAME)
 
 #define THPStorage_(NAME) TH_CONCAT_4(THDP,Real,Storage_,NAME)

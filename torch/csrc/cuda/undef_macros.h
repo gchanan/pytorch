@@ -24,7 +24,7 @@
 
 #undef THWStorage
 #undef THWStorage_
-#undef THTensor
+#undef THWTensor
 #undef THWTensor_
 
 #undef THWStoragePtr
