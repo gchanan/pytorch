@@ -11,7 +11,7 @@
 template<>
 void THPPointer<THTensor>::free() {
   if (ptr)
-    THTensor_(free)(LIBRARY_STATE ptr);
+    THWTensor_(free)(LIBRARY_STATE ptr);
 }
 
 template<>

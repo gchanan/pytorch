@@ -26,6 +26,7 @@
 
 #define THWStorage THStorage
 #define THWStorage_(NAME) THStorage_(NAME)
+#define THWTensor_(NAME) THTensor_(NAME)
 
 #include "PtrWrapper.h"
 #include "Exceptions.h"

@@ -8,7 +8,7 @@
 #define THWStorage THCStorage
 #define THWStorage_(NAME) THCStorage_(NAME)
 #define THTensor THCTensor
-#define THTensor_(NAME) THCTensor_(NAME)
+#define THWTensor_(NAME) THCTensor_(NAME)
 
 #define THPStorage_(NAME) TH_CONCAT_4(THCP,Real,Storage_,NAME)
 #define THPStorage THCPStorage
