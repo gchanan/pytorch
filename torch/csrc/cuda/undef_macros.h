@@ -22,7 +22,7 @@
 #undef THPStorageClass
 #undef THPStorageType
 
-#undef THStorage
+#undef THWStorage
 #undef THWStorage_
 #undef THTensor
 #undef THTensor_
