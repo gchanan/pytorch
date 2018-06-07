@@ -8,7 +8,7 @@
 
 #include <atomic>
 
-typedef struct _THTensor
+typedef struct THTensor
 {
     int64_t *size;
     int64_t *stride;
@@ -31,13 +31,11 @@ typedef struct _THTensor
     inline T * unsafe_data() const {
       return storage->unsafe_data<T>() + storageOffset;
     }
-} _THTensor;
+} THTensor;
 
-#include "generic/THTensor.hpp"
-#include "THGenerateAllTypes.h"
-
-#include "generic/THTensor.hpp"
-#include "THGenerateHalfType.h"
+typedef THTensor _THTensor;
 
 #include "generic/THTensorFastGetSet.hpp"
 #include "THGenerateAllTypes.h"
+
+TH_API void THTensor_free(_THTensor *self);
