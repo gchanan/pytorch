@@ -12,7 +12,7 @@ struct THPStorage;
 struct THSPTensor;
 
 typedef class THPPointer<THStorage>      THWStoragePtr;
-typedef class THPPointer<THTensor>       THTensorPtr;
+typedef class THPPointer<THTensor>       THWTensorPtr;
 typedef class THPPointer<THPStorage>     THPStoragePtr;
 
 #if (!defined(THC_GENERIC_FILE) || defined(THC_REAL_IS_HALF)) && \

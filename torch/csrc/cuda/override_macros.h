@@ -2,7 +2,7 @@
 
 #define THWStoragePtr THCStoragePtr
 #define THPStoragePtr THCPStoragePtr
-#define THTensorPtr THCTensorPtr
+#define THWTensorPtr THCTensorPtr
 #define THPTensorPtr THCPTensorPtr
 
 #define THStorage THCStorage
