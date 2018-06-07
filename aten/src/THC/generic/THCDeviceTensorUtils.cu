@@ -25,7 +25,7 @@ template <typename T, int Dim,
           typename IndexT, template <typename U> class PtrTraits>
 THCDeviceTensor<T, Dim, IndexT, PtrTraits>
 toDeviceTensor(THCState* state, THCTensor* t) {
-  if (Dim != THCTensor_(nDimension)(state, t)) {
+  if (Dim != THCTensor_nDimension(state, t)) {
     THError("THCudaTensor dimension mismatch");
   }
   // Determine the maximum offset into the tensor achievable; `IndexT`
@@ -35,8 +35,8 @@ toDeviceTensor(THCState* state, THCTensor* t) {
   IndexT strides[Dim];
 
   for (int i = 0; i < Dim; ++i) {
-    int64_t size = THCTensor_(size)(state, t, i);
-    int64_t stride = THCTensor_(stride)(state, t, i);
+    int64_t size = THCTensor_size(state, t, i);
+    int64_t stride = THCTensor_stride(state, t, i);
 
     maxOffset += (size - 1) * stride;
 
@@ -49,7 +49,8 @@ toDeviceTensor(THCState* state, THCTensor* t) {
   }
 
   return THCDeviceTensor<T, Dim, IndexT, PtrTraits>(
-    THCTensor_(data)(state, t), sizes, strides);
+    state->data<T>(), sizes, strides);
+    //THCTensor_(data)(state, t), sizes, strides);
 }
 
 #endif

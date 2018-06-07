@@ -7,8 +7,23 @@
 #define TH_TENSOR_REFCOUNTED 1
 
 // Struct definition moved to THTensor.hpp
-typedef struct THTensor THTensor;
+//typedef struct THTensor THTensor;
 
+struct THTensor;
+
+// These used to be distinct types; for some measure of backwards compatibility and documentation
+// alias these to the single THStorage type.
+#define THFloatTensor THTensor
+#define THDoubleTensor THTensor
+#define THHalfTensor THTensor
+//#define THByteTensor THTensor
+typedef struct THTensor THByteTensor;
+#define THCharTensor THTensor
+#define THShortTensor THTensor
+#define THIntTensor THTensor
+#define THLongTensor THTensor
+
+typedef struct THTensor THTensor;
 
 /**** access methods ****/
 TH_API THStorage* THTensor_(storage)(const THTensor *self);

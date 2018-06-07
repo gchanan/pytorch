@@ -5,19 +5,19 @@
 #define DeviceTensor3 THCDeviceTensor<real, 3>
 #define DeviceTensor1 THCDeviceTensor<real, 1>
 
-template <int Dim>
-static THCDeviceTensor<real, Dim> devicetensor(THCState *state, THCTensor *t) {
+template <typename T, int Dim>
+static THCDeviceTensor<T, Dim> THNN_(devicetensor)(THCState *state, THCTensor *t) {
   if (!t) {
-    return THCDeviceTensor<real, Dim>();
+    return THCDeviceTensor<T, Dim>();
   }
 
-  int inDim = THCTensor_(nDimension)(state, t);
+  int inDim = THCTensor_nDimension(state, t);
   if (inDim == Dim) {
-    return toDeviceTensor<real, Dim>(state, t);
+    return toDeviceTensor<T, Dim>(state, t);
   }
 
   // View in which the last dimensions are collapsed or expanded as needed
-  THAssert(THCTensor_(isContiguous)(state, t));
+  THAssert(THCTensor_isContiguous(state, t));
   int size[Dim];
   for (int i = 0; i < Dim || i < inDim; ++i) {
     if (i < Dim && i < inDim) {
@@ -28,7 +28,7 @@ static THCDeviceTensor<real, Dim> devicetensor(THCState *state, THCTensor *t) {
       size[Dim - 1] *= t->size[i];
     }
   }
-  return THCDeviceTensor<real, Dim>(THCTensor_(data)(state, t), size);
+  return THCDeviceTensor<T, Dim>(t->data<T>(), size);
 }
 
 void THNN_(BatchNormalization_updateOutput)(
@@ -43,14 +43,14 @@ void THNN_(BatchNormalization_updateOutput)(
     THCTensor_(resize1d)(state, saveMean_, nInput);
     THCTensor_(resize1d)(state, saveStd_, nInput);
   }
-  DeviceTensor3 input = devicetensor<3>(state, input_);
-  DeviceTensor3 output = devicetensor<3>(state, output_);
-  DeviceTensor1 weight = devicetensor<1>(state, weight_);
-  DeviceTensor1 bias = devicetensor<1>(state, bias_);
-  DeviceTensor1 runningMean = devicetensor<1>(state, runningMean_);
-  DeviceTensor1 runningVar = devicetensor<1>(state, runningVar_);
-  DeviceTensor1 saveMean = devicetensor<1>(state, saveMean_);
-  DeviceTensor1 saveStd = devicetensor<1>(state, saveStd_);
+  DeviceTensor3 input = THNN_(devicetensor)<real, 3>(state, input_);
+  DeviceTensor3 output = THNN_(devicetensor)<real, 3>(state, output_);
+  DeviceTensor1 weight = THNN_(devicetensor)<real, 1>(state, weight_);
+  DeviceTensor1 bias = THNN_(devicetensor)<real, 1>(state, bias_);
+  DeviceTensor1 runningMean = THNN_(devicetensor)<real, 1>(state, runningMean_);
+  DeviceTensor1 runningVar = THNN_(devicetensor)<real, 1>(state, runningVar_);
+  DeviceTensor1 saveMean = THNN_(devicetensor)<real, 1>(state, saveMean_);
+  DeviceTensor1 saveStd = THNN_(devicetensor)<real, 1>(state, saveStd_);
 
   cudaStream_t s = THCState_getCurrentStream(state);
   cudaDeviceProp *prop = THCState_getCurrentDeviceProperties(state);
@@ -81,16 +81,16 @@ void THNN_(BatchNormalization_backward)(
     THCTensor_(resizeAs)(state, gradInput_, input_);
   }
 
-  DeviceTensor3 input = devicetensor<3>(state, input_);
-  DeviceTensor3 gradOutput = devicetensor<3>(state, gradOutput_);
-  DeviceTensor3 gradInput = devicetensor<3>(state, gradInput_);
-  DeviceTensor1 gradWeight = devicetensor<1>(state, gradWeight_);
-  DeviceTensor1 gradBias = devicetensor<1>(state, gradBias_);
-  DeviceTensor1 weight = devicetensor<1>(state, weight_);
-  DeviceTensor1 runningMean = devicetensor<1>(state, runningMean_);
-  DeviceTensor1 runningVar = devicetensor<1>(state, runningVar_);
-  DeviceTensor1 saveMean = devicetensor<1>(state, saveMean_);
-  DeviceTensor1 saveStd = devicetensor<1>(state, saveStd_);
+  DeviceTensor3 input = THNN_(devicetensor)<real, 3>(state, input_);
+  DeviceTensor3 gradOutput = THNN_(devicetensor)<real, 3>(state, gradOutput_);
+  DeviceTensor3 gradInput = THNN_(devicetensor)<real, 3>(state, gradInput_);
+  DeviceTensor1 gradWeight = THNN_(devicetensor)<real, 1>(state, gradWeight_);
+  DeviceTensor1 gradBias = THNN_(devicetensor)<real, 1>(state, gradBias_);
+  DeviceTensor1 weight = THNN_(devicetensor)<real, 1>(state, weight_);
+  DeviceTensor1 runningMean = THNN_(devicetensor)<real, 1>(state, runningMean_);
+  DeviceTensor1 runningVar = THNN_(devicetensor)<real, 1>(state, runningVar_);
+  DeviceTensor1 saveMean = THNN_(devicetensor)<real, 1>(state, saveMean_);
+  DeviceTensor1 saveStd = THNN_(devicetensor)<real, 1>(state, saveStd_);
 
   cudaStream_t s = THCState_getCurrentStream(state);
 

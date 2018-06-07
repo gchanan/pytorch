@@ -28,34 +28,6 @@ bool isSameType() {
   return SameType<T, U>::same;
 }
 
-template <typename TensorType>
-struct TensorUtils {
-};
-
-#define TENSOR_UTILS(TENSOR_TYPE, DATA_TYPE, ACC_DATA_TYPE)             \
-  template <>                                                           \
-  struct THC_CLASS TensorUtils<TENSOR_TYPE> {                                     \
-    typedef DATA_TYPE DataType;                                         \
-    typedef ACC_DATA_TYPE AccDataType;                                  \
-                                                                        \
-    static void copyIgnoringOverlaps(THCState* state,                   \
-                                     TENSOR_TYPE* dst, TENSOR_TYPE* src); \
-  }
-
-TENSOR_UTILS(THCudaByteTensor, uint8_t, int64_t);
-TENSOR_UTILS(THCudaCharTensor, int8_t, int64_t);
-TENSOR_UTILS(THCudaShortTensor, int16_t, int64_t);
-TENSOR_UTILS(THCudaIntTensor, int32_t, int64_t);
-TENSOR_UTILS(THCudaLongTensor, int64_t, int64_t);
-TENSOR_UTILS(THCudaTensor, float, float);
-TENSOR_UTILS(THCudaDoubleTensor, double, double);
-
-#ifdef CUDA_HALF_TENSOR
-TENSOR_UTILS(THCudaHalfTensor, half, float);
-#endif
-
-#undef TENSOR_UTILS
-
 // Utility function for constructing TensorInfo structs. In this case, the
 // two template parameters are:
 //

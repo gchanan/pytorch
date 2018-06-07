@@ -9,12 +9,6 @@
 #endif
 
 template<>
-void THPPointer<THTensor>::free() {
-  if (ptr)
-    THTensor_(free)(LIBRARY_STATE ptr);
-}
-
-template<>
 void THPPointer<THPStorage>::free() {
   if (ptr)
     Py_DECREF(ptr);
@@ -29,7 +23,6 @@ void THPPointer<THSTensor>::free() {
 #endif
 
 
-template class THPPointer<THTensor>;
 template class THPPointer<THPStorage>;
 #if GENERATE_SPARSE
 template class THPPointer<THSTensor>;

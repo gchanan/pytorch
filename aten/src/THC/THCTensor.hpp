@@ -9,7 +9,7 @@
 
 #include <atomic>
 
-typedef struct _THCTensor
+typedef struct THCTensor
 {
     int64_t *size;
     int64_t *stride;
@@ -30,10 +30,9 @@ typedef struct _THCTensor
     inline T * unsafe_data() const {
       return storage->unsafe_data<T>() + storageOffset;
     }
-} _THCTensor;
+} THCTensor;
 
-#include "generic/THCTensor.hpp"
-#include "THCGenerateAllTypes.h"
+typedef THCTensor _THCTensor;
 
 THC_API int THCTensor_nDimension(THCState *state, const _THCTensor *self);
 THC_API int64_t THCTensor_size(THCState *state, const _THCTensor *self, int dim);
