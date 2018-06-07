@@ -24,6 +24,8 @@
 #define LIBRARY_STATE_TYPE
 #define LIBRARY_STATE_TYPE_NOARGS
 
+#define THWStorage_(NAME) THStorage_(NAME)
+
 #include "PtrWrapper.h"
 #include "Exceptions.h"
 #include "Generator.h"
