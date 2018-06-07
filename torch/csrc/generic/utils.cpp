@@ -20,20 +20,8 @@ void THPPointer<THPStorage>::free() {
     Py_DECREF(ptr);
 }
 
-#if GENERATE_SPARSE
-template<>
-void THPPointer<THSTensor>::free() {
-  if (ptr)
-    THSTensor_(free)(LIBRARY_STATE ptr);
-}
-#endif
-
-
 template class THPPointer<THTensor>;
 template class THPPointer<THPStorage>;
-#if GENERATE_SPARSE
-template class THPPointer<THSTensor>;
-#endif
 
 #undef GENERATE_SPARSE
 
