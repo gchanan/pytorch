@@ -118,7 +118,7 @@ static PyObject * THPStorage_(pynew)(PyTypeObject *type, PyObject *args, PyObjec
         size, numel - offset, offset);
 
     real *data_ptr = THStorage_(data)(LIBRARY_STATE storage_arg->cdata) + offset;
-    THStoragePtr storage(THStorage_(newWithData)(LIBRARY_STATE data_ptr, size));
+    THWStoragePtr storage(THStorage_(newWithData)(LIBRARY_STATE data_ptr, size));
     storage->flag = TH_STORAGE_REFCOUNTED | TH_STORAGE_VIEW;
     storage->view = storage_arg->cdata;
     THStorage_(retain)(LIBRARY_STATE storage_arg->cdata);
@@ -213,7 +213,7 @@ static PyObject * THPStorage_(get)(THPStorage *self, PyObject *index)
     }
 
     real *data = THStorage_(data)(LIBRARY_STATE self->cdata);
-    THStoragePtr new_storage(THStorage_(newWithData)(LIBRARY_STATE data + start, slicelength));
+    THWStoragePtr new_storage(THStorage_(newWithData)(LIBRARY_STATE data + start, slicelength));
     new_storage->flag = TH_STORAGE_REFCOUNTED | TH_STORAGE_VIEW;
     new_storage->view = self->cdata;
     THStorage_(retain)(LIBRARY_STATE self->cdata);

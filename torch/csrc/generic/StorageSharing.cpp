@@ -48,7 +48,7 @@ static PyObject * THPStorage_(sharedIncref)(THPStorage *self)
 static PyObject * THPStorage_(newTHView)(THStorage *base, ptrdiff_t offset, size_t size)
 {
   void *data = (char*)base->data<real>() + offset;
-  THStoragePtr view(THStorage_(newWithData)(LIBRARY_STATE (real*)data, size));
+  THWStoragePtr view(THStorage_(newWithData)(LIBRARY_STATE (real*)data, size));
   view->flag = TH_STORAGE_REFCOUNTED | TH_STORAGE_VIEW;
   view->view = base;
   THStorage_(retain)(LIBRARY_STATE base);
@@ -102,7 +102,7 @@ static PyObject * THPStorage_(shareFilename)(THPStorage *self)
   } else {
     // TODO: retry on collision
     AutoNoGIL no_gil;
-    THStoragePtr new_storage(THPStorage_(newFilenameStorage)(storage->size));
+    THWStoragePtr new_storage(THPStorage_(newFilenameStorage)(storage->size));
     THStorage_(copy)(new_storage, storage);
     THStorage_(swap)(storage, new_storage);
     ctx = (libshm_context*)storage->allocatorContext;
@@ -183,7 +183,7 @@ static PyObject * THPStorage_(shareFd)(THPStorage *self)
     ctx = (THMapAllocatorContext*)allocator_obj->allocatorContext;
   } else {
     AutoNoGIL no_gil;
-    THStoragePtr new_storage(THPStorage_(newFdStorage)(storage->size));
+    THWStoragePtr new_storage(THPStorage_(newFdStorage)(storage->size));
     THStorage_(copy)(new_storage, storage);
     THStorage_(swap)(storage, new_storage);
     ctx = (THMapAllocatorContext*)storage->allocatorContext;
@@ -304,7 +304,7 @@ static PyObject * THPStorage_(newSharedCuda)(PyObject *_unused, PyObject *args)
   void *devPtr = NULL;
   THCudaCheck(cudaIpcOpenMemHandle(&devPtr, handle, cudaIpcMemLazyEnablePeerAccess));
 
-  THStoragePtr base(THStorage_(newWithDataAndAllocator)(
+  THWStoragePtr base(THStorage_(newWithDataAndAllocator)(
       LIBRARY_STATE (real*)devPtr, storage_size, &THCIpcAllocator, (void*)device));
   base->flag = TH_STORAGE_REFCOUNTED | TH_STORAGE_FREEMEM;
 

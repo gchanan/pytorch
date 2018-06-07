@@ -72,7 +72,7 @@ THStorage * THPStorage_(readFileRaw)(io file, THStorage *_storage)
     throw std::runtime_error("unexpected EOF. The file might be corrupted.");
   if (result != sizeof(int64_t))
     throw std::system_error(result, std::system_category());
-  THStoragePtr storage;
+  THWStoragePtr storage;
   if (_storage == nullptr) {
     storage = THStorage_(newWithSize)(LIBRARY_STATE size);
   } else {

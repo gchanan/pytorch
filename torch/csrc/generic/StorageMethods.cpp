@@ -54,7 +54,7 @@ static PyObject * THPStorage_(elementSize)(THPStorage *self)
 static PyObject * THPStorage_(new)(THPStorage *self)
 {
   HANDLE_TH_ERRORS
-  THStoragePtr new_storage(THStorage_(new)(LIBRARY_STATE_NOARGS));
+  THWStoragePtr new_storage(THStorage_(new)(LIBRARY_STATE_NOARGS));
   PyObject *_ret = THPStorage_(New)(new_storage);
   new_storage.release();
   return _ret;
