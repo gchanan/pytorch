@@ -41,8 +41,6 @@ THC_API int64_t THCTensor_stride(THCState *state, const _THCTensor *self, int di
 THC_API THLongStorage *THCTensor_newSizeOf(THCState *state, _THCTensor *self);
 
 THC_API _THCTensor *THCTensor_new(THCState *state, at::ScalarType scalar_type);
-THC_API _THCTensor *THCTensor_newClone(THCState *state, _THCTensor *self);
-THC_API _THCTensor *THCTensor_newContiguous(THCState *state, _THCTensor *self);
 
 THC_API void THCTensor_resize(THCState *state, _THCTensor *tensor, THLongStorage *size, THLongStorage *stride);
 THC_API void THCTensor_resizeAs(THCState *state, _THCTensor *tensor, _THCTensor *src);
@@ -74,7 +72,3 @@ THC_API void THCTensor_preserveReduceDimSemantics(THCState *state, _THCTensor *t
 /* has more than one index that references the same datapoint, */
 /* true otherwise.                                             */
 THC_API bool THCTensor_maybeOverlappingIndices(THCState* state, const _THCTensor* t);
-
-// Copy methods
-THC_API void THCTensor_copySame(THCState* state,  _THCTensor *self, _THCTensor *src);
-THC_API void THCTensor_freeCopySameTo(THCState *state, _THCTensor *self, _THCTensor *dst);

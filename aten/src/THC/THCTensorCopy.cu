@@ -1,13 +1,25 @@
 #include "THCApply.cuh"
 #include "THCHalf.h"
 #include "THCNumerics.cuh"
-#include "THCTensorCopy.cuh"
+#include "THCTensorCopy.hpp"
 
 inline int curGPU() {
   int curDev;
   THCudaCheck(cudaGetDevice(&curDev));
   return curDev;
 }
+
+// Copy operator for the pointwise apply kernel
+template <typename TypeDst, typename TypeSrc>
+struct CopyOp {
+  __device__ __forceinline__ void operator()(TypeDst* dst, TypeSrc* src) {
+#if __CUDA_ARCH__ >= 350
+    *dst = ScalarConvert<TypeSrc, TypeDst>::to(__ldg(src));
+#else
+    *dst = ScalarConvert<TypeSrc, TypeDst>::to(*src);
+#endif
+  }
+};
 
 // Copy for the same type to the same type
 template <typename ScalarTypeDst, typename ScalarTypeSrc>
@@ -118,7 +130,7 @@ void THC_copyTensor(THCState* state, _THCTensor* dst, _THCTensor* src) {
       _THCTensor* srcContig = NULL;
 
       if (sameType) {
-        srcContig = THCTensor_newContiguous(state, src);
+        srcContig = THCTensor_newContiguous<ScalarTypeSrc>(state, src);
 
       } else {
         // Types are different
@@ -139,7 +151,7 @@ void THC_copyTensor(THCState* state, _THCTensor* dst, _THCTensor* src) {
 
       // Make sure the dst is contiguous
       THCudaCheck(cudaSetDevice(dstDev));
-      _THCTensor* dstContig = THCTensor_newContiguous(state, dst);
+      _THCTensor* dstContig = THCTensor_newContiguous<ScalarTypeDst>(state, dst);
 
       // Now, we are ready for a cross-device memcpy of contiguous
       // data, of the same layout and type
@@ -157,7 +169,7 @@ void THC_copyTensor(THCState* state, _THCTensor* dst, _THCTensor* src) {
       THCTensor_free(state, srcContig);
 
       if (dst != dstContig) {
-        THCTensor_freeCopySameTo(state, dstContig, dst);
+        THCTensor_freeCopyTo<ScalarTypeDst>(state, dstContig, dst);
       } else {
         THCTensor_free(state, dstContig);
       }

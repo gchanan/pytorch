@@ -4,7 +4,7 @@
 #include "THCTensorCopy.h"
 #include "THCReduceApplyUtils.cuh"
 #include "THCTensorTypeUtils.cuh"
-#include "THCTensorCopy.cuh"
+#include "THCTensorCopy.hpp"
 
 //
 // This file contains pointwise operation functions and kernels that
@@ -221,7 +221,7 @@ bool THC_pointwiseApply1(THCState* state,
       THCTensor_maybeOverlappingIndices(state, a)) {
     // Must perform in contiguous space
     oldA = a;
-    a = (TensorTypeA*)THCTensor_newContiguous(state, a);
+    a = (TensorTypeA*)THCTensor_newContiguous<ScalarTypeA>(state, a);
   }
 
   // It is possible that the tensor dimensions are able to be collapsed,
@@ -364,13 +364,13 @@ bool THC_pointwiseApply2(THCState* state,
       THCTensor_maybeOverlappingIndices(state, a)) {
     // Must perform in contiguous space
     oldA = a;
-    a = (TensorTypeA*)THCTensor_newContiguous(state, a);
+    a = (TensorTypeA*)THCTensor_newContiguous<ScalarTypeA>(state, a);
   }
   if (bType == ReadWrite &&
       THCTensor_maybeOverlappingIndices(state, b)) {
     // Must perform in contiguous space
     oldB = b;
-    b = (TensorTypeB*)THCTensor_newContiguous(state, b);
+    b = (TensorTypeB*)THCTensor_newContiguous<ScalarTypeB>(state, b);
   }
 
   // It is possible that the tensor dimensions are able to be collapsed,
@@ -560,19 +560,19 @@ bool THC_pointwiseApply3(THCState* state,
       THCTensor_maybeOverlappingIndices(state, a)) {
     // Must perform in contiguous space
     oldA = a;
-    a = (TensorTypeA*)THCTensor_newContiguous(state, a);
+    a = (TensorTypeA*)THCTensor_newContiguous<ScalarTypeA>(state, a);
   }
   if (bType == ReadWrite &&
       THCTensor_maybeOverlappingIndices(state, b)) {
     // Must perform in contiguous space
     oldB = b;
-    b = (TensorTypeB*)THCTensor_newContiguous(state, b);
+    b = (TensorTypeB*)THCTensor_newContiguous<ScalarTypeB>(state, b);
   }
   if (cType == ReadWrite &&
       THCTensor_maybeOverlappingIndices(state, c)) {
     // Must perform in contiguous space
     oldC = c;
-    c = (TensorTypeC*)THCTensor_newContiguous(state, c);
+    c = (TensorTypeC*)THCTensor_newContiguous<ScalarTypeC>(state, c);
   }
 
 #define HANDLE_CASE(TYPE, A, B, C)                                      \

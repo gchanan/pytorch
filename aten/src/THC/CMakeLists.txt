@@ -68,7 +68,7 @@ INSTALL(FILES
           THCThreadLocal.h
           THCTensor.h
           THCTensorCopy.h
-          THCTensorCopy.cuh
+          THCTensorCopy.hpp
           THCTensorRandom.h
           THCTensorMath.h
           THCTensorConv.h
