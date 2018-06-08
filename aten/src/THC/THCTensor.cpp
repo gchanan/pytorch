@@ -56,7 +56,7 @@ _THCTensor *THCTensor_new(THCState *state, at::ScalarType scalar_type) {
 _THCTensor *THCTensor_newClone(THCState *state, _THCTensor *self) {
   _THCTensor *tensor = THCTensor_new(state, self->storage->scalar_type);
   THCTensor_resizeAs(state, tensor, self);
-  THCTensor_copy(state, tensor, self);
+  THCTensor_copySame(state, tensor, self);
   return tensor;
 }
 
