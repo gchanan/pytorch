@@ -5,7 +5,7 @@
 THC_API void
 THCTensor_(copy)(THCState* state, THCTensor* dst, THCTensor* src) {
   if (dst == src) return;
-  THC_copyTensor<real, real, THCTensor, THCTensor>(state, dst, src);
+  THC_copyTensor<real, real>(state, dst, src);
 }
 
 template <>
@@ -32,7 +32,7 @@ THCTensor_(copyIgnoringOverlaps)(THCState* state, THCTensor* dst, THCTensor* src
   THCTensor_(copyCuda##TYPEC)(THCState *state,                          \
                               THCTensor *self,                          \
                               THCuda##TYPECUDA##Tensor *src) {          \
-    THC_copyTensor<real, SCALARC, THCTensor, THCuda##TYPECUDA##Tensor>(state, self, src); \
+    THC_copyTensor<real, SCALARC>(state, self, src); \
   }
 
 IMPLEMENT_THC_CUDA_TENSOR_COPY(Byte, Byte, uint8_t)

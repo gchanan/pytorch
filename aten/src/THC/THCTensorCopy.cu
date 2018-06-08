@@ -10,9 +10,9 @@ inline int curGPU() {
 }
 
 // Copy for the same type to the same type
-template <typename ScalarTypeDst, typename ScalarTypeSrc, typename TensorTypeDst, typename TensorTypeSrc>
+template <typename ScalarTypeDst, typename ScalarTypeSrc>
 void
-THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
+THC_copyTensor(THCState* state, _THCTensor* dst, _THCTensor* src) {
 
   ptrdiff_t totalElements = THCTensor_nElement(state, dst);
 
@@ -33,7 +33,7 @@ THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
   // to the size/strides such that the resulting tensor is
   // contiguous).
   // -AND: both tensors have the same type.
-  bool sameType = isSameType<TensorTypeSrc, TensorTypeDst>();
+  bool sameType = src->storage->scalar_type == dst->storage->scalar_type;
   bool srcContig = THCTensor_isContiguous(state, src);
   bool dstContig = THCTensor_isContiguous(state, dst);
   bool memcpyEligible =
@@ -116,18 +116,16 @@ THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
 
       // Make sure the src is contiguous and in the same type as dst
       THCudaCheck(cudaSetDevice(srcDev));
-      TensorTypeDst* srcContig = NULL;
+      _THCTensor* srcContig = NULL;
 
       if (sameType) {
-        srcContig =
-          (TensorTypeDst*) // this is actually the same type as src
-          THCTensor_newContiguous(state, src);
+        srcContig = THCTensor_newContiguous(state, src);
 
       } else {
         // Types are different
         // Copy into the new format, contiguous, on the source device
-        srcContig = (TensorTypeDst*)THCTensor_new(state,
-                                                  at::CTypeToScalarType<at::cuda::from_type<ScalarTypeDst>>::to());
+        srcContig = THCTensor_new(state,
+                                  at::CTypeToScalarType<at::cuda::from_type<ScalarTypeDst>>::to());
         THCTensor_resizeAs(state, srcContig, dst);
 
         bool succ =
@@ -142,8 +140,7 @@ THC_copyTensor(THCState* state, TensorTypeDst* dst, TensorTypeSrc* src) {
 
       // Make sure the dst is contiguous
       THCudaCheck(cudaSetDevice(dstDev));
-      TensorTypeDst* dstContig =
-        (TensorTypeDst*)THCTensor_newContiguous(state, dst);
+      _THCTensor* dstContig = THCTensor_newContiguous(state, dst);
 
       // Now, we are ready for a cross-device memcpy of contiguous
       // data, of the same layout and type
