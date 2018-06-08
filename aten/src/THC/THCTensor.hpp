@@ -72,3 +72,5 @@ THC_API void THCTensor_preserveReduceDimSemantics(THCState *state, _THCTensor *t
 /* has more than one index that references the same datapoint, */
 /* true otherwise.                                             */
 THC_API bool THCTensor_maybeOverlappingIndices(THCState* state, const _THCTensor* t);
+
+THC_API void THCTensor_copySame(THCState* state,  _THCTensor *self, _THCTensor *src);
