@@ -91,7 +91,7 @@ static inline void THNN_(VolumetricFullDilatedConvolution_shapeCheck)(
                          int pT, int pW, int pH,
                          int dilationT, int dilationW, int dilationH,
                          int aT, int aW, int aH, int weight_nullable) {
-  THNN_ARGCHECK(input->dim() == 4 || input->dim() == 5, 2, input,
+  THNN_ARGCHECK(input->new_dim() == 4 || input->new_dim() == 5, 2, input,
                 "4D or 5D (batch mode) tensor expected for input, but got: %s");
   THArgCheck(dT > 0 && dW > 0 && dH > 0, 11,
              "stride should be greater than zero, but got dT: %d dH: %d dW: %d", dT, dH, dW);
@@ -108,7 +108,7 @@ static inline void THNN_(VolumetricFullDilatedConvolution_shapeCheck)(
 
   // number of input & output planes and kernel size is indirectly defined by the weight tensor
   if (weight != NULL) {
-    THNN_ARGCHECK(weight->dim() == 5, 4, weight,
+    THNN_ARGCHECK(weight->new_dim() == 5, 4, weight,
                   "5D (nOutputPlane x nInputPlane x kT x kH x kW) tensor "
                   "expected for weight, but got: %s");
     if (bias != NULL) {
@@ -118,7 +118,7 @@ static inline void THNN_(VolumetricFullDilatedConvolution_shapeCheck)(
     THError("weight tensor is expected to be non-nullable");
   }
 
-  int ndim = input->dim();
+  int ndim = input->new_dim();
   int dimf = 0;
   int dimd = 1;
   int dimh = 2;
@@ -191,7 +191,7 @@ void THNN_(VolumetricFullDilatedConvolution_updateOutput)(
   weight = THTensor_(newContiguous)(weight);
   bias = bias ? THTensor_(newContiguous)(bias) : bias;
   int is_batch = 1;
-  if (input->dim() == 4)
+  if (input->new_dim() == 4)
   {
     // Force batch
     is_batch = 0;
@@ -332,7 +332,7 @@ void THNN_(VolumetricFullDilatedConvolution_updateGradInput)(
   gradOutput = THTensor_(newContiguous)(gradOutput);
 
   int is_batch = 1;
-  if (input->dim() == 4)
+  if (input->new_dim() == 4)
   {
     // Force batch
     is_batch = 0;
@@ -460,7 +460,7 @@ void THNN_(VolumetricFullDilatedConvolution_accGradParameters)(
   }
 
   int is_batch = 1;
-  if (input->dim() == 4)
+  if (input->new_dim() == 4)
   {
     // Force batch
     is_batch = 0;

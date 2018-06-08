@@ -12,7 +12,7 @@ static inline void THNN_(VolumetricDilatedMaxPooling_shapeCheck)(
                          int pT, int pW, int pH,
                          int dilationT, int dilationW, int dilationH,
                          bool ceilMode) {
-  int ndim = input->dim();
+  int ndim = input->new_dim();
   int dimN = 0;
   int dimt = 1;
   int dimh = 2;
@@ -226,7 +226,7 @@ void THNN_(VolumetricDilatedMaxPooling_updateOutput)(
   int dimh = 2;
   int dimw = 3;
 
-  if (input->dim() == 5)
+  if (input->new_dim() == 5)
   {
     dimN++;
     dimt++;
@@ -272,7 +272,7 @@ void THNN_(VolumetricDilatedMaxPooling_updateOutput)(
   /* get contiguous input */
   input = THTensor_(newContiguous)(input);
 
-  if (input->dim() == 4) /* non-batch mode */
+  if (input->new_dim() == 4) /* non-batch mode */
   {
     /* resize output */
     THTensor_(resize4d)(output, nslices, otime, oheight, owidth);
@@ -435,7 +435,7 @@ void THNN_(VolumetricDilatedMaxPooling_updateGradInput)(
   THTensor_(resizeAs)(gradInput, input);
   THTensor_(zero)(gradInput);
 
-  if (input->dim() == 5)
+  if (input->new_dim() == 5)
   {
     dimN++;
     dimt++;
@@ -458,7 +458,7 @@ void THNN_(VolumetricDilatedMaxPooling_updateGradInput)(
   indices_data = THIndexTensor_(data)(indices);
 
   /* backprop */
-  if (input->dim() == 4) /* non-batch mode*/
+  if (input->new_dim() == 4) /* non-batch mode*/
   {
     THNN_(VolumetricDilatedMaxPooling_updateGradInput_frame)(
       gradInput_data, gradOutput_data,
