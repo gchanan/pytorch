@@ -32,8 +32,6 @@ typedef struct THCTensor
     }
 } THCTensor;
 
-typedef THCTensor _THCTensor;
-
 THC_API int THCTensor_nDimension(THCState *state, const _THCTensor *self);
 THC_API int64_t THCTensor_size(THCState *state, const _THCTensor *self, int dim);
 THC_API int64_t THCTensor_stride(THCState *state, const _THCTensor *self, int dim);

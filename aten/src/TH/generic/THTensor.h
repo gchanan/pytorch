@@ -10,7 +10,7 @@
 typedef struct THTensor THTensor;
 
 // These used to be distinct types; for some measure of backwards compatibility and documentation
-// alias these to the single THStorage type.
+// alias these to the single THTensor type.
 #define THFloatTensor THTensor
 #define THDoubleTensor THTensor
 #define THHalfTensor THTensor
