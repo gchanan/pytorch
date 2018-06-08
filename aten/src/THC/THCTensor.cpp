@@ -255,7 +255,7 @@ bool THCTensor_isContiguous(THCState *state, const THCTensor *self) {
   return true;
 }
 
-bool THCTensor_allContiguous(THCState *state, const THCTensor **inputs, int numInputs) {
+bool THCTensor_allContiguous(THCState *state, THCTensor **inputs, int numInputs) {
   THAssert(numInputs > 0);
   for (int i = 0; i < numInputs; ++i) {
     if (!THCTensor_isContiguous(state, inputs[i])) {
@@ -307,7 +307,7 @@ int THCTensor_getDevice(THCState* state, const THCTensor* tensor) {
   return THCStorage_getDevice(state, tensor->storage);
 }
 
-bool THCTensor_allSameDevice(THCState* state, const THCTensor ** inputs, int numInputs) {
+bool THCTensor_allSameDevice(THCState* state, THCTensor ** inputs, int numInputs) {
   THAssert(numInputs > 0);
   int device = THCTensor_getDevice(state, inputs[0]);
   for (int i = 1; i < numInputs; ++i) {
@@ -343,7 +343,7 @@ bool THCTensor_canUse32BitIndexMath(THCState* state, const THCTensor* t, ptrdiff
   return true;
 }
 
-bool THCTensor_all32BitIndexable(THCState* state, const THCTensor** inputs, int numInputs) {
+bool THCTensor_all32BitIndexable(THCState* state, THCTensor** inputs, int numInputs) {
   for (int i = 0; i < numInputs; ++i) {
     if (!THCTensor_canUse32BitIndexMath(state, inputs[i])) {
       return false;

@@ -50,19 +50,19 @@ THC_API void THCTensor_squeeze1d(THCState *state, THCTensor *self, THCTensor *sr
 THC_API void THCTensor_unsqueeze1d(THCState *state, THCTensor *self, THCTensor *src, int dimension_);
 
 THC_API bool THCTensor_isContiguous(THCState *state, const THCTensor *self);
-THC_API bool THCTensor_allContiguous(THCState *state, const THCTensor **inputs, int numInputs);
+THC_API bool THCTensor_allContiguous(THCState *state, THCTensor **inputs, int numInputs);
 THC_API ptrdiff_t THCTensor_nElement(THCState *state, const THCTensor *self);
 
 THC_API void THCTensor_retain(THCState *state, THCTensor *self);
 THC_API void THCTensor_free(THCState *state, THCTensor *self);
 
 THC_API int THCTensor_getDevice(THCState* state, const THCTensor* tensor);
-THC_API bool THCTensor_allSameDevice(THCState* state, const THCTensor ** inputs, int numInputs);
+THC_API bool THCTensor_allSameDevice(THCState* state, THCTensor ** inputs, int numInputs);
 
 /* Can we use 32 bit math for indexing? */
 THC_API bool THCTensor_canUse32BitIndexMath(THCState* state, const THCTensor* t, ptrdiff_t max_elem=INT32_MAX);
 /* Are all tensors 32-bit indexable? */
-THC_API bool THCTensor_all32BitIndexable(THCState* state, const THCTensor** inputs, int numInputs);
+THC_API bool THCTensor_all32BitIndexable(THCState* state, THCTensor** inputs, int numInputs);
 THC_API void THCTensor_preserveReduceDimSemantics(THCState *state, THCTensor *tensor, int in_dims,
                                                   int64_t dimension, int keepdim);
 /* Returns false if there is no possibility that the tensor    */
