@@ -2,6 +2,7 @@
 #include "THCHalf.h"
 #include "THCNumerics.cuh"
 #include "THCTensorCopy.hpp"
+#include <type_traits>
 
 inline int curGPU() {
   int curDev;
@@ -44,7 +45,7 @@ void THC_copyTensor(THCState* state, _THCTensor* dst, _THCTensor* src) {
   // to the size/strides such that the resulting tensor is
   // contiguous).
   // -AND: both tensors have the same type.
-  bool sameType = src->storage->scalar_type == dst->storage->scalar_type;
+  bool sameType = std::is_same<ScalarTypeDst, ScalarTypeSrc>::value;
   bool srcContig = THCTensor_isContiguous(state, src);
   bool dstContig = THCTensor_isContiguous(state, dst);
   bool memcpyEligible =
