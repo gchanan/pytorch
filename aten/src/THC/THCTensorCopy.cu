@@ -11,8 +11,7 @@ inline int curGPU() {
 
 // Copy for the same type to the same type
 template <typename ScalarTypeDst, typename ScalarTypeSrc>
-void
-THC_copyTensor(THCState* state, _THCTensor* dst, _THCTensor* src) {
+void THC_copyTensor(THCState* state, _THCTensor* dst, _THCTensor* src) {
 
   ptrdiff_t totalElements = THCTensor_nElement(state, dst);
 

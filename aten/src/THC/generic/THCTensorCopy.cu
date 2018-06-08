@@ -9,6 +9,34 @@ THCTensor_(copy)(THCState* state, THCTensor* dst, THCTensor* src) {
 }
 
 template <>
+_THCTensor *THCTensor_newClone<real>(THCState *state, _THCTensor *self) {
+  _THCTensor *tensor = THCTensor_new(state, self->storage->scalar_type);
+  THCTensor_resizeAs(state, tensor, self);
+  THC_copyTensor<real, real>(state, tensor, self);
+  return tensor;
+}
+
+template <>
+_THCTensor *THCTensor_newContiguous<real>(THCState *state, _THCTensor *self)
+{
+  if(!THCTensor_isContiguous(state, self)) {
+    return THCTensor_newClone<real>(state, self);
+  } else {
+    THCTensor_retain(state, self);
+    return self;
+  }
+}
+
+
+template <>
+void THCTensor_freeCopyTo<real>(THCState *state, _THCTensor *self, _THCTensor *dst) {
+  if(self != dst)
+    THC_copyTensor<real, real>(state, dst, self);
+
+  THCTensor_free(state, self);
+}
+
+template <>
 void THCTensor_copyIgnoringOverlaps<real>(THCState* state, _THCTensor* dst, _THCTensor* src) {
   // Called when we are copying into an overlapping index `dst`, but
   // we don't care which writer wins. Hacky but it works.
