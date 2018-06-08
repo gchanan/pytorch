@@ -38,7 +38,6 @@ struct TensorUtils {
     typedef DATA_TYPE DataType;                                         \
     typedef ACC_DATA_TYPE AccDataType;                                  \
                                                                         \
-    static TENSOR_TYPE* newTensor(THCState* state);                     \
     static TENSOR_TYPE* newContiguous(THCState* state, TENSOR_TYPE* t); \
     static void freeCopyTo(THCState* state, TENSOR_TYPE* src,           \
                            TENSOR_TYPE* dst);                           \

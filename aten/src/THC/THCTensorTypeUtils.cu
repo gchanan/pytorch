@@ -7,11 +7,6 @@
 #define IMPL_TENSOR_UTILS(TENSOR_TYPE, DATA_TYPE)                       \
                                                                         \
 TENSOR_TYPE*                                                            \
-TensorUtils<TENSOR_TYPE>::newTensor(THCState* state) {                  \
-  return TENSOR_TYPE##_new(state);                                      \
-}                                                                       \
-                                                                        \
-TENSOR_TYPE*                                                            \
 TensorUtils<TENSOR_TYPE>::newContiguous(THCState* state,                \
                                         TENSOR_TYPE* t) {               \
   return TENSOR_TYPE##_newContiguous(state, t);                         \
