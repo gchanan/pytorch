@@ -12,7 +12,7 @@ typedef struct THTensor
 {
     int64_t *size;
     int64_t *stride;
-    int nDimension;
+    int nDimension_;
 
     // Note: storage->size may be greater than the recorded size
     // of a tensor
@@ -30,6 +30,14 @@ typedef struct THTensor
     template <typename T>
     inline T * unsafe_data() const {
       return storage->unsafe_data<T>() + storageOffset;
+    }
+
+    inline int dim() const {
+      return nDimension_;  
+    }
+
+    inline int new_dim() const {
+      return nDimension_;  
     }
 } THTensor;
 
