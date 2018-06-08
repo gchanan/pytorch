@@ -17,7 +17,7 @@ static inline void THNN_(VolumetricMaxUnpooling_shapeCheck)(
                          int pW,
                          int pH)
 {
-  THNN_ARGCHECK(input->dim() == 4 || input->dim() == 5, 2, input,
+  THNN_ARGCHECK(input->new_dim() == 4 || input->new_dim() == 5, 2, input,
                 "4D or 5D (batch mode) tensor expected for input, but got: %s");
 
   THNN_CHECK_SHAPE_INDICES(input, indices);
@@ -31,7 +31,7 @@ static inline void THNN_(VolumetricMaxUnpooling_shapeCheck)(
   int dimt = 1;
   int dimn = 0;
 
-  if (input->dim() == 5)
+  if (input->new_dim() == 5)
   {
     dimt++;
     dimw++;
@@ -49,7 +49,7 @@ static inline void THNN_(VolumetricMaxUnpooling_shapeCheck)(
       );
     }
 
-    THNN_CHECK_DIM_SIZE(gradOutput, input->dim(), dimn, nslices);
+    THNN_CHECK_DIM_SIZE(gradOutput, input->new_dim(), dimn, nslices);
   }
 }
 
@@ -285,7 +285,7 @@ void THNN_(VolumetricMaxUnpooling_updateGradInput)(
   THTensor_(resizeAs)(gradInput, input);
   THTensor_(zero)(gradInput);
 
-  if (input->dim() == 5)
+  if (input->new_dim() == 5)
   {
     nbatch = input->size[0];
     dimt++;
@@ -305,7 +305,7 @@ void THNN_(VolumetricMaxUnpooling_updateGradInput)(
   indices_data = THIndexTensor_(data)(indices);
 
   /* backprop */
-  if (input->dim() == 4)
+  if (input->new_dim() == 4)
   {
     THNN_(VolumetricMaxUnpooling_updateGradInput_frame)(
       gradInput_data, gradOutput_data,
