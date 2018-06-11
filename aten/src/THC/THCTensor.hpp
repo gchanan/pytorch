@@ -13,7 +13,7 @@ typedef struct THCTensor
 {
     int64_t *size;
     int64_t *stride;
-    int nDimension;
+    int64_t nDimension;
 
     THCStorage *storage;
     ptrdiff_t storageOffset;

@@ -12,7 +12,7 @@ typedef struct THTensor
 {
     int64_t *size;
     int64_t *stride;
-    int nDimension;
+    int64_t nDimension;
 
     // Note: storage->size may be greater than the recorded size
     // of a tensor
