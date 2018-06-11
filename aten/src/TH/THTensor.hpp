@@ -39,12 +39,12 @@ typedef struct THTensor
       return is_empty_ ? 0 : dim_;
     }
 
-    // NOTE: this is the TH view of the dimensionality, i.e. 0-sized dimensions are supported.
+    // NOTE: this is the ATen view of the dimensionality, i.e. 0-sized dimensions are supported.
     inline int64_t dim() const {
       return dim_;
     }
 
-    // NOTE: will go away, represents that prod(*sizes) == 0.
+    // NOTE: will go away, represents that prod(*sizes) == 0 in ATen view.
     inline bool is_empty() const {
       return is_empty_;
     }
