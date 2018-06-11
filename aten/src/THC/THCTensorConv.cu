@@ -303,7 +303,7 @@ THC_API void THCudaTensor_conv2Dmv(THCState *state, THCudaTensor *output, float 
   int64_t nKernelRows, nKernelCols;
   int64_t nOutputPlane, nOutputRows, nOutputCols;
 
-  THArgCheck(kernel->nDimension == 4 , 4, "kernel: 4D Tensor expected");
+  THArgCheck(kernel->_dim() == 4 , 4, "kernel: 4D Tensor expected");
   THArgCheck(srow >= 1, 5, "Stride should be a positive integer");
   THArgCheck(scol >= 1, 6, "Stride should be a positive integer");
   THArgCheck(type[0] == 'v' || type[0] == 'f', 7, "type of convolution can 'v' or 'f'");
@@ -423,7 +423,7 @@ THC_API void THCudaTensor_conv2Dmm(THCState *state, THCudaTensor *output, float 
   int64_t nKernelRows, nKernelCols;
   int64_t nOutputPlane, nOutputRows, nOutputCols;
 
-  THArgCheck(kernel->nDimension == 4 , 4, "kernel: 4D Tensor expected");
+  THArgCheck(kernel->_dim() == 4 , 4, "kernel: 4D Tensor expected");
   THArgCheck(srow >= 1, 5, "Stride should be a positive integer");
   THArgCheck(scol >= 1, 6, "Stride should be a positive integer");
   THArgCheck(type[0] == 'v' || type[0] == 'f', 7, "type of convolution can 'v' or 'f'");
@@ -556,8 +556,8 @@ THC_API void THCudaTensor_conv2DRevger(THCState *state, THCudaTensor *output, fl
   int64_t nKernelPlane, nKernelRows, nKernelCols;
   int64_t nOutputRows, nOutputCols;
 
-  THArgCheck(input->nDimension == 3 , 3, "input: 3D Tensor expected");
-  THArgCheck(kernel->nDimension == 3 , 4, "kernel: 3D Tensor expected");
+  THArgCheck(input->_dim() == 3 , 3, "input: 3D Tensor expected");
+  THArgCheck(kernel->_dim() == 3 , 4, "kernel: 3D Tensor expected");
   THArgCheck(srow >= 1, 5, "Stride should be a positive integer");
   THArgCheck(scol >= 1, 6, "Stride should be a positive integer");
 
@@ -628,8 +628,8 @@ THC_API void THCudaTensor_conv2DRevgerm(THCState *state, THCudaTensor *output, f
   int64_t nOutputRows, nOutputCols;
   int64_t nbatch;
 
-  THArgCheck(input->nDimension == 4 , 3, "input: 3D Tensor expected");
-  THArgCheck(kernel->nDimension == 4 , 4, "kernel: 3D Tensor expected");
+  THArgCheck(input->_dim() == 4 , 3, "input: 3D Tensor expected");
+  THArgCheck(kernel->_dim() == 4 , 4, "kernel: 3D Tensor expected");
   THArgCheck(srow >= 1, 5, "Stride should be a positive integer");
   THArgCheck(scol >= 1, 6, "Stride should be a positive integer");
 
@@ -890,7 +890,7 @@ THC_API void THCudaTensor_conv2Dmap(THCState *state, THCudaTensor *output, THCud
   int64_t nKernelRows, nKernelCols;
   int64_t nOutputPlane, nOutputRows, nOutputCols;
 
-  THArgCheck(kernel->nDimension == 3 , 4, "kernel: 3D Tensor expected");
+  THArgCheck(kernel->_dim() == 3 , 4, "kernel: 3D Tensor expected");
   THArgCheck(stride_x >= 1, 5, "Stride should be a positive integer");
   THArgCheck(stride_y >= 1, 6, "Stride should be a positive integer");
 
