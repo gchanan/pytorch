@@ -167,7 +167,7 @@ THCTensor *THCTensor_(newWithSize4d)(THCState *state, int64_t size0, int64_t siz
 
   THCTensor *self = (THCTensor*)THAlloc(sizeof(THCTensor));
   THCTensor_(rawInit)(state, self);
-  THCTensor_(resizeNd)(state, self, 4, size, NULL);
+  THCTensor_(resizeNdLegacy)(state, self, 4, size, NULL);
 
   return self;
 }
@@ -294,9 +294,9 @@ THCTensor *THCTensor_(newFoldBatchDim)(THCState *state, THCTensor *input) {
 }
 
 /* Resize */
-void THCTensor_(resize)(THCState *state, THCTensor *self, THLongStorage *size, THLongStorage *stride)
+void THCTensor_(resizeLegacy)(THCState *state, THCTensor *self, THLongStorage *size, THLongStorage *stride)
 {
-  THCTensor_resize(state, self, size, stride);
+  THCTensor_resizeLegacy(state, self, size, stride);
 }
 
 void THCTensor_(resizeAs)(THCState *state, THCTensor *self, THCTensor *src)
@@ -323,14 +323,14 @@ void THCTensor_(resize4d)(THCState *state, THCTensor *self, int64_t size0, int64
 {
   int64_t size[4] = {size0, size1, size2, size3};
 
-  THCTensor_(resizeNd)(state, self, 4, size, NULL);
+  THCTensor_(resizeNdLegacy)(state, self, 4, size, NULL);
 }
 
 void THCTensor_(resize5d)(THCState *state, THCTensor *self, int64_t size0, int64_t size1, int64_t size2, int64_t size3, int64_t size4)
 {
     int64_t size[5] = {size0, size1, size2, size3, size4};
 
-  THCTensor_(resizeNd)(state, self, 5, size, NULL);
+  THCTensor_(resizeNdLegacy)(state, self, 5, size, NULL);
 }
 
 void THCTensor_(set)(THCState *state, THCTensor *self, THCTensor *src)
@@ -637,9 +637,9 @@ void THCTensor_(setStorageNd)(THCState *state, THCTensor *self, THCStorage *stor
   THCTensor_setStorageNd(state, self, storage, storageOffset, nDimension, size, stride);
 }
 
-void THCTensor_(resizeNd)(THCState *state, THCTensor *self, int nDimension, int64_t *size, int64_t *stride)
+void THCTensor_(resizeNdLegacy)(THCState *state, THCTensor *self, int nDimension, int64_t *size, int64_t *stride)
 {
-  THCTensor_resizeNd(state, self, nDimension, size, stride);
+  THCTensor_resizeNdLegacy(state, self, nDimension, size, stride);
 }
 
 void THCTensor_(set1d)(THCState *state, THCTensor *tensor, int64_t x0, real value)
