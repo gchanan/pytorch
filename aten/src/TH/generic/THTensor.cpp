@@ -176,7 +176,7 @@ THTensor *THTensor_(newWithSize4d)(int64_t size0, int64_t size1, int64_t size2, 
 
   THTensor *self = (THTensor *)THAlloc(sizeof(THTensor));
   THTensor_(rawInit)(self);
-  THTensor_(resizeNd)(self, 4, size, NULL);
+  THTensor_(resizeNdLegacy)(self, 4, size, NULL);
 
   return self;
 }
@@ -287,7 +287,7 @@ THTensor *THTensor_(newView)(THTensor *tensor, THLongStorage *size)
 }
 
 /* Resize */
-void THTensor_(resize)(THTensor *self, THLongStorage *size, THLongStorage *stride)
+void THTensor_(resizeLegacy)(THTensor *self, THLongStorage *size, THLongStorage *stride)
 {
   THArgCheck(size != NULL, 2, "invalid size");
   if(stride)
@@ -296,13 +296,13 @@ void THTensor_(resize)(THTensor *self, THLongStorage *size, THLongStorage *strid
 #ifdef DEBUG
   THAssert(size->size <= INT_MAX);
 #endif
-  THTensor_(resizeNd)(self, size->size, THLongStorage_data(size), (stride ? THLongStorage_data(stride) : NULL));
+  THTensor_(resizeNdLegacy)(self, size->size, THLongStorage_data(size), (stride ? THLongStorage_data(stride) : NULL));
 }
 
 void THTensor_(resizeAs)(THTensor *self, THTensor *src)
 {
   if(!THTensor_(isSameSizeAs)(self, src))
-    THTensor_(resizeNd)(self, src->nDimension, src->size, NULL);
+    THTensor_(resizeNdLegacy)(self, src->nDimension, src->size, NULL);
 }
 
 void THTensor_(resize1d)(THTensor *tensor, int64_t size0)
@@ -324,14 +324,14 @@ void THTensor_(resize4d)(THTensor *self, int64_t size0, int64_t size1, int64_t s
 {
   int64_t size[4] = {size0, size1, size2, size3};
 
-  THTensor_(resizeNd)(self, 4, size, NULL);
+  THTensor_(resizeNdLegacy)(self, 4, size, NULL);
 }
 
 void THTensor_(resize5d)(THTensor *self, int64_t size0, int64_t size1, int64_t size2, int64_t size3, int64_t size4)
 {
     int64_t size[5] = {size0, size1, size2, size3, size4};
 
-  THTensor_(resizeNd)(self, 5, size, NULL);
+  THTensor_(resizeNdLegacy)(self, 5, size, NULL);
 }
 
 void THTensor_(set)(THTensor *self, THTensor *src)
@@ -751,10 +751,10 @@ void THTensor_(setStorageNd)(THTensor *self, THStorage *storage, ptrdiff_t stora
   self->storageOffset = storageOffset;
 
   /* size and stride */
-  THTensor_(resizeNd)(self, nDimension, size, stride);
+  THTensor_(resizeNdLegacy)(self, nDimension, size, stride);
 }
 
-void THTensor_(resizeNd)(THTensor *self, int nDimension, int64_t *size, int64_t *stride)
+void THTensor_(resizeNdLegacy)(THTensor *self, int nDimension, int64_t *size, int64_t *stride)
 {
   int d;
   int nDimension_;

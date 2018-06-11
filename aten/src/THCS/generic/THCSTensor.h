@@ -32,7 +32,7 @@ THC_API THCSTensor *THCSTensor_(newTranspose)(THCState *state, THCSTensor *self,
 /**** reshaping methods ***/
 THC_API int THCSTensor_(isSameSizeAs)(THCState *state, const THCSTensor *self, const THCSTensor* src);
 THC_API int THCSTensor_(isSameSizeAsDense)(THCState *state, const THCSTensor *self, const THCTensor* src);
-THC_API THCSTensor *THCSTensor_(resize)(THCState *state, THCSTensor *self, THLongStorage *size);
+THC_API THCSTensor *THCSTensor_(resizeLegacy)(THCState *state, THCSTensor *self, THLongStorage *size);
 THC_API THCSTensor *THCSTensor_(resizeAs)(THCState *state, THCSTensor *self, THCSTensor *src);
 THC_API THCSTensor *THCSTensor_(resize1d)(THCState *state, THCSTensor *self, int64_t size0);
 THC_API THCSTensor *THCSTensor_(resize2d)(THCState *state, THCSTensor *self, int64_t size0, int64_t size1);
