@@ -53,12 +53,12 @@ THCTensor *THCTensor_new(THCState *state, at::ScalarType scalar_type) {
   }
 }
 
-void THCTensor_resize(THCState *state, THCTensor *self, THLongStorage *size, THLongStorage *stride) {
+void THCTensor_resizeLegacy(THCState *state, THCTensor *self, THLongStorage *size, THLongStorage *stride) {
   THArgCheck(size != NULL, 2, "invalid size");
   if(stride)
     THArgCheck(stride->size == size->size, 3, "invalid stride");
 
-  THCTensor_resizeNd(state, self, size->size, THLongStorage_data(size), (stride ? THLongStorage_data(stride) : NULL));
+  THCTensor_resizeNdLegacy(state, self, size->size, THLongStorage_data(size), (stride ? THLongStorage_data(stride) : NULL));
 }
 
 void THCTensor_resizeAs(THCState *state, THCTensor *self, THCTensor *src) {
@@ -78,10 +78,10 @@ void THCTensor_resizeAs(THCState *state, THCTensor *self, THCTensor *src) {
   }
 
   if(!isSame)
-    THCTensor_resizeNd(state, self, src->_dim(), src->size, NULL);
+    THCTensor_resizeNdLegacy(state, self, src->_dim(), src->size, NULL);
 }
 
-void THCTensor_resizeNd(THCState *state, THCTensor *self, int nDimension, int64_t *size, int64_t *stride)
+void THCTensor_resizeNdLegacy(THCState *state, THCTensor *self, int nDimension, int64_t *size, int64_t *stride)
 {
   int d;
   int nDimension_;
@@ -186,7 +186,7 @@ void THCTensor_setStorageNd(THCState *state, THCTensor *self, THCStorage *storag
   self->storageOffset = storageOffset;
 
   /* size and stride */
-  THCTensor_resizeNd(state, self, nDimension, size, stride);
+  THCTensor_resizeNdLegacy(state, self, nDimension, size, stride);
 }
 
 
