@@ -144,8 +144,13 @@ void THCTensor_resizeNdLegacy(THCState *state, THCTensor *self, int nDimension, 
         THCStorage_resize(state, self->storage, totalSize+self->storageOffset);
     }
   }
-  else
-    self->dim_ = 0;
+  else {
+    self->dim_ = 1;
+    self->size = (int64_t *)THRealloc(self->size, sizeof(int64_t));
+    self->stride = (int64_t *)THRealloc(self->stride, sizeof(int64_t));
+    self->size[0] = 0;
+    self->stride[0] = 1;
+  }
 }
 
 void THCTensor_set(THCState *state, THCTensor *self, THCTensor *src)
@@ -201,15 +206,16 @@ void THCTensor_squeeze1d(THCState *state, THCTensor *self, THCTensor *src, int d
 
   THCTensor_set(state, self, src);
 
-  if(src->size[dimension] == 1 && src->_dim() > 1)
+  if(src->size[dimension] == 1 && src->dim() > 1)
   {
-    for(d = dimension; d < self->_dim()-1; d++)
+    for(d = dimension; d < self->dim()-1; d++)
     {
       self->size[d] = self->size[d+1];
       self->stride[d] = self->stride[d+1];
     }
     self->dim_--;
   }
+  self->is_empty_ = src->is_empty_;
 }
 
 void THCTensor_unsqueeze1d(THCState *state, THCTensor *self, THCTensor *src, int dimension)
@@ -220,18 +226,21 @@ void THCTensor_unsqueeze1d(THCState *state, THCTensor *self, THCTensor *src, int
     src = self;
 
   THArgCheck((dimension >= 0) && (dimension <= src->_dim()), 3, "dimension out of range");
+#ifndef SIZE_ZERO_DIM
   THArgCheck(src->_dim() > 0, 3, "cannot unsqueeze empty tensor");
+#endif
 
   THCTensor_set(state, self, src);
 
-  self->size = (int64_t*)THRealloc(self->size, sizeof(int64_t)*(self->_dim()+1));
-  self->stride = (int64_t*)THRealloc(self->stride, sizeof(int64_t)*(self->_dim()+1));
+  self->size = (int64_t*)THRealloc(self->size, sizeof(int64_t)*(self->dim()+1));
+  self->stride = (int64_t*)THRealloc(self->stride, sizeof(int64_t)*(self->dim()+1));
   self->dim_++;
-  for (d = self->_dim()-1; d > dimension; d--) {
+  self->is_empty_ = src->is_empty_;
+  for (d = self->dim()-1; d > dimension; d--) {
     self->size[d] = self->size[d-1];
     self->stride[d] = self->stride[d-1];
   }
-  if (dimension+1 < self->_dim()) {
+  if (dimension+1 < self->dim()) {
     self->stride[dimension] = self->size[dimension+1] * self->stride[dimension+1];
   } else {
     self->stride[dimension] = 1;

@@ -432,7 +432,7 @@ void THTensor_(select)(THTensor *self, THTensor *src, int dimension, int64_t sli
   if(!src)
     src = self;
 
-#ifdef TH_SCALAR
+#ifndef TH_SCALAR
   THArgCheck(src->_dim() > 1, 1, "cannot select on a vector");
 #endif
   THArgCheck((dimension >= 0) && (dimension < src->dim()), 2, "out of range");
