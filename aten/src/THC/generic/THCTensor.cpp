@@ -423,18 +423,21 @@ void THCTensor_(select)(THCState *state, THCTensor *self, THCTensor *src, int di
   if(!src)
     src = self;
 
+#ifndef TH_SCALAR
   THArgCheck(src->_dim() > 1, 1, "cannot select on a vector");
-  THArgCheck((dimension >= 0) && (dimension < src->_dim()), 3, "out of range");
+#endif
+  THArgCheck((dimension >= 0) && (dimension < src->dim()), 3, "out of range");
   THArgCheck((sliceIndex >= 0) && (sliceIndex < src->size[dimension]), 4, "out of range");
 
   THCTensor_(set)(state, self, src);
   THCTensor_(narrow)(state, self, NULL, dimension, sliceIndex, 1);
-  for(d = dimension; d < self->_dim()-1; d++)
+  for(d = dimension; d < self->dim()-1; d++)
   {
     self->size[d] = self->size[d+1];
     self->stride[d] = self->stride[d+1];
   }
   self->dim_--;
+  self->is_empty_ = src->is_empty_;
 }
 
 void THCTensor_(transpose)(THCState *state, THCTensor *self, THCTensor *src, int dimension1, int dimension2)
@@ -469,18 +472,18 @@ void THCTensor_(unfold)(THCState *state, THCTensor *self, THCTensor *src, int di
   if(!src)
     src = self;
 
-  THArgCheck( (src->_dim() > 0), 1, "cannot unfold an empty tensor");
-  THArgCheck(dimension < src->_dim(), 2, "out of range");
+  THArgCheck( (src->is_empty() > 0), 1, "cannot unfold an empty tensor");
+  THArgCheck(dimension < src->dim(), 2, "out of range");
   THArgCheck(size <= src->size[dimension], 3, "out of range");
   THArgCheck(step > 0, 4, "invalid step");
 
   THCTensor_(set)(state, self, src);
 
-  newSize = (int64_t*)THAlloc(sizeof(int64_t)*(self->_dim()+1));
-  newStride = (int64_t*)THAlloc(sizeof(int64_t)*(self->_dim()+1));
+  newSize = (int64_t*)THAlloc(sizeof(int64_t)*(self->dim()+1));
+  newStride = (int64_t*)THAlloc(sizeof(int64_t)*(self->dim()+1));
 
-  newSize[self->_dim()] = size;
-  newStride[self->_dim()] = self->stride[dimension];
+  newSize[self->dim()] = size;
+  newStride[self->dim()] = self->stride[dimension];
   for(d = 0; d < self->_dim(); d++)
   {
     if(d == dimension)
@@ -501,6 +504,7 @@ void THCTensor_(unfold)(THCState *state, THCTensor *self, THCTensor *src, int di
   self->size = newSize;
   self->stride = newStride;
   self->dim_++;
+  self->is_empty_ = false;
 }
 
 /* we have to handle the case where the result is a number */
@@ -514,7 +518,7 @@ void THCTensor_(squeeze)(THCState *state, THCTensor *self, THCTensor *src)
 
   THCTensor_(set)(state, self, src);
 
-  for(d = 0; d < src->_dim(); d++)
+  for(d = 0; d < src->dim(); d++)
   {
     if(src->size[d] != 1)
     {
@@ -527,15 +531,18 @@ void THCTensor_(squeeze)(THCState *state, THCTensor *self, THCTensor *src)
     }
   }
 
+#ifndef TH_SCALAR
   /* right now, we do not handle 0-dimension tensors */
-  if(ndim == 0 && src->_dim() > 0)
+  if(ndim == 0 && src->dim() > 0)
   {
     self->size[0] = 1;
     self->stride[0] = 1;
     ndim = 1;
   }
   self->dim_ = ndim;
+  self->is_empty_ = src->is_empty_;
 }
+#endif
 
 void THCTensor_(squeeze1d)(THCState *state, THCTensor *self, THCTensor *src, int dimension)
 {
@@ -626,9 +633,12 @@ static void THCTensor_(rawInit)(THCState *state, THCTensor *self)
   new (&self->refcount) std::atomic<int>(1);
   self->storage = THCStorage_(new)(state);
   self->storageOffset = 0;
-  self->size = NULL;
-  self->stride = NULL;
-  self->dim_ = 0;
+  self->size = (int64_t *)THAlloc(sizeof(int64_t));
+  self->stride = (int64_t *)THAlloc(sizeof(int64_t));
+  self->size[0] = 0;
+  self->stride[0] = 1;
+  self->dim_ = 1;
+  self->is_empty_ = true;
   self->flag = TH_TENSOR_REFCOUNTED;
 }
 
