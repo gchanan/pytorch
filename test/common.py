@@ -47,7 +47,7 @@ torch.manual_seed(SEED)
 
 
 def run_tests():
-    unittest.main(argv=UNITTEST_ARGS)
+    unittest.main(argv=UNITTEST_ARGS, verbosity=2)
 
 PY3 = sys.version_info > (3, 0)
 PY34 = sys.version_info >= (3, 4)

@@ -1740,7 +1740,10 @@ class TestTorch(TestCase):
 
     @unittest.skipIf(not torch.cuda.is_available(), 'no CUDA')
     def test_ones_like_cuda(self):
-        expected = torch.ones(100, 100).cuda()
+        expected = torch.ones(100, 100)
+        print ('doing cuda')
+        expected = expected.cuda()
+        print("done cuda")
 
         res1 = torch.ones_like(expected)
         self.assertEqual(res1, expected)

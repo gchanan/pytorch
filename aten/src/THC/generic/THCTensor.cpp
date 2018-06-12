@@ -472,7 +472,7 @@ void THCTensor_(unfold)(THCState *state, THCTensor *self, THCTensor *src, int di
   if(!src)
     src = self;
 
-  THArgCheck( (src->is_empty() > 0), 1, "cannot unfold an empty tensor");
+  THArgCheck(!src->is_empty(), 1, "cannot unfold an empty tensor");
   THArgCheck(dimension < src->dim(), 2, "out of range");
   THArgCheck(size <= src->size[dimension], 3, "out of range");
   THArgCheck(step > 0, 4, "invalid step");
