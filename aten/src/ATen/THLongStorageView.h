@@ -13,11 +13,7 @@ static inline bool is_noelem_tensor_size(ArrayRef<int64_t> size) {
 }
 
 enum class THLongStorageViewKind {
-  SIZE,
-  // noelem_to_empty is to differentiate strides of empty tensors vs scalars.  In ATen, both may have strides [1],
-  // but in TH an empty tensor should have stride [], while a scalar should have stride [1].
-  STRIDE_EMPTY_TENSOR,  // noelem_to_empty = true
-  STRIDE_SCALAR,  // noelem_to_empty = false
+  SIZE_STRIDE,  // represents a size or stride.
   LENGTH,
 };
 
@@ -26,7 +22,7 @@ enum class THLongStorageViewKind {
 class THLongStorageView {
 public:
   operator THLongStorage*() {
-    if (storage.size == 0 && zero_dim_to_null) {
+    if (storage.size == 0) {
       return nullptr;
     }
     return &storage;
@@ -48,23 +44,11 @@ public:
   */
 
   THLongStorageView(ArrayRef<int64_t> ref, THLongStorageViewKind kind)
-  : zero_dim_to_null(false)
   {
     // zero_dim_to_one converts an empty ArrayRef into [1]
-    // zero_dim_to_null converts an empty ArrayRef into a null THLongStorage
-    // noelem_to_empty makes an ArrayRef of [0] into an empty THLongStorage
-    bool zero_dim_to_one = false;
-    bool noelem_to_empty = false;
-    switch (kind) {
-      case THLongStorageViewKind::SIZE:
+    bool zero_dim_to_one = false;    switch (kind) {
+      case THLongStorageViewKind::SIZE_STRIDE:
         zero_dim_to_one = true;
-        break;
-      case THLongStorageViewKind::STRIDE_EMPTY_TENSOR:
-        zero_dim_to_null = true;
-        noelem_to_empty = true;
-        break;
-      case THLongStorageViewKind::STRIDE_SCALAR:
-        zero_dim_to_null = true;
         break;
       case THLongStorageViewKind::LENGTH:
         break;
@@ -75,11 +59,7 @@ public:
       one = 1;
       storage.data_ptr = &one;
       storage.size = 1;
-    } else if (noelem_to_empty && is_noelem_tensor_size(ref)) {
-      storage.data_ptr = (void*)(ref.data());
-      storage.size = 0;
-    }
-    else {
+    } else {
       storage.data_ptr = (void*)(ref.data());
       storage.size = ref.size();
     }
@@ -92,7 +72,6 @@ public:
 private:
   int64_t one;
   THLongStorage storage;
-  bool zero_dim_to_null;
 };
 
 }
