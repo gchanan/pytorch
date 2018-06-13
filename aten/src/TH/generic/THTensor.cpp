@@ -432,7 +432,7 @@ void THTensor_(select)(THTensor *self, THTensor *src, int dimension, int64_t sli
   if(!src)
     src = self;
 
-#ifndef TH_SCALAR
+#ifndef USE_TH_SCALAR
   THArgCheck(src->_dim() > 1, 1, "cannot select on a vector");
 #endif
   THArgCheck((dimension >= 0) && (dimension < src->dim()), 2, "out of range");
@@ -538,8 +538,8 @@ void THTensor_(squeeze)(THTensor *self, THTensor *src)
     }
   }
 
+#ifndef USE_TH_SCALAR
   /* right now, we do not handle 0-dimension tensors */
-#ifndef TH_SCALAR
   if(ndim == 0 && src->dim() > 0)
   {
     self->size[0] = 1;
@@ -561,7 +561,7 @@ void THTensor_(squeeze1d)(THTensor *self, THTensor *src, int dimension)
 
   THTensor_(set)(self, src);
 
-#ifdef TH_SCALAR
+#ifdef USE_TH_SCALAR
   if(src->size[dimension] == 1)
 #else
   if(src->size[dimension] == 1 && src->dim() > 1)
@@ -584,7 +584,7 @@ void THTensor_(unsqueeze1d)(THTensor *self, THTensor *src, int dimension)
     src = self;
 
   THArgCheck((dimension >= 0) && (dimension <= src->dim()), 2, "dimension out of range");
-#ifndef SIZE_ZERO_DIM
+#ifndef USE_SIZE_ZERO_DIM
   THArgCheck(!src->is_empty(), 2, "cannot unsqueeze empty tensor");
 #endif
 
@@ -806,6 +806,7 @@ void THTensor_(resizeNdLegacy)(THTensor *self, int nDimension, int64_t *size, in
     }
 
     totalSize = 1;
+    // note: can't use _dim() here because there is junk in size
     for(d = nDimension-1; d >= 0; d--)
     {
       self->size[d] = size[d];

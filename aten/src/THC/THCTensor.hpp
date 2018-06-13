@@ -14,7 +14,6 @@ typedef struct THCTensor
     int64_t *size;
     int64_t *stride;
     int64_t dim_;
-    bool is_empty_;
 
     THCStorage *storage;
     ptrdiff_t storageOffset;
@@ -43,11 +42,8 @@ typedef struct THCTensor
       return dim_;
     }
 
-    // NOTE: will go away, represents that prod(*sizes) == 0 in ATen view.
+    // represents that numel() == 0.
     inline bool is_empty() const {
-      if (dim_ == 0) {
-        throw std::runtime_error("should not be dim_ 0");  
-      }
       for (int64_t i = 0; i < dim_; ++i) {
         if (size[i] == 0) {
           return true;  
@@ -64,8 +60,8 @@ THC_API THLongStorage *THCTensor_newSizeOf(THCState *state, THCTensor *self);
 
 THC_API THCTensor *THCTensor_new(THCState *state, at::ScalarType scalar_type);
 
-THC_API void THCTensor_resizeLegacy(THCState *state, THCTensor *tensor, THLongStorage *size, THLongStorage *stride);
 THC_API void THCTensor_resizeAs(THCState *state, THCTensor *tensor, THCTensor *src);
+THC_API void THCTensor_resizeLegacy(THCState *state, THCTensor *tensor, THLongStorage *size, THLongStorage *stride);
 THC_API void THCTensor_resizeNdLegacy(THCState *state, THCTensor *tensor, int nDimension, int64_t *size, int64_t *stride);
 
 THC_API void THCTensor_set(THCState *state, THCTensor *self, THCTensor *src);

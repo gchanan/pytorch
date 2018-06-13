@@ -121,6 +121,7 @@ void THCTensor_resizeNdLegacy(THCState *state, THCTensor *self, int nDimension, 
     }
 
     totalSize = 1;
+    // note: can't use _dim() here because there is junk in size
     for(d = nDimension-1; d >= 0; d--)
     {
       self->size[d] = size[d];
@@ -202,11 +203,15 @@ void THCTensor_squeeze1d(THCState *state, THCTensor *self, THCTensor *src, int d
   if(!src)
     src = self;
 
-  THArgCheck(dimension < src->_dim(), 3, "dimension out of range");
+  THArgCheck(dimension < src->()dim(), 3, "dimension out of range");
 
   THCTensor_set(state, self, src);
 
+#ifdef TH_SCALAR
+  if(src->size[dimension] == 1)
+#else
   if(src->size[dimension] == 1 && src->dim() > 1)
+#endif
   {
     for(d = dimension; d < self->dim()-1; d++)
     {
@@ -215,7 +220,6 @@ void THCTensor_squeeze1d(THCState *state, THCTensor *self, THCTensor *src, int d
     }
     self->dim_--;
   }
-  self->is_empty_ = src->is_empty_;
 }
 
 void THCTensor_unsqueeze1d(THCState *state, THCTensor *self, THCTensor *src, int dimension)
@@ -225,9 +229,9 @@ void THCTensor_unsqueeze1d(THCState *state, THCTensor *self, THCTensor *src, int
   if(!src)
     src = self;
 
-  THArgCheck((dimension >= 0) && (dimension <= src->_dim()), 3, "dimension out of range");
+  THArgCheck((dimension >= 0) && (dimension <= src->dim()), 3, "dimension out of range");
 #ifndef SIZE_ZERO_DIM
-  THArgCheck(src->_dim() > 0, 3, "cannot unsqueeze empty tensor");
+  THArgCheck(!src->is_empty(), 3, "cannot unsqueeze empty tensor");
 #endif
 
   THCTensor_set(state, self, src);
@@ -235,7 +239,6 @@ void THCTensor_unsqueeze1d(THCState *state, THCTensor *self, THCTensor *src, int
   self->size = (int64_t*)THRealloc(self->size, sizeof(int64_t)*(self->dim()+1));
   self->stride = (int64_t*)THRealloc(self->stride, sizeof(int64_t)*(self->dim()+1));
   self->dim_++;
-  self->is_empty_ = src->is_empty_;
   for (d = self->dim()-1; d > dimension; d--) {
     self->size[d] = self->size[d-1];
     self->stride[d] = self->stride[d-1];

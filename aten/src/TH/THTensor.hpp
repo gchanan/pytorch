@@ -43,7 +43,7 @@ typedef struct THTensor
       return dim_;
     }
 
-    // represents that prod(*sizes) == 0 in ATen view.
+    // represents that numel() == 0.
     inline bool is_empty() const {
       for (int64_t i = 0; i < dim_; ++i) {
         if (size[i] == 0) {
