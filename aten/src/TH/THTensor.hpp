@@ -13,7 +13,6 @@ typedef struct THTensor
     int64_t *size;
     int64_t *stride;
     int64_t dim_;
-    bool is_empty_;
 
     // Note: storage->size may be greater than the recorded size
     // of a tensor
@@ -44,11 +43,8 @@ typedef struct THTensor
       return dim_;
     }
 
-    // NOTE: will go away, represents that prod(*sizes) == 0 in ATen view.
+    // represents that prod(*sizes) == 0 in ATen view.
     inline bool is_empty() const {
-      if (dim_ == 0) {
-        throw std::runtime_error("should not be dim_ 0");  
-      }
       for (int64_t i = 0; i < dim_; ++i) {
         if (size[i] == 0) {
           return true;  

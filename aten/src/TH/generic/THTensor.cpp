@@ -446,7 +446,6 @@ void THTensor_(select)(THTensor *self, THTensor *src, int dimension, int64_t sli
     self->stride[d] = self->stride[d+1];
   }
   self->dim_--;
-  self->is_empty_ = src->is_empty_;
 }
 
 void THTensor_(transpose)(THTensor *self, THTensor *src, int dimension1, int dimension2)
@@ -513,7 +512,6 @@ void THTensor_(unfold)(THTensor *self, THTensor *src, int dimension, int64_t siz
   self->size = newSize;
   self->stride = newStride;
   self->dim_++;
-  self->is_empty_ = false;
 }
 
 /* we have to handle the case where the result is a number */
@@ -550,7 +548,6 @@ void THTensor_(squeeze)(THTensor *self, THTensor *src)
   }
 #endif
   self->dim_ = ndim;
-  self->is_empty_ = src->is_empty_;
 }
 
 void THTensor_(squeeze1d)(THTensor *self, THTensor *src, int dimension)
@@ -577,7 +574,6 @@ void THTensor_(squeeze1d)(THTensor *self, THTensor *src, int dimension)
     }
     self->dim_--;
   }
-  self->is_empty_ = src->is_empty_;
 }
 
 void THTensor_(unsqueeze1d)(THTensor *self, THTensor *src, int dimension)
@@ -597,7 +593,6 @@ void THTensor_(unsqueeze1d)(THTensor *self, THTensor *src, int dimension)
   self->size = (int64_t*)THRealloc(self->size, sizeof(int64_t)*(self->dim()+1));
   self->stride = (int64_t*)THRealloc(self->stride, sizeof(int64_t)*(self->dim()+1));
   self->dim_++;
-  self->is_empty_ = src->is_empty_;
   for (d = self->dim()-1; d > dimension; d--) {
     self->size[d] = self->size[d-1];
     self->stride[d] = self->stride[d-1];
@@ -742,7 +737,6 @@ static void THTensor_(rawInit)(THTensor *self)
   self->size[0] = 0;
   self->stride[0] = 1;
   self->dim_ = 1;
-  self->is_empty_ = true;
   self->flag = TH_TENSOR_REFCOUNTED;
 }
 
@@ -809,7 +803,6 @@ void THTensor_(resizeNdLegacy)(THTensor *self, int nDimension, int64_t *size, in
       self->size = (int64_t *)THRealloc(self->size, sizeof(int64_t)*nDimension);
       self->stride = (int64_t *)THRealloc(self->stride, sizeof(int64_t)*nDimension);
       self->dim_ = nDimension;
-      self->is_empty_ = false;
     }
 
     totalSize = 1;
