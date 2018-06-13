@@ -22,9 +22,6 @@ enum class THLongStorageViewKind {
 class THLongStorageView {
 public:
   operator THLongStorage*() {
-    if (storage.size == 0) {
-      return nullptr;
-    }
     return &storage;
   }
 
