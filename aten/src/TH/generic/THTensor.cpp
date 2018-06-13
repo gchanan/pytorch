@@ -584,7 +584,7 @@ void THTensor_(unsqueeze1d)(THTensor *self, THTensor *src, int dimension)
     src = self;
 
   THArgCheck((dimension >= 0) && (dimension <= src->dim()), 2, "dimension out of range");
-#ifndef USE_SIZE_ZERO_DIM
+#ifndef USE_TH_SIZE_ZERO_DIM
   THArgCheck(!src->is_empty(), 2, "cannot unsqueeze empty tensor");
 #endif
 

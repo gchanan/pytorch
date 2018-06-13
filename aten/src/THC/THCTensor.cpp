@@ -203,7 +203,7 @@ void THCTensor_squeeze1d(THCState *state, THCTensor *self, THCTensor *src, int d
   if(!src)
     src = self;
 
-  THArgCheck(dimension < src->()dim(), 3, "dimension out of range");
+  THArgCheck(dimension < src->dim(), 3, "dimension out of range");
 
   THCTensor_set(state, self, src);
 
@@ -230,7 +230,7 @@ void THCTensor_unsqueeze1d(THCState *state, THCTensor *self, THCTensor *src, int
     src = self;
 
   THArgCheck((dimension >= 0) && (dimension <= src->dim()), 3, "dimension out of range");
-#ifndef USE_SIZE_ZERO_DIM
+#ifndef USE_TH_SIZE_ZERO_DIM
   THArgCheck(!src->is_empty(), 3, "cannot unsqueeze empty tensor");
 #endif
 
