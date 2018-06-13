@@ -46,7 +46,8 @@ public:
   THLongStorageView(ArrayRef<int64_t> ref, THLongStorageViewKind kind)
   {
     // zero_dim_to_one converts an empty ArrayRef into [1]
-    bool zero_dim_to_one = false;    switch (kind) {
+    bool zero_dim_to_one = false;
+    switch (kind) {
       case THLongStorageViewKind::SIZE_STRIDE:
         zero_dim_to_one = true;
         break;
