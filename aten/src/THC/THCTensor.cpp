@@ -121,14 +121,14 @@ void THCTensor_resizeNdLegacy(THCState *state, THCTensor *self, int nDimension, 
     }
 
     totalSize = 1;
-    for(d = self->_dim()-1; d >= 0; d--)
+    for(d = nDimension-1; d >= 0; d--)
     {
       self->size[d] = size[d];
       if(stride && (stride[d] >= 0) )
         self->stride[d] = stride[d];
       else
       {
-        if(d == self->_dim()-1)
+        if(d == nDimension-1)
           self->stride[d] = 1;
         else
           self->stride[d] = self->size[d+1]*self->stride[d+1];

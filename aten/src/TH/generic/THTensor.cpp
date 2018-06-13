@@ -589,7 +589,7 @@ void THTensor_(unsqueeze1d)(THTensor *self, THTensor *src, int dimension)
 
   THArgCheck((dimension >= 0) && (dimension <= src->dim()), 2, "dimension out of range");
 #ifndef SIZE_ZERO_DIM
-  THArgCheck(src->is_empty(), 2, "cannot unsqueeze empty tensor");
+  THArgCheck(!src->is_empty(), 2, "cannot unsqueeze empty tensor");
 #endif
 
   THTensor_(set)(self, src);
@@ -813,14 +813,14 @@ void THTensor_(resizeNdLegacy)(THTensor *self, int nDimension, int64_t *size, in
     }
 
     totalSize = 1;
-    for(d = self->_dim()-1; d >= 0; d--)
+    for(d = nDimension-1; d >= 0; d--)
     {
       self->size[d] = size[d];
       if(stride && (stride[d] >= 0) )
         self->stride[d] = stride[d];
       else
       {
-        if(d == self->_dim()-1)
+        if(d == nDimension-1)
           self->stride[d] = 1;
         else
           self->stride[d] = self->size[d+1]*self->stride[d+1];
