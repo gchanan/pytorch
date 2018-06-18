@@ -51,14 +51,6 @@ THCTensor_(onesLike)(THCState *state, THCTensor *r_, THCTensor *input)
   THCTensor_(fill)(state, r_, ScalarConvert<int, real>::to(1));
 }
 
-THC_API void
-THCTensor_(reshape)(THCState *state, THCTensor *r_, THCTensor *t, THLongStorage *size)
-{
-  THCAssertSameGPU(THCTensor_(checkGPU)(state, 2, r_, t));
-  THCTensor_(resizeLegacy)(state, r_, size, NULL);
-  THCTensor_(copy)(state, r_, t);
-}
-
 ptrdiff_t
 THCTensor_(numel)(THCState *state, THCTensor *t)
 {
