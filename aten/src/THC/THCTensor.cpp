@@ -147,7 +147,8 @@ void THCTensor_resizeNd(THCState *state, THCTensor *self, int nDimension, int64_
       if(d == nDimension-1) {
         self->stride[d] = 1;
       } else {
-        self->stride[d] = self->size[d+1]*self->stride[d+1];
+        // Keep stride monotonically increasing to match NumPy.
+        self->stride[d] = std::max<int64_t>(self->size[d+1],1)*self->stride[d+1];
       }
     }
     totalSize += (self->size[d]-1)*self->stride[d];
