@@ -4423,12 +4423,6 @@ void THTensor_(logspace)(THTensor *r_, real a, real b, int64_t n)
   }
 }
 
-void THTensor_(rand)(THTensor *r_, THGenerator *_generator, THLongStorage *size)
-{
-  THTensor_(resizeLegacy)(r_, size, NULL);
-  THTensor_(uniform)(r_, _generator, 0, 1);
-}
-
 void THTensor_(randn)(THTensor *r_, THGenerator *_generator, THLongStorage *size)
 {
   THTensor_(resizeLegacy)(r_, size, NULL);
