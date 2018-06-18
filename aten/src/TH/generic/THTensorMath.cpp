@@ -2812,12 +2812,6 @@ void THTensor_(cminValue)(THTensor *r, THTensor *t, real value) {
                    *r_data = *t_data > value ? value : *t_data;);  // this order propagates NaN
 }
 
-void THTensor_(zeros)(THTensor *r_, THLongStorage *size)
-{
-  THTensor_(resizeLegacy)(r_, size, NULL);
-  THTensor_(zero)(r_);
-}
-
 void THTensor_(zerosLike)(THTensor *r_, THTensor *input)
 {
   THTensor_(resizeAs)(r_, input);
@@ -2827,12 +2821,6 @@ void THTensor_(zerosLike)(THTensor *r_, THTensor *input)
 void THTensor_(onesLike)(THTensor *r_, THTensor *input)
 {
   THTensor_(resizeAs)(r_, input);
-  THTensor_(fill)(r_, 1);
-}
-
-void THTensor_(ones)(THTensor *r_, THLongStorage *size)
-{
-  THTensor_(resizeLegacy)(r_, size, NULL);
   THTensor_(fill)(r_, 1);
 }
 
@@ -2963,12 +2951,6 @@ void THTensor_(randperm)(THTensor *r_, THGenerator *_generator, int64_t n)
     r__data[i*r__stride_0] = r__data[(z+i)*r__stride_0];
     r__data[(z+i)*r__stride_0] = sav;
   }
-}
-
-void THTensor_(reshape)(THTensor *r_, THTensor *t, THLongStorage *size)
-{
-  THTensor_(resizeLegacy)(r_, size, NULL);
-  THTensor_(copy)(r_, t);
 }
 
 /* I cut and pasted (slightly adapted) the quicksort code from
@@ -4421,12 +4403,6 @@ void THTensor_(logspace)(THTensor *r_, real a, real b, int64_t n)
         i++;
         );
   }
-}
-
-void THTensor_(randn)(THTensor *r_, THGenerator *_generator, THLongStorage *size)
-{
-  THTensor_(resizeLegacy)(r_, size, NULL);
-  THTensor_(normal)(r_, _generator, 0, 1);
 }
 
 void THTensor_(histc)(THTensor *hist, THTensor *tensor, int64_t nbins, real minvalue, real maxvalue)
