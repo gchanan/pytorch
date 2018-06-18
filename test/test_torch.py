@@ -2735,6 +2735,20 @@ class TestTorch(TestCase):
     def test_contiguous(self):
         return self._test_contiguous(self, lambda t: t)
 
+    def test_empty_tensor_props(self):
+        sizes = [(0,)]
+        if torch._C._use_zero_size_dim():
+            sizes += [(0, 3), (5, 0), (5, 0, 3, 0, 2), (0, 3, 0, 2), (0, 5, 0, 2, 0)]
+        devices = ['cpu'] if not torch.cuda.is_available() else ['cpu', 'cuda']
+        for size in sizes:
+            for device in devices:
+                x = torch.empty(tuple(size), device=device)
+                self.assertEqual(size, x.shape)
+                self.assertTrue(x.is_contiguous())
+                size_ones_instead_of_zeros = (x if x != 0 else 1 for x in size)
+                y = torch.empty(tuple(size_ones_instead_of_zeros), device=device)
+                self.assertEqual(x.stride(), y.stride())
+
     def test_scalars_as_floats(self):
         "zero-dim variables that don't require grad should bind to scalar arguments"
         x = torch.tensor(2.)

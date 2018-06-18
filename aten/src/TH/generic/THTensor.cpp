@@ -850,7 +850,8 @@ void THTensor_(resizeNd)(THTensor *self, int nDimension, int64_t *size, int64_t 
       if(d == nDimension-1) {
         self->stride[d] = 1;
       } else {
-        self->stride[d] = self->size[d+1]*self->stride[d+1];
+        // Keep stride monotonically increasing to match NumPy.
+        self->stride[d] = std::max<int64_t>(self->size[d+1], 1)*self->stride[d+1];
       }
     }
     totalSize += (self->size[d]-1)*self->stride[d];
