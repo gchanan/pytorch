@@ -320,13 +320,13 @@ void THTensor_(indexSelect)(THTensor *tensor, THTensor *src, int dim, THLongTens
 
   numel = THLongTensor_nElement(index);
 
-  newSize = THLongStorage_newWithSize(src->_dim());
+  newSize = THLongStorage_newWithSize(src->dim());
   THLongStorage_rawCopy(newSize,src->size);
 #ifdef DEBUG
   THAssert(numel <= LONG_MAX);
 #endif
   THLongStorage_data(newSize)[dim] = numel;
-  THTensor_(resizeLegacy)(tensor,newSize,NULL);
+  THTensor_(resize)(tensor,newSize,NULL);
   THLongStorage_free(newSize);
 
   index = THLongTensor_newContiguous(index);
