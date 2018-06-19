@@ -16,9 +16,8 @@ void THNN_(VolumetricAdaptiveAveragePooling_updateOutput)(
 {
   THCUNN_assertSameGPU(state, 2, input, output);
 
-  THCUNN_argCheck(state, input->_dim() == 4 || input->_dim() == 5, 2, input,
-                  "4D or 5D (batch mode) tensor expected for input, but got: %s");
-
+  AT_CHECK(!input->is_empty() && (input->dim() == 4 || input->dim() == 5),
+           "4D or 5D (batch mode) non-empty tensor expected for input, but got dim: ", input->sizes());
 
   real *output_data;
   real *input_data;
@@ -27,7 +26,7 @@ void THNN_(VolumetricAdaptiveAveragePooling_updateOutput)(
   int64_t istrideD, istrideT, istrideH, istrideW;
   int64_t totalZ;
 
-  if (input->_dim() == 4) {
+  if (input->dim() == 4) {
     sizeD = input->size[0];
     isizeT = input->size[1];
     isizeH = input->size[2];
@@ -80,7 +79,7 @@ void THNN_(VolumetricAdaptiveAveragePooling_updateOutput)(
     THCudaCheck(cudaGetLastError());
   }
 
-  if (input->_dim() == 5) {
+  if (input->dim() == 5) {
     // clean
     THCTensor_(free)(state, input);
   }
@@ -106,7 +105,7 @@ void THNN_(VolumetricAdaptiveAveragePooling_updateGradInput)(
   int64_t osizeT, osizeH, osizeW;
   int64_t totalZ;
 
-  if (input->_dim() == 4) {
+  if (input->dim() == 4) {
     sizeD = input->size[0];
     isizeT = input->size[1];
     isizeH = input->size[2];
@@ -129,7 +128,7 @@ void THNN_(VolumetricAdaptiveAveragePooling_updateGradInput)(
   // somehow nonatomic is passing all test for volumetric case.
   bool atomic = false; //(isizeW%osizeW != 0) || (isizeH%osizeH != 0) || (isizeT%osizeT != 0);
 
-  if (input->_dim() == 4) {
+  if (input->dim() == 4) {
     totalZ = atomic ? sizeD * osizeT : sizeD * isizeT;
   } else {
     int sizeB = input->size[0];
