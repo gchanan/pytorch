@@ -3214,7 +3214,7 @@ class TestTorch(TestCase):
             torch.cat([x, y])
 
     @staticmethod
-    def _test_cat_empty(self, use_cuda=False):
+    def _test_cat_empty_legacy(self, use_cuda=False):
         # FIXME: this is legacy behavior and should be removed
         # when we support empty tensors with arbitrary sizes
         dtype = torch.float32
@@ -3241,8 +3241,59 @@ class TestTorch(TestCase):
                                     'expected a non-empty list of Tensors'):
             torch.cat([], dim=1)
 
+    def test_cat_empty_legacy(self):
+        self._test_cat_empty_legacy(self)
+
+    @staticmethod
+    def _test_cat_empty(self, use_cuda=False):
+        if not torch._C._use_zero_size_dim():
+            return
+
+        dtype = torch.float32
+        device = 'cuda' if use_cuda else 'cpu'
+
+        x = torch.randn((4, 3, 32, 32), dtype=dtype, device=device)
+        empty = torch.randn((4, 0, 32, 32), dtype=dtype, device=device)
+
+        res1 = torch.cat([x, empty], dim=1)
+        res2 = torch.cat([empty, x], dim=1)
+        self.assertEqual(res1, res2)
+
+        conv = torch.nn.Conv2d(3, 3, kernel_size=1).float()
+        if use_cuda:
+            conv = conv.cuda()
+        res1 = torch.cat([conv(x), empty], dim=1)
+        res2 = torch.cat([empty, conv(x)], dim=1)
+        self.assertEqual(res1, res2)
+
+        res1 = torch.cat([empty, empty], dim=1)
+        self.assertEqual(res1, empty)
+
+        # check non-legacy-behavior (sizes don't match)
+        empty = torch.randn((4, 0, 31, 32), dtype=dtype, device=device)
+        self.assertRaises(RuntimeError, lambda: torch.cat([x, empty], dim=1))
+        self.assertRaises(RuntimeError, lambda: torch.cat([empty, x], dim=1))
+
+        # check non-legacy-behavior (dimensions don't match)
+        empty = torch.randn((4, 0), dtype=dtype, device=device)
+        self.assertRaises(RuntimeError, lambda: torch.cat([x, empty], dim=1))
+        self.assertRaises(RuntimeError, lambda: torch.cat([empty, x], dim=1))
+
     def test_cat_empty(self):
         self._test_cat_empty(self)
+
+    def test_narrow_empty(self):
+        if not torch._C._use_zero_size_dim():
+            return
+
+        devices = ['cpu'] if not torch.cuda.is_available() else ['cpu', 'cuda']
+        for device in devices:
+            x = torch.randn(2, 3, 4, device=device)
+            for d in range(x.dim()):
+                y = x.narrow(d, x.size(d), 0)
+                sz = list(x.size())
+                sz[d] = 0
+                self.assertEqual(sz, y.size())
 
     def test_stack(self):
         x = torch.rand(2, 3, 4)
@@ -7080,7 +7131,10 @@ class TestTorch(TestCase):
 
         # check zero dimensional
         x = np.zeros((0, 2))
-        self.assertEqual(torch.from_numpy(x).shape, (0,))
+        if torch._C._use_zero_size_dim():
+            self.assertEqual(torch.from_numpy(x).shape, (0, 2))
+        else:
+            self.assertEqual(torch.from_numpy(x).shape, (0,))
 
         # check ill-sized strides raise exception
         x = np.array([3., 5., 8.])
