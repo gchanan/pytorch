@@ -101,9 +101,9 @@ class TestIndexing(TestCase):
 
         for a in tensors:
             self.assertNotEqual(a.data_ptr(), a[True].data_ptr())
-            self.assertEqual(torch.tensor([]), a[False])
+            self.assertEqual(torch.empty(0, *a.shape), a[False])
             self.assertNotEqual(a.data_ptr(), a[true].data_ptr())
-            self.assertEqual(torch.tensor([]), a[false])
+            self.assertEqual(torch.empty(0, *a.shape), a[false])
             self.assertEqual(a.data_ptr(), a[None].data_ptr())
             self.assertEqual(a.data_ptr(), a[...].data_ptr())
 

@@ -15,7 +15,8 @@ std::vector<int64_t> infer_size(IntList a, IntList b) {
     long sizeA = (dimA >= 0) ? a[dimA] : 1;
     long sizeB = (dimB >= 0) ? b[dimB] : 1;
     if (sizeA == sizeB || sizeA == 1 || sizeB == 1) {
-      expandedSizes[i] = std::max(sizeA, sizeB);
+      // 1s map to the other size (even 0).
+      expandedSizes[i] = sizeA == 1 ? sizeB : sizeA;
     } else {
       std::ostringstream oss;
       oss << "The size of tensor a (" << sizeA << ") must match the size of tensor b ("
