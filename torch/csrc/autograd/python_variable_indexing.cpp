@@ -122,7 +122,7 @@ static Variable valueToTensor(const Type & type, PyObject* value) {
   throw TypeError("can't assign a %s to a %s", Py_TYPE(value)->tp_name, type.toString());
 }
 
-static Variable boolToIndexingTensor(const Variable& self, int64_t dim, bool value) {
+static Variable boolToIndexingTensor(const Variable& self, bool value) {
   // booleans add a dimension of size 1. true indexes this dimension as if 0:, false as empty.
   if (value) {
     return at::zeros({1}, self.options().dtype(kLong));
@@ -154,12 +154,6 @@ static Variable applySlicing(const Variable& self, PyObject* index, variable_lis
       result = applySelect(result, dim, THPUtils_unpackLong(obj));
     } else if (PySlice_Check(obj)) {
       result = applySlice(result, dim, obj);
-      if (result.numel() == 0) {
-        // TODO: currently we don't have support for 0-sized dims, so slicing a dim
-        // to size 0 will return a size 0 tensor. for now, just shortcircuit slicing
-        // and return that size 0 tensor.
-        return result;
-      }
       dim++;
     } else if (obj == Py_Ellipsis) {
       dim += self.dim() - specified_dims;
@@ -168,7 +162,7 @@ static Variable applySlicing(const Variable& self, PyObject* index, variable_lis
       dim++;
     } else if (PyBool_Check(obj)) {
       result = result.unsqueeze(dim);
-      handle_var(boolToIndexingTensor(result, dim, obj == Py_True));
+      handle_var(boolToIndexingTensor(result, obj == Py_True));
     } else if (THPVariable_Check(obj)) {
       auto& var = THPVariable_Unpack(obj);
       auto scalar_type = var.type().scalarType();
@@ -177,7 +171,7 @@ static Variable applySlicing(const Variable& self, PyObject* index, variable_lis
           result = applySelect(result, dim, THPUtils_unpackLong(obj));
         } else {
           result = result.unsqueeze(dim);
-          handle_var(boolToIndexingTensor(result, dim, var.toCByte() != 0));
+          handle_var(boolToIndexingTensor(result, var.toCByte() != 0));
         }
       } else {
         handle_var(var);
