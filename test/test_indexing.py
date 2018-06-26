@@ -1,4 +1,4 @@
-from common import TestCase, run_tests
+from common import TestCase, run_tests, skipIfNoZeroSize
 import torch
 import warnings
 from torch import tensor
@@ -92,6 +92,19 @@ class TestIndexing(TestCase):
         mask = torch.zeros(4, 3).byte()
         y[mask] = -1
         self.assertEqual(x, y)
+
+    @skipIfNoZeroSize
+    def test_empty_ndim_index(self):
+        x = torch.randn(5)
+        self.assertEqual(torch.empty(0, 2), x[torch.empty(0, 2, dtype=torch.int64)])
+
+        x = torch.randn(2, 3, 4, 5)
+        self.assertEqual(torch.empty(2, 0, 6, 4, 5), x[:, torch.empty(0, 6, dtype=torch.int64)])
+
+    @skipIfNoZeroSize
+    def test_empty_ndim_index_bool(self):
+        x = torch.randn(5)
+        self.assertRaises(IndexError, lambda: x[torch.empty(0, 2, dtype=torch.uint8)])
 
     def test_index_getitem_copy_bools_slices(self):
         true = torch.tensor(1, dtype=torch.uint8)
