@@ -163,9 +163,8 @@ static bool _dimreduce_return_trivial(Tensor &result, const Tensor &self,
     return true;
   }
   // Return identity
-  if (self.numel() == 0 && self.ndimension() == 1) {
-    result.resize_({0});
-    result.fill_(ident);
+  if (self.numel() == 0) {
+    result.resize_(self.sizes());
     return true;
   }
   return false;

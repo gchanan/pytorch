@@ -261,7 +261,11 @@ static PyObject* applyBoolGetitem(const Variable& self, bool index) {
   if (index) {
     return wrap(self.type().copy(self.unsqueeze(0)));
   } else {
+#ifndef USE_TH_SIZE_ZERO_DIM
     return wrap(at::empty({0}, self.options()));
+#else
+    return wrap(self.type().copy(self.unsqueeze(0).slice(0, 0, 0, 1)));
+#endif
   }
 }
 
