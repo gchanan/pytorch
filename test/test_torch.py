@@ -21,7 +21,7 @@ from functools import reduce
 from torch import multiprocessing as mp
 from common import TestCase, iter_indices, TEST_NUMPY, TEST_SCIPY, TEST_MKL, \
     run_tests, download_file, skipIfNoLapack, suppress_warnings, IS_WINDOWS, \
-    PY3, NO_MULTIPROCESSING_SPAWN
+    PY3, NO_MULTIPROCESSING_SPAWN, skipIfNoZeroSize
 from multiprocessing.reduction import ForkingPickler
 
 if TEST_NUMPY:
@@ -5861,6 +5861,11 @@ class TestTorch(TestCase):
         self.assertEqual(empty.reshape([0, 1]).shape, (0,))
         self.assertEqual(empty.reshape([1, -1]).shape, (0,))
         self.assertRaises(RuntimeError, lambda: empty.reshape(1))
+
+    @skipIfNoZeroSize
+    def test_empty_reshape(self):
+        x = torch.randn(0, 6)
+        self.assertEqual((1, 0, 6, 1, 1), x.reshape(1, 0, 6, 1, 1).shape)
 
     def test_expand(self):
         tensor = torch.rand(1, 8, 1)
