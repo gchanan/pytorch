@@ -95,25 +95,33 @@ class TestIndexing(TestCase):
 
     @skipIfNoZeroSize
     def test_empty_ndim_index(self):
-        x = torch.randn(5)
-        self.assertEqual(torch.empty(0, 2), x[torch.empty(0, 2, dtype=torch.int64)])
+        devices = ['cpu'] if not torch.cuda.is_available() else ['cpu', 'cuda']
+        for device in devices:
+            x = torch.randn(5, device=device)
+            self.assertEqual(torch.empty(0, 2, device=device), x[torch.empty(0, 2, dtype=torch.int64, device=device)])
 
-        x = torch.randn(2, 3, 4, 5)
-        self.assertEqual(torch.empty(2, 0, 6, 4, 5), x[:, torch.empty(0, 6, dtype=torch.int64)])
+            x = torch.randn(2, 3, 4, 5, device=device)
+            self.assertEqual(torch.empty(2, 0, 6, 4, 5, device=device),
+                             x[:, torch.empty(0, 6, dtype=torch.int64, device=device)])
 
     @skipIfNoZeroSize
     def test_empty_ndim_index_bool(self):
-        x = torch.randn(5)
-        self.assertRaises(IndexError, lambda: x[torch.empty(0, 2, dtype=torch.uint8)])
+        devices = ['cpu'] if not torch.cuda.is_available() else ['cpu', 'cuda']
+        for device in devices:
+            x = torch.randn(5, device=device)
+            self.assertRaises(IndexError, lambda: x[torch.empty(0, 2, dtype=torch.uint8, device=device)])
 
     @skipIfNoZeroSize
     def test_empty_slice(self):
-        x = torch.randn(2, 3, 4, 5)
-        y = x[:, :, :, 1]
-        z = y[:, 1:1, :]
-        self.assertEqual((2, 0, 4), z.shape)
-        # this isn't technically necessary, but matches NumPy stride calculations.
-        self.assertEqual((60, 20, 5), z.stride())
+        devices = ['cpu'] if not torch.cuda.is_available() else ['cpu', 'cuda']
+        for device in devices:
+            x = torch.randn(2, 3, 4, 5, device=device)
+            y = x[:, :, :, 1]
+            z = y[:, 1:1, :]
+            self.assertEqual((2, 0, 4), z.shape)
+            # this isn't technically necessary, but matches NumPy stride calculations.
+            self.assertEqual((60, 20, 5), z.stride())
+            self.assertTrue(z.is_contiguous())
 
     def test_index_getitem_copy_bools_slices(self):
         true = torch.tensor(1, dtype=torch.uint8)
