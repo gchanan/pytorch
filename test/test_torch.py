@@ -2077,6 +2077,43 @@ class TestTorch(TestCase):
         self.assertTrue(x.is_cuda)
         torch.set_default_tensor_type(saved_type)
 
+    @skipIfNoZeroSize
+    def test_tensor_factories_empty(self):
+        # ensure we can create empty tensors from each factory function
+        shapes = [(5, 0, 1), (0,), (0, 0, 1, 0, 2, 0, 0)]
+        devices = ['cpu'] if not torch.cuda.is_available() else ['cpu', 'cuda']
+
+        for device in devices:
+            for shape in shapes:
+                self.assertEqual(shape, torch.zeros(shape, device=device).shape)
+                self.assertEqual(shape, torch.zeros_like(torch.zeros(shape, device=device)).shape)
+                self.assertEqual(shape, torch.empty(shape, device=device).shape)
+                self.assertEqual(shape, torch.empty_like(torch.zeros(shape, device=device)).shape)
+                self.assertEqual(shape, torch.full(shape, 3, device=device).shape)
+                self.assertEqual(shape, torch.full_like(torch.zeros(shape, device=device), 3).shape)
+                self.assertEqual(shape, torch.ones(shape, device=device).shape)
+                self.assertEqual(shape, torch.ones_like(torch.zeros(shape, device=device)).shape)
+                self.assertEqual(shape, torch.rand(shape, device=device).shape)
+                self.assertEqual(shape, torch.rand_like(torch.zeros(shape, device=device)).shape)
+                self.assertEqual(shape, torch.randn(shape, device=device).shape)
+                self.assertEqual(shape, torch.randn_like(torch.zeros(shape, device=device)).shape)
+                self.assertEqual(shape, torch.randint(6, shape, device=device).shape)
+                self.assertEqual(shape, torch.randint_like(torch.zeros(shape, device=device), 6).shape)
+
+            self.assertEqual((0,), torch.arange(0, device=device).shape)
+            self.assertEqual((0, 0), torch.eye(0, device=device).shape)
+            self.assertEqual((0, 0), torch.eye(0, 0, device=device).shape)
+            self.assertEqual((5, 0), torch.eye(5, 0, device=device).shape)
+            self.assertEqual((0, 5), torch.eye(0, 5, device=device).shape)
+            self.assertEqual((0,), torch.linspace(1, 1, 0, device=device).shape)
+            self.assertEqual((0,), torch.logspace(1, 1, 0, device=device).shape)
+            self.assertEqual((0,), torch.randperm(0, device=device).shape)
+            self.assertEqual((0,), torch.bartlett_window(0, device=device).shape)
+            self.assertEqual((0,), torch.hamming_window(0, device=device).shape)
+            self.assertEqual((0,), torch.hann_window(0, device=device).shape)
+            self.assertEqual((1, 1, 0), torch.tensor([[[]]]).shape)
+            self.assertEqual((1, 1, 0), torch.as_tensor([[[]]]).shape)
+
     def test_new_tensor(self):
         expected = torch.autograd.Variable(torch.ByteTensor([1, 1]))
         # test data
