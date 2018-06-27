@@ -106,6 +106,15 @@ class TestIndexing(TestCase):
         x = torch.randn(5)
         self.assertRaises(IndexError, lambda: x[torch.empty(0, 2, dtype=torch.uint8)])
 
+    @skipIfNoZeroSize
+    def test_empty_slice(self):
+        x = torch.randn(2, 3, 4, 5)
+        y = x[:, :, :, 1]
+        z = y[:, 1:1, :]
+        self.assertEqual((2, 0, 4), z.shape)
+        # this isn't technically necessary, but matches NumPy stride calculations.
+        self.assertEqual((60, 20, 5), z.stride())
+
     def test_index_getitem_copy_bools_slices(self):
         true = torch.tensor(1, dtype=torch.uint8)
         false = torch.tensor(0, dtype=torch.uint8)
