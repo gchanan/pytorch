@@ -23,6 +23,8 @@
 #define PRAGMA(P) __pragma(P)
 #endif
 
+#include <iostream>
+
 #define TH_TENSOR_APPLY_CONTIG(TYPE, TENSOR, CODE) \
 { \
   int inOmp = omp_in_parallel(); \
@@ -2591,7 +2593,7 @@ void THTensor_(sum)(THTensor *r_, THTensor *t, int dimension, int keepdim)
 void THTensor_(prod)(THTensor *r_, THTensor *t, int dimension, int keepdim)
 {
   THLongStorage *dim;
-
+  std::cerr << "IN PROD THTENSOR" << std::endl;
   THArgCheck(dimension >= 0 && dimension < THTensor_(_nDimension)(t), 2, "dimension %d out of range",
       dimension + TH_INDEX_BASE);
 

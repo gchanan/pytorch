@@ -785,6 +785,29 @@ class TestTorch(TestCase):
     def test_dim_reduction(self):
         self._test_dim_reduction(self, lambda t: t)
 
+    @skipIfNoZeroSize
+    def test_reduction_empty(self):
+        devices = ['cpu'] if not torch.cuda.is_available() else ['cpu', 'cuda']
+        shape = (2, 0, 4)
+        for device in devices:
+            # prod
+            self.assertEqual((2, 0), torch.randn(shape, device=device).prod(2).shape)
+            self.assertEqual((2, 0, 1), torch.randn(shape, device=device).prod(2, keepdim=True).shape)
+            self.assertEqual(torch.ones(2, 4, device=device), torch.randn(shape, device=device).prod(1))
+            self.assertEqual(torch.ones(2, 1, 4, device=device),
+                             torch.randn(shape, device=device).prod(1, keepdim=True))
+            self.assertEqual(torch.ones((), device=device), torch.randn(shape, device=device).prod())
+
+            # sum
+            self.assertEqual((2, 0), torch.randn(shape, device=device).sum(2).shape)
+            self.assertEqual((2, 0, 1), torch.randn(shape, device=device).sum(2, keepdim=True).shape)
+            self.assertEqual(torch.zeros(2, 4, device=device), torch.randn(shape, device=device).sum(1))
+            self.assertEqual(torch.zeros(2, 1, 4, device=device),
+                             torch.randn(shape, device=device).sum(1, keepdim=True))
+            self.assertEqual(torch.zeros((), device=device), torch.randn(shape, device=device).sum())
+
+
+
     @unittest.skipIf(not TEST_SCIPY, "Scipy not found")
     def test_logsumexp(self):
         from scipy.special import logsumexp
