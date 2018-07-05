@@ -787,6 +787,61 @@ class TestTorch(TestCase):
     def test_dim_reduction(self):
         self._test_dim_reduction(self, lambda t: t)
 
+    @skipIfNoZeroSize
+    def test_reduction_empty(self):
+        devices = ['cpu'] if not torch.cuda.is_available() else ['cpu', 'cuda']
+        shape = (2, 0, 4)
+        for device in devices:
+            x = torch.randn(shape, device=device)
+
+            # prod
+            self.assertEqual((2, 0), x.prod(2).shape)
+            self.assertEqual((2, 0, 1), x.prod(2, keepdim=True).shape)
+            self.assertEqual(torch.ones(2, 4, device=device), x.prod(1))
+            self.assertEqual(torch.ones(2, 1, 4, device=device), x.prod(1, keepdim=True))
+            self.assertEqual(torch.ones((), device=device), x.prod())
+
+            # sum
+            self.assertEqual((2, 0), x.sum(2).shape)
+            self.assertEqual((2, 0, 1), x.sum(2, keepdim=True).shape)
+            self.assertEqual(torch.zeros(2, 4, device=device), x.sum(1))
+            self.assertEqual(torch.zeros(2, 1, 4, device=device), x.sum(1, keepdim=True))
+            self.assertEqual(torch.zeros((), device=device), x.sum())
+
+            # norm
+            self.assertEqual((2, 0), x.norm(2, dim=2).shape)
+            self.assertEqual((2, 0, 1), x.norm(2, dim=2, keepdim=True).shape)
+            self.assertEqual(torch.zeros(2, 4, device=device), x.norm(2, dim=1))
+            self.assertEqual(torch.zeros(2, 1, 4, device=device), x.norm(2, dim=1, keepdim=True))
+            self.assertEqual(torch.zeros((), device=device), x.norm())
+
+            # mean
+            self.assertEqual((2, 0), x.mean(dim=2).shape)
+            self.assertEqual((2, 0, 1), x.norm(dim=2, keepdim=True).shape)
+            # value is 'NaN', don't compare
+
+            # max
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.max(2))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.max(2, keepdim=True))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.max(1))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.max(1, keepdim=True))
+
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.argmax(2))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.argmax(2, keepdim=True))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.argmax(1))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.argmax(1, keepdim=True))
+
+            # min
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.min(2))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.min(2, keepdim=True))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.min(1))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.min(1, keepdim=True))
+
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.argmin(2))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.argmin(2, keepdim=True))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.argmin(1))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.argmin(1, keepdim=True))
+
     @unittest.skipIf(not TEST_SCIPY, "Scipy not found")
     def test_logsumexp(self):
         from scipy.special import logsumexp
