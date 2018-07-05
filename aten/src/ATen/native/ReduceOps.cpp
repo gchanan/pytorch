@@ -4,6 +4,7 @@
 #include "ATen/NativeFunctions.h"
 #include "ATen/WrapDimUtils.h"
 #include "ATen/WrapDimUtilsMulti.h"
+#include "ReduceOpsUtils.h"
 #include "cpu/ReduceOpsKernel.h"
 
 #include <algorithm>
@@ -155,31 +156,6 @@ Tensor _prod_cpu(const Tensor &self) {
 
 // DIM REDUCE #################################################################
 
-static bool _dimreduce_return_trivial(Tensor &result, const Tensor &self,
-                                      int64_t ident) {
-  if (self.numel() == 1 && self.ndimension() == 0) {
-    result.resize_({});
-    result.fill_(self);
-    return true;
-  }
-  // Return identity
-  if (self.numel() == 0) {
-    result.resize_(self.sizes());
-    return true;
-  }
-  return false;
-}
-
-static Tensor &_dimreduce_setup(Tensor &result, const Tensor &self,
-                                int64_t dim) {
-  IntList self_sizes = self.sizes();
-  std::vector<int64_t> result_sizes;
-  result_sizes.insert(result_sizes.end(), self_sizes.begin(), self_sizes.end());
-  result_sizes[dim] = 1;
-  result.resize_(result_sizes);
-  return result;
-}
-
 static inline Tensor &mean_out(Tensor &result, const Tensor &self, int64_t dim,
                  bool keepdim, optional<ScalarType> dtype) {
   ScalarType scalarType = result.type().scalarType();
@@ -235,7 +211,7 @@ Tensor& sum_out(Tensor& result, const Tensor& self, IntList dim, ScalarType dtyp
 Tensor &_sum_out_cpu(Tensor &result, const Tensor &self, int64_t dim_,
                      bool keepdim) {
   int64_t dim = maybe_wrap_dim(dim_, self.dim());
-  if (_dimreduce_return_trivial(result, self, 0))
+  if (_dimreduce_return_trivial(result, self, 0, dim, keepdim))
     return result;
   if (self.is_contiguous() && result.is_contiguous()) {
     _dimreduce_setup(result, self, dim);
@@ -273,7 +249,7 @@ Tensor& prod_out(Tensor& result, const Tensor& self, int64_t dim, ScalarType dty
 Tensor &_prod_out_cpu(Tensor &result, const Tensor &self, int64_t dim_,
                       bool keepdim) {
   int64_t dim = maybe_wrap_dim(dim_, self.dim());
-  if (_dimreduce_return_trivial(result, self, 1))
+  if (_dimreduce_return_trivial(result, self, 1, dim, keepdim))
     return result;
   if (self.is_contiguous() && result.is_contiguous()) {
     _dimreduce_setup(result, self, dim);
@@ -435,6 +411,23 @@ Tensor _sum(const Tensor &self, IntList dims, bool keepdim) {
 Tensor& _sum_out(Tensor &result, const Tensor &self, IntList dims, bool keepdim)
 {
   return reduce_multi_associative_out<_sum, _sum_out>(result, self, dims, keepdim);
+}
+
+Tensor norm(const Tensor& self, Scalar p, int64_t dim, bool keepdim) {
+  Tensor result = self.type().tensor();
+  return at::native::norm_out(result, self, p, dim, keepdim);
+}
+
+Tensor &norm_out(Tensor &result, const Tensor &self, Scalar p, int64_t dim, bool keepdim) {
+  AT_CHECK(self.type().backend() == Backend::CPU || self.type().backend() == Backend::CUDA,
+           "norm only supports CPU AND CUDA backend, got: ", at::toString(self.type().backend()));
+  AT_CHECK(at::isFloatingType(self.type().scalarType()), "norm on supports floating-point dtypes");
+  dim = maybe_wrap_dim(dim, self.dim());
+  if (_dimreduce_return_trivial(result, self, 0, dim, keepdim)) {
+    return result;
+  } else {
+    return at::_th_norm_out(result, self, p, dim, keepdim);
+  }
 }
 
 }} // namespace at::native

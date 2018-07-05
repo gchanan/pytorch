@@ -828,6 +828,14 @@
       - arg: THTensor* self
         broadcast: other fallback
       - THTensor* other
+]]
+
+[[
+  name: _th_min
+  variants:
+    - method
+    - function
+  options:
     - cname: min
       return: argument 0,1
       scalar_check: self_->isScalar() || (keepdim == false && self_->dim() == 1)
@@ -860,6 +868,14 @@
       - arg: THTensor* self
         broadcast: other fallback
       - THTensor* other
+]]
+
+[[
+  name: _th_max
+  variants:
+    - method
+    - function
+  options:
     - cname: max
       return: argument 0,1
       scalar_check: self_->isScalar() || (keepdim == false && self_->dim() == 1)
@@ -874,6 +890,7 @@
         - arg: bool keepdim
           default: "false"
 ]]
+
 [[
   name: kthvalue
   backends:
@@ -1686,7 +1703,7 @@
           default: AS_REAL(2)
 ]]
 [[
-  name: norm
+  name: _th_norm
   types:
     - floating_point
   backends:

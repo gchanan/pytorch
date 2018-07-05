@@ -407,7 +407,7 @@
   self: zeros_like(self).masked_scatter_(mask, grad)
 
 - name: max(Tensor self, int64_t dim, bool keepdim)
-  self: index_select_backward(grad, dim, max_indices, self.sizes(), keepdim)
+  self: index_select_backward(grad, dim, result1, self.sizes(), keepdim)
 
 - name: max(Tensor self)
   self: select_equals_backward(grad, self, result)
@@ -443,7 +443,7 @@
   self: index_select_backward(grad, dim, indices, self.sizes(), keepdim)
 
 - name: min(Tensor self, int64_t dim, bool keepdim)
-  self: index_select_backward(grad, dim, min_indices, self.sizes(), keepdim)
+  self: index_select_backward(grad, dim, result1, self.sizes(), keepdim)
 
 - name: min(Tensor self)
   self: select_equals_backward(grad, self, result)
