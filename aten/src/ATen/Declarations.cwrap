@@ -829,7 +829,6 @@
         broadcast: other fallback
       - THTensor* other
 ]]
-
 [[
   name: _th_min
   variants:
@@ -869,7 +868,6 @@
         broadcast: other fallback
       - THTensor* other
 ]]
-
 [[
   name: _th_max
   variants:
@@ -892,12 +890,13 @@
 ]]
 
 [[
-  name: kthvalue
+  name: _th_kthvalue
   backends:
     - CPU
   variants:
     - method
     - function
+  cname: kthvalue
   return: argument 0,1
   scalar_check: self_->isScalar() || (keepdim == false && self_->dim() == 1)
   arguments:
@@ -914,10 +913,11 @@
       default: "false"
 ]]
 [[
-  name: mode
+  name: _th_mode
   variants:
     - method
     - function
+  cname: mode
   return: argument 0,1
   scalar_check: self_->isScalar() || (keepdim == false && self_->dim() == 1)
   arguments:
@@ -943,6 +943,15 @@
       return: real
       arguments:
         - THTensor* self
+]]
+[[
+  name: _th_median
+  variants:
+    - method
+    - function
+  cname: median
+  return: argument 0,1
+  options:
     - cname: median
       scalar_check: self_->isScalar() || (keepdim == false && self_->dim() == 1)
       arguments:
