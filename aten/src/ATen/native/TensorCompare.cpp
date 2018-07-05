@@ -85,8 +85,36 @@ Tensor _s_where_cpu(const Tensor& condition, const Tensor& self, const Tensor& o
   return ret;
 }
 
+std::tuple<Tensor, Tensor> max(const Tensor& self, int64_t dim, bool keepdim) {
+  Tensor max_values = self.type().tensor();
+  Tensor max_indices = self.type().toScalarType(kLong).tensor();
+  return at::native::max_out(max_values, max_indices, self, dim, keepdim);
+}
+
+std::tuple<Tensor &,Tensor &> max_out(Tensor& max_values, Tensor& max_indices,
+                                      const Tensor& self, int64_t dim, bool keepdim) {
+  AT_CHECK(self.type().backend() == Backend::CPU || self.type().backend() == Backend::CUDA,
+           "max only supports CPU AND CUDA backend, got: ", at::toString(self.type().backend()));
+  dim = maybe_wrap_dim(dim, self.dim());
+  return at::_th_max_out(max_values, max_indices, self, dim, keepdim);
+}
+
 Tensor max_values(const Tensor& self, int64_t dim, bool keepdim) {
   return std::get<0>(self.max(dim, keepdim));
+}
+
+std::tuple<Tensor, Tensor> min(const Tensor& self, int64_t dim, bool keepdim) {
+  Tensor min_values = self.type().tensor();
+  Tensor min_indices = self.type().toScalarType(kLong).tensor();
+  return at::native::min_out(min_values, min_indices, self, dim, keepdim);
+}
+
+std::tuple<Tensor &,Tensor &> min_out(Tensor& min_values, Tensor& min_indices,
+                                      const Tensor& self, int64_t dim, bool keepdim) {
+  AT_CHECK(self.type().backend() == Backend::CPU || self.type().backend() == Backend::CUDA,
+           "min only supports CPU AND CUDA backend, got: ", at::toString(self.type().backend()));
+  dim = maybe_wrap_dim(dim, self.dim());
+  return at::_th_min_out(min_values, min_indices, self, dim, keepdim);
 }
 
 Tensor min_values(const Tensor& self, int64_t dim, bool keepdim) {
