@@ -4,6 +4,7 @@
 #include "ATen/Error.h"
 #include "ATen/ExpandUtils.h"
 #include "ATen/NativeFunctions.h"
+#include "ReduceOpsUtils.h"
 
 namespace {
 template <typename scalar_t>
@@ -138,7 +139,12 @@ std::tuple<Tensor &,Tensor &> max_out(Tensor& max, Tensor& max_indices,
   AT_CHECK(self.type().backend() == Backend::CPU || self.type().backend() == Backend::CUDA,
            "max only supports CPU AND CUDA backend, got: ", at::toString(self.type().backend()));
   dim = maybe_wrap_dim(dim, self.dim());
-  return at::_th_max_out(max, max_indices, self, dim, keepdim);
+  Tensor result = self.type().tensor(self.sizes());
+  if (_dimreduce_return_trivial_no_ident(result, self, dim, keepdim, "max")) {
+    return std::make_tuple(result, indices);
+  } else {
+    return at::_th_max_out(max, max_indices, self, dim, keepdim);
+  }
 }
 
 Tensor max_values(const Tensor& self, int64_t dim, bool keepdim) {
@@ -156,7 +162,13 @@ std::tuple<Tensor &,Tensor &> min_out(Tensor& min, Tensor& min_indices,
   AT_CHECK(self.type().backend() == Backend::CPU || self.type().backend() == Backend::CUDA,
            "min only supports CPU AND CUDA backend, got: ", at::toString(self.type().backend()));
   dim = maybe_wrap_dim(dim, self.dim());
-  return at::_th_min_out(min, min_indices, self, dim, keepdim);
+  Tensor result = self.type().tensor(self.sizes());
+  if (_dimreduce_return_trivial_no_ident(result, self, dim, keepdim, "min")) {
+    Tensor indices = self.type().toScalarType(kLong).scalarTensor(0);
+    return std::make_tuple(result, indices);
+  } else {
+    return at::_th_min_out(min, min_indices, self, dim, keepdim);
+  }
 }
 
 Tensor min_values(const Tensor& self, int64_t dim, bool keepdim) {

@@ -888,6 +888,7 @@
         - arg: bool keepdim
           default: "false"
 ]]
+
 [[
   name: _th_kthvalue
   backends:
@@ -1711,7 +1712,7 @@
           default: AS_REAL(2)
 ]]
 [[
-  name: norm
+  name: _th_norm
   types:
     - floating_point
   backends:
