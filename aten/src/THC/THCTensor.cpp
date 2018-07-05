@@ -68,10 +68,10 @@ void THCTensor_resize(THCState *state, THCTensor *self, THLongStorage *size, THL
 void THCTensor_resizeAs(THCState *state, THCTensor *self, THCTensor *src) {
   int isSame = 0;
   int d;
-  if(self->_dim() == src->_dim())
+  if(self->dim() == src->dim())
   {
     isSame = 1;
-    for(d = 0; d < self->_dim(); d++)
+    for(d = 0; d < self->dim(); d++)
     {
       if(self->size[d] != src->size[d])
       {

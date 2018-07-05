@@ -102,6 +102,16 @@
 - func: addr_out(Tensor result, Tensor self, Tensor vec1, Tensor vec2, *, Scalar beta=1, Scalar alpha=1) -> Tensor
   variants: function
 
+- func: all(Tensor self, int64_t dim, bool keepdim=false) -> Tensor
+
+- func: all_out(Tensor result, Tensor self, int64_t dim, bool keepdim=false) -> Tensor
+  variants: function
+
+- func: any(Tensor self, int64_t dim, bool keepdim=false) -> Tensor
+
+- func: any_out(Tensor result, Tensor self, int64_t dim, bool keepdim=false) -> Tensor
+  variants: function
+
 - func: arange(Scalar start, Scalar end, TensorOptions options={}) -> Tensor
   variants: function
 
@@ -1218,6 +1228,11 @@
     CPU: _sqrt_out_cpu
     CUDA: _sqrt_out_cuda
 
+- func: std(Tensor self, int64_t dim, bool unbiased=true, bool keepdim=false) -> Tensor
+
+- func: std_out(Tensor result, Tensor self, int64_t dim, bool unbiased=true, bool keepdim=false) -> Tensor
+  variants: function
+
 # FIXME: These could be combined as optional<ScalarType> but for https://github.com/pytorch/pytorch/issues/6593.
 - func: prod(Tensor self, *, ScalarType dtype) -> Tensor
 
@@ -1326,6 +1341,11 @@
 
 - func: unsqueeze_(Tensor self, int64_t dim) -> Tensor
   variants: method
+
+- func: var(Tensor self, int64_t dim, bool unbiased=true, bool keepdim=false) -> Tensor
+
+- func: var_out(Tensor result, Tensor self, int64_t dim, bool unbiased=true, bool keepdim=false) -> Tensor
+  variants: function
 
 - func: view_as(Tensor self, Tensor other) -> Tensor
   variants: method
