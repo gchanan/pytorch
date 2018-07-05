@@ -788,7 +788,7 @@ class TestTorch(TestCase):
         self._test_dim_reduction(self, lambda t: t)
 
     @skipIfNoZeroSize
-    def test_reduction_empty(self):
+    def test_dimension_op_empty(self):
         devices = ['cpu'] if not torch.cuda.is_available() else ['cpu', 'cuda']
         shape = (2, 0, 4)
         for device in devices:
@@ -841,6 +841,57 @@ class TestTorch(TestCase):
             self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.argmin(2, keepdim=True))
             self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.argmin(1))
             self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.argmin(1, keepdim=True))
+
+            # logsumexp
+            self.assertEqual((2, 0), x.logsumexp(2).shape)
+            self.assertEqual((2, 0, 1), x.logsumexp(2, keepdim=True).shape)
+            self.assertTrue(torch.allclose(torch.full((2, 4), float('-inf'), device=device), x.logsumexp(1)))
+            self.assertTrue(torch.allclose(torch.full((2, 1, 4), float('-inf'), device=device), x.logsumexp(1, keepdim=True)))
+
+            # any
+            xb = x.to(torch.uint8)
+            yb = x.to(torch.uint8)
+            print("xb", xb)
+            print("yb", yb)
+            self.assertEqual((2, 0), xb.any(2).shape)
+            self.assertEqual((2, 0, 1), xb.any(2, keepdim=True).shape)
+            self.assertEqual(torch.zeros(2, 4, device=device), xb.any(1))
+            self.assertEqual(torch.zeros(2, 1, 4, device=device), xb.any(1, keepdim=True))
+            self.assertEqual(torch.zeros((), device=device), xb.any())
+
+            # all
+            self.assertEqual((2, 0), xb.all(2).shape)
+            self.assertEqual((2, 0, 1), xb.all(2, keepdim=True).shape)
+            self.assertEqual(torch.ones(2, 4, device=device), xb.all(1))
+            self.assertEqual(torch.ones(2, 1, 4, device=device), xb.all(1, keepdim=True))
+            self.assertEqual(torch.ones((), device=device), xb.all())
+
+            # var
+            self.assertEqual((2, 0), x.var(dim=2).shape)
+            self.assertEqual((2, 0, 1), x.var(dim=2, keepdim=True).shape)
+            # value is 'NaN', don't compare
+
+            # std
+            self.assertEqual((2, 0), x.std(dim=2).shape)
+            self.assertEqual((2, 0, 1), x.std(dim=2, keepdim=True).shape)
+            # value is 'NaN', don't compare
+
+    @skipIfNoZeroSize
+    def test_pairwise_distance_empty(self):
+        devices = ['cpu'] if not torch.cuda.is_available() else ['cpu', 'cuda']
+        for device in devices:
+            shape = (2, 0)
+            x = torch.randn(shape, device=device)
+            y = torch.randn(shape, device=device)
+
+            self.assertEqual(torch.zeros(2, device=device), torch.pairwise_distance(x, y))
+            self.assertEqual(torch.zeros((2,1), device=device), torch.pairwise_distance(x, y, keepdim=True))
+
+            shape = (0, 2)
+            x = torch.randn(shape, device=device)
+            y = torch.randn(shape, device=device)
+            self.assertEqual(torch.zeros(0, device=device), torch.pairwise_distance(x, y))
+            self.assertEqual(torch.zeros((0,1), device=device), torch.pairwise_distance(x, y, keepdim=True))
 
     @unittest.skipIf(not TEST_SCIPY, "Scipy not found")
     def test_logsumexp(self):
