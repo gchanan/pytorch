@@ -851,8 +851,6 @@ class TestTorch(TestCase):
             # any
             xb = x.to(torch.uint8)
             yb = x.to(torch.uint8)
-            print("xb", xb)
-            print("yb", yb)
             self.assertEqual((2, 0), xb.any(2).shape)
             self.assertEqual((2, 0, 1), xb.any(2, keepdim=True).shape)
             self.assertEqual(torch.zeros(2, 4, device=device), xb.any(1))
@@ -875,6 +873,24 @@ class TestTorch(TestCase):
             self.assertEqual((2, 0), x.std(dim=2).shape)
             self.assertEqual((2, 0, 1), x.std(dim=2, keepdim=True).shape)
             # value is 'NaN', don't compare
+
+            # kthvalue
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.kthvalue(1, dim=2))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.kthvalue(1, dim=2, keepdim=True))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.kthvalue(1, dim=1))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.kthvalue(1, dim=1, keepdim=True))
+
+            # mode
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.mode(2))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.mode(2, keepdim=True))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.mode(1))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.mode(1, keepdim=True))
+
+            # median
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.median(2))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.median(2, keepdim=True))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.median(1))
+            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.median(1, keepdim=True))
 
     @skipIfNoZeroSize
     def test_pairwise_distance_empty(self):
