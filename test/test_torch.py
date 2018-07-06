@@ -829,7 +829,8 @@ class TestTorch(TestCase):
                     elif math.isinf(identity):
                         # FIXME: assertEqual doesn't work with inf, -inf and two tensors.
                         self.assertTrue(torch.allclose(torch.full((2, 4), identity, device=device), fn(x, dim=1)))
-                        self.assertTrue(torch.allclose(torch.full((2, 1, 4), identity, device=device), fn(x, dim=1, keepdim=True)))
+                        self.assertTrue(torch.allclose(torch.full((2, 1, 4), identity, device=device),
+                                        fn(x, dim=1, keepdim=True)))
 
             # any
             xb = x.to(torch.uint8)
@@ -856,13 +857,13 @@ class TestTorch(TestCase):
             y = torch.randn(shape, device=device)
 
             self.assertEqual(torch.zeros(2, device=device), torch.pairwise_distance(x, y))
-            self.assertEqual(torch.zeros((2,1), device=device), torch.pairwise_distance(x, y, keepdim=True))
+            self.assertEqual(torch.zeros((2, 1), device=device), torch.pairwise_distance(x, y, keepdim=True))
 
             shape = (0, 2)
             x = torch.randn(shape, device=device)
             y = torch.randn(shape, device=device)
             self.assertEqual(torch.zeros(0, device=device), torch.pairwise_distance(x, y))
-            self.assertEqual(torch.zeros((0,1), device=device), torch.pairwise_distance(x, y, keepdim=True))
+            self.assertEqual(torch.zeros((0, 1), device=device), torch.pairwise_distance(x, y, keepdim=True))
 
     @unittest.skipIf(not TEST_SCIPY, "Scipy not found")
     def test_logsumexp(self):
