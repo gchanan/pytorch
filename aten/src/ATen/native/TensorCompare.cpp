@@ -97,7 +97,13 @@ std::tuple<Tensor &,Tensor &> kthvalue_out(Tensor& values, Tensor& indices,
   AT_CHECK(self.type().backend() == Backend::CPU || self.type().backend() == Backend::CUDA,
            "kthvalue only supports CPU AND CUDA backend, got: ", at::toString(self.type().backend()));
   dim = maybe_wrap_dim(dim, self.dim());
-  return at::_th_kthvalue_out(values, indices, self, k, dim, keepdim);
+  if (_dimreduce_return_trivial_no_ident(values, self, dim, keepdim, "kthvalue")) {
+    AT_ASSERT(values.dim() == 0);
+    indices.resize_({}).fill_(0);
+    return std::forward_as_tuple(values, indices);
+  } else {
+    return at::_th_kthvalue_out(values, indices, self, k, dim, keepdim);
+  }
 }
 
 std::tuple<Tensor, Tensor> median(const Tensor& self, int64_t dim, bool keepdim) {
@@ -111,7 +117,13 @@ std::tuple<Tensor &,Tensor &> median_out(Tensor& values, Tensor& indices,
   AT_CHECK(self.type().backend() == Backend::CPU || self.type().backend() == Backend::CUDA,
            "median only supports CPU AND CUDA backend, got: ", at::toString(self.type().backend()));
   dim = maybe_wrap_dim(dim, self.dim());
-  return at::_th_median_out(values, indices, self, dim, keepdim);
+  if (_dimreduce_return_trivial_no_ident(values, self, dim, keepdim, "median")) {
+    AT_ASSERT(values.dim() == 0);
+    indices.resize_({}).fill_(0);
+    return std::forward_as_tuple(values, indices);
+  } else {
+    return at::_th_median_out(values, indices, self, dim, keepdim);
+  }
 }
 
 std::tuple<Tensor, Tensor> mode(const Tensor& self, int64_t dim, bool keepdim) {
@@ -125,7 +137,13 @@ std::tuple<Tensor &,Tensor &> mode_out(Tensor& values, Tensor& indices,
   AT_CHECK(self.type().backend() == Backend::CPU || self.type().backend() == Backend::CUDA,
            "mode only supports CPU AND CUDA backend, got: ", at::toString(self.type().backend()));
   dim = maybe_wrap_dim(dim, self.dim());
-  return at::_th_mode_out(values, indices, self, dim, keepdim);
+  if (_dimreduce_return_trivial_no_ident(values, self, dim, keepdim, "mode")) {
+    AT_ASSERT(values.dim() == 0);
+    indices.resize_({}).fill_(0);
+    return std::forward_as_tuple(values, indices);
+  } else {
+    return at::_th_mode_out(values, indices, self, dim, keepdim);
+  }
 }
 
 std::tuple<Tensor, Tensor> max(const Tensor& self, int64_t dim, bool keepdim) {
