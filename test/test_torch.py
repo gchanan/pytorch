@@ -4769,7 +4769,10 @@ class TestTorch(TestCase):
         reference = conv_fn(consec((3, 3, 3)))
 
         # empty tensor indexing
-        #self.assertEqual(reference[conv_fn(torch.LongTensor())], )
+        if torch._C._use_zero_size_dim():
+            self.assertEqual(reference[conv_fn(torch.LongTensor())], reference.new(0, 3, 3))
+        else:
+            self.assertEqual(reference[conv_fn(torch.LongTensor())], reference.new())
 
         self.assertEqual(reference[0], consec((3, 3)), 0)
         self.assertEqual(reference[1], consec((3, 3), 10), 0)
@@ -4815,7 +4818,7 @@ class TestTorch(TestCase):
         self.assertEqual(reference[None, 2:5, None, None], reference.unsqueeze(0)[:, 2:5].unsqueeze(2).unsqueeze(2))
 
         # indexing 0-length slice
-        if torch._C._use_zero_size_dim:
+        if torch._C._use_zero_size_dim():
             self.assertEqual(torch.empty(0, 5, 5), reference[slice(0)])
             self.assertEqual(torch.empty(0, 5), reference[slice(0), 2])
             self.assertEqual(torch.empty(0, 5), reference[2, slice(0)])
