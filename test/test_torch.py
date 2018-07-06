@@ -790,18 +790,21 @@ class TestTorch(TestCase):
     @skipIfNoZeroSize
     def test_reduction_empty(self):
         fn_to_identity = {
-            torch.max: None,
-            torch.argmax: None,
-            torch.min: None,
-            torch.argmin: None,
-            torch.mode: None,
-            torch.median: None,
+            lambda *args, **kwargs: torch.max(*args, **kwargs): None,
+            lambda *args, **kwargs: torch.kthvalue(*args, k=1, **kwargs): None,
+            lambda *args, **kwargs: torch.argmax(*args, **kwargs): None,
+            lambda *args, **kwargs: torch.min(*args, **kwargs): None,
+            lambda *args, **kwargs: torch.argmin(*args, **kwargs): None,
+            lambda *args, **kwargs: torch.mode(*args, **kwargs): None,
+            lambda *args, **kwargs: torch.median(*args, **kwargs): None,
 
-            torch.prod: 1,
-            torch.sum: 0,
-            torch.mean: float('nan'),
-            torch.var: float('nan'),
-            torch.std: float('nan'),
+            lambda *args, **kwargs: torch.prod(*args, **kwargs): 1,
+            lambda *args, **kwargs: torch.sum(*args, **kwargs): 0,
+            lambda *args, **kwargs: torch.norm(*args, p=2, **kwargs): 0,
+            lambda *args, **kwargs: torch.mean(*args, **kwargs): float('nan'),
+            lambda *args, **kwargs: torch.var(*args, **kwargs): float('nan'),
+            lambda *args, **kwargs: torch.std(*args, **kwargs): float('nan'),
+            lambda *args, **kwargs: torch.logsumexp(*args, **kwargs): float('-inf'),
         }
 
         devices = ['cpu'] if not torch.cuda.is_available() else ['cpu', 'cuda']
@@ -819,23 +822,14 @@ class TestTorch(TestCase):
                 else:
                     self.assertEqual(torch.empty((2, 0), device=device), fn(x, dim=2))
                     self.assertEqual(torch.empty((2, 0, 1), device=device), fn(x, dim=2, keepdim=True))
-                    if not math.isnan(identity):
+                    if not math.isnan(identity) and not math.isinf(identity):
                         self.assertEqual(torch.full((2, 4), identity, device=device), fn(x, dim=1))
                         self.assertEqual(torch.full((2, 1, 4), identity, device=device), fn(x, dim=1, keepdim=True))
                         self.assertEqual(torch.full((), identity, device=device), fn(x))
-
-            # norm
-            self.assertEqual((2, 0), x.norm(2, dim=2).shape)
-            self.assertEqual((2, 0, 1), x.norm(2, dim=2, keepdim=True).shape)
-            self.assertEqual(torch.zeros((2, 4), device=device), x.norm(2, dim=1))
-            self.assertEqual(torch.zeros((2, 1, 4), device=device), x.norm(2, dim=1, keepdim=True))
-            self.assertEqual(torch.zeros((), device=device), x.norm())
-
-            # logsumexp
-            self.assertEqual((2, 0), x.logsumexp(2).shape)
-            self.assertEqual((2, 0, 1), x.logsumexp(2, keepdim=True).shape)
-            self.assertTrue(torch.allclose(torch.full((2, 4), float('-inf'), device=device), x.logsumexp(1)))
-            self.assertTrue(torch.allclose(torch.full((2, 1, 4), float('-inf'), device=device), x.logsumexp(1, keepdim=True)))
+                    elif math.isinf(identity):
+                        # FIXME: assertEqual doesn't work with inf, -inf and two tensors.
+                        self.assertTrue(torch.allclose(torch.full((2, 4), identity, device=device), fn(x, dim=1)))
+                        self.assertTrue(torch.allclose(torch.full((2, 1, 4), identity, device=device), fn(x, dim=1, keepdim=True)))
 
             # any
             xb = x.to(torch.uint8)
@@ -852,12 +846,6 @@ class TestTorch(TestCase):
             self.assertEqual(torch.ones((2, 4), device=device), xb.all(1))
             self.assertEqual(torch.ones((2, 1, 4), device=device), xb.all(1, keepdim=True))
             self.assertEqual(torch.ones((), device=device), xb.all())
-
-            # kthvalue
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.kthvalue(1, dim=2))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.kthvalue(1, dim=2, keepdim=True))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.kthvalue(1, dim=1))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.kthvalue(1, dim=1, keepdim=True))
 
     @skipIfNoZeroSize
     def test_pairwise_distance_empty(self):
