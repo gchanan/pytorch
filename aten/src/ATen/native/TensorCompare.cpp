@@ -129,19 +129,6 @@ std::tuple<Tensor &,Tensor &> mode_out(Tensor& values, Tensor& indices,
 }
 
 std::tuple<Tensor, Tensor> max(const Tensor& self, int64_t dim, bool keepdim) {
-  AT_CHECK(self.type().backend() == Backend::CPU || self.type().backend() == Backend::CUDA,
-           "max only supports CPU AND CUDA backend, got: ", at::toString(self.type().backend()));
-  dim = maybe_wrap_dim(dim, self.dim());
-  Tensor result = self.type().tensor(self.sizes());
-  if (_dimreduce_return_trivial_no_ident(result, self, dim, keepdim, "max")) {
-    Tensor indices = self.type().toScalarType(kLong).scalarTensor(0);
-    return std::make_tuple(result, indices);
-  } else {
-    return at::_th_max(self, dim, keepdim);
-  }
-}
-
-std::tuple<Tensor, Tensor> max(const Tensor& self, int64_t dim, bool keepdim) {
   Tensor max = self.type().tensor();
   Tensor max_indices = self.type().toScalarType(kLong).tensor();
   return at::native::max_out(max, max_indices, self, dim, keepdim);
@@ -153,9 +140,9 @@ std::tuple<Tensor &,Tensor &> max_out(Tensor& max, Tensor& max_indices,
            "max only supports CPU AND CUDA backend, got: ", at::toString(self.type().backend()));
   dim = maybe_wrap_dim(dim, self.dim());
   if (_dimreduce_return_trivial_no_ident(max, self, dim, keepdim, "max")) {
-    // if we got here, max was a scalar.
-    Tensor indices = self.type().toScalarType(kLong).scalarTensor(0);
-    return std::make_tuple(max, indices);
+    AT_ASSERT(max.dim() == 0);
+    max_indices.resize_({}).fill_(0);
+    return std::forward_as_tuple(max, max_indices);
   } else {
     return at::_th_max_out(max, max_indices, self, dim, keepdim);
   }
@@ -177,9 +164,9 @@ std::tuple<Tensor &,Tensor &> min_out(Tensor& min, Tensor& min_indices,
            "min only supports CPU AND CUDA backend, got: ", at::toString(self.type().backend()));
   dim = maybe_wrap_dim(dim, self.dim());
   if (_dimreduce_return_trivial_no_ident(min, self, dim, keepdim, "max")) {
-    // if we got here, min was a scalar.
-    Tensor indices = self.type().toScalarType(kLong).scalarTensor(0);
-    return std::make_tuple(min, indices);
+    AT_ASSERT(min.dim() == 0);
+    min_indices.resize_({}).fill_(0);
+    return std::forward_as_tuple(min, min_indices);
   } else {
     return at::_th_min_out(min, min_indices, self, dim, keepdim);
   }
