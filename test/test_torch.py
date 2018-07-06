@@ -788,59 +788,48 @@ class TestTorch(TestCase):
         self._test_dim_reduction(self, lambda t: t)
 
     @skipIfNoZeroSize
-    def test_dimension_op_empty(self):
+    def test_reduction_empty(self):
+        fn_to_identity = {
+            torch.max: None,
+            torch.argmax: None,
+            torch.min: None,
+            torch.argmin: None,
+            torch.mode: None,
+            torch.median: None,
+
+            torch.prod: 1,
+            torch.sum: 0,
+            torch.mean: float('nan'),
+            torch.var: float('nan'),
+            torch.std: float('nan'),
+        }
+
         devices = ['cpu'] if not torch.cuda.is_available() else ['cpu', 'cuda']
         shape = (2, 0, 4)
         for device in devices:
             x = torch.randn(shape, device=device)
 
-            # prod
-            self.assertEqual((2, 0), x.prod(2).shape)
-            self.assertEqual((2, 0, 1), x.prod(2, keepdim=True).shape)
-            self.assertEqual(torch.ones(2, 4, device=device), x.prod(1))
-            self.assertEqual(torch.ones(2, 1, 4, device=device), x.prod(1, keepdim=True))
-            self.assertEqual(torch.ones((), device=device), x.prod())
-
-            # sum
-            self.assertEqual((2, 0), x.sum(2).shape)
-            self.assertEqual((2, 0, 1), x.sum(2, keepdim=True).shape)
-            self.assertEqual(torch.zeros(2, 4, device=device), x.sum(1))
-            self.assertEqual(torch.zeros(2, 1, 4, device=device), x.sum(1, keepdim=True))
-            self.assertEqual(torch.zeros((), device=device), x.sum())
+            for fn, identity in fn_to_identity.items():
+                if identity is None:
+                    ident_err = 'does not have an identity'
+                    self.assertRaisesRegex(RuntimeError, ident_err, lambda: fn(x, dim=2))
+                    self.assertRaisesRegex(RuntimeError, ident_err, lambda: fn(x, dim=2, keepdim=True))
+                    self.assertRaisesRegex(RuntimeError, ident_err, lambda: fn(x, dim=1))
+                    self.assertRaisesRegex(RuntimeError, ident_err, lambda: fn(x, dim=1, keepdim=True))
+                else:
+                    self.assertEqual(torch.empty((2, 0), device=device), fn(x, dim=2))
+                    self.assertEqual(torch.empty((2, 0, 1), device=device), fn(x, dim=2, keepdim=True))
+                    if not math.isnan(identity):
+                        self.assertEqual(torch.full((2, 4), identity, device=device), fn(x, dim=1))
+                        self.assertEqual(torch.full((2, 1, 4), identity, device=device), fn(x, dim=1, keepdim=True))
+                        self.assertEqual(torch.full((), identity, device=device), fn(x))
 
             # norm
             self.assertEqual((2, 0), x.norm(2, dim=2).shape)
             self.assertEqual((2, 0, 1), x.norm(2, dim=2, keepdim=True).shape)
-            self.assertEqual(torch.zeros(2, 4, device=device), x.norm(2, dim=1))
-            self.assertEqual(torch.zeros(2, 1, 4, device=device), x.norm(2, dim=1, keepdim=True))
+            self.assertEqual(torch.zeros((2, 4), device=device), x.norm(2, dim=1))
+            self.assertEqual(torch.zeros((2, 1, 4), device=device), x.norm(2, dim=1, keepdim=True))
             self.assertEqual(torch.zeros((), device=device), x.norm())
-
-            # mean
-            self.assertEqual((2, 0), x.mean(dim=2).shape)
-            self.assertEqual((2, 0, 1), x.norm(dim=2, keepdim=True).shape)
-            # value is 'NaN', don't compare
-
-            # max
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.max(2))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.max(2, keepdim=True))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.max(1))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.max(1, keepdim=True))
-
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.argmax(2))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.argmax(2, keepdim=True))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.argmax(1))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.argmax(1, keepdim=True))
-
-            # min
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.min(2))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.min(2, keepdim=True))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.min(1))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.min(1, keepdim=True))
-
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.argmin(2))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.argmin(2, keepdim=True))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.argmin(1))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.argmin(1, keepdim=True))
 
             # logsumexp
             self.assertEqual((2, 0), x.logsumexp(2).shape)
@@ -853,44 +842,22 @@ class TestTorch(TestCase):
             yb = x.to(torch.uint8)
             self.assertEqual((2, 0), xb.any(2).shape)
             self.assertEqual((2, 0, 1), xb.any(2, keepdim=True).shape)
-            self.assertEqual(torch.zeros(2, 4, device=device), xb.any(1))
-            self.assertEqual(torch.zeros(2, 1, 4, device=device), xb.any(1, keepdim=True))
+            self.assertEqual(torch.zeros((2, 4), device=device), xb.any(1))
+            self.assertEqual(torch.zeros((2, 1, 4), device=device), xb.any(1, keepdim=True))
             self.assertEqual(torch.zeros((), device=device), xb.any())
 
             # all
             self.assertEqual((2, 0), xb.all(2).shape)
             self.assertEqual((2, 0, 1), xb.all(2, keepdim=True).shape)
-            self.assertEqual(torch.ones(2, 4, device=device), xb.all(1))
-            self.assertEqual(torch.ones(2, 1, 4, device=device), xb.all(1, keepdim=True))
+            self.assertEqual(torch.ones((2, 4), device=device), xb.all(1))
+            self.assertEqual(torch.ones((2, 1, 4), device=device), xb.all(1, keepdim=True))
             self.assertEqual(torch.ones((), device=device), xb.all())
-
-            # var
-            self.assertEqual((2, 0), x.var(dim=2).shape)
-            self.assertEqual((2, 0, 1), x.var(dim=2, keepdim=True).shape)
-            # value is 'NaN', don't compare
-
-            # std
-            self.assertEqual((2, 0), x.std(dim=2).shape)
-            self.assertEqual((2, 0, 1), x.std(dim=2, keepdim=True).shape)
-            # value is 'NaN', don't compare
 
             # kthvalue
             self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.kthvalue(1, dim=2))
             self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.kthvalue(1, dim=2, keepdim=True))
             self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.kthvalue(1, dim=1))
             self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.kthvalue(1, dim=1, keepdim=True))
-
-            # mode
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.mode(2))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.mode(2, keepdim=True))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.mode(1))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.mode(1, keepdim=True))
-
-            # median
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.median(2))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.median(2, keepdim=True))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.median(1))
-            self.assertRaisesRegex(RuntimeError, 'does not have an identity', lambda: x.median(1, keepdim=True))
 
     @skipIfNoZeroSize
     def test_pairwise_distance_empty(self):
