@@ -6023,6 +6023,73 @@ class TestTorch(TestCase):
         # should be viewable -- i.e. data_ptr is the same.
         self.assertEqual(x.data_ptr(), x.reshape(1, 0, 6, 1, 1).data_ptr())
 
+        # match NumPy semantics -- don't infer the size of dimension with a degree of freedom
+        self.assertRaises(RuntimeError, lambda: x.reshape(0, -1))
+
+    @skipIfNoZeroSize
+    def test_tensor_shape_empty(self):
+        devices = ['cpu'] if not torch.cuda.is_available() else ['cpu', 'cuda']
+        for device in devices:
+            x = torch.randn((0, 1, 3, 0), device=device)
+            # flatten
+            self.assertEqual((0,), torch.flatten(x, 0, 3).shape)
+            #self.assertEqual(torch.empty(0, 0), torch.flatten(x, 0, 2).shape)
+            self.assertEqual((0, 3, 0), torch.flatten(x, 1, 2).shape)
+
+            # squeeze, unsqueeze
+            #self.assertEqual((0, 1, 1, 3, 0), torch.unsqueeze(x, 1).shape)
+            self.assertEqual((0, 3, 0), torch.squeeze(x, 1).shape)
+            self.assertEqual((0, 3, 0), torch.squeeze(x).shape)
+
+            # transpose, t
+            self.assertEqual((0, 0, 3, 1), torch.transpose(x, 1, 3).shape)
+            y = torch.randn((5, 0), device=device)
+            self.assertEqual((0, 5), y.t().shape)
+
+            # select
+            self.assertEqual((0, 1, 0), torch.select(x, 2, 2).shape)
+            # repeat
+            #self.assertEqual((9, 0, 5, 6, 0), x.repeat(9, 7, 5, 2, 3).shape)
+            # permute
+            self.assertEqual((3, 0, 0, 1), x.permute(2, 3, 0, 1).shape)
+            # diagonal, diagflat
+            y = torch.randn((5, 0), device=device)
+            #self.assertEqual((0,), torch.diagonal(y).shape)
+            #self.assertEqual((0, 0), torch.diagflat(torch.tensor([])).shape)
+            #self.assertEqual(torch.zeros(1, 1), torch.diagflat(torch.tensor([]), offset=1))
+            # chunk
+            # stack
+            # split
+            #self.assertEqual((torch.empty(0, 1, 3, 0),), torch.split(x, 1, 0))
+
+            #In [13]: np.split(np.random.randn(0,2,3,0), 3, axis=0)
+            #Out[13]:
+            #[array([], shape=(0, 2, 3, 0), dtype=float64),
+            #array([], shape=(0, 2, 3, 0), dtype=float64),
+            #array([], shape=(0, 2, 3, 0), dtype=float64)]
+
+            #In [14]: np.split(np.random.randn(0,2,3,0), 3, axis=2)
+            #Out[14]:
+            #[array([], shape=(0, 2, 1, 0), dtype=float64),
+            #array([], shape=(0, 2, 1, 0), dtype=float64),
+            #array([], shape=(0, 2, 1, 0), dtype=float64)]
+
+            #In [19]: np.split(np.random.randn(0,2,3,0), (0,1,2), axis=2)
+            #Out[19]:
+            #[array([], shape=(0, 2, 0, 0), dtype=float64),
+            #array([], shape=(0, 2, 1, 0), dtype=float64),
+            #array([], shape=(0, 2, 1, 0), dtype=float64),
+            #array([], shape=(0, 2, 1, 0), dtype=float64)]
+
+            #In [22]: np.split(np.random.randn(0,2,3,0), (0,1,2,4), axis=0)
+            #Out[22]:
+            #[array([], shape=(0, 2, 3, 0), dtype=float64),
+            # array([], shape=(0, 2, 3, 0), dtype=float64),
+            # array([], shape=(0, 2, 3, 0), dtype=float64),
+            # array([], shape=(0, 2, 3, 0), dtype=float64),
+            # array([], shape=(0, 2, 3, 0), dtype=float64)]
+                        # split_with_sizes
+
     def test_expand(self):
         tensor = torch.rand(1, 8, 1)
         tensor2 = torch.rand(5)

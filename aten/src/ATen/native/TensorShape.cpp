@@ -210,6 +210,9 @@ static std::vector<int64_t> infer_size(IntList shape, int64_t numel) {
 
   if (numel == newsize || (infer_dim && newsize > 0 && numel % newsize == 0)) {
     if (infer_dim) {
+      // we have a degree of freedom here to select the dimension size; follow NumPy semantics
+      // and just bail.
+      AT_CHECK(newsize != 0, "cannot reshape tensor of 0 elements into shape ", shape);
       res[*infer_dim] = numel / newsize;
     }
 #ifndef USE_TH_SIZE_ZERO_DIM
@@ -586,12 +589,17 @@ Tensor flatten(const Tensor& self, int64_t start_dim, int64_t end_dim) {
     return self;
   }
 
+  // We don't want to infer_size on the entire shape, because that can give us an extra degree
+  // of freedom we don't want; for example, consider shape [0, 1, 3, 0], with start_dim=1, end_dim=2.
+  // It's clear we want result shape [0, 3, 0] but passing [0, -1, 0] to infer_size means the -1
+  // can take on any value and satisfy the constraints.
+  auto slice_numel = prod_intlist(self.sizes().slice(start_dim, end_dim - start_dim + 1));
   std::vector<int64_t> shape;
   shape.reserve(self.dim() - end_dim + start_dim);
   for (int64_t i = 0; i < start_dim; i++) {
     shape.push_back(self.size(i));
   }
-  shape.push_back(-1);
+  shape.push_back(slice_numel);
   for (int64_t i = end_dim + 1; i < self.dim(); i++) {
     shape.push_back(self.size(i));
   }
