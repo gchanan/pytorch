@@ -2826,7 +2826,7 @@ void THTensor_(onesLike)(THTensor *r_, THTensor *input)
 
 void THTensor_(diag)(THTensor *r_, THTensor *t, int k)
 {
-  THArgCheck(!t->is_empty() && (THTensor_(nDimension)(t) == 1 || THTensor_(nDimension)(t) == 2), 1, "non-empty matrix or a vector expected");
+  THArgCheck(THTensor_(nDimension)(t) == 1 || THTensor_(nDimension)(t) == 2, 1, "matrix or a vector expected");
 
   if(THTensor_(nDimension)(t) == 1)
   {

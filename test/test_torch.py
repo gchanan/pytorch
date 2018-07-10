@@ -6054,14 +6054,15 @@ class TestTorch(TestCase):
             self.assertEqual((1, 1, 3, 0), z.unfold(0, 0, 4).shape)
 
             # repeat
-            #self.assertEqual((9, 0, 5, 6, 0), x.repeat(9, 7, 5, 2, 3).shape)
+            self.assertEqual((9, 0, 5, 6, 0), x.repeat(9, 7, 5, 2, 3).shape)
             # permute
             self.assertEqual((3, 0, 0, 1), x.permute(2, 3, 0, 1).shape)
             # diagonal, diagflat
             y = torch.randn((5, 0), device=device)
-            #self.assertEqual((0,), torch.diagonal(y).shape)
-            #self.assertEqual((0, 0), torch.diagflat(torch.tensor([])).shape)
-            #self.assertEqual(torch.zeros(1, 1), torch.diagflat(torch.tensor([]), offset=1))
+            self.assertEqual((0,), torch.diagonal(y).shape)
+            self.assertEqual((0, 0), torch.diagflat(torch.tensor([])).shape)
+            self.assertEqual(torch.zeros(1, 1), torch.diagflat(torch.tensor([]), offset=1))
+
             # chunk
             # stack
             # split

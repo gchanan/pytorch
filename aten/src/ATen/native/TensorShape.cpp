@@ -70,7 +70,9 @@ Tensor diagonal(const Tensor& self, int64_t offset, int64_t dim1_, int64_t dim2_
     diag_size = std::min(self.size(dim1)+offset, self.size(dim2));
     storage_offset -= offset * self.stride(dim1);
   }
+#ifndef USE_TH_SIZE_ZERO_DIM
   AT_CHECK(diag_size > 0, "invalid diagonal offset ", offset); // the diagonal offset was too large in magnitude
+#endif
 
   // construct new size and stride: we drop dim1 and dim2 (maximum first for not changing the index of the minumum)
   // the new ("joint") dimension is appended to the end of the shape / stride to match numpy semantics
@@ -181,7 +183,9 @@ Tensor repeat(const Tensor& self, IntList repeats) {
   Tensor result = self.type().tensor(target_size);
   Tensor urtensor = result.type().alias(result);
   for (int64_t i = 0; i < xtensor.dim(); ++i) {
-    urtensor = urtensor.unfold(i, xtensor.size(i), xtensor.size(i));
+    // can't unfold with step 0, so make sure step is at least 1
+    // (it doesn't matter what it is in that case).
+    urtensor = urtensor.unfold(i, xtensor.size(i), std::max<int64_t>(xtensor.size(i), 1));
   }
 
   urtensor.copy_(xtensor.expand_as(urtensor));
