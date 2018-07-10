@@ -6033,11 +6033,11 @@ class TestTorch(TestCase):
             x = torch.randn((0, 1, 3, 0), device=device)
             # flatten
             self.assertEqual((0,), torch.flatten(x, 0, 3).shape)
-            #self.assertEqual(torch.empty(0, 0), torch.flatten(x, 0, 2).shape)
+            self.assertEqual((0, 0), torch.flatten(x, 0, 2).shape)
             self.assertEqual((0, 3, 0), torch.flatten(x, 1, 2).shape)
 
             # squeeze, unsqueeze
-            #self.assertEqual((0, 1, 1, 3, 0), torch.unsqueeze(x, 1).shape)
+            self.assertEqual((0, 1, 1, 3, 0), torch.unsqueeze(x, 1).shape)
             self.assertEqual((0, 3, 0), torch.squeeze(x, 1).shape)
             self.assertEqual((0, 3, 0), torch.squeeze(x).shape)
 

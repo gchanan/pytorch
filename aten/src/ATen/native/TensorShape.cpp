@@ -507,10 +507,6 @@ inferSqueezeGeometry(const Tensor& tensor, int64_t dim) {
 
 std::tuple<std::vector<int64_t>, std::vector<int64_t> >
 inferUnsqueezeGeometry(const Tensor& tensor, int64_t dim) {
-  if (tensor.numel() == 0) {
-    throw std::runtime_error("cannot unsqueeze empty tensor");
-  }
-
   std::vector<int64_t> sizes(tensor.sizes());
   std::vector<int64_t> strides(tensor.strides());
   int64_t new_stride = dim >= tensor.dim() ? 1 : sizes[dim] * strides[dim];
