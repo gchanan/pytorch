@@ -6060,8 +6060,12 @@ class TestTorch(TestCase):
             # diagonal, diagflat
             self.assertEqual((0,), torch.diagonal(torch.randn((5, 0), device=device)).shape)
             self.assertEqual((0,), torch.diagonal(torch.randn((0, 5), device=device)).shape)
+            # off the end offsets are valid
             self.assertEqual((0,), torch.diagonal(torch.randn((5, 0), device=device), offset=1).shape)
             self.assertEqual((0,), torch.diagonal(torch.randn((0, 5), device=device), offset=1).shape)
+            # check non-zero sized offsets off the end
+            self.assertEqual((5, 6, 0), torch.diagonal(torch.randn((3, 4, 5, 6), device=device), offset=45252).shape)
+            self.assertEqual((5, 6, 0), torch.diagonal(torch.randn((3, 4, 5, 6), device=device), offset=-45252).shape)
 
             self.assertEqual((0, 0), torch.diagflat(torch.tensor([], device=device)).shape)
             self.assertEqual(torch.zeros(1, 1), torch.diagflat(torch.tensor([], device=device), offset=1))

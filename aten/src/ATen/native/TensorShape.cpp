@@ -70,15 +70,24 @@ Tensor diagonal(const Tensor& self, int64_t offset, int64_t dim1_, int64_t dim2_
   // Note that we invert +/- in the second to absorb the negative
   // sign in the offset.
   if (offset >= 0) {
-    diag_size = std::min(self.size(dim1), self.size(dim2)-offset);
-    storage_offset += offset * self.stride(dim2);
+    diag_size = std::max<int64_t>(std::min(self.size(dim1), self.size(dim2)-offset), 0);
   } else {
-    diag_size = std::min(self.size(dim1)+offset, self.size(dim2));
-    storage_offset -= offset * self.stride(dim1);
+    diag_size = std::max<int64_t>(std::min(self.size(dim1)+offset, self.size(dim2)), 0);
   }
 #ifndef USE_TH_SIZE_ZERO_DIM
   AT_CHECK(diag_size > 0, "invalid diagonal offset ", offset); // the diagonal offset was too large in magnitude
 #endif
+
+  // NumPy allows you to specify offsets "off the end"; let's just be careful not to
+  // set a ridiculous storage_offset in that case (technically it shouldn't matter
+  // because there are no elements in the tensor, but let's be kosher).
+  if (diag_size == 0) {
+    // skip
+  } else if (offset >= 0) {
+    storage_offset += offset * self.stride(dim2);
+  } else {
+    storage_offset -= offset * self.stride(dim1);
+  }
 
   // construct new size and stride: we drop dim1 and dim2 (maximum first for not changing the index of the minumum)
   // the new ("joint") dimension is appended to the end of the shape / stride to match numpy semantics
