@@ -6063,38 +6063,22 @@ class TestTorch(TestCase):
             self.assertEqual((0, 0), torch.diagflat(torch.tensor([])).shape)
             self.assertEqual(torch.zeros(1, 1), torch.diagflat(torch.tensor([]), offset=1))
 
-            # chunk
-            # stack
-            # split
-            #self.assertEqual((torch.empty(0, 1, 3, 0),), torch.split(x, 1, 0))
+            # stack, split, chunk
+            self.assertEqual((4, 0, 1, 3, 0), torch.stack((x, x, x, x)).shape)
+            self.assertEqual([(0, 1, 3, 0)],
+                             [y.shape for y in torch.chunk(x, 1, dim=0)])
 
-            #In [13]: np.split(np.random.randn(0,2,3,0), 3, axis=0)
-            #Out[13]:
-            #[array([], shape=(0, 2, 3, 0), dtype=float64),
-            #array([], shape=(0, 2, 3, 0), dtype=float64),
-            #array([], shape=(0, 2, 3, 0), dtype=float64)]
+            self.assertEqual([(0, 1, 3, 0), ] * 3, [y.shape for y in torch.chunk(x, 3, dim=0)])
+            self.assertEqual([(0, 1, 1, 0), ] * 3, [y.shape for y in torch.chunk(x, 3, dim=2)])
 
-            #In [14]: np.split(np.random.randn(0,2,3,0), 3, axis=2)
-            #Out[14]:
-            #[array([], shape=(0, 2, 1, 0), dtype=float64),
-            #array([], shape=(0, 2, 1, 0), dtype=float64),
-            #array([], shape=(0, 2, 1, 0), dtype=float64)]
+            # NOTE: split_with_sizes behaves differently than NumPy in that it
+            # takes sizes rather than offsets
+            self.assertEqual([(0, 1, 0, 0), (0, 1, 1, 0), (0, 1, 2, 0)],
+                             [x.shape for x in torch.split(x, (0, 1, 2), dim=2)])
 
-            #In [19]: np.split(np.random.randn(0,2,3,0), (0,1,2), axis=2)
-            #Out[19]:
-            #[array([], shape=(0, 2, 0, 0), dtype=float64),
-            #array([], shape=(0, 2, 1, 0), dtype=float64),
-            #array([], shape=(0, 2, 1, 0), dtype=float64),
-            #array([], shape=(0, 2, 1, 0), dtype=float64)]
-
-            #In [22]: np.split(np.random.randn(0,2,3,0), (0,1,2,4), axis=0)
-            #Out[22]:
-            #[array([], shape=(0, 2, 3, 0), dtype=float64),
-            # array([], shape=(0, 2, 3, 0), dtype=float64),
-            # array([], shape=(0, 2, 3, 0), dtype=float64),
-            # array([], shape=(0, 2, 3, 0), dtype=float64),
-            # array([], shape=(0, 2, 3, 0), dtype=float64)]
-                        # split_with_sizes
+            self.assertRaises(RuntimeError, lambda: torch.split(x, 0, dim=1))
+            self.assertEqual([(0, 1, 3, 0)], [y.shape for y in torch.split(x, 1, dim=0)])
+            self.assertEqual([(0, 1, 3, 0)], [y.shape for y in torch.split(x, 0, dim=0)])
 
     def test_expand(self):
         tensor = torch.rand(1, 8, 1)

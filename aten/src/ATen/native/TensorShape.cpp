@@ -41,8 +41,14 @@ std::vector<Tensor> chunk(const Tensor& self, int64_t chunks, int64_t dim) {
     AT_ERROR("chunk expects `chunks` to be greater than 0, got: ", chunks);
   }
   int64_t split_size = (self.size(dim) + chunks - 1) / chunks;
-  // ensure this is dispatched through Tensor/Type, rather than the native function directly.
-  return self.split(split_size, dim);
+
+  // We need to call split_with_sizes in the case where split_size and dimension size are 0, because
+  // a call to split would discard the number of chunks (because we can have an arbitrary number of
+  // 0-sized chunks adding up to 0).  So, call split_with_sizes with the correct number of chunks,
+  // and do this for all cases for consistency.
+  std::vector<int64_t> split_sizes(chunks, split_size);
+  split_sizes[chunks - 1] = split_size - (split_size * chunks - self.size(dim));
+  return self.split_with_sizes(split_sizes, dim);
 }
 
 Tensor diagflat(const Tensor& self, int64_t offset) {
@@ -308,17 +314,19 @@ Tensor slice(const Tensor& self, int64_t dim, int64_t start, int64_t end, int64_
 }
 
 std::vector<Tensor> split(const Tensor& self, int64_t split_size, int64_t dim) {
-  if (self.dim() == 0) {
-    throw std::runtime_error("split expects at least a 1-dimensional tensor");
-  }
-  if (split_size < 0) {
-    std::ostringstream ss;
-    ss << "split expects split_size be non-negative, but got split_size="
-       << split_size;
-    throw std::runtime_error(ss.str());
-  }
+  AT_CHECK(self.dim() != 0, "split expects at least a 1-dimensional tensor");
+  AT_CHECK(split_size >= 0,  "split expects split_size be non-negative, but got split_size=", split_size);
   int64_t dim_size = self.size(dim);
-  int64_t num_splits = (dim_size + split_size - 1) / split_size;
+  AT_CHECK(split_size > 0 || self.size(dim) == 0,
+           "split_size can only be 0 if dimension size is 0, "
+           "but got dimension size of ", dim_size);
+  // if split_size is 0 and dimension size is 0, there is 1 split.
+  int64_t num_splits = 1;
+  if (split_size != 0) {
+    // ensuring num_splits if at least 1 makes consistent the case where split_size > dim_size
+    // (returns a single split).  We might want to error here, but keep it for BC.
+    num_splits = std::max<int64_t>(dim_size + split_size - 1, 1);
+  }
   std::vector<Tensor> splits(num_splits);
   int64_t last_split_size = split_size - (split_size * num_splits - dim_size);
 
@@ -330,9 +338,7 @@ std::vector<Tensor> split(const Tensor& self, int64_t split_size, int64_t dim) {
 }
 
 std::vector<Tensor> split_with_sizes(const Tensor& self, IntList split_sizes, int64_t dim) {
-  if (self.dim() == 0) {
-    throw std::runtime_error("split_with_sizes expects at least a 1-dimensional tensor");
-  }
+  AT_CHECK(self.dim() != 0, "split expects at least a 1-dimensional tensor");
   int64_t dim_size = self.size(dim);
   int64_t num_splits = split_sizes.size();
   std::vector<Tensor> splits(num_splits);
@@ -346,9 +352,6 @@ std::vector<Tensor> split_with_sizes(const Tensor& self, IntList split_sizes, in
       ss << "split_with_sizes expects split_sizes have only non-negative "
          << "entries, but got split_sizes=" << split_sizes;
       throw std::runtime_error(ss.str());
-    }
-    if (start_idx >= dim_size) {
-      break;
     }
     splits[i] = self.narrow(dim, start_idx, length);
     start_idx += length;
