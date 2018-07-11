@@ -6058,10 +6058,15 @@ class TestTorch(TestCase):
             self.assertEqual((3, 0, 0, 1), x.permute(2, 3, 0, 1).shape)
 
             # diagonal, diagflat
-            y = torch.randn((5, 0), device=device)
-            self.assertEqual((0,), torch.diagonal(y).shape)
+            self.assertEqual((0,), torch.diagonal(torch.randn((5, 0), device=device)).shape)
+            self.assertEqual((0,), torch.diagonal(torch.randn((0, 5), device=device)).shape)
+            self.assertEqual((0,), torch.diagonal(torch.randn((5, 0), device=device), offset=1).shape)
+            self.assertEqual((0,), torch.diagonal(torch.randn((0, 5), device=device), offset=1).shape)
+
             self.assertEqual((0, 0), torch.diagflat(torch.tensor([], device=device)).shape)
             self.assertEqual(torch.zeros(1, 1), torch.diagflat(torch.tensor([], device=device), offset=1))
+            self.assertEqual((0, 0), torch.diagflat(torch.tensor([[]], device=device)).shape)
+            self.assertEqual(torch.zeros(1, 1), torch.diagflat(torch.tensor([[]], device=device), offset=1))
 
             # stack, split, chunk
             self.assertEqual((4, 0, 1, 3, 0), torch.stack((x, x, x, x)).shape)
