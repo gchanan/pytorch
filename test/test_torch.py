@@ -6053,15 +6053,15 @@ class TestTorch(TestCase):
             z = torch.randn((0, 1, 3), device=device)
             self.assertEqual((1, 1, 3, 0), z.unfold(0, 0, 4).shape)
 
-            # repeat
+            # repeat, permute
             self.assertEqual((9, 0, 5, 6, 0), x.repeat(9, 7, 5, 2, 3).shape)
-            # permute
             self.assertEqual((3, 0, 0, 1), x.permute(2, 3, 0, 1).shape)
+
             # diagonal, diagflat
             y = torch.randn((5, 0), device=device)
             self.assertEqual((0,), torch.diagonal(y).shape)
-            self.assertEqual((0, 0), torch.diagflat(torch.tensor([])).shape)
-            self.assertEqual(torch.zeros(1, 1), torch.diagflat(torch.tensor([]), offset=1))
+            self.assertEqual((0, 0), torch.diagflat(torch.tensor([], device=device)).shape)
+            self.assertEqual(torch.zeros(1, 1), torch.diagflat(torch.tensor([], device=device), offset=1))
 
             # stack, split, chunk
             self.assertEqual((4, 0, 1, 3, 0), torch.stack((x, x, x, x)).shape)
@@ -6077,6 +6077,8 @@ class TestTorch(TestCase):
                              [x.shape for x in torch.split(x, (0, 1, 2), dim=2)])
 
             self.assertRaises(RuntimeError, lambda: torch.split(x, 0, dim=1))
+            # This is strange because the split size is larger than the dim size, but consistent with
+            # how split handles that case generally (when no 0s are involved).
             self.assertEqual([(0, 1, 3, 0)], [y.shape for y in torch.split(x, 1, dim=0)])
             self.assertEqual([(0, 1, 3, 0)], [y.shape for y in torch.split(x, 0, dim=0)])
 
