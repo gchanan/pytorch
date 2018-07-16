@@ -2745,11 +2745,11 @@ void THTensor_(cross)(THTensor *r_, THTensor *a, THTensor *b, int dimension)
 {
   int i;
 
-  if(THTensor_(_nDimension)(a) != THTensor_(_nDimension)(b))
+  if(THTensor_(nDimension)(a) != THTensor_(nDimension)(b))
     THError("inconsistent tensor dimension %dD, %dD",
-        THTensor_(_nDimension)(a), THTensor_(_nDimension)(b));
+        THTensor_(nDimension)(a), THTensor_(nDimension)(b));
 
-  for(i = 0; i < THTensor_(_nDimension)(a); i++)
+  for(i = 0; i < THTensor_(nDimension)(a); i++)
   {
     if(THTensor_(size)(a, i) != THTensor_(size)(b, i)) {
         THDescBuff ba = THTensor_(sizeDesc)(a);
@@ -2760,7 +2760,7 @@ void THTensor_(cross)(THTensor *r_, THTensor *a, THTensor *b, int dimension)
 
   if(dimension < 0)
   {
-    for(i = 0; i < THTensor_(_nDimension)(a); i++)
+    for(i = 0; i < THTensor_(nDimension)(a); i++)
     {
       if(THTensor_(size)(a, i) == 3)
       {
@@ -2774,7 +2774,7 @@ void THTensor_(cross)(THTensor *r_, THTensor *a, THTensor *b, int dimension)
     }
   }
 
-  THArgCheck(dimension >= 0 && dimension < THTensor_(_nDimension)(a), 3, "dimension %d out of range",
+  THArgCheck(dimension >= 0 && dimension < THTensor_(nDimension)(a), 3, "dimension %d out of range",
       dimension + TH_INDEX_BASE);
   THArgCheck(THTensor_(size)(a, dimension) == 3, 3, "dimension %d does not have size 3",
       dimension + TH_INDEX_BASE);

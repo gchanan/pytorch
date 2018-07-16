@@ -6125,6 +6125,15 @@ class TestTorch(TestCase):
             self.assertEqual(x, x.flip(0))
             self.assertEqual(x, x.flip(2))
 
+            # unbind
+            self.assertEqual((), x.unbind(0))
+            self.assertEqual((torch.empty((0, 1, 0), device=device), torch.empty((0, 1, 0), device=device)),
+                             x.unbind(2))
+
+            # cross
+            y = torch.randn((0, 1, 3, 0), device=device)
+            self.assertEqual(y.shape, torch.cross(y, y).shape)
+
     def test_expand(self):
         tensor = torch.rand(1, 8, 1)
         tensor2 = torch.rand(5)
