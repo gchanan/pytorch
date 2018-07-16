@@ -6105,15 +6105,15 @@ class TestTorch(TestCase):
             self.assertEqual(2, x.stride(0))
             self.assertEqual(1, x.stride(2))
 
-            #self.assertEqual(shape, torch.nn.functional.glu(x, 0))
-            #self.assertEqual(shape, torch.nn.functional.glu(x, 2))
+            self.assertEqual(x, torch.nn.functional.glu(x, 0))
+            self.assertEqual((0, 1, 1, 0), torch.nn.functional.glu(x, 2).shape)
 
             # softmax, logsoftmax
-            #self.assertEqual(shape, torch.nn.functional.softmax(x, 0))
-            #self.assertEqual(shape, torch.nn.functional.softmax(x, 2))
+            self.assertEqual(x, torch.nn.functional.softmax(x, 0))
+            self.assertEqual(x, torch.nn.functional.softmax(x, 2))
 
-            #self.assertEqual(shape, torch.nn.functional.log_softmax(x, 0))
-            #self.assertEqual(shape, torch.nn.functional.log_softmax(x, 2))
+            self.assertEqual(x, torch.nn.functional.log_softmax(x, 0))
+            self.assertEqual(x, torch.nn.functional.log_softmax(x, 2))
 
             # cumsum, cumprod
             self.assertEqual(shape, torch.cumsum(x, 0).shape)
