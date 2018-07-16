@@ -6175,6 +6175,33 @@ class TestTorch(TestCase):
             self.assertEqual(z, z.scatter_(2, torch.empty((2, 3, 0), dtype=torch.int64), z_src))
             self.assertEqual(z, z.scatter_add_(2, torch.empty((2, 3, 0), dtype=torch.int64), z_src))
 
+            # index_fill, index_copy, index_add
+            c = x.clone()
+            self.assertEqual(c, c.index_fill_(0, torch.tensor([], dtype=torch.int64), -1))
+            self.assertEqual(c, c.index_fill_(2, torch.tensor([], dtype=torch.int64), -1))
+            self.assertEqual(c, c.index_fill_(2, torch.tensor([0, 1], dtype=torch.int64), -1))
+            self.assertEqual(c, c.index_copy_(0, torch.tensor([], dtype=torch.int64), torch.empty((0, 1, 2, 0), device=device)))
+            self.assertEqual(c, c.index_copy_(2, torch.tensor([], dtype=torch.int64), torch.empty((0, 1, 0, 0), device=device)))
+            self.assertEqual(c, c.index_copy_(2, torch.tensor([0, 1], dtype=torch.int64), torch.empty((0, 1, 2, 0), device=device)))
+            self.assertEqual(c, c.index_add_(0, torch.tensor([], dtype=torch.int64), torch.empty((0, 1, 2, 0), device=device)))
+            self.assertEqual(c, c.index_add_(2, torch.tensor([], dtype=torch.int64), torch.empty((0, 1, 0, 0), device=device)))
+            self.assertEqual(c, c.index_add_(2, torch.tensor([0, 1], dtype=torch.int64), torch.empty((0, 1, 2, 0), device=device)))
+
+            # index fill/copy/add non-empty
+            z = torch.randn((2, 3, 4), device=device)
+            self.assertEqual(z, z.index_fill_(0, torch.tensor([], dtype=torch.int64), -1))
+            z = torch.randn((2, 3, 4), device=device)
+            self.assertEqual(z, z.index_copy_(0, torch.tensor([], dtype=torch.int64), torch.empty((0, 3, 4), device=device)))
+            z = torch.randn((2, 3, 4), device=device)
+            self.assertEqual(z, z.index_add_(0, torch.tensor([], dtype=torch.int64), torch.empty((0, 3, 4), device=device)))
+
+            # index_select
+            self.assertEqual(x, x.index_select(0, torch.tensor([], dtype=torch.int64)))
+            self.assertEqual((0, 1, 0, 0), x.index_select(2, torch.tensor([], dtype=torch.int64)).shape)
+            self.assertEqual(x, x.index_select(2, torch.tensor([0, 1], dtype=torch.int64)))
+            z = torch.randn((2, 3, 4), device=device)  # non-empty
+            self.assertEqual((0, 3, 4), z.index_select(0, torch.tensor([], dtype=torch.int64)).shape)
+
     def test_expand(self):
         tensor = torch.rand(1, 8, 1)
         tensor2 = torch.rand(5)
