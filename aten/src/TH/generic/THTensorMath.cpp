@@ -3169,7 +3169,7 @@ static void THTensor_(quicksortdescend)(real *arr, int64_t *idx, int64_t element
 
 void THTensor_(sort)(THTensor *rt_, THLongTensor *ri_, THTensor *t, int dimension, int descendingOrder)
 {
-  THArgCheck(dimension >= 0 && dimension < THTensor_(_nDimension)(t), 2, "invalid dimension %d",
+  THArgCheck(dimension >= 0 && dimension < THTensor_(nDimension)(t), 2, "invalid dimension %d",
       dimension + TH_INDEX_BASE);
 
   THTensor_(resizeAs)(rt_, t);
@@ -3430,11 +3430,19 @@ void THTensor_(median)(THTensor *values_, THLongTensor *indices_, THTensor *t, i
 
 void THTensor_(topk)(THTensor *rt_, THLongTensor *ri_, THTensor *t, int64_t k, int dim, int dir, int sorted)
 {
+#ifndef USE_TH_SIZE_ZERO_DIM
   int numDims = THTensor_(_nDimension)(t);
+#else
+  int numDims = THTensor_(nDimension)(t);
+#endif
   THArgCheck(dim >= 0 && dim < numDims, 3, "dim not in range");
 
   int64_t sliceSize = THTensor_(size)(t, dim);
+#ifndef USE_TH_SIZE_ZERO_DIM
   THArgCheck(k > 0 && k <= sliceSize, 2, "k not in range for dimension");
+#else
+  THArgCheck(k >= 0 && k <= sliceSize, 2, "k not in range for dimension");
+#endif
 
   THTensor *tmpResults = THTensor_(new)();
   THTensor_(resize1d)(tmpResults, sliceSize);
@@ -4287,11 +4295,11 @@ void THTensor_(renorm)(THTensor *res, THTensor *src, real value, int dimension, 
   int i;
   THTensor *rowR, *rowS;
 
-  THArgCheck(dimension >= 0 && dimension < THTensor_(_nDimension)(src), 3, "invalid dimension %d",
+  THArgCheck(dimension >= 0 && dimension < THTensor_(nDimension)(src), 3, "invalid dimension %d",
       dimension + TH_INDEX_BASE);
   THArgCheck(value > 0, 2, "non-positive-norm not supported");
-  THArgCheck(THTensor_(_nDimension)(src) > 1, 1, "need at least 2 dimensions, got %d dimensions",
-      THTensor_(_nDimension)(src));
+  THArgCheck(THTensor_(nDimension)(src) > 1, 1, "need at least 2 dimensions, got %d dimensions",
+      THTensor_(nDimension)(src));
 
   rowR = THTensor_(new)();
   rowS = THTensor_(new)();

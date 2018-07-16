@@ -6134,6 +6134,21 @@ class TestTorch(TestCase):
             y = torch.randn((0, 1, 3, 0), device=device)
             self.assertEqual(y.shape, torch.cross(y, y).shape)
 
+            # renorm
+            self.assertEqual(shape, torch.renorm(x, 1, 0, 5).shape)
+            self.assertEqual(shape, torch.renorm(x, 1, 2, 5).shape)
+
+            # sort
+            self.assertEqual([shape, shape], [z.shape for z in torch.sort(x, dim=0)])
+            self.assertEqual([shape, shape], [z.shape for z in torch.sort(x, dim=2)])
+
+            # topk
+            self.assertEqual([shape, shape], [z.shape for z in torch.topk(x, 0, dim=0)])
+            self.assertEqual([(0, 1, 1, 0), (0, 1, 1, 0)], [z.shape for z in torch.topk(x, 1, dim=2)])
+
+            y = torch.randn((2, 3, 4), device=device)
+            self.assertEqual([(2, 3, 0), (2, 3, 0)], [z.shape for z in torch.topk(y, 0)])
+
     def test_expand(self):
         tensor = torch.rand(1, 8, 1)
         tensor2 = torch.rand(5)
