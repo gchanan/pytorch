@@ -6091,6 +6091,40 @@ class TestTorch(TestCase):
             self.assertEqual([(0, 1, 3, 0)], [z.shape for z in torch.split(x, 1, dim=0)])
             self.assertEqual([(0, 1, 3, 0)], [z.shape for z in torch.split(x, 0, dim=0)])
 
+    # functions that operate over a dimension but don't reduce.
+    @skipIfNoZeroSize
+    def test_dim_function_empty(self):
+        devices = ['cpu'] if not torch.cuda.is_available() else ['cpu', 'cuda']
+        for device in devices:
+            shape = (0, 1, 2, 0)
+            x = torch.randn(shape, device=device)
+
+            # size stride
+            self.assertEqual(0, x.size(3))
+            self.assertEqual(2, x.size(2))
+            self.assertEqual(2, x.stride(0))
+            self.assertEqual(1, x.stride(2))
+
+            #self.assertEqual(shape, torch.nn.functional.glu(x, 0))
+            #self.assertEqual(shape, torch.nn.functional.glu(x, 2))
+
+            # softmax, logsoftmax
+            #self.assertEqual(shape, torch.nn.functional.softmax(x, 0))
+            #self.assertEqual(shape, torch.nn.functional.softmax(x, 2))
+
+            #self.assertEqual(shape, torch.nn.functional.log_softmax(x, 0))
+            #self.assertEqual(shape, torch.nn.functional.log_softmax(x, 2))
+
+            # cumsum, cumprod
+            self.assertEqual(shape, torch.cumsum(x, 0).shape)
+            self.assertEqual(shape, torch.cumsum(x, 2).shape)
+            self.assertEqual(shape, torch.cumprod(x, 0).shape)
+            self.assertEqual(shape, torch.cumprod(x, 2).shape)
+
+            # flip
+            self.assertEqual(x, x.flip(0))
+            self.assertEqual(x, x.flip(2))
+
     def test_expand(self):
         tensor = torch.rand(1, 8, 1)
         tensor2 = torch.rand(5)

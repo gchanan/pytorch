@@ -2670,7 +2670,7 @@ void THTensor_(prod)(THTensor *r_, THTensor *t, int dimension, int keepdim)
 
 void THTensor_(cumsum)(THTensor *r_, THTensor *t, int dimension)
 {
-  THArgCheck(dimension >= 0 && dimension < THTensor_(_nDimension)(t), 2, "dimension %d out of range",
+  THArgCheck(dimension >= 0 && dimension < THTensor_(nDimension)(t), 2, "dimension %d out of range",
       dimension + TH_INDEX_BASE);
 
   THTensor_(resizeAs)(r_, t);
@@ -2687,7 +2687,7 @@ void THTensor_(cumsum)(THTensor *r_, THTensor *t, int dimension)
 
 void THTensor_(cumprod)(THTensor *r_, THTensor *t, int dimension)
 {
-  THArgCheck(dimension >= 0 && dimension < THTensor_(_nDimension)(t), 2, "dimension %d out of range",
+  THArgCheck(dimension >= 0 && dimension < THTensor_(nDimension)(t), 2, "dimension %d out of range",
       dimension + TH_INDEX_BASE);
 
   THTensor_(resizeAs)(r_, t);
