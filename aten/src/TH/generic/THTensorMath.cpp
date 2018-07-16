@@ -581,11 +581,11 @@ void THTensor_(gather)(THTensor *tensor, THTensor *src, int dim, THLongTensor *i
 {
   int64_t elems_per_row, i, idx;
 
-  THArgCheck(THLongTensor__nDimension(index) == THTensor_(_nDimension)(src), 4,
+  THArgCheck(THLongTensor_nDimension(index) == THTensor_(nDimension)(src), 4,
              "Index tensor must have same dimensions as input tensor");
-  THArgCheck(dim >= 0 && dim < THTensor_(_nDimension)(tensor), 3,
+  THArgCheck(dim >= 0 && dim < THTensor_(nDimension)(tensor), 3,
              "Index dimension is out of bounds");
-  THArgCheck(THTensor_(_nDimension)(src) == THTensor_(_nDimension)(tensor), 2,
+  THArgCheck(THTensor_(nDimension)(src) == THTensor_(nDimension)(tensor), 2,
              "Input tensor must have same dimensions as output tensor");
 
   elems_per_row = THLongTensor_size(index, dim);

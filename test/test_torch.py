@@ -6094,7 +6094,7 @@ class TestTorch(TestCase):
     # functions that operate over a dimension but don't reduce.
     @skipIfNoZeroSize
     def test_dim_function_empty(self):
-        devices = ['cpu'] if not torch.cuda.is_available() else ['cpu', 'cuda']
+        devices = ['cpu'] #if not torch.cuda.is_available() else ['cpu', 'cuda']
         for device in devices:
             shape = (0, 1, 2, 0)
             x = torch.randn(shape, device=device)
@@ -6148,6 +6148,32 @@ class TestTorch(TestCase):
 
             y = torch.randn((2, 3, 4), device=device)
             self.assertEqual([(2, 3, 0), (2, 3, 0)], [z.shape for z in torch.topk(y, 0)])
+
+            # gather
+            self.assertEqual(shape, torch.gather(x, 0, torch.empty(shape, dtype=torch.int64)).shape)
+            self.assertEqual(shape, torch.gather(x, 2, torch.empty(shape, dtype=torch.int64)).shape)
+            larger_shape = (0, 1, 3, 0)
+            self.assertEqual(larger_shape, torch.gather(x, 2, torch.empty(larger_shape, dtype=torch.int64)).shape)
+            smaller_shape = (0, 1, 0, 0)
+            self.assertEqual(smaller_shape, torch.gather(x, 2, torch.empty(smaller_shape, dtype=torch.int64)).shape)
+            y = torch.randn((2, 3, 4), device=device)
+            self.assertEqual((0, 3, 4), torch.gather(y, 0, torch.empty((0, 3, 4), dtype=torch.int64)).shape)
+
+            # scatter, scatter_add
+            for dim in [0, 2]:
+                y = torch.randn(shape, device=device)
+                y_src = torch.randn(shape, device=device)
+                self.assertEqual(shape, y.scatter_(dim, torch.empty(shape, dtype=torch.int64), y_src).shape)
+
+            for dim in [0, 2]:
+                y = torch.randn(shape, device=device)
+                y_src = torch.randn(shape, device=device)
+                self.assertEqual(shape, y.scatter_add_(dim, torch.empty(shape, dtype=torch.int64), y_src).shape)
+
+            z = torch.randn((2, 3, 4), device=device)
+            z_src = torch.randn((2, 3, 4), device=device)
+            self.assertEqual(z, z.scatter_(2, torch.empty((2, 3, 0), dtype=torch.int64), z_src))
+            self.assertEqual(z, z.scatter_add_(2, torch.empty((2, 3, 0), dtype=torch.int64), z_src))
 
     def test_expand(self):
         tensor = torch.rand(1, 8, 1)
