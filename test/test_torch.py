@@ -6222,8 +6222,10 @@ class TestTorch(TestCase):
         devices = ['cpu']  # if not torch.cuda.is_available() else ['cpu', 'cuda']
         for device in devices:
             shape = (0, 5)
+
             def fn(torchfn, *args):
-                return torchfn(*tuple(torch.randn(shape, device=device) for shape in args))
+                return torchfn(*tuple(torch.randn(shape, device=device) if isinstance(shape, tuple) else shape
+                                      for shape in args))
 
             # mm, addmm
             self.assertEqual((0, 0), fn(torch.mm, (0, 0), (0, 0)).shape)
@@ -6232,7 +6234,7 @@ class TestTorch(TestCase):
             self.assertEqual((3, 0), fn(torch.mm, (3, 2), (2, 0)).shape)
             self.assertEqual(torch.zeros((5, 6), device=device), fn(torch.mm, (5, 0), (0, 6)))
 
-            self.assertEqual((0, 0), fn(torch.addmm, (0,0), (0, 0), (0, 0)).shape)
+            self.assertEqual((0, 0), fn(torch.addmm, (0, 0), (0, 0), (0, 0)).shape)
             self.assertEqual((5, 6), fn(torch.addmm, (5, 6), (5, 0), (0, 6)).shape)
 
             # mv, addmv
@@ -6290,8 +6292,10 @@ class TestTorch(TestCase):
         devices = ['cpu']  # if not torch.cuda.is_available() else ['cpu', 'cuda']
         for device in devices:
             shape = (0, 5)
+
             def fn(torchfn, *args):
-                return torchfn(*tuple(torch.randn(shape, device=device) for shape in args))
+                return torchfn(*tuple(torch.randn(shape, device=device) if isinstance(shape, tuple) else shape
+                                      for shape in args))
 
             # inverse, pinverse
             self.assertEqual((0, 0), fn(torch.inverse, (0, 0)).shape)
@@ -6309,15 +6313,23 @@ class TestTorch(TestCase):
                              fn(torch.slogdet, (0, 0)))
 
             # eig, symeig
-            evalues, evectors = torch.eig(torch.randn(0, 0), eigenvectors=True)
+            evalues, evectors = fn(torch.eig, (0, 0), True)
             self.assertEqual([(0, 2), (0, 0)], [evalues.shape, evectors.shape])
-            evalues, evectors = torch.symeig(torch.randn(0, 0), eigenvectors=True)
+            evalues, evectors = fn(torch.symeig, (0, 0), True)
             self.assertEqual([(0,), (0, 0)], [evalues.shape, evectors.shape])
 
             # qr, gels
             self.assertRaises(RuntimeError, lambda: torch.qr(torch.randn(0, 0)))
             self.assertRaises(RuntimeError, lambda: torch.gels(torch.randn(0, 0), torch.randn(0, 0)))
             self.assertRaises(RuntimeError, lambda: torch.gels(torch.randn(0,), torch.randn(0, 0)))
+
+            # btrifact
+            A_LU, pivots = fn(torch.btrifact, (0, 5, 5))
+            self.assertEqual([(0, 5, 5), (0, 5)], [A_LU.shape, pivots.shape])
+            A_LU, pivots = fn(torch.btrifact, (0, 0, 0))
+            self.assertEqual([(0, 0, 0), (0, 0)], [A_LU.shape, pivots.shape])
+            A_LU, pivots = fn(torch.btrifact, (2, 0, 0))
+            self.assertEqual([(2, 0, 0), (2, 0)], [A_LU.shape, pivots.shape])
 
     def test_expand(self):
         tensor = torch.rand(1, 8, 1)
