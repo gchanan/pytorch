@@ -22,7 +22,7 @@ int THTensor_(nDimension)(const THTensor *self)
 
 int THTensor_(nDimensionLegacyAll)(const THTensor *self)
 {
-  return self->_dim();
+  return THTensor_nDimensionLegacyAll(self);
 }
 
 int64_t THTensor_(size)(const THTensor *self, int dim)
