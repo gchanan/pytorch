@@ -159,6 +159,24 @@ inline void THTensor_setIsZeroDim(THTensor *tensor, bool is_zero_dim) {
   tensor->is_zero_dim_ = is_zero_dim;
 }
 
+inline int THTensor_nDimensionLegacyNoScalars(const THTensor* tensor) {
+  if (THTensor_isZeroDim(tensor)) {
+    return 1;
+  } else {
+    return tensor->dim();  
+  }
+}
+
+inline int THTensor_nDimensionLegacyAll(const THTensor* tensor) {
+  if (tensor->is_empty()) {
+    return 0;  
+  } else if (THTensor_isZeroDim(tensor)) {
+    return 1;
+  } else {
+    return tensor->dim();  
+  }
+}
+
 TH_API void THTensor_free(THTensor *self);
 TH_CPP_API at::optional<std::vector<int64_t>> THTensor_compute_stride(at::IntList oldshape, at::IntList oldstride,
                                                                       at::IntList newshape);
