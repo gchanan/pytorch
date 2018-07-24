@@ -158,7 +158,7 @@ void THCTensor_(sortViaThrust)(THCState* state,
                                THCudaLongTensor* indices,
                                THCTensor* input,
                                int dim, bool dir) {
-  int nDims = THCTensor_(_nDimension)(state, input);
+  int nDims = THCTensor_(nDimensionLegacyAll)(state, input);
 
   ptrdiff_t totalElements = THCTensor_(nElement)(state, input);
   int64_t sliceSize = THCTensor_(size)(state, input, dim);

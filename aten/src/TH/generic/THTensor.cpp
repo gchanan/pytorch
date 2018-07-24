@@ -20,7 +20,7 @@ int THTensor_(nDimension)(const THTensor *self)
   return self->dim();
 }
 
-int THTensor_(_nDimension)(const THTensor *self)
+int THTensor_(nDimensionLegacyAll)(const THTensor *self)
 {
   return self->_dim();
 }

@@ -845,9 +845,9 @@ THC_API void THCTensor_(btrisolve)(THCState *state, THCTensor *rb_, THCTensor *b
 {
 #if defined(THC_REAL_IS_FLOAT) || defined(THC_REAL_IS_DOUBLE)
   THAssert(THCTensor_(checkGPU)(state, 3, rb_, atf, b));
-  THArgCheck(THCTensor_(_nDimension)(state, atf) == 3, 3, "expected 3D tensor");
-  THArgCheck(THCTensor_(_nDimension)(state, b) == 3 ||
-             THCTensor_(_nDimension)(state, b) == 2, 4, "expected 2D or 3D tensor");
+  THArgCheck(THCTensor_(nDimensionLegacyAll)(state, atf) == 3, 3, "expected 3D tensor");
+  THArgCheck(THCTensor_(nDimensionLegacyAll)(state, b) == 3 ||
+             THCTensor_(nDimensionLegacyAll)(state, b) == 2, 4, "expected 2D or 3D tensor");
   THArgCheck(THCTensor_(size)(state, atf, 0) ==
              THCTensor_(size)(state, b, 0), 3, "number of batches must be equal");
   THArgCheck(THCTensor_(size)(state, atf, 1) ==

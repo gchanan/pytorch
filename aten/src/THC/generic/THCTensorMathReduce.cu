@@ -94,7 +94,7 @@ THCTensor_(std)(THCState *state, THCTensor *self_, THCTensor *src, int dimension
   THCAssertSameGPU(THCTensor_(checkGPU)(state, 2, self_, src));
 
   THCTensor_preserveReduceDimSemantics(
-      state, self_, THCTensor_(_nDimension)(state, src), dimension, keepdim);
+      state, self_, THCTensor_(nDimensionLegacyAll)(state, src), dimension, keepdim);
   THLongStorage *dim = THCTensor_(newSizeOf)(state, src);
   THLongStorage_set(dim, dimension, 1);
   THCTensor_(resize)(state, self_, dim, NULL);
@@ -103,7 +103,7 @@ THCTensor_(std)(THCState *state, THCTensor *self_, THCTensor *src, int dimension
   THCTensor *self = THCTensor_(newContiguous)(state, self_);
   src = THCTensor_(newContiguous)(state, src);
 
-  if (dimension == THCTensor_(_nDimension)(state, src) - 1) {
+  if (dimension == THCTensor_(nDimensionLegacyAll)(state, src) - 1) {
     THCTensor_varInnermostDim<THCTensor, real, accreal, true>(state, self, src, biased);
   } else {
     THCTensor_varOuterDim<THCTensor, real, accreal, true>(state, self, src, dimension, biased);
@@ -123,7 +123,7 @@ THCTensor_(var)(THCState *state, THCTensor *self_, THCTensor *src, int dimension
   THCAssertSameGPU(THCTensor_(checkGPU)(state, 2, self_, src));
 
   THCTensor_preserveReduceDimSemantics(
-      state, self_, THCTensor_(_nDimension)(state, src), dimension, keepdim);
+      state, self_, THCTensor_(nDimensionLegacyAll)(state, src), dimension, keepdim);
   THLongStorage *dim = THCTensor_(newSizeOf)(state, src);
   THLongStorage_set(dim, dimension, 1);
   THCTensor_(resize)(state, self_, dim, NULL);
@@ -132,7 +132,7 @@ THCTensor_(var)(THCState *state, THCTensor *self_, THCTensor *src, int dimension
   THCTensor *self = THCTensor_(newContiguous)(state, self_);
   src = THCTensor_(newContiguous)(state, src);
 
-  if (dimension == THCTensor_(_nDimension)(state, src) - 1) {
+  if (dimension == THCTensor_(nDimensionLegacyAll)(state, src) - 1) {
     THCTensor_varInnermostDim<THCTensor, real, accreal, false>(state, self, src, biased);
   } else {
     THCTensor_varOuterDim<THCTensor, real, accreal, false>(state, self, src, dimension, biased);
