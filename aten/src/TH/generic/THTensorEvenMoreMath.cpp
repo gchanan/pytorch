@@ -261,7 +261,7 @@ void THTensor_(indexCopy)(THTensor *tensor, int dim, THLongTensor *index, THTens
 static ptrdiff_t THTensor_(dataOffset)(THTensor* tensor, ptrdiff_t linearIndex) {
   auto size = tensor->sizes();
   auto stride = tensor->strides();
-  int nDim = tensor->_dim();
+  int nDim = THTensor_nDimensionLegacyAll(tensor);
   ptrdiff_t dataOffset = 0;
   for (int i = nDim - 1; i >= 0; i--) {
     dataOffset += (linearIndex % size[i]) * stride[i];
@@ -402,7 +402,7 @@ void THTensor_(indexFill)(THTensor *tensor, int dim, THLongTensor *index, real v
   numel = THLongTensor_nElement(index);
 #ifndef USE_TH_SIZE_ZERO_DIM
   THArgCheck(index->_dim() == 1, 3, "Index is supposed to be a vector");
-  THArgCheck(dim < tensor->_dim(), 4,"Indexing dim %d is out of bounds of tensor", dim + TH_INDEX_BASE);
+  THArgCheck(dim < THTensor_nDimensionLegacyAll(tensor), 4,"Indexing dim %d is out of bounds of tensor", dim + TH_INDEX_BASE);
 #else
   THArgCheck(index->dim() == 1, 3, "Index is supposed to be a vector");
   THArgCheck(dim < tensor->dim(), 4,"Indexing dim %d is out of bounds of tensor", dim + TH_INDEX_BASE);
@@ -558,7 +558,7 @@ real THTensor_(minall)(THTensor *tensor)
   real theMin;
   real value;
 
-  THArgCheck(tensor->_dim() > 0, 1, "tensor must have one dimension");
+  THArgCheck(THTensor_nDimensionLegacyAll(tensor) > 0, 1, "tensor must have one dimension");
   theMin = THTensor_(data)(tensor)[0];
   TH_TENSOR_APPLY(real, tensor,
                   value = *tensor_data;
@@ -576,7 +576,7 @@ real THTensor_(maxall)(THTensor *tensor)
   real theMax;
   real value;
 
-  THArgCheck(tensor->_dim() > 0, 1, "tensor must have one dimension");
+  THArgCheck(THTensor_nDimensionLegacyAll(tensor) > 0, 1, "tensor must have one dimension");
   theMax = THTensor_(data)(tensor)[0];
   TH_TENSOR_APPLY(real, tensor,
                   value = *tensor_data;

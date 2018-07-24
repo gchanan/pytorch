@@ -1031,7 +1031,7 @@ static void THTensor_(quickselect)(real *arr, int64_t *idx, int64_t k, int64_t e
 
 real THTensor_(medianall)(THTensor *tensor)
 {
-  THArgCheck(tensor->_dim() > 0, 1, "tensor must have one dimension");
+  THArgCheck(THTensor_nDimensionLegacyAll(tensor) > 0, 1, "tensor must have one dimension");
 
   real theMedian;
   ptrdiff_t numel;
