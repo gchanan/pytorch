@@ -264,7 +264,7 @@ void THTensor_(sum)(THTensor *r_, THTensor *t, int dimension, int keepdim)
     if(r_Contig && (tp != rp)){
       ptrdiff_t iter = 0;
       ptrdiff_t r_Size = THTensor_(nElement)(r_);
-      int r_Dim = r_->_dim();
+      int r_Dim = THTensor_nDimensionLegacyAll(r_);
       #pragma omp parallel for if ( r_Size > HYPER_TH_OMP_OVERHEAD_THRESHOLD)
       for (iter = 0; iter < r_Size; iter++) {
         int j;
@@ -344,7 +344,7 @@ void THTensor_(prod)(THTensor *r_, THTensor *t, int dimension, int keepdim)
     if(r_Contig && (tp != rp)){
       ptrdiff_t iter = 0;
       ptrdiff_t r_Size = THTensor_(nElement)(r_);
-      int r_Dim = r_->_dim();
+      int r_Dim = THTensor_nDimensionLegacyAll(r_);
       #pragma omp parallel for if ( r_Size > HYPER_TH_OMP_OVERHEAD_THRESHOLD)
       for (iter = 0; iter < r_Size; iter++) {
         int j;
@@ -1680,7 +1680,7 @@ void THTensor_(logicalAnd)(THTensor *r_, THTensor *t, int dimension, int keepdim
     if(r_Contig && (tp != rp)){
       ptrdiff_t iter = 0;
       ptrdiff_t r_Size = THTensor_(nElement)(r_);
-      int r_Dim = r_->_dim();
+      int r_Dim = THTensor_nDimensionLegacyAll(r_);
       #pragma omp parallel for if ( r_Size > TH_OMP_OVERHEAD_THRESHOLD)
       for (iter = 0; iter < r_Size; iter++) {
         int j;
@@ -1760,7 +1760,7 @@ void THTensor_(logicalAny)(THTensor *r_, THTensor *t, int dimension, int keepdim
     if(r_Contig && (tp != rp)){
       ptrdiff_t iter = 0;
       ptrdiff_t r_Size = THTensor_(nElement)(r_);
-      int r_Dim = r_->_dim();
+      int r_Dim = THTensor_nDimensionLegacyAll(r_);
       #pragma omp parallel for if ( r_Size > TH_OMP_OVERHEAD_THRESHOLD)
       for (iter = 0; iter < r_Size; iter++) {
         int j;

@@ -1051,7 +1051,7 @@ void THTensor_(btrisolve)(THTensor *rb_, THTensor *b, THTensor *atf, THIntTensor
 
   int64_t num_batches = atf->size(0);
   int64_t n = atf->size(1);
-  int nrhs = rb_->_dim() > 2 ? rb_->size(2) : 1;
+  int nrhs = THTensor_nDimensionLegacyAll(rb_) > 2 ? rb_->size(2) : 1;
 
   int lda, ldb;
   THTensor *atf_;
@@ -1077,7 +1077,7 @@ void THTensor_(btrisolve)(THTensor *rb_, THTensor *b, THTensor *atf, THIntTensor
   // correct ordering of B
   if (rb_->stride(1) == 1) {
     // column ordered
-    if (rb_->_dim() == 2 || rb_->size(2) == 1) {
+    if (THTensor_nDimensionLegacyAll(rb_) == 2 || rb_->size(2) == 1) {
       ldb = n;
     } else {
       ldb = rb_->stride(2);
@@ -1085,7 +1085,7 @@ void THTensor_(btrisolve)(THTensor *rb_, THTensor *b, THTensor *atf, THIntTensor
     rb__ = rb_;
   } else {
     // make column ordered
-    if (rb_->_dim() > 2) {
+    if (THTensor_nDimensionLegacyAll(rb_) > 2) {
       THTensor *transp_r_ = THTensor_(newTranspose)(rb_, 1, 2);
       rb__ = THTensor_(newClone)(transp_r_);
       THTensor_(free)(transp_r_);

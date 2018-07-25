@@ -862,7 +862,7 @@ THC_API void THCTensor_(btrisolve)(THCState *state, THCTensor *rb_, THCTensor *b
 
 
   int n = atf->size(1);
-  int nrhs = rb_->_dim() > 2 ? rb_->size(2) : 1;
+  int nrhs = THTensor_nDimensionLegacyAll(rb_) > 2 ? rb_->size(2) : 1;
   THCTensor *atf_;
   THCTensor *rb__;
   int lda, ldb;
@@ -887,7 +887,7 @@ THC_API void THCTensor_(btrisolve)(THCState *state, THCTensor *rb_, THCTensor *b
   // correct ordering of B
   if (rb_->stride(1) == 1) {
     // column ordered
-    if (rb_->_dim() == 2 || rb_->size(2) == 1) {
+    if (THTensor_nDimensionLegacyAll(rb_) == 2 || rb_->size(2) == 1) {
       ldb = n;
     } else {
       ldb = rb_->stride(2);
@@ -895,7 +895,7 @@ THC_API void THCTensor_(btrisolve)(THCState *state, THCTensor *rb_, THCTensor *b
     rb__ = rb_;
   } else {
     // make column ordered
-    if (rb_->_dim() > 2) {
+    if (THTensor_nDimensionLegacyAll(rb_) > 2) {
       THCTensor *transp_r_ = THCTensor_(newTranspose)(state, rb_, 1, 2);
       rb__ = THCTensor_(newClone)(state, transp_r_);
       THCTensor_(free)(state, transp_r_);

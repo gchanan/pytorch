@@ -14,7 +14,7 @@ int THCTensor_nDimension(THCState *state, const THCTensor *self) {
 }
 
 int THCTensor_nDimensionLegacyAll(THCState *state, const THCTensor *self) {
-  return self->_dim();
+  return THTensor_nDimensionLegacyAll(self);
 }
 
 int64_t THCTensor_size(THCState *state, const THCTensor *self, int dim) {
@@ -281,13 +281,13 @@ bool THCTensor_allContiguous(THCState *state, THCTensor **inputs, int numInputs)
 }
 
 ptrdiff_t THCTensor_nElement(THCState *state, const THCTensor *self) {
-  if(self->_dim() == 0)
+  if(THTensor_nDimensionLegacyAll(self) == 0)
     return 0;
   else
   {
     ptrdiff_t nElement = 1;
     int d;
-    for(d = 0; d < self->_dim(); d++)
+    for(d = 0; d < THTensor_nDimensionLegacyAll(self); d++)
       nElement *= self->size(d);
     return nElement;
   }

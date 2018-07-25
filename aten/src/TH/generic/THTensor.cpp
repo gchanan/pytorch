@@ -575,7 +575,7 @@ int THTensor_(isTransposed)(const THTensor *self)
   int64_t size_max_stride = 1;
   int64_t z = 1;
   int d;
-  for (d = 0; d < self->_dim(); ++d) {
+  for (d = 0; d < THTensor_nDimensionLegacyAll(self); ++d) {
     if (self->stride(d) == 0 && self->size(d) != 1)
       return 0;
     if (self->stride(d) > max_stride) {
@@ -611,10 +611,10 @@ int THTensor_(isContiguous)(const THTensor *self)
 int THTensor_(isSize)(const THTensor *self, const THLongStorage *dims)
 {
   int d;
-  if (self->_dim() != dims->size)
+  if (THTensor_nDimensionLegacyAll(self) != dims->size)
     return 0;
 
-  for(d = 0; d < self->_dim(); ++d)
+  for(d = 0; d < THTensor_nDimensionLegacyAll(self); ++d)
   {
     if(self->size(d) != THLongStorage_data(dims)[d])
       return 0;
@@ -641,10 +641,10 @@ int THTensor_(isSetTo)(const THTensor *self, const THTensor* src)
     return 0;
   if (THTensor_getStoragePtr(self) == THTensor_getStoragePtr(src) &&
       self->storage_offset() == src->storage_offset() &&
-      self->_dim() == THTensor_nDimensionLegacyAll(src))
+      THTensor_nDimensionLegacyAll(self) == THTensor_nDimensionLegacyAll(src))
   {
     int d;
-    for (d = 0; d < self->_dim(); ++d)
+    for (d = 0; d < THTensor_nDimensionLegacyAll(self); ++d)
     {
       if (self->size(d) != src->size(d) || self->stride(d) != src->stride(d))
         return 0;
@@ -656,13 +656,13 @@ int THTensor_(isSetTo)(const THTensor *self, const THTensor* src)
 
 ptrdiff_t THTensor_(nElement)(const THTensor *self)
 {
-  if(self->_dim() == 0)
+  if(THTensor_nDimensionLegacyAll(self) == 0)
     return 0;
   else
   {
     ptrdiff_t nElement = 1;
     int d;
-    for(d = 0; d < self->_dim(); d++)
+    for(d = 0; d < THTensor_nDimensionLegacyAll(self); d++)
       nElement *= self->size(d);
     return nElement;
   }

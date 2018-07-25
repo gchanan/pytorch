@@ -150,7 +150,7 @@ void THTensor_(indexSelect)(THTensor *tensor, THTensor *src, int dim, THLongTens
   real *tensor_data, *src_data;
 
 #ifndef USE_TH_SIZE_ZERO_DIM
-  THArgCheck(index->_dim() <= 1, 3, "Index is supposed to be an empty tensor or a vector");
+  THArgCheck(THTensor_nDimensionLegacyAll(index) <= 1, 3, "Index is supposed to be an empty tensor or a vector");
   THArgCheck(dim < THTensor_nDimensionLegacyAll(src), 4, "Indexing dim %d is out of bounds of tensor", dim + TH_INDEX_BASE);
   THArgCheck(THTensor_nDimensionLegacyAll(src) > 0, 2, "Source tensor is empty");
 #else
@@ -355,7 +355,7 @@ void THTensor_(indexAdd)(THTensor *tensor, int dim, THLongTensor *index, THTenso
 
   numel = THLongTensor_nElement(index);
 #ifndef USE_TH_SIZE_ZERO_DIM
-  THArgCheck(index->_dim() == 1, 3, "Index is supposed to be a vector");
+  THArgCheck(THTensor_nDimensionLegacyAll(index) == 1, 3, "Index is supposed to be a vector");
   THArgCheck(dim < THTensor_nDimensionLegacyAll(src), 4,"Indexing dim %d is out of bounds of tensor", dim + TH_INDEX_BASE);
 #else
   THArgCheck(index->dim() == 1, 3, "Index is supposed to be a vector");
@@ -401,7 +401,7 @@ void THTensor_(indexFill)(THTensor *tensor, int dim, THLongTensor *index, real v
 
   numel = THLongTensor_nElement(index);
 #ifndef USE_TH_SIZE_ZERO_DIM
-  THArgCheck(index->_dim() == 1, 3, "Index is supposed to be a vector");
+  THArgCheck(THTensor_nDimensionLegacyAll(index) == 1, 3, "Index is supposed to be a vector");
   THArgCheck(dim < THTensor_nDimensionLegacyAll(tensor), 4,"Indexing dim %d is out of bounds of tensor", dim + TH_INDEX_BASE);
 #else
   THArgCheck(index->dim() == 1, 3, "Index is supposed to be a vector");
