@@ -160,11 +160,21 @@ inline void THTensor_setIsZeroDim(THTensor *tensor, bool is_zero_dim) {
 }
 
 inline int THTensor_nDimensionLegacyNoScalars(const THTensor* tensor) {
-  return tensor->dim();
+  if (THTensor_isZeroDim(tensor)) {
+    return 1;
+  } else {
+    return tensor->dim();  
+  }
 }
 
 inline int THTensor_nDimensionLegacyAll(const THTensor* tensor) {
-  return tensor->_dim();
+  if (tensor->is_empty()) {
+    return 0;  
+  } else if (THTensor_isZeroDim(tensor)) {
+    return 1;
+  } else {
+    return tensor->dim();  
+  }
 }
 
 TH_API void THTensor_free(THTensor *self);
