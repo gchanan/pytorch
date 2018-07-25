@@ -161,16 +161,16 @@ void THTensor_(trtrs)(THTensor *rb_, THTensor *ra_, THTensor *b, THTensor *a,
   int free_b = 0;
   if (a == NULL) a = ra_;
   if (b == NULL) b = rb_;
-  THArgCheck(a->_dim() == 2, 2, "A should have 2 dimensions, but has %d",
-      a->_dim());
-  THArgCheck(b->_dim() == 1 || b->_dim() == 2, 1, "B should have 1 or 2 "
-      "dimensions, but has %d", b->_dim());
+  THArgCheck(THTensor_nDimensionLegacyAll(a) == 2, 2, "A should have 2 dimensions, but has %d",
+      THTensor_nDimensionLegacyAll(a));
+  THArgCheck(THTensor_nDimensionLegacyAll(b) == 1 || THTensor_nDimensionLegacyAll(b) == 2, 1, "B should have 1 or 2 "
+      "dimensions, but has %d", THTensor_nDimensionLegacyAll(b));
   THArgCheck(a->size(0) == a->size(1), 2, "A should be square, but is %ldx%ld",
       a->size(0), a->size(1));
   THArgCheck(a->size(0) == b->size(0), 2, "A,B size incompatible - A has %ld "
       "rows, B has %ld", a->size(0), b->size(0));
 
-  if (b->_dim() == 1) {
+  if (THTensor_nDimensionLegacyAll(b) == 1) {
     b = THTensor_(newWithStorage2d)(THTensor_getStoragePtr(b), b->storage_offset(), b->size(0),
             b->stride(0), 1, 0);
     free_b = 1;
@@ -220,7 +220,7 @@ void THTensor_(gels)(THTensor *rb_, THTensor *ra_, THTensor *b, THTensor *a)
   THArgCheck(a->size(0) == b->size(0), 2, "A,B size incompatible - A has %ld "
       "rows, B has %ld", a->size(0), b->size(0));
 
-  if (b->_dim() == 1) {
+  if (THTensor_nDimensionLegacyAll(b) == 1) {
     b = THTensor_(newWithStorage2d)(THTensor_getStoragePtr(b), b->storage_offset(), b->size(0),
             b->stride(0), 1, 0);
     free_b = 1;
@@ -498,7 +498,7 @@ void THTensor_(gesvd2)(THTensor *ru_, THTensor *rs_, THTensor *rv_, THTensor *ra
 void THTensor_(getri)(THTensor *ra_, THTensor *a)
 {
   if (a == NULL) a = ra_;
-  THArgCheck(a->_dim() == 2, 1, "A should be 2 dimensional");
+  THArgCheck(THTensor_nDimensionLegacyAll(a) == 2, 1, "A should be 2 dimensional");
   THArgCheck(a->size(0) == a->size(1), 1, "A should be square");
 
   int m, n, lda, info, lwork;
@@ -541,7 +541,7 @@ void THTensor_(getri)(THTensor *ra_, THTensor *a)
 
 void THTensor_(clearUpLoTriangle)(THTensor *a, const char *uplo)
 {
-  THArgCheck(a->_dim() == 2, 1, "A should be 2 dimensional");
+  THArgCheck(THTensor_nDimensionLegacyAll(a) == 2, 1, "A should be 2 dimensional");
   THArgCheck(a->size(0) == a->size(1), 1, "A should be square");
 
   int n = a->size(0);
@@ -574,7 +574,7 @@ void THTensor_(clearUpLoTriangle)(THTensor *a, const char *uplo)
 
 void THTensor_(copyUpLoTriangle)(THTensor *a, const char *uplo)
 {
-  THArgCheck(a->_dim() == 2, 1, "A should be 2 dimensional");
+  THArgCheck(THTensor_nDimensionLegacyAll(a) == 2, 1, "A should be 2 dimensional");
   THArgCheck(a->size(0) == a->size(1), 1, "A should be square");
 
   int n = a->size(0);
@@ -608,7 +608,7 @@ void THTensor_(copyUpLoTriangle)(THTensor *a, const char *uplo)
 void THTensor_(potrf)(THTensor *ra_, THTensor *a, const char *uplo)
 {
   if (a == NULL) a = ra_;
-  THArgCheck(a->_dim() == 2, 1, "A should be 2 dimensional");
+  THArgCheck(THTensor_nDimensionLegacyAll(a) == 2, 1, "A should be 2 dimensional");
   THArgCheck(a->size(0) == a->size(1), 1, "A should be square");
 
   int n, lda, info;
@@ -634,16 +634,16 @@ void THTensor_(potrs)(THTensor *rb_, THTensor *b, THTensor *a, const char *uplo)
   int free_b = 0;
   if (b == NULL) b = rb_;
 
-  THArgCheck(a->_dim() == 2, 2, "A should have 2 dimensions, but has %d",
-      a->_dim());
-  THArgCheck(b->_dim() == 1 || b->_dim() == 2, 1, "B should have 1 or 2 "
-      "dimensions, but has %d", b->_dim());
+  THArgCheck(THTensor_nDimensionLegacyAll(a) == 2, 2, "A should have 2 dimensions, but has %d",
+      THTensor_nDimensionLegacyAll(a));
+  THArgCheck(THTensor_nDimensionLegacyAll(b) == 1 || THTensor_nDimensionLegacyAll(b) == 2, 1, "B should have 1 or 2 "
+      "dimensions, but has %d", THTensor_nDimensionLegacyAll(b));
   THArgCheck(a->size(0) == a->size(1), 2, "A should be square, but is %ldx%ld",
       a->size(0), a->size(1));
   THArgCheck(a->size(0) == b->size(0), 2, "A,B size incompatible - A has %ld "
       "rows, B has %ld", a->size(0), b->size(0));
 
-  if (b->_dim() == 1) {
+  if (THTensor_nDimensionLegacyAll(b) == 1) {
     b = THTensor_(newWithStorage2d)(THTensor_getStoragePtr(b), b->storage_offset(), b->size(0),
             b->stride(0), 1, 0);
     free_b = 1;
@@ -680,7 +680,7 @@ void THTensor_(potrs)(THTensor *rb_, THTensor *b, THTensor *a, const char *uplo)
 void THTensor_(potri)(THTensor *ra_, THTensor *a, const char *uplo)
 {
   if (a == NULL) a = ra_;
-  THArgCheck(a->_dim() == 2, 1, "A should be 2 dimensional");
+  THArgCheck(THTensor_nDimensionLegacyAll(a) == 2, 1, "A should be 2 dimensional");
   THArgCheck(a->size(0) == a->size(1), 1, "A should be square");
 
   int n, lda, info;
@@ -718,7 +718,7 @@ void THTensor_(potri)(THTensor *ra_, THTensor *a, const char *uplo)
               The algorithm terminates when the pivot <= tol.
  */
 void THTensor_(pstrf)(THTensor *ra_, THIntTensor *rpiv_, THTensor *a, const char *uplo, real tol) {
-  THArgCheck(a->_dim() == 2, 1, "A should be 2 dimensional");
+  THArgCheck(THTensor_nDimensionLegacyAll(a) == 2, 1, "A should be 2 dimensional");
   THArgCheck(a->size(0) == a->size(1), 1, "A should be square");
 
   int n = a->size(0);
@@ -861,7 +861,7 @@ void THTensor_(geqrf)(THTensor *ra_, THTensor *rtau_, THTensor *a)
 void THTensor_(orgqr)(THTensor *ra_, THTensor *a, THTensor *tau)
 {
   if (a == NULL) a = ra_;
-  THArgCheck(a->_dim() == 2, 1, "A should be 2 dimensional");
+  THArgCheck(THTensor_nDimensionLegacyAll(a) == 2, 1, "A should be 2 dimensional");
 
   THTensor *ra__ = NULL;
   ra__ = THTensor_(cloneColumnMajor)(ra_, a);
@@ -914,7 +914,7 @@ void THTensor_(orgqr)(THTensor *ra_, THTensor *a, THTensor *tau)
 void THTensor_(ormqr)(THTensor *ra_, THTensor *a, THTensor *tau, THTensor *c, const char *side, const char *trans)
 {
   if (a == NULL) a = ra_;
-  THArgCheck(a->_dim() == 2, 1, "A should be 2 dimensional");
+  THArgCheck(THTensor_nDimensionLegacyAll(a) == 2, 1, "A should be 2 dimensional");
 
   THTensor *ra__ = NULL;
   ra__ = THTensor_(cloneColumnMajor)(ra_, c);
