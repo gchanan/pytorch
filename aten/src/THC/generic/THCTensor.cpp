@@ -391,7 +391,7 @@ void THCTensor_(select)(THCState *state, THCTensor *self, THCTensor *src, int di
     src = self;
 
 #ifndef USE_TH_SIZE_ZERO_DIM
-  THArgCheck(src->_dim() > 1, 1, "cannot select on a vector");
+  THArgCheck(THTensor_nDimensionLegacyAll(src) > 1, 1, "cannot select on a vector");
 #else
 #ifndef USE_TH_SCALAR
   THArgCheck(src->dim() > 1, 1, "cannot select on a vector");

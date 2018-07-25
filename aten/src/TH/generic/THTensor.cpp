@@ -397,7 +397,7 @@ void THTensor_(select)(THTensor *self, THTensor *src, int dimension, int64_t sli
     src = self;
 
 #ifndef USE_TH_SIZE_ZERO_DIM
-  THArgCheck(src->_dim() > 1, 1, "cannot select on a vector");
+  THArgCheck(THTensor_nDimensionLegacyAll(src) > 1, 1, "cannot select on a vector");
 #else
 #ifndef USE_TH_SCALAR
   THArgCheck(src->dim() > 1, 1, "cannot select on a vector");
@@ -641,7 +641,7 @@ int THTensor_(isSetTo)(const THTensor *self, const THTensor* src)
     return 0;
   if (THTensor_getStoragePtr(self) == THTensor_getStoragePtr(src) &&
       self->storage_offset() == src->storage_offset() &&
-      self->_dim() == src->_dim())
+      self->_dim() == THTensor_nDimensionLegacyAll(src))
   {
     int d;
     for (d = 0; d < self->_dim(); ++d)
