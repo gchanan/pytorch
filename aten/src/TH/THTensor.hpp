@@ -159,6 +159,10 @@ inline void THTensor_setIsZeroDim(THTensor *tensor, bool is_zero_dim) {
   tensor->is_zero_dim_ = is_zero_dim;
 }
 
+inline int THTensor_nDimensionLegacyNoScalars(const THTensor* tensor) {
+  return tensor->dim();
+}
+
 inline int THTensor_nDimensionLegacyAll(const THTensor* tensor) {
   return tensor->_dim();
 }

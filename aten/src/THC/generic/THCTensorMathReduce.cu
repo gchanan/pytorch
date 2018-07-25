@@ -63,9 +63,9 @@ THCTensor_(renorm)(THCState *state, THCTensor* self, THCTensor* src, real value,
   THCTensor *data = THCTensor_(newClone)(state, src_);
   int64_t numel = THCTensor_(nElement)(state, data);
 
-  THArgCheck(dimension >= 0 && dimension < THCTensor_(nDimension)(state, src), 3, "invalid dimension");
+  THArgCheck(dimension >= 0 && dimension < THCTensor_(nDimensionLegacyNoScalars)(state, src), 3, "invalid dimension");
   THArgCheck(THCNumerics<real>::gt(value, scalar_cast<real>(0)), 2, "non-positive-norm not supported");
-  THArgCheck(THCTensor_(nDimension)(state, src) > 1, 1, "need at least 2 dimensions");
+  THArgCheck(THCTensor_(nDimensionLegacyNoScalars)(state, src) > 1, 1, "need at least 2 dimensions");
 
   if (numel > 0) {
     ptrdiff_t size = numel / data->size(0);

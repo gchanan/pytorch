@@ -958,7 +958,7 @@ void THTensor_(ormqr)(THTensor *ra_, THTensor *a, THTensor *tau, THTensor *c, co
 
 void THTensor_(btrifact)(THTensor *ra_, THIntTensor *rpivots_, THIntTensor *rinfo_, int pivot, THTensor *a)
 {
-  AT_CHECK(THTensor_(nDimension)(a) == 3, "expected 3D tensor, got size: ", a->sizes());
+  AT_CHECK(THTensor_(nDimensionLegacyNoScalars)(a) == 3, "expected 3D tensor, got size: ", a->sizes());
   if (!pivot) {
     THError("btrifact without pivoting is not implemented on the CPU");
   }
@@ -1033,10 +1033,10 @@ void THTensor_(btrifact)(THTensor *ra_, THIntTensor *rpivots_, THIntTensor *rinf
 
 void THTensor_(btrisolve)(THTensor *rb_, THTensor *b, THTensor *atf, THIntTensor *pivots)
 {
-  AT_CHECK(!atf->is_empty() && THTensor_(nDimension)(atf) == 3, "expected non-empty 3D tensor, got size: ",
+  AT_CHECK(!atf->is_empty() && THTensor_(nDimensionLegacyNoScalars)(atf) == 3, "expected non-empty 3D tensor, got size: ",
            atf->sizes());
-  AT_CHECK(!b->is_empty() && (THTensor_(nDimension)(b) == 3 ||
-             THTensor_(nDimension)(b) == 2), "expected non-empty 2D or 3D tensor, got size: ", b->sizes());
+  AT_CHECK(!b->is_empty() && (THTensor_(nDimensionLegacyNoScalars)(b) == 3 ||
+             THTensor_(nDimensionLegacyNoScalars)(b) == 2), "expected non-empty 2D or 3D tensor, got size: ", b->sizes());
   THArgCheck(THTensor_(size)(atf, 0) ==
              THTensor_(size)(b, 0), 3, "number of batches must be equal");
   THArgCheck(THTensor_(size)(atf, 1) ==

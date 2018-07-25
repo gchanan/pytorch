@@ -432,11 +432,11 @@ void THTensor_(gather)(THTensor *tensor, THTensor *src, int dim, THLongTensor *i
 {
   int64_t elems_per_row, i, idx;
 
-  THArgCheck(THLongTensor_nDimension(index) == THTensor_(nDimension)(src), 4,
+  THArgCheck(THLongTensor_nDimensionLegacyNoScalars(index) == THTensor_(nDimensionLegacyNoScalars)(src), 4,
              "Index tensor must have same dimensions as input tensor");
-  THArgCheck(dim >= 0 && dim < THTensor_(nDimension)(tensor), 3,
+  THArgCheck(dim >= 0 && dim < THTensor_(nDimensionLegacyNoScalars)(tensor), 3,
              "Index dimension is out of bounds");
-  THArgCheck(THTensor_(nDimension)(src) == THTensor_(nDimension)(tensor), 2,
+  THArgCheck(THTensor_(nDimensionLegacyNoScalars)(src) == THTensor_(nDimensionLegacyNoScalars)(tensor), 2,
              "Input tensor must have same dimensions as output tensor");
 
   elems_per_row = THLongTensor_size(index, dim);
@@ -466,10 +466,10 @@ void THTensor_(scatter)(THTensor *tensor, int dim, THLongTensor *index, THTensor
   THArgCheck(THTensor_(nDimensionLegacyAll)(src) == THTensor_(nDimensionLegacyAll)(tensor), 4,
              "Input tensor must have same dimensions as output tensor");
 #else
-  THArgCheck(dim < THTensor_(nDimension)(tensor), 2, "Index dimension is out of bounds");
-  THArgCheck(THLongTensor_nDimension(index) == THTensor_(nDimension)(tensor), 3,
+  THArgCheck(dim < THTensor_(nDimensionLegacyNoScalars)(tensor), 2, "Index dimension is out of bounds");
+  THArgCheck(THLongTensor_nDimensionLegacyNoScalars(index) == THTensor_(nDimensionLegacyNoScalars)(tensor), 3,
              "Index tensor must have same dimensions as output tensor");
-  THArgCheck(THTensor_(nDimension)(src) == THTensor_(nDimension)(tensor), 4,
+  THArgCheck(THTensor_(nDimensionLegacyNoScalars)(src) == THTensor_(nDimensionLegacyNoScalars)(tensor), 4,
              "Input tensor must have same dimensions as output tensor");
 #endif
 
@@ -493,10 +493,10 @@ void THTensor_(scatterAdd)(THTensor *tensor, int dim, THLongTensor *index, THTen
 {
   int64_t elems_per_row, i, idx;
 
-  THArgCheck(dim < THTensor_(nDimension)(tensor), 2, "Index dimension is out of bounds");
-  THArgCheck(THLongTensor_nDimension(index) == THTensor_(nDimension)(tensor), 3,
+  THArgCheck(dim < THTensor_(nDimensionLegacyNoScalars)(tensor), 2, "Index dimension is out of bounds");
+  THArgCheck(THLongTensor_nDimensionLegacyNoScalars(index) == THTensor_(nDimensionLegacyNoScalars)(tensor), 3,
              "Index tensor must have same dimensions as output tensor");
-  THArgCheck(THTensor_(nDimension)(src) == THTensor_(nDimension)(tensor), 4,
+  THArgCheck(THTensor_(nDimensionLegacyNoScalars)(src) == THTensor_(nDimensionLegacyNoScalars)(tensor), 4,
              "Input tensor must have same dimensions as output tensor");
 
   elems_per_row = THLongTensor_size(index, dim);
