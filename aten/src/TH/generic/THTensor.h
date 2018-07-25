@@ -25,7 +25,8 @@ TH_API THStorage* THTensor_(storage)(const THTensor *self);
 TH_API ptrdiff_t THTensor_(storageOffset)(const THTensor *self);
 
 // See [NOTE: _dim() vs dim()]; nDimensionLegacyAll corresponds to _dim(), nDimension corresponds to dim().
-TH_API int THTensor_(nDimension)(const THTensor *self);
+//TH_API int THTensor_(nDimension)(const THTensor *self);
+TH_API int THTensor_(nDimensionLegacyNoScalars)(const THTensor *self);
 TH_API int THTensor_(nDimensionLegacyAll)(const THTensor *self);
 TH_API int64_t THTensor_(size)(const THTensor *self, int dim);
 TH_API int64_t THTensor_(stride)(const THTensor *self, int dim);

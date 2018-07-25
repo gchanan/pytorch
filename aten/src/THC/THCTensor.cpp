@@ -9,7 +9,7 @@
 
 #include "THCTensorInfo.cuh"
 
-int THCTensor_nDimension(THCState *state, const THCTensor *self) {
+int THCTensor_nDimensionLegacyNoScalars(THCState *state, const THCTensor *self) {
   return self->dim();
 }
 
