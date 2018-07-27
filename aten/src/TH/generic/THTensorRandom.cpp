@@ -368,8 +368,8 @@ void THTensor_(multinomial)(THLongTensor *self, THGenerator *_generator, THTenso
     THTensor_(unsqueeze1d)(prob_dist, prob_dist, 0);
   }
 
-  n_dist = THTensor_(size)(prob_dist, 0);
-  n_categories = THTensor_(size)(prob_dist, 1);
+  n_dist = THTensor_(sizeLegacyNoScalars)(prob_dist, 0);
+  n_categories = THTensor_(sizeLegacyNoScalars)(prob_dist, 1);
 
   THArgCheckWithCleanup(n_sample > 0,
     THCleanup(if (start_dim == 1) THTensor_(squeeze1d)(prob_dist, prob_dist, 0);),

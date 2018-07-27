@@ -306,7 +306,7 @@
 \
       if(TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i] == TENSOR->size(TH_TENSOR_DIM_APPLY_i)) \
       { \
-        /* Handled TENSOR_size(dim) iterations for DIM_APPLY_i. If this is the last dimension, exit */ \
+        /* Handled THTensor_sizeLegacyNoScalars(dim) iterations for DIM_APPLY_i. If this is the last dimension, exit */ \
         if(TH_TENSOR_DIM_APPLY_i == THTensor_nDimensionLegacyAll(TENSOR)-1) \
         { \
           TH_TENSOR_DIM_APPLY_hasFinished = 1; \

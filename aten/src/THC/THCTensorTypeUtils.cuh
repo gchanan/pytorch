@@ -62,7 +62,7 @@ getTensorInfo(THCState* state, TensorType* t) {
 
   int dims = THCTensor_nDimensionLegacyNoScalars(state, t);
   for (int i = 0; i < dims; ++i) {
-    sz[i] = THCTensor_size(state, t, i);
+    sz[i] = THCTensor_sizeLegacyNoScalars(state, t, i);
     st[i] = THCTensor_strideLegacyNoScalars(state, t, i);
   }
 

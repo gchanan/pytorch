@@ -90,8 +90,8 @@ void THNN_(SpatialFullDilatedConvolution_updateOutput)(
     (input, NULL, weight, bias, kH, kW, dH, dW, padH, padW,
      dilationH, dilationW, adjH, adjW, 0);
 
-  int nInputPlane = THTensor_(size)(weight,0);
-  int nOutputPlane = THTensor_(size)(weight,1);
+  int nInputPlane = THTensor_(sizeLegacyNoScalars)(weight,0);
+  int nOutputPlane = THTensor_(sizeLegacyNoScalars)(weight,1);
 
   input = THTensor_(newContiguous)(input);
   weight = THTensor_(newContiguous)(weight);
@@ -221,8 +221,8 @@ void THNN_(SpatialFullDilatedConvolution_updateGradInput)(
     (input, gradOutput, weight, NULL, kH, kW, dH, dW, padH, padW,
      dilationH, dilationW, adjH, adjW, 0);
 
-  int64_t nInputPlane = THTensor_(size)(weight,0);
-  int64_t nOutputPlane = THTensor_(size)(weight,1);
+  int64_t nInputPlane = THTensor_(sizeLegacyNoScalars)(weight,0);
+  int64_t nOutputPlane = THTensor_(sizeLegacyNoScalars)(weight,1);
 
   input = THTensor_(newContiguous)(input);
   gradOutput = THTensor_(newContiguous)(gradOutput);
@@ -330,9 +330,9 @@ void THNN_(SpatialFullDilatedConvolution_accGradParameters)(
 
   int64_t nOutputPlane;
   if (gradWeight) {
-    nOutputPlane = THTensor_(size)(gradWeight, 1);
+    nOutputPlane = THTensor_(sizeLegacyNoScalars)(gradWeight, 1);
   } else if (gradBias) {
-    nOutputPlane = THTensor_(size)(gradBias, 0);
+    nOutputPlane = THTensor_(sizeLegacyNoScalars)(gradBias, 0);
   } else {
     return;
   }

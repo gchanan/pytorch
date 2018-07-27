@@ -94,8 +94,8 @@ void THNN_(SpatialConvolutionLocal_updateOutput)(
 
   input = THCTensor_(newContiguous)(state, input);
 
-  int64_t nInputPlane = THCTensor_(size)(state,weight,2)/(kW*kH);
-  int64_t nOutputPlane = THCTensor_(size)(state,weight,1);
+  int64_t nInputPlane = THCTensor_(sizeLegacyNoScalars)(state,weight,2)/(kW*kH);
+  int64_t nOutputPlane = THCTensor_(sizeLegacyNoScalars)(state,weight,1);
 
   int batch = 1;
   if (input->dim() == 3) {
@@ -207,8 +207,8 @@ void THNN_(SpatialConvolutionLocal_updateGradInput)(
   input = THCTensor_(newContiguous)(state, input);
   gradOutput = THCTensor_(newContiguous)(state, gradOutput);
 
-  int64_t nInputPlane = THCTensor_(size)(state,weight,2)/(kW*kH);
-  int64_t nOutputPlane = THCTensor_(size)(state,weight,1);
+  int64_t nInputPlane = THCTensor_(sizeLegacyNoScalars)(state,weight,2)/(kW*kH);
+  int64_t nOutputPlane = THCTensor_(sizeLegacyNoScalars)(state,weight,1);
 
   int batch = 1;
   if (input->dim() == 3) {
@@ -327,8 +327,8 @@ void THNN_(SpatialConvolutionLocal_accGradParameters)(
   input = THCTensor_(newContiguous)(state, input);
   gradOutput = THCTensor_(newContiguous)(state, gradOutput);
 
-  int64_t nInputPlane = THCTensor_(size)(state,gradWeight,2)/(kW*kH);
-  int64_t nOutputPlane = THCTensor_(size)(state,gradWeight,1);
+  int64_t nInputPlane = THCTensor_(sizeLegacyNoScalars)(state,gradWeight,2)/(kW*kH);
+  int64_t nOutputPlane = THCTensor_(sizeLegacyNoScalars)(state,gradWeight,1);
 
   int batch = 1;
   if (input->dim() == 3) {

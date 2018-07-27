@@ -1122,18 +1122,18 @@ void THTensor_(addbmm)(THTensor *result, real beta, THTensor *t, real alpha, THT
 
   THArgCheck(THTensor_(nDimensionLegacyNoScalars)(batch1) == 3, 1, "expected 3D tensor");
   THArgCheck(THTensor_(nDimensionLegacyNoScalars)(batch2) == 3, 2, "expected 3D tensor");
-  THArgCheck(THTensor_(size)(batch1, 0) == THTensor_(size)(batch2, 0), 2,
+  THArgCheck(THTensor_(sizeLegacyNoScalars)(batch1, 0) == THTensor_(sizeLegacyNoScalars)(batch2, 0), 2,
              "equal number of batches expected, got %d, %d",
-             THTensor_(size)(batch1, 0), THTensor_(size)(batch2, 0));
-  THArgCheck(THTensor_(size)(batch1, 2) == THTensor_(size)(batch2, 1), 2,
+             THTensor_(sizeLegacyNoScalars)(batch1, 0), THTensor_(sizeLegacyNoScalars)(batch2, 0));
+  THArgCheck(THTensor_(sizeLegacyNoScalars)(batch1, 2) == THTensor_(sizeLegacyNoScalars)(batch2, 1), 2,
              "wrong matrix size, batch1: %dx%d, batch2: %dx%d",
-             THTensor_(size)(batch1, 1), THTensor_(size)(batch1,2),
-             THTensor_(size)(batch2, 1), THTensor_(size)(batch2,2));
+             THTensor_(sizeLegacyNoScalars)(batch1, 1), THTensor_(sizeLegacyNoScalars)(batch1,2),
+             THTensor_(sizeLegacyNoScalars)(batch2, 1), THTensor_(sizeLegacyNoScalars)(batch2,2));
 
-  int64_t dim1 = THTensor_(size)(batch1, 1);
-  int64_t dim2 = THTensor_(size)(batch2, 2);
-  THArgCheck(THTensor_(size)(t, 0) == dim1, 1, "output tensor of incorrect size");
-  THArgCheck(THTensor_(size)(t, 1) == dim2, 1, "output tensor of incorrect size");
+  int64_t dim1 = THTensor_(sizeLegacyNoScalars)(batch1, 1);
+  int64_t dim2 = THTensor_(sizeLegacyNoScalars)(batch2, 2);
+  THArgCheck(THTensor_(sizeLegacyNoScalars)(t, 0) == dim1, 1, "output tensor of incorrect size");
+  THArgCheck(THTensor_(sizeLegacyNoScalars)(t, 1) == dim2, 1, "output tensor of incorrect size");
 
   if (t != result) {
     THTensor_(resizeAs)(result, t);
@@ -1145,7 +1145,7 @@ void THTensor_(addbmm)(THTensor *result, real beta, THTensor *t, real alpha, THT
   THTensor *matrix1 = THTensor_(new)();
   THTensor *matrix2 = THTensor_(new)();
 
-  for (batch = 0; batch < THTensor_(size)(batch1, 0); ++batch) {
+  for (batch = 0; batch < THTensor_(sizeLegacyNoScalars)(batch1, 0); ++batch) {
     THTensor_(select)(matrix1, batch1, 0, batch);
     THTensor_(select)(matrix2, batch2, 0, batch);
 

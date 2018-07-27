@@ -439,9 +439,9 @@ void THNN_(VolumetricFullDilatedConvolution_accGradParameters)(
 
   int64_t nOutputPlane;
   if (gradWeight) {
-    nOutputPlane = THTensor_(size)(gradWeight, 1);
+    nOutputPlane = THTensor_(sizeLegacyNoScalars)(gradWeight, 1);
   } else if (gradBias) {
-    nOutputPlane = THTensor_(size)(gradBias, 0);
+    nOutputPlane = THTensor_(sizeLegacyNoScalars)(gradBias, 0);
   } else {
     return;
   }

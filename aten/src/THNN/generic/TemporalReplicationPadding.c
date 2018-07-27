@@ -169,9 +169,9 @@ void THNN_(TemporalReplicationPadding_updateGradInput)(THNNState *state,
   iwidth = input->size(dimw);
   owidth  = iwidth + pad_l + pad_r;
 
-  THArgCheck(owidth == THTensor_(size)(gradOutput, dimw), 3,
+  THArgCheck(owidth == THTensor_(sizeLegacyNoScalars)(gradOutput, dimw), 3,
 	     "gradOutput width unexpected. Expected: %d, Got: %d",
-	     owidth, THTensor_(size)(gradOutput, dimw));
+	     owidth, THTensor_(sizeLegacyNoScalars)(gradOutput, dimw));
 
   /* get contiguous gradOutput */
   gradOutput = THTensor_(newContiguous)(gradOutput);

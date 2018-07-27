@@ -5,7 +5,7 @@
 static bool THNN_(checkKeysValues)(THCState *state, THCudaLongTensor* keys,
                                    THCTensor* values)
 {
-    return THCudaLongTensor_size(state, keys, 0) == THCTensor_(nElement)(state, values)
+    return THCudaLongTensor_sizeLegacyNoScalars(state, keys, 0) == THCTensor_(nElement)(state, values)
         && THCTensor_(nDimensionLegacyAll)(state, values) == 1
         && THCudaLongTensor_nDimensionLegacyAll(state, keys) == 1;
 }

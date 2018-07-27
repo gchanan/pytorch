@@ -38,7 +38,7 @@ THC_API void
 THCTensor_(mean)(THCState *state, THCTensor *self, THCTensor *src, int dim, int keepdim)
 {
   THCAssertSameGPU(THCTensor_(checkGPU)(state, 2, self, src));
-  const accreal size = scalar_cast<accreal>(THCTensor_(size)(state, src, dim));
+  const accreal size = scalar_cast<accreal>(THCTensor_(sizeLegacyNoScalars)(state, src, dim));
   if (!THC_reduceDim<real>(state, self, src,
                            thrust::identity<accreal>{},
                            ReduceAdd<accreal>{},
@@ -407,7 +407,7 @@ THCTensor_(median)(THCState *state,
 
   int64_t t_size_dim, k;
 
-  t_size_dim = THCTensor_(size)(state, self, dimension);
+  t_size_dim = THCTensor_(sizeLegacyNoScalars)(state, self, dimension);
 
   k = (t_size_dim-1) >> 1;
 

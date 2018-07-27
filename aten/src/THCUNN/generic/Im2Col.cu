@@ -26,9 +26,9 @@ static inline void THNN_(Im2Col_shapeCheck)(
   if (ndim == 3) {
     dim_batch = -1;
   }
-  int64_t nInputPlane  = THCTensor_(size)(state, input, dim_batch + 1);
-  int64_t inputHeight  = THCTensor_(size)(state, input, dim_batch + 2);
-  int64_t inputWidth   = THCTensor_(size)(state, input, dim_batch + 3);
+  int64_t nInputPlane  = THCTensor_(sizeLegacyNoScalars)(state, input, dim_batch + 1);
+  int64_t inputHeight  = THCTensor_(sizeLegacyNoScalars)(state, input, dim_batch + 2);
+  int64_t inputWidth   = THCTensor_(sizeLegacyNoScalars)(state, input, dim_batch + 3);
   int64_t outputHeight = (inputHeight + 2 * padH - (dH * (kH - 1) + 1)) / sH + 1;
   int64_t outputWidth  = (inputWidth + 2 * padW - (dW * (kW - 1) + 1)) / sW + 1;
 
@@ -62,10 +62,10 @@ void THNN_(Im2Col_updateOutput)(
     THCTensor_(resize4d)(state, input, 1, input->size(0), input->size(1), input->size(2));
   }
 
-  int64_t batchSize    = THCTensor_(size)(state, input, 0);
-  int64_t nInputPlane  = THCTensor_(size)(state, input, 1);
-  int64_t inputHeight  = THCTensor_(size)(state, input, 2);
-  int64_t inputWidth   = THCTensor_(size)(state, input, 3);
+  int64_t batchSize    = THCTensor_(sizeLegacyNoScalars)(state, input, 0);
+  int64_t nInputPlane  = THCTensor_(sizeLegacyNoScalars)(state, input, 1);
+  int64_t inputHeight  = THCTensor_(sizeLegacyNoScalars)(state, input, 2);
+  int64_t inputWidth   = THCTensor_(sizeLegacyNoScalars)(state, input, 3);
 
   int64_t outputHeight = (inputHeight + 2 * padH - (dH * (kH - 1) + 1)) / sH + 1;
   int64_t outputWidth  = (inputWidth + 2 * padW - (dW * (kW - 1) + 1)) / sW + 1;

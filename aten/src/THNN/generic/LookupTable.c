@@ -55,7 +55,7 @@ void THNN_(LookupTable_accGradParameters)(
 
   THIndex_t *input_data = THIndexTensor_(data)(input);
   ptrdiff_t numel = THIndexTensor_(nElement)(input);
-  int64_t numw = THTensor_(size)(gradWeight, 0);
+  int64_t numw = THTensor_(sizeLegacyNoScalars)(gradWeight, 0);
 
   // check that inputs are all within range
   for (i=0; i<numel; i++)
@@ -182,7 +182,7 @@ void THNN_(LookupTable_renorm)(
   THIndex_t *row_idx = THIndexTensor_(data)(idx);
   ptrdiff_t numel = THIndexTensor_(nElement)(idx);
 
-  int64_t numw = THTensor_(size)(weight, 0);
+  int64_t numw = THTensor_(sizeLegacyNoScalars)(weight, 0);
   int64_t stride = THTensor_(strideLegacyNoScalars)(weight, 0);
   real *gw = THTensor_(data)(weight);
   for (i=0; i<numel; i++) {

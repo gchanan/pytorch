@@ -80,8 +80,8 @@ inline void THCTensor_(check_shape_except_dim)(THCState *state,
     if (dim == dimension) {
       continue;
     }
-    int64_t first_dim_size = THCTensor_(size)(state, first, dim);
-    int64_t second_dim_size = THCTensor_(size)(state, second, dim);
+    int64_t first_dim_size = THCTensor_(sizeLegacyNoScalars)(state, first, dim);
+    int64_t second_dim_size = THCTensor_(sizeLegacyNoScalars)(state, second, dim);
     THArgCheck(first_dim_size == second_dim_size, 0,
         "Sizes of tensors must match except in dimension %d. Got %lld and %lld in dimension %d",
         dimension, (long long)first_dim_size, (long long)second_dim_size, dim);
@@ -132,12 +132,12 @@ void THCTensor_(catArray)(THCState *state, THCTensor *result,
       continue;
     }
     THCTensor_(check_shape_except_dim)(state, notSkippedTensor, tensor, dimension);
-    cat_dim_size += THCTensor_(size)(state, tensor, dimension);
+    cat_dim_size += THCTensor_(sizeLegacyNoScalars)(state, tensor, dimension);
   }
 
   // Compute the size of the result
   for (int dim = 0; dim < nDims; dim++) {
-    int64_t result_dim_size = THCTensor_(size)(state, notSkippedTensor, dim);
+    int64_t result_dim_size = THCTensor_(sizeLegacyNoScalars)(state, notSkippedTensor, dim);
     if (dim == dimension) {
       result_dim_size = cat_dim_size;
     }
@@ -176,7 +176,7 @@ void THCTensor_(catArray)(THCState *state, THCTensor *result,
 
     // Next, let's initialize the size, stride arrays for the output Tensor.
     for (i = 0; i < nDims; ++i) {
-      param.outputSize[i] = THCTensor_(size)(state, result, i);
+      param.outputSize[i] = THCTensor_(sizeLegacyNoScalars)(state, result, i);
       param.outputStride[i] = THCTensor_(strideLegacyNoScalars)(state, result, i);
     }
 
@@ -195,7 +195,7 @@ void THCTensor_(catArray)(THCState *state, THCTensor *result,
         CatArrInputTensor<real, unsigned int>* stackInputs = static_cast<CatArrInputTensor<real, unsigned int>*>(stackInputs_owner.get());
         cohortMax = 0;
         for (j = 0; j < CAT_ARRAY_BATCH_SIZE && (i+j) < numInputs; ++j) {
-          int64_t dimSize = THCTensor_(size)(state, inputs[i+j], dimension);
+          int64_t dimSize = THCTensor_(sizeLegacyNoScalars)(state, inputs[i+j], dimension);
 
           stackInputs[j].input = THCTensor_(data)(state, inputs[i+j]);
           stackInputs[j].offset = offset;
@@ -250,7 +250,7 @@ void THCTensor_(catArray)(THCState *state, THCTensor *result,
     for (j = 0; j < numInputs; j++)
     {
       if (should_skip(inputs[j])) continue;
-      int64_t dimSize = THCTensor_(size)(state, inputs[j], dimension);
+      int64_t dimSize = THCTensor_(sizeLegacyNoScalars)(state, inputs[j], dimension);
       THCTensor *nt = THCTensor_(newWithTensor)(state, result);
       THCTensor_(narrow)(state, nt, NULL, dimension, offset, dimSize);
       THCTensor_(copy)(state, nt, inputs[j]);
@@ -337,8 +337,8 @@ void THCTensor_(diag)(THCState *state, THCTensor *self_, THCTensor *src_, int64_
   if (nDimension == 2) {
     int64_t stride0 = THCTensor_(strideLegacyNoScalars)(state, src_, 0);
     int64_t stride1 = THCTensor_(strideLegacyNoScalars)(state, src_, 1);
-    int64_t size0 = THCTensor_(size)(state, src_, 0);
-    int64_t size1 = THCTensor_(size)(state, src_, 1);
+    int64_t size0 = THCTensor_(sizeLegacyNoScalars)(state, src_, 0);
+    int64_t size1 = THCTensor_(sizeLegacyNoScalars)(state, src_, 1);
     int64_t size = (k > 0) ? min((int64_t)size0, (int64_t)size1 - k) : min((int64_t)size0 + k, (int64_t)size1);
     THCTensor_(resize1d)(state, self_, size);
     if (size > 0) {

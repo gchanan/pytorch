@@ -224,12 +224,12 @@ void THNN_(SpatialReflectionPadding_updateGradInput)(THNNState *state,
   oheight = iheight + pad_t + pad_b;
   owidth  = iwidth + pad_l + pad_r;
 
-  THArgCheck(owidth == THTensor_(size)(gradOutput, dimw), 3,
+  THArgCheck(owidth == THTensor_(sizeLegacyNoScalars)(gradOutput, dimw), 3,
 	     "gradOutput width unexpected. Expected: %d, Got: %d",
-	     owidth, THTensor_(size)(gradOutput, dimw));
-  THArgCheck(oheight == THTensor_(size)(gradOutput, dimh), 3,
+	     owidth, THTensor_(sizeLegacyNoScalars)(gradOutput, dimw));
+  THArgCheck(oheight == THTensor_(sizeLegacyNoScalars)(gradOutput, dimh), 3,
                 "gradOutput height unexpected. Expected: %d, Got: %d",
-	     oheight, THTensor_(size)(gradOutput, dimh));
+	     oheight, THTensor_(sizeLegacyNoScalars)(gradOutput, dimh));
 
   /* get contiguous gradOutput */
   gradOutput = THTensor_(newContiguous)(gradOutput);

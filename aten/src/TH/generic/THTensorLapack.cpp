@@ -973,7 +973,7 @@ void THTensor_(btrifact)(THTensor *ra_, THIntTensor *rpivots_, THIntTensor *rinf
   if (m != n) {
     THError("btrifact is only implemented for square matrices");
   }
-  int64_t num_batches = THTensor_(size)(a, 0);
+  int64_t num_batches = THTensor_(sizeLegacyNoScalars)(a, 0);
   THTensor *ra__;
   int lda;
 
@@ -1037,12 +1037,12 @@ void THTensor_(btrisolve)(THTensor *rb_, THTensor *b, THTensor *atf, THIntTensor
            atf->sizes());
   AT_CHECK(!b->is_empty() && (THTensor_(nDimensionLegacyNoScalars)(b) == 3 ||
              THTensor_(nDimensionLegacyNoScalars)(b) == 2), "expected non-empty 2D or 3D tensor, got size: ", b->sizes());
-  THArgCheck(THTensor_(size)(atf, 0) ==
-             THTensor_(size)(b, 0), 3, "number of batches must be equal");
-  THArgCheck(THTensor_(size)(atf, 1) ==
-             THTensor_(size)(atf, 2), 3, "A matrices must be square");
-  THArgCheck(THTensor_(size)(atf, 1) ==
-             THTensor_(size)(b, 1), 3, "dimensions of A and b must be equal");
+  THArgCheck(THTensor_(sizeLegacyNoScalars)(atf, 0) ==
+             THTensor_(sizeLegacyNoScalars)(b, 0), 3, "number of batches must be equal");
+  THArgCheck(THTensor_(sizeLegacyNoScalars)(atf, 1) ==
+             THTensor_(sizeLegacyNoScalars)(atf, 2), 3, "A matrices must be square");
+  THArgCheck(THTensor_(sizeLegacyNoScalars)(atf, 1) ==
+             THTensor_(sizeLegacyNoScalars)(b, 1), 3, "dimensions of A and b must be equal");
 
   if (rb_ != b) {
     THTensor_(resizeAs)(rb_, b);

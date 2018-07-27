@@ -49,15 +49,15 @@ void THNN_(SparseLinear_updateOutput)(
           THTensor *bias)
 {
   int64_t h, i, hp0, hp1;
-  int64_t outDim = THTensor_(size)(weight, 0);
-  int64_t inDim = THTensor_(size)(weight, 1);
-  int64_t batchSize = THTensor_(size)(output, 0);
+  int64_t outDim = THTensor_(sizeLegacyNoScalars)(weight, 0);
+  int64_t inDim = THTensor_(sizeLegacyNoScalars)(weight, 1);
+  int64_t batchSize = THTensor_(sizeLegacyNoScalars)(output, 0);
 
   THArgCheck(THNN_(checkInput)(input), 2, "input must be in coo format, nnz x 3");
   THArgCheck(THTensor_(isContiguous)(output), 3, "output must be contiguous");
   THArgCheck(THNN_(checkSize1D)(bias, outDim), 5, "bias size wrong");
 
-  int64_t nnz = THTensor_(size)(input, 0);
+  int64_t nnz = THTensor_(sizeLegacyNoScalars)(input, 0);
 
   THLongTensor * csr = THLongTensor_newWithSize1d(batchSize+1);
   THLongTensor_zero(csr);
@@ -119,8 +119,8 @@ void THNN_(SparseLinear_legacyUpdateOutput)(
           THTensor *bias)
 {
   int64_t h, i;
-  int64_t outDim = THTensor_(size)(weight, 0);
-  int64_t inDim = THTensor_(size)(weight, 1);
+  int64_t outDim = THTensor_(sizeLegacyNoScalars)(weight, 0);
+  int64_t inDim = THTensor_(sizeLegacyNoScalars)(weight, 1);
 
   THArgCheck(THNN_(checkLegacyInput)(input), 2, "input size must be batchsize x nnz x 2");
   THArgCheck(THTensor_(isContiguous)(output), 3, "output must be contiguous");
@@ -128,8 +128,8 @@ void THNN_(SparseLinear_legacyUpdateOutput)(
 
   weight = THTensor_(newContiguous)(weight);
 
-  int64_t batchSize = THTensor_(size)(input, 0);
-  int64_t nnz = THTensor_(size)(input, 1);
+  int64_t batchSize = THTensor_(sizeLegacyNoScalars)(input, 0);
+  int64_t nnz = THTensor_(sizeLegacyNoScalars)(input, 1);
   THTensor_(resize2d)(output, batchSize, outDim);
 
   // output = weight * input + bias
@@ -179,8 +179,8 @@ void THNN_(SparseLinear_accGradParameters)(
   real weightDecay = TH_CONVERT_ACCREAL_TO_REAL(weightDecay_);
   real scale = TH_CONVERT_ACCREAL_TO_REAL(scale_);
   int64_t h, i, col, hp0, hp1;
-  int64_t outDim = THTensor_(size)(weight, 0);
-  int64_t inDim = THTensor_(size)(weight, 1);
+  int64_t outDim = THTensor_(sizeLegacyNoScalars)(weight, 0);
+  int64_t inDim = THTensor_(sizeLegacyNoScalars)(weight, 1);
 
   THArgCheck(THNN_(checkInput)(input), 2,
              "input must be in coo format, nnz x 3");
@@ -191,7 +191,7 @@ void THNN_(SparseLinear_accGradParameters)(
   THArgCheck(THTensor_(isContiguous)(gradOutput), 1,
              "gradOutput must be contiguous");
 
-  int64_t nnz = THTensor_(size)(input, 0);
+  int64_t nnz = THTensor_(sizeLegacyNoScalars)(input, 0);
 
   THLongTensor* csc = THLongTensor_newWithSize1d(inDim+1);
   THLongTensor_zero(csc);
@@ -259,8 +259,8 @@ void THNN_(SparseLinear_legacyAccGradParameters)(
   real weightDecay = TH_CONVERT_ACCREAL_TO_REAL(weightDecay_);
   real scale = TH_CONVERT_ACCREAL_TO_REAL(scale_);
   int64_t h, i;
-  int64_t outDim = THTensor_(size)(weight, 0);
-  int64_t inDim = THTensor_(size)(weight, 1);
+  int64_t outDim = THTensor_(sizeLegacyNoScalars)(weight, 0);
+  int64_t inDim = THTensor_(sizeLegacyNoScalars)(weight, 1);
 
   THArgCheck(THNN_(checkLegacyInput)(input), 2,
              "input size must be batchsize x nnz x 2");
@@ -271,8 +271,8 @@ void THNN_(SparseLinear_legacyAccGradParameters)(
   THArgCheck(THTensor_(isContiguous)(gradOutput), 1,
              "gradOutput must be contiguous");
 
-  int64_t batchSize = THTensor_(size)(input, 0);
-  int64_t nnz = THTensor_(size)(input, 1);
+  int64_t batchSize = THTensor_(sizeLegacyNoScalars)(input, 0);
+  int64_t nnz = THTensor_(sizeLegacyNoScalars)(input, 1);
   THTensor_(resize2d)(gradOutput, batchSize, outDim);
 
   // gradWeight += gradOutput * input
@@ -335,7 +335,7 @@ void THNN_(SparseLinear_updateParameters)(
              "input must be in coo format, nnz x 3");
 
 
-  int64_t nnz = THTensor_(size)(lastInput, 0);
+  int64_t nnz = THTensor_(sizeLegacyNoScalars)(lastInput, 0);
 
   // collect unique offsets of non-0 val in input
   THTensor* offsets = THTensor_(newWithSize1d)(nnz);
@@ -366,7 +366,7 @@ void THNN_(SparseLinear_updateParameters)(
 
   cnt = 1;
   real* uniqueOffsets_p = THTensor_(data)(uniqueOffsets);
-  for (i = 1; i < THTensor_(size)(uniqueOffsets, 0); i++) {
+  for (i = 1; i < THTensor_(sizeLegacyNoScalars)(uniqueOffsets, 0); i++) {
     if (uniqueOffsets_p[i] != uniqueOffsets_p[i - 1]) {
       uniqueOffsets_p[cnt++] = uniqueOffsets_p[i];
     }
@@ -409,8 +409,8 @@ void THNN_(SparseLinear_legacyUpdateParameters)(
              "input size must be batchsize x nnz x 2");
 
 
-  int64_t batchSize = THTensor_(size)(lastInput, 0);
-  int64_t nnz = THTensor_(size)(lastInput, 1);
+  int64_t batchSize = THTensor_(sizeLegacyNoScalars)(lastInput, 0);
+  int64_t nnz = THTensor_(sizeLegacyNoScalars)(lastInput, 1);
 
   // collect unique offsets of non-0 val in input
   THTensor* offsets = THTensor_(newWithSize1d)(batchSize * nnz);
@@ -442,7 +442,7 @@ void THNN_(SparseLinear_legacyUpdateParameters)(
 
   cnt = 1;
   real* uniqueOffsets_p = THTensor_(data)(uniqueOffsets);
-  for (i = 1; i < THTensor_(size)(uniqueOffsets, 0); i++) {
+  for (i = 1; i < THTensor_(sizeLegacyNoScalars)(uniqueOffsets, 0); i++) {
     if (uniqueOffsets_p[i] != uniqueOffsets_p[i - 1]) {
       uniqueOffsets_p[cnt++] = uniqueOffsets_p[i];
     }
@@ -480,7 +480,7 @@ void THNN_(SparseLinear_zeroGradParameters)(
 
   THTensor_(zero)(gradBias);
 
-  int64_t nnz = THTensor_(size)(lastInput, 0);
+  int64_t nnz = THTensor_(sizeLegacyNoScalars)(lastInput, 0);
 
 #pragma omp parallel for private(i, j) schedule(static) if (   \
   nnz * outDim > 10000)
@@ -526,8 +526,8 @@ void THNN_(SparseLinear_legacyZeroGradParameters)(
 
   THTensor_(zero)(gradBias);
 
-  int64_t batchSize = THTensor_(size)(lastInput, 0);
-  int64_t nnz = THTensor_(size)(lastInput, 1);
+  int64_t batchSize = THTensor_(sizeLegacyNoScalars)(lastInput, 0);
+  int64_t nnz = THTensor_(sizeLegacyNoScalars)(lastInput, 1);
 
 #pragma omp parallel for private(h, i, j) schedule(static) if (   \
   batchSize > 1 && batchSize * nnz * outDim > 10000)

@@ -39,7 +39,7 @@ void THNN_(BatchNormalization_updateOutput)(
 
   THCTensor_(resizeAs)(state, output_, input_);
   if (train) {
-    int64_t nInput = THCTensor_(size)(state, input_, 1);
+    int64_t nInput = THCTensor_(sizeLegacyNoScalars)(state, input_, 1);
     THCTensor_(resize1d)(state, saveMean_, nInput);
     THCTensor_(resize1d)(state, saveStd_, nInput);
   }

@@ -47,18 +47,18 @@ static inline void THNN_(VolumetricReplicationPadding_shapeCheck)(
              idepth, iheight, iwidth, odepth, oheight, owidth);
 
   if (gradOutput != NULL) {
-    THArgCheck(nslices == THTensor_(size)(gradOutput, dimslices), 3,
+    THArgCheck(nslices == THTensor_(sizeLegacyNoScalars)(gradOutput, dimslices), 3,
                "gradOutput width unexpected. Expected: %d, Got: %d",
-               nslices, THTensor_(size)(gradOutput, dimslices));
-    THArgCheck(owidth == THTensor_(size)(gradOutput, dimw), 3,
+               nslices, THTensor_(sizeLegacyNoScalars)(gradOutput, dimslices));
+    THArgCheck(owidth == THTensor_(sizeLegacyNoScalars)(gradOutput, dimw), 3,
                "gradOutput width unexpected. Expected: %d, Got: %d",
-               owidth, THTensor_(size)(gradOutput, dimw));
-    THArgCheck(oheight == THTensor_(size)(gradOutput, dimh), 3,
+               owidth, THTensor_(sizeLegacyNoScalars)(gradOutput, dimw));
+    THArgCheck(oheight == THTensor_(sizeLegacyNoScalars)(gradOutput, dimh), 3,
                "gradOutput height unexpected. Expected: %d, Got: %d",
-               oheight, THTensor_(size)(gradOutput, dimh));
-    THArgCheck(odepth == THTensor_(size)(gradOutput, dimd), 3,
+               oheight, THTensor_(sizeLegacyNoScalars)(gradOutput, dimh));
+    THArgCheck(odepth == THTensor_(sizeLegacyNoScalars)(gradOutput, dimd), 3,
                "gradOutput depth unexpected. Expected: %d, Got: %d",
-               odepth, THTensor_(size)(gradOutput, dimd));
+               odepth, THTensor_(sizeLegacyNoScalars)(gradOutput, dimd));
   }
 }
 

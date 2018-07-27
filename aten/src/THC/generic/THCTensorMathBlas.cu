@@ -413,19 +413,19 @@ THCTensor_(addbmm)(THCState *state, THCTensor *result, real beta, THCTensor *t,
   THArgCheck(THCTensor_(nDimensionLegacyNoScalars)(state, batch1) == 3, 6, "expected 3D tensor");
   THArgCheck(THCTensor_(nDimensionLegacyNoScalars)(state, batch2) == 3, 7, "expected 3D tensor");
 
-  int64_t batchnum = THCTensor_(size)(state, batch1, 0);
-  int64_t m1d1 = THCTensor_(size)(state, batch1, 1);
-  int64_t innerdim = THCTensor_(size)(state, batch1, 2);
-  int64_t m2d2 = THCTensor_(size)(state, batch2, 2);
+  int64_t batchnum = THCTensor_(sizeLegacyNoScalars)(state, batch1, 0);
+  int64_t m1d1 = THCTensor_(sizeLegacyNoScalars)(state, batch1, 1);
+  int64_t innerdim = THCTensor_(sizeLegacyNoScalars)(state, batch1, 2);
+  int64_t m2d2 = THCTensor_(sizeLegacyNoScalars)(state, batch2, 2);
 
-  THArgCheck(batchnum == THCTensor_(size)(state, batch2, 0), 7,
+  THArgCheck(batchnum == THCTensor_(sizeLegacyNoScalars)(state, batch2, 0), 7,
       "equal number of batches expected");
   // M is t, as listed in the docs under addbmm
-  THArgCheck(m1d1 == THCTensor_(size)(state, t, 0), 6,
+  THArgCheck(m1d1 == THCTensor_(sizeLegacyNoScalars)(state, t, 0), 6,
       "first dimension must match first dimension of M");
-  THArgCheck(m2d2 == THCTensor_(size)(state, t, 1), 7,
+  THArgCheck(m2d2 == THCTensor_(sizeLegacyNoScalars)(state, t, 1), 7,
       "second dimension must match second dimension of M");
-  THArgCheck(innerdim == THCTensor_(size)(state, batch2, 1), 6,
+  THArgCheck(innerdim == THCTensor_(sizeLegacyNoScalars)(state, batch2, 1), 6,
       "second dimension must match first dimension of batch2");
 
   if (t != result) {
@@ -477,15 +477,15 @@ THCTensor_(baddbmm)(THCState *state, THCTensor *result, real beta, THCTensor *t,
   THArgCheck(THCTensor_(nDimensionLegacyNoScalars)(state, t) == 3, 4, "expected 3D tensor");
   THArgCheck(THCTensor_(nDimensionLegacyNoScalars)(state, batch1) == 3, 6, "expected 3D tensor");
   THArgCheck(THCTensor_(nDimensionLegacyNoScalars)(state, batch2) == 3, 7, "expected 3D tensor");
-  THArgCheck(THCTensor_(size)(state, t, 0) == THCTensor_(size)(state, batch1, 0), 6,
+  THArgCheck(THCTensor_(sizeLegacyNoScalars)(state, t, 0) == THCTensor_(sizeLegacyNoScalars)(state, batch1, 0), 6,
              "equal number of batches expected");
-  THArgCheck(THCTensor_(size)(state, t, 0) == THCTensor_(size)(state, batch2, 0), 7,
+  THArgCheck(THCTensor_(sizeLegacyNoScalars)(state, t, 0) == THCTensor_(sizeLegacyNoScalars)(state, batch2, 0), 7,
              "equal number of batches expected");
-  THArgCheck(THCTensor_(size)(state, t, 1) == THCTensor_(size)(state, batch1, 1), 6,
+  THArgCheck(THCTensor_(sizeLegacyNoScalars)(state, t, 1) == THCTensor_(sizeLegacyNoScalars)(state, batch1, 1), 6,
              "wrong matrix size");
-  THArgCheck(THCTensor_(size)(state, t, 2) == THCTensor_(size)(state, batch2, 2), 7,
+  THArgCheck(THCTensor_(sizeLegacyNoScalars)(state, t, 2) == THCTensor_(sizeLegacyNoScalars)(state, batch2, 2), 7,
              "wrong matrix size");
-  THArgCheck(THCTensor_(size)(state, batch1, 2) == THCTensor_(size)(state, batch2, 1), 6,
+  THArgCheck(THCTensor_(sizeLegacyNoScalars)(state, batch1, 2) == THCTensor_(sizeLegacyNoScalars)(state, batch2, 1), 6,
              "wrong matrix size");
 
   if (t != result) {
@@ -741,8 +741,8 @@ THC_API void THCTensor_(btrifact)(THCState *state, THCTensor *ra_, THCudaIntTens
 #if defined(THC_REAL_IS_FLOAT) || defined(THC_REAL_IS_DOUBLE)
   THAssert(THCTensor_(checkGPU)(state, 2, ra_, a));
   THArgCheck(THCTensor_(nDimensionLegacyNoScalars)(state, a) == 3, 3, "expected 3D tensor");
-  THArgCheck(THCTensor_(size)(state, a, 1) ==
-             THCTensor_(size)(state, a, 2), 3, "matrices must be square");
+  THArgCheck(THCTensor_(sizeLegacyNoScalars)(state, a, 1) ==
+             THCTensor_(sizeLegacyNoScalars)(state, a, 2), 3, "matrices must be square");
 
   if (ra_ != a) {
     THCTensor_(resizeAs)(state, ra_, a);
@@ -848,12 +848,12 @@ THC_API void THCTensor_(btrisolve)(THCState *state, THCTensor *rb_, THCTensor *b
   THArgCheck(THCTensor_(nDimensionLegacyAll)(state, atf) == 3, 3, "expected 3D tensor");
   THArgCheck(THCTensor_(nDimensionLegacyAll)(state, b) == 3 ||
              THCTensor_(nDimensionLegacyAll)(state, b) == 2, 4, "expected 2D or 3D tensor");
-  THArgCheck(THCTensor_(size)(state, atf, 0) ==
-             THCTensor_(size)(state, b, 0), 3, "number of batches must be equal");
-  THArgCheck(THCTensor_(size)(state, atf, 1) ==
-             THCTensor_(size)(state, atf, 2), 3, "A matrices must be square");
-  THArgCheck(THCTensor_(size)(state, atf, 1) ==
-             THCTensor_(size)(state, b, 1), 3, "dimensions of A and b must be equal");
+  THArgCheck(THCTensor_(sizeLegacyNoScalars)(state, atf, 0) ==
+             THCTensor_(sizeLegacyNoScalars)(state, b, 0), 3, "number of batches must be equal");
+  THArgCheck(THCTensor_(sizeLegacyNoScalars)(state, atf, 1) ==
+             THCTensor_(sizeLegacyNoScalars)(state, atf, 2), 3, "A matrices must be square");
+  THArgCheck(THCTensor_(sizeLegacyNoScalars)(state, atf, 1) ==
+             THCTensor_(sizeLegacyNoScalars)(state, b, 1), 3, "dimensions of A and b must be equal");
 
   if (rb_ != b) {
     THCTensor_(resizeAs)(state, rb_, b);

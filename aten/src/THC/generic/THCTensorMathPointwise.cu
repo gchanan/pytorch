@@ -118,14 +118,14 @@ THCTensor_(cross)(THCState *state, THCTensor *self, THCTensor *x, THCTensor *y, 
   ptrdiff_t nelem = THCTensor_(nElement)(state, x);
   THArgCheck(nd == THCTensor_(nDimensionLegacyNoScalars)(state, y), 1, "tensors must have same number of dimensions");
   for (i = 0; i < nd; i++) {
-    THArgCheck(THCTensor_(size)(state, x, i) == THCTensor_(size)(state, y, i), 1, "dimension %i of x and y does not match", i);
-    if (dimension < 0 && THCTensor_(size)(state, x, i) == 3) {
+    THArgCheck(THCTensor_(sizeLegacyNoScalars)(state, x, i) == THCTensor_(sizeLegacyNoScalars)(state, y, i), 1, "dimension %i of x and y does not match", i);
+    if (dimension < 0 && THCTensor_(sizeLegacyNoScalars)(state, x, i) == 3) {
       dimension = i;
     }
   }
 
   THArgCheck(dimension >= 0 && dimension < nd, 3, "dimension %d out of range", dimension+1);
-  THArgCheck(THCTensor_(size)(state, x, dimension) == 3, 3,
+  THArgCheck(THCTensor_(sizeLegacyNoScalars)(state, x, dimension) == 3, 3,
       "dimension %d does not have size 3", dimension+1);
   THCTensor_(resizeAs)(state, self, x);
 

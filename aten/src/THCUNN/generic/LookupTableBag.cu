@@ -21,9 +21,9 @@ void THNN_(LookupTableBag_updateOutput)(
     THError("Tensors must be contiguous");
   }
 
-  ptrdiff_t numIndices = THCIndexTensor_(size)(state, input, 0);
-  ptrdiff_t numBags = THCIndexTensor_(size)(state, offsets, 0);
-  ptrdiff_t stride = THCTensor_(size)(state, weight, 1);
+  ptrdiff_t numIndices = THCIndexTensor_(sizeLegacyNoScalars)(state, input, 0);
+  ptrdiff_t numBags = THCIndexTensor_(sizeLegacyNoScalars)(state, offsets, 0);
+  ptrdiff_t stride = THCTensor_(sizeLegacyNoScalars)(state, weight, 1);
   int64_t *bag_size_data = NULL;
   if (bag_size != NULL) {
     bag_size_data = THCIndexTensor_(data)(state, bag_size);

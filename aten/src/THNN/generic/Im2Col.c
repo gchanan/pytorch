@@ -24,9 +24,9 @@ static inline void THNN_(Im2Col_shapeCheck)(
   if (ndim == 3) {
     dim_batch = -1;
   }
-  int64_t nInputPlane  = THTensor_(size)(input, dim_batch + 1);
-  int64_t inputHeight  = THTensor_(size)(input, dim_batch + 2);
-  int64_t inputWidth   = THTensor_(size)(input, dim_batch + 3);
+  int64_t nInputPlane  = THTensor_(sizeLegacyNoScalars)(input, dim_batch + 1);
+  int64_t inputHeight  = THTensor_(sizeLegacyNoScalars)(input, dim_batch + 2);
+  int64_t inputWidth   = THTensor_(sizeLegacyNoScalars)(input, dim_batch + 3);
   int64_t outputHeight = (inputHeight + 2 * padH - (dH * (kH - 1) + 1)) / sH + 1;
   int64_t outputWidth  = (inputWidth + 2 * padW - (dW * (kW - 1) + 1)) / sW + 1;
   int64_t nOutputPlane = nInputPlane * kW * kH;
@@ -60,10 +60,10 @@ void THNN_(Im2Col_updateOutput)(
     THTensor_(resize4d)(input, 1, input->size(0), input->size(1), input->size(2));
   }
 
-  int64_t batchSize    = THTensor_(size)(input, 0);
-  int64_t nInputPlane  = THTensor_(size)(input, 1);
-  int64_t inputHeight  = THTensor_(size)(input, 2);
-  int64_t inputWidth   = THTensor_(size)(input, 3);
+  int64_t batchSize    = THTensor_(sizeLegacyNoScalars)(input, 0);
+  int64_t nInputPlane  = THTensor_(sizeLegacyNoScalars)(input, 1);
+  int64_t inputHeight  = THTensor_(sizeLegacyNoScalars)(input, 2);
+  int64_t inputWidth   = THTensor_(sizeLegacyNoScalars)(input, 3);
 
   int64_t outputHeight = (inputHeight + 2 * padH - (dH * (kH - 1) + 1)) / sH + 1;
   int64_t outputWidth  = (inputWidth + 2 * padW - (dW * (kW - 1) + 1)) / sW + 1;

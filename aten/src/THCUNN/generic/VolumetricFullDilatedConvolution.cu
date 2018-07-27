@@ -54,7 +54,7 @@ static inline void THNN_(VolumetricFullDilatedConvolution_shapeCheck)(
   }
 
   if (weight != NULL) {
-    const int64_t nInputPlane = THCTensor_(size)(state, weight, 0);
+    const int64_t nInputPlane = THCTensor_(sizeLegacyNoScalars)(state, weight, 0);
     THCUNN_check_dim_size(state, input, ndim, dimf, nInputPlane);
   }
 
@@ -73,10 +73,10 @@ static inline void THNN_(VolumetricFullDilatedConvolution_shapeCheck)(
 
   if (gradOutput != NULL) {
     if (weight != NULL) {
-      const int64_t nOutputPlane = THCTensor_(size)(state, weight, 1);
+      const int64_t nOutputPlane = THCTensor_(sizeLegacyNoScalars)(state, weight, 1);
       THCUNN_check_dim_size(state, gradOutput, ndim, dimf, nOutputPlane);
     } else if (bias != NULL) {
-      const int64_t nOutputPlane = THCTensor_(size)(state, bias, 0);
+      const int64_t nOutputPlane = THCTensor_(sizeLegacyNoScalars)(state, bias, 0);
       THCUNN_check_dim_size(state, gradOutput, ndim, dimf, nOutputPlane);
     }
     THCUNN_check_dim_size(state, gradOutput, ndim, dimd, outputDepth);
@@ -103,8 +103,8 @@ void THNN_(VolumetricFullDilatedConvolution_updateOutput)(
   THCTensor  *columns = finput;
   THCTensor  *ones    = fgradInput;
 
-  int nInputPlane = THCTensor_(size)(state, weight, 0);
-  int nOutputPlane = THCTensor_(size)(state, weight, 1);
+  int nInputPlane = THCTensor_(sizeLegacyNoScalars)(state, weight, 0);
+  int nOutputPlane = THCTensor_(sizeLegacyNoScalars)(state, weight, 1);
 
   THCUNN_assertSameGPU(state, 6, input, output, weight,
                bias, columns, ones);
@@ -254,8 +254,8 @@ void THNN_(VolumetricFullDilatedConvolution_updateGradInput)(
 {
   THCTensor  *gradColumns = finput;
 
-  int nInputPlane = THCTensor_(size)(state, weight, 0);
-  int nOutputPlane = THCTensor_(size)(state, weight, 1);
+  int nInputPlane = THCTensor_(sizeLegacyNoScalars)(state, weight, 0);
+  int nOutputPlane = THCTensor_(sizeLegacyNoScalars)(state, weight, 1);
 
   THCUNN_assertSameGPU(state, 5, input, gradOutput, weight,
                gradColumns, gradInput);
@@ -385,9 +385,9 @@ void THNN_(VolumetricFullDilatedConvolution_accGradParameters)(
 
   int nOutputPlane;
   if (gradWeight) {
-    nOutputPlane = THCTensor_(size)(state, gradWeight, 1);
+    nOutputPlane = THCTensor_(sizeLegacyNoScalars)(state, gradWeight, 1);
   } else if (gradBias) {
-    nOutputPlane = THCTensor_(size)(state, gradBias, 0);
+    nOutputPlane = THCTensor_(sizeLegacyNoScalars)(state, gradBias, 0);
   } else {
     return;
   }

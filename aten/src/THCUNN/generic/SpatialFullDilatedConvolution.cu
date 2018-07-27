@@ -88,8 +88,8 @@ void THNN_(SpatialFullDilatedConvolution_updateOutput)(
            int adjW, int adjH)
 {
 
-  int nInputPlane = THCTensor_(size)(state, weight, 0);
-  int nOutputPlane = THCTensor_(size)(state, weight, 1);
+  int nInputPlane = THCTensor_(sizeLegacyNoScalars)(state, weight, 0);
+  int nOutputPlane = THCTensor_(sizeLegacyNoScalars)(state, weight, 1);
 
   THCUNN_assertSameGPU(state, 6, input, output, weight,
                        bias, columns, ones);
@@ -228,8 +228,8 @@ void THNN_(SpatialFullDilatedConvolution_updateGradInput)(
            int dilationW, int dilationH,
            int adjW, int adjH)
 {
-  int nInputPlane = THCTensor_(size)(state, weight, 0);
-  int nOutputPlane = THCTensor_(size)(state, weight, 1);
+  int nInputPlane = THCTensor_(sizeLegacyNoScalars)(state, weight, 0);
+  int nOutputPlane = THCTensor_(sizeLegacyNoScalars)(state, weight, 1);
 
   THCUNN_assertSameGPU(state, 5, input, gradOutput, weight,
                        gradColumns, gradInput);
@@ -349,9 +349,9 @@ void THNN_(SpatialFullDilatedConvolution_accGradParameters)(
 
   int nOutputPlane;
   if (gradWeight != NULL) {
-    nOutputPlane = THCTensor_(size)(state, gradWeight, 1);
+    nOutputPlane = THCTensor_(sizeLegacyNoScalars)(state, gradWeight, 1);
   } else if (gradBias != NULL) {
-    nOutputPlane = THCTensor_(size)(state, gradBias, 0);
+    nOutputPlane = THCTensor_(sizeLegacyNoScalars)(state, gradBias, 0);
   } else {
     return;
   }

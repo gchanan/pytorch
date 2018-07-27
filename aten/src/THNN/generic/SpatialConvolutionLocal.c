@@ -124,8 +124,8 @@ void THNN_(SpatialConvolutionLocal_updateOutput)(
 
   input = THTensor_(newContiguous)(input);
 
-  int64_t nInputPlane = THTensor_(size)(weight, 2)/ (kW * kH);
-  int64_t nOutputPlane = THTensor_(size)(weight, 1);
+  int64_t nInputPlane = THTensor_(sizeLegacyNoScalars)(weight, 2)/ (kW * kH);
+  int64_t nOutputPlane = THTensor_(sizeLegacyNoScalars)(weight, 1);
 
   if(input->dim() == 3)
   {
@@ -224,8 +224,8 @@ void THNN_(SpatialConvolutionLocal_updateGradInput)(
 
   input = THTensor_(newContiguous)(input);
   gradOutput = THTensor_(newContiguous)(gradOutput);
-  int64_t nInputPlane = THTensor_(size)(weight,2)/(kW*kH);
-  int64_t nOutputPlane = THTensor_(size)(weight,1);
+  int64_t nInputPlane = THTensor_(sizeLegacyNoScalars)(weight,2)/(kW*kH);
+  int64_t nOutputPlane = THTensor_(sizeLegacyNoScalars)(weight,1);
 
   THTensor_(resizeAs)(gradInput, input);
   THTensor_(resizeAs)(fgradInput, finput);
@@ -326,8 +326,8 @@ void THNN_(SpatialConvolutionLocal_accGradParameters)(
   input = THTensor_(newContiguous)(input);
   gradOutput = THTensor_(newContiguous)(gradOutput);
 
-  int64_t nInputPlane = THTensor_(size)(gradWeight,2)/(kW*kH);
-  int64_t nOutputPlane = THTensor_(size)(gradWeight,1);
+  int64_t nInputPlane = THTensor_(sizeLegacyNoScalars)(gradWeight,2)/(kW*kH);
+  int64_t nOutputPlane = THTensor_(sizeLegacyNoScalars)(gradWeight,1);
 
   if(input->dim() == 3)
   {
