@@ -69,7 +69,7 @@ void THNN_(LookupTable_accGradParameters)(
 
   real *gw = THTensor_(data)(gradWeight);
   real *go = THTensor_(data)(gradOutput);
-  int64_t stride = THTensor_(stride)(gradWeight, 0);
+  int64_t stride = THTensor_(strideLegacyNoScalars)(gradWeight, 0);
 
   if (count_data)
     THNN_(LookupTable_resetCount)(count_data, input);
@@ -183,7 +183,7 @@ void THNN_(LookupTable_renorm)(
   ptrdiff_t numel = THIndexTensor_(nElement)(idx);
 
   int64_t numw = THTensor_(size)(weight, 0);
-  int64_t stride = THTensor_(stride)(weight, 0);
+  int64_t stride = THTensor_(strideLegacyNoScalars)(weight, 0);
   real *gw = THTensor_(data)(weight);
   for (i=0; i<numel; i++) {
     if (row_idx[i] < TH_INDEX_BASE || row_idx[i] >= numw + TH_INDEX_BASE) {

@@ -18,8 +18,8 @@ int THTensor_(copyTransposeValid)(THTensor *tensor, THTensor *src) {
   return THTensor_(isContiguous)(tensor) &&
          !src->is_empty() &&
          THTensor_(nDimensionLegacyNoScalars)(src) == 2 &&
-         THTensor_(stride)(src, 0) == 1 &&
-         THTensor_(stride)(src, 1) == THTensor_(size)(src, 0) &&
+         THTensor_(strideLegacyNoScalars)(src, 0) == 1 &&
+         THTensor_(strideLegacyNoScalars)(src, 1) == THTensor_(size)(src, 0) &&
          THTensor_(nElement)(tensor) >= MIN_SZ;
 }
 

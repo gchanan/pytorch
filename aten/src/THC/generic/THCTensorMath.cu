@@ -177,7 +177,7 @@ void THCTensor_(catArray)(THCState *state, THCTensor *result,
     // Next, let's initialize the size, stride arrays for the output Tensor.
     for (i = 0; i < nDims; ++i) {
       param.outputSize[i] = THCTensor_(size)(state, result, i);
-      param.outputStride[i] = THCTensor_(stride)(state, result, i);
+      param.outputStride[i] = THCTensor_(strideLegacyNoScalars)(state, result, i);
     }
 
     THCStream* stream = THCState_getStream(state);
@@ -335,14 +335,14 @@ void THCTensor_(diag)(THCState *state, THCTensor *self_, THCTensor *src_, int64_
 #endif
   THArgCheck((nDimension == 2) || (nDimension == 1), 1, "expected a matrix or a vector");
   if (nDimension == 2) {
-    int64_t stride0 = THCTensor_(stride)(state, src_, 0);
-    int64_t stride1 = THCTensor_(stride)(state, src_, 1);
+    int64_t stride0 = THCTensor_(strideLegacyNoScalars)(state, src_, 0);
+    int64_t stride1 = THCTensor_(strideLegacyNoScalars)(state, src_, 1);
     int64_t size0 = THCTensor_(size)(state, src_, 0);
     int64_t size1 = THCTensor_(size)(state, src_, 1);
     int64_t size = (k > 0) ? min((int64_t)size0, (int64_t)size1 - k) : min((int64_t)size0 + k, (int64_t)size1);
     THCTensor_(resize1d)(state, self_, size);
     if (size > 0) {
-      int64_t strideSelf = THCTensor_(stride)(state, self_, 0);
+      int64_t strideSelf = THCTensor_(strideLegacyNoScalars)(state, self_, 0);
       const dim3 threads(min((int64_t)THCState_getCurrentDeviceProperties(state)->maxThreadsPerBlock, (int64_t)size));
       dim3 grid(min((int64_t)1024, (int64_t)THCCeilDiv(size, (int64_t)threads.x)));
       int64_t start = (k >= 0 ? k * stride1 : -k * stride0);
@@ -352,12 +352,12 @@ void THCTensor_(diag)(THCState *state, THCTensor *self_, THCTensor *src_, int64_
   } else {
     ptrdiff_t totalElements = THCTensor_(nElement)(state, src_);
     ptrdiff_t size = (k > 0) ? totalElements + k : totalElements - k;
-    int64_t strideSrc = THCTensor_(stride)(state, src_, 0);
+    int64_t strideSrc = THCTensor_(strideLegacyNoScalars)(state, src_, 0);
     THCTensor_(resize2d)(state, self_, size, size);
     THCTensor_(zero)(state, self_);
     if (size > 0) {
-      int64_t stride0 = THCTensor_(stride)(state, self_, 0);
-      int64_t stride1 = THCTensor_(stride)(state, self_, 1);
+      int64_t stride0 = THCTensor_(strideLegacyNoScalars)(state, self_, 0);
+      int64_t stride1 = THCTensor_(strideLegacyNoScalars)(state, self_, 1);
       const dim3 threads(min((int64_t)THCState_getCurrentDeviceProperties(state)->maxThreadsPerBlock, (int64_t)size));
       dim3 grid(min((int64_t)1024, (int64_t)THCCeilDiv(size, (ptrdiff_t)threads.x)));
       ptrdiff_t start = (k >= 0 ? k * stride1 : -k * stride0);
@@ -380,8 +380,8 @@ void THCTensor_(eye)(THCState *state, THCTensor *self_, int64_t n, int64_t m)
   THCTensor_(zero)(state, self_);
 
   int64_t sz = THMin(n, m);
-  int64_t stride = THCTensor_(stride)(state, self_, 0) +
-                   THCTensor_(stride)(state, self_, 1);
+  int64_t stride = THCTensor_(strideLegacyNoScalars)(state, self_, 0) +
+                   THCTensor_(strideLegacyNoScalars)(state, self_, 1);
 
   THCTensor *diag = THCTensor_(newWithStorage1d)(state, THTensor_getStoragePtr(self_),
       self_->storage_offset(),  sz, stride);

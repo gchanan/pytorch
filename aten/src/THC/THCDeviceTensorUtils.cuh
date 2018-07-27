@@ -59,7 +59,7 @@ toDeviceTensor(THCState* state, THCTensor* t) {
 
   for (int i = 0; i < Dim; ++i) {
     int64_t size = THCTensor_size(state, t, i);
-    int64_t stride = THCTensor_stride(state, t, i);
+    int64_t stride = THCTensor_strideLegacyNoScalars(state, t, i);
 
     maxOffset += (size - 1) * stride;
 

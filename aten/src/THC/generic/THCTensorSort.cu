@@ -162,7 +162,7 @@ void THCTensor_(sortViaThrust)(THCState* state,
 
   ptrdiff_t totalElements = THCTensor_(nElement)(state, input);
   int64_t sliceSize = THCTensor_(size)(state, input, dim);
-  int64_t sliceStride = THCTensor_(stride)(state, input, dim);
+  int64_t sliceStride = THCTensor_(strideLegacyNoScalars)(state, input, dim);
 
   // We perform a vectorized segmented sort in Thrust.
   // Say we are sorting a (2, 3) tensor. We have in flattened form:

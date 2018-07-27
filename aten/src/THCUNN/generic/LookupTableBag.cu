@@ -95,7 +95,7 @@ void THNN_(LookupTableBag_accGradParameters)(
   }
 
   ptrdiff_t numel = THCIndexTensor_(nElement)(state, input);
-  int64_t stride = THCTensor_(stride)(state, gradWeight, 0);
+  int64_t stride = THCTensor_(strideLegacyNoScalars)(state, gradWeight, 0);
 
   cudaStream_t stream = THCState_getCurrentStream(state);
 

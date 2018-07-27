@@ -17,7 +17,7 @@ THC_API void THCTensor_(calculateMode)(THCState *state,
   // calculations to get an offset
   real *data = THCTensor_(data)(state, input);
   for (int i = 0; i < THLongStorage_size(position); ++i) {
-    data += THLongStorage_data(position)[i] * THCTensor_(stride)(state, input, i);
+    data += THLongStorage_data(position)[i] * THCTensor_(strideLegacyNoScalars)(state, input, i);
   }
 
   int64_t nElement = THCTensor_(size)(state, input, THCTensor_(nDimensionLegacyAll)(state, input) - 1);
@@ -121,8 +121,8 @@ THC_API void THCTensor_(calculateMode)(THCState *state,
 
   for (int i = 0; i < THLongStorage_size(position); ++i) {
     int64_t pos = THLongStorage_data(position)[i];
-    valuesOffset += THCTensor_(stride)(state, values, i) * pos;
-    indicesOffset += THCudaLongTensor_stride(state, indices, i) * pos;
+    valuesOffset += THCTensor_(strideLegacyNoScalars)(state, values, i) * pos;
+    indicesOffset += THCudaLongTensor_strideLegacyNoScalars(state, indices, i) * pos;
   }
   THCStorage_(set)(state, THCTensor_(storage)(state, values), valuesOffset, mode);
   THCudaLongStorage_set(state, THCudaLongTensor_storage(state, indices), indicesOffset, index);

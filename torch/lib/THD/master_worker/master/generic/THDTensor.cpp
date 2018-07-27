@@ -47,7 +47,7 @@ int64_t THDTensor_(size)(const THDTensor *self, int dim) {
   return self->size[dim];
 }
 
-int64_t THDTensor_(stride)(const THDTensor *self, int dim) {
+int64_t THDTensor_(strideLegacyNoScalars)(const THDTensor *self, int dim) {
   THArgCheck((dim >= 0) && (dim < self->nDimension), 2, "dimension %d out of range of %dD tensor", dim+1,
       THDTensor_(nDimensionLegacyNoScalars)(self));
   return self->stride[dim];

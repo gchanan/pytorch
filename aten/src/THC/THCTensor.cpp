@@ -22,7 +22,7 @@ int64_t THCTensor_size(THCState *state, const THCTensor *self, int dim) {
   return self->size(dim);
 }
 
-int64_t THCTensor_stride(THCState *state, const THCTensor *self, int dim) {
+int64_t THCTensor_strideLegacyNoScalars(THCState *state, const THCTensor *self, int dim) {
   THArgCheck((dim >= 0) && (dim < self->dim()), 2, "out of range");
   return self->stride(dim);
 }
@@ -330,7 +330,7 @@ bool THCTensor_canUse32BitIndexMath(THCState* state, const THCTensor* t, ptrdiff
     ptrdiff_t curDimIndex =
       linearId % THCTensor_size(state, t, i);
     ptrdiff_t curDimOffset = curDimIndex *
-      THCTensor_stride(state, t, i);
+      THCTensor_strideLegacyNoScalars(state, t, i);
     offset += curDimOffset;
     linearId /= THCTensor_size(state, t, i);
   }
@@ -410,7 +410,7 @@ bool THCTensor_maybeOverlappingIndices(THCState* state, const THCTensor* t) {
     if (size > 1) {
       info[nonSize1Dims].size = size;
       info[nonSize1Dims].stride =
-        THCTensor_stride(state, t, i);
+        THCTensor_strideLegacyNoScalars(state, t, i);
 
       if (info[nonSize1Dims].stride < 1) {
         return true;

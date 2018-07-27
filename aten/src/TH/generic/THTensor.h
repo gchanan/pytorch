@@ -28,7 +28,7 @@ TH_API ptrdiff_t THTensor_(storageOffset)(const THTensor *self);
 TH_API int THTensor_(nDimensionLegacyNoScalars)(const THTensor *self);
 TH_API int THTensor_(nDimensionLegacyAll)(const THTensor *self);
 TH_API int64_t THTensor_(size)(const THTensor *self, int dim);
-TH_API int64_t THTensor_(stride)(const THTensor *self, int dim);
+TH_API int64_t THTensor_(strideLegacyNoScalars)(const THTensor *self, int dim);
 TH_API THLongStorage *THTensor_(newSizeOf)(THTensor *self);
 TH_API THLongStorage *THTensor_(newStrideOf)(THTensor *self);
 TH_API real *THTensor_(data)(const THTensor *self);

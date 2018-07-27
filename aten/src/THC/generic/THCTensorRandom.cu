@@ -203,8 +203,8 @@ THC_API void THCTensor_(multinomial)(struct THCState *state,
       numCategories,
       THCTensor_(data)(state, sampled),
       THCTensor_(data)(state, prob_dist),
-      THCTensor_(stride)(state, prob_dist, 0),
-      THCTensor_(stride)(state, prob_dist, 1)
+      THCTensor_(strideLegacyNoScalars)(state, prob_dist, 0),
+      THCTensor_(strideLegacyNoScalars)(state, prob_dist, 1)
       );
     THCTensor_(free)(state, sampled);
   } else {

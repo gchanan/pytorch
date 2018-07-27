@@ -56,6 +56,14 @@ struct THTensor
       return sizes_.size();
     }
 
+    inline int64_t dimOK() const {
+      return sizes_.size();
+    }
+
+    inline int64_t _dim() const {
+      return sizes_.size();
+    }
+
     ptrdiff_t storage_offset() const {
       return storage_offset_;
     }
@@ -175,6 +183,12 @@ inline int THTensor_nDimensionLegacyAll(const THTensor* tensor) {
   } else {
     return tensor->dim();  
   }
+}
+
+inline int64_t THTensor_strideLegacyNoScalars(const THTensor *self, int dim) {
+  THArgCheck((dim >= 0) && (dim < THTensor_nDimensionLegacyNoScalars(self)), 2, "dimension %d out of range of %dD tensor",
+      dim+TH_INDEX_BASE, THTensor_nDimensionLegacyNoScalars(self));
+  return self->stride(dim);
 }
 
 TH_API void THTensor_free(THTensor *self);

@@ -52,33 +52,33 @@ THNN_(FeatureLPPooling_upcastCPU)(THTensor* t, bool batchMode) {
     THAssert(!batchMode);
     // [feature dim]
     s.size[1] = THTensor_(size)(t, 0);
-    s.stride[1] = THTensor_(stride)(t, 0);
+    s.stride[1] = THTensor_(strideLegacyNoScalars)(t, 0);
   } else if (dim == 2) {
     if (batchMode) {
       // [batch dim][feature dim]
       for (int i = 0; i < 2; ++i) {
         s.size[i] = THTensor_(size)(t, i);
-        s.stride[i] = THTensor_(stride)(t, i);
+        s.stride[i] = THTensor_(strideLegacyNoScalars)(t, i);
       }
     } else {
       // [feature dim][opt dim 1]
       s.size[1] = THTensor_(size)(t, 0);
-      s.stride[1] = THTensor_(stride)(t, 0);
+      s.stride[1] = THTensor_(strideLegacyNoScalars)(t, 0);
       s.size[2] = THTensor_(size)(t, 1);
-      s.stride[2] = THTensor_(stride)(t, 1);
+      s.stride[2] = THTensor_(strideLegacyNoScalars)(t, 1);
     }
   } else if (dim == 3) {
     if (batchMode) {
       // [batch dim][feature dim][opt dim 1]
       for (int i = 0; i < 3; ++i) {
         s.size[i] = THTensor_(size)(t, i);
-        s.stride[i] = THTensor_(stride)(t, i);
+        s.stride[i] = THTensor_(strideLegacyNoScalars)(t, i);
       }
     } else {
       // [feature dim][opt dim 1][opt dim 2]
       for (int i = 1; i < 4; ++i) {
         s.size[i] = THTensor_(size)(t, i - 1);
-        s.stride[i] = THTensor_(stride)(t, i - 1);
+        s.stride[i] = THTensor_(strideLegacyNoScalars)(t, i - 1);
       }
     }
   } else if (dim == 4) {
@@ -86,7 +86,7 @@ THNN_(FeatureLPPooling_upcastCPU)(THTensor* t, bool batchMode) {
     THAssert(batchMode);
     for (int i = 0; i < 4; ++i) {
       s.size[i] = THTensor_(size)(t, i);
-      s.stride[i] = THTensor_(stride)(t, i);
+      s.stride[i] = THTensor_(strideLegacyNoScalars)(t, i);
     }
   }
 

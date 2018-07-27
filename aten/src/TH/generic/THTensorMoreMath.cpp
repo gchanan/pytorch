@@ -460,8 +460,8 @@ accreal THTensor_(trace)(THTensor *t)
 
   THArgCheck(THTensor_(nDimensionLegacyAll)(t) == 2, 1, "expected a matrix");
 
-  t_stride_0 = THTensor_(stride)(t, 0);
-  t_stride_1 = THTensor_(stride)(t, 1);
+  t_stride_0 = THTensor_(strideLegacyNoScalars)(t, 0);
+  t_stride_1 = THTensor_(strideLegacyNoScalars)(t, 1);
   t_diag_size = THMin(THTensor_(size)(t, 0), THTensor_(size)(t, 1));
   while(i < t_diag_size)
   {
@@ -565,7 +565,7 @@ void THTensor_(diag)(THTensor *r_, THTensor *t, int k)
   if(THTensor_(nDimensionLegacyNoScalars)(t) == 1)
   {
     real *t_data = THTensor_(data)(t);
-    int64_t t_stride_0 = THTensor_(stride)(t, 0);
+    int64_t t_stride_0 = THTensor_(strideLegacyNoScalars)(t, 0);
     int64_t t_size = THTensor_(size)(t, 0);
     int64_t sz = t_size + (k >= 0 ? k : -k);
     real *r__data;
@@ -576,8 +576,8 @@ void THTensor_(diag)(THTensor *r_, THTensor *t, int k)
     THTensor_(resize2d)(r_, sz, sz);
     THTensor_(zero)(r_);
     r__data = THTensor_(data)(r_);
-    r__stride_0 = THTensor_(stride)(r_, 0);
-    r__stride_1 = THTensor_(stride)(r_, 1);
+    r__stride_0 = THTensor_(strideLegacyNoScalars)(r_, 0);
+    r__stride_1 = THTensor_(strideLegacyNoScalars)(r_, 1);
     r__data += (k >= 0 ? k*r__stride_1 : -k*r__stride_0);
 
     for(i = 0; i < t_size; i++)
@@ -586,8 +586,8 @@ void THTensor_(diag)(THTensor *r_, THTensor *t, int k)
   else
   {
     real *t_data = THTensor_(data)(t);
-    int64_t t_stride_0 = THTensor_(stride)(t, 0);
-    int64_t t_stride_1 = THTensor_(stride)(t, 1);
+    int64_t t_stride_0 = THTensor_(strideLegacyNoScalars)(t, 0);
+    int64_t t_stride_1 = THTensor_(strideLegacyNoScalars)(t, 1);
     int64_t sz;
     real *r__data;
     int64_t r__stride_0;
@@ -599,7 +599,7 @@ void THTensor_(diag)(THTensor *r_, THTensor *t, int k)
       sz = THMin(THTensor_(size)(t, 0)+k, THTensor_(size)(t, 1));
     THTensor_(resize1d)(r_, sz);
     r__data = THTensor_(data)(r_);
-    r__stride_0 = THTensor_(stride)(r_, 0);
+    r__stride_0 = THTensor_(strideLegacyNoScalars)(r_, 0);
 
     t_data += (k >= 0 ? k*t_stride_1 : -k*t_stride_0);
     for(i = 0; i < sz; i++)
@@ -673,7 +673,7 @@ void THTensor_(randperm)(THTensor *r_, THGenerator *_generator, int64_t n)
 
   THTensor_(resize1d)(r_, n);
   r__data = THTensor_(data)(r_);
-  r__stride_0 = THTensor_(stride)(r_,0);
+  r__stride_0 = THTensor_(strideLegacyNoScalars)(r_,0);
 
   for(i = 0; i < n; i++)
     r__data[i*r__stride_0] = (real)(i);
@@ -1273,10 +1273,10 @@ void THTensor_(tril)(THTensor *r_, THTensor *t, int64_t k)
 
   t_size_0 = THTensor_(size)(t, 0);
   t_size_1 = THTensor_(size)(t, 1);
-  t_stride_0 = THTensor_(stride)(t, 0);
-  t_stride_1 = THTensor_(stride)(t, 1);
-  r__stride_0 = THTensor_(stride)(r_, 0);
-  r__stride_1 = THTensor_(stride)(r_, 1);
+  t_stride_0 = THTensor_(strideLegacyNoScalars)(t, 0);
+  t_stride_1 = THTensor_(strideLegacyNoScalars)(t, 1);
+  r__stride_0 = THTensor_(strideLegacyNoScalars)(r_, 0);
+  r__stride_1 = THTensor_(strideLegacyNoScalars)(r_, 1);
   r__data = THTensor_(data)(r_);
   t_data = THTensor_(data)(t);
 
@@ -1304,10 +1304,10 @@ void THTensor_(triu)(THTensor *r_, THTensor *t, int64_t k)
 
   t_size_0 = THTensor_(size)(t, 0);
   t_size_1 = THTensor_(size)(t, 1);
-  t_stride_0 = THTensor_(stride)(t, 0);
-  t_stride_1 = THTensor_(stride)(t, 1);
-  r__stride_0 = THTensor_(stride)(r_, 0);
-  r__stride_1 = THTensor_(stride)(r_, 1);
+  t_stride_0 = THTensor_(strideLegacyNoScalars)(t, 0);
+  t_stride_1 = THTensor_(strideLegacyNoScalars)(t, 1);
+  r__stride_0 = THTensor_(strideLegacyNoScalars)(r_, 0);
+  r__stride_1 = THTensor_(strideLegacyNoScalars)(r_, 1);
   r__data = THTensor_(data)(r_);
   t_data = THTensor_(data)(t);
 
