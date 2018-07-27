@@ -84,7 +84,7 @@ void THNN_(TemporalRowConvolution_updateOutput)(
   if (ndim == 2) {
     // Force batch
     batch = 0;
-    THCTensor_(resize3d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), input->size(1));
+    THCTensor_(resize3d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1));
   }
 
   // Params:
@@ -104,7 +104,7 @@ void THNN_(TemporalRowConvolution_updateOutput)(
   // Define a buffer of ones, for bias accumulation
   // Note: this buffer can be shared with other modules, it only ever
   // gets increased and always contains ones.
-  if (ones->dim() != 2 || THTensor_sizeLegacyNoScalars(ones, 0) * ones->size(1) < nOutputFrame) {
+  if (ones->dim() != 2 || THTensor_sizeLegacyNoScalars(ones, 0) * THTensor_sizeLegacyNoScalars(ones, 1) < nOutputFrame) {
     // Resize plane and fill with ones...
     THCTensor_(resize2d)(state, ones, 1, nOutputFrame);
     THCTensor_(fill)(state, ones, ScalarConvert<int, real>::to(1));
@@ -218,7 +218,7 @@ void THNN_(TemporalRowConvolution_updateGradInput)(
   if (ndim == 2) {
     // Force batch
     batch = 0;
-    THCTensor_(resize3d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), input->size(1));
+    THCTensor_(resize3d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1));
     THCTensor_(resize3d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0),
                          THTensor_sizeLegacyNoScalars(gradOutput, 1));
   }
@@ -331,7 +331,7 @@ void THNN_(TemporalRowConvolution_accGradParameters)(
   if (ndim == 2) {
     // Force batch
     batch = 0;
-    THCTensor_(resize3d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), input->size(1));
+    THCTensor_(resize3d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1));
     THCTensor_(resize3d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0),
                          THTensor_sizeLegacyNoScalars(gradOutput, 1));
   }
@@ -345,7 +345,7 @@ void THNN_(TemporalRowConvolution_accGradParameters)(
   int64_t batchSize = THTensor_sizeLegacyNoScalars(input, 0);
 
   // Define a buffer of ones, for bias accumulation
-  if (ones->dim() != 2 || THTensor_sizeLegacyNoScalars(ones, 0) * ones->size(1) < nOutputFrame) {
+  if (ones->dim() != 2 || THTensor_sizeLegacyNoScalars(ones, 0) * THTensor_sizeLegacyNoScalars(ones, 1) < nOutputFrame) {
     // Resize plane and fill with ones...
     THCTensor_(resize2d)(state, ones, 1, nOutputFrame);
     THCTensor_(fill)(state, ones, ScalarConvert<int, real>::to(1));

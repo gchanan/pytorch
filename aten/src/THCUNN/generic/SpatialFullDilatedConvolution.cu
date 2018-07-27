@@ -105,7 +105,7 @@ void THNN_(SpatialFullDilatedConvolution_updateOutput)(
   if (input->dim() == 3) {
     // Force batch
     is_batch = 0;
-    THCTensor_(resize4d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), input->size(1), input->size(2));
+    THCTensor_(resize4d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1), THTensor_sizeLegacyNoScalars(input, 2));
   }
 
   int64_t inputWidth   = THTensor_sizeLegacyNoScalars(input, 3);
@@ -125,7 +125,7 @@ void THNN_(SpatialFullDilatedConvolution_updateOutput)(
   // Define a buffer of ones, for bias accumulation
   // Note: this buffer can be shared with other modules, it only ever gets increased,
   // and always contains ones.
-  if (ones->dim() != 2 || THTensor_sizeLegacyNoScalars(ones, 0)*ones->size(1) < outputHeight*outputWidth) {
+  if (ones->dim() != 2 || THTensor_sizeLegacyNoScalars(ones, 0)*THTensor_sizeLegacyNoScalars(ones, 1) < outputHeight*outputWidth) {
     // Resize plane and fill with ones...
     THCTensor_(resize2d)(state, ones, outputHeight, outputWidth);
     THCTensor_(fill)(state, ones, ScalarConvert<int, real>::to(1));
@@ -143,7 +143,7 @@ void THNN_(SpatialFullDilatedConvolution_updateOutput)(
 
     // M,N,K are dims of matrix A and B
     // (see http://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gemm)
-    int64_t m = THTensor_sizeLegacyNoScalars(weight, 1) * weight->size(2) * weight->size(3);
+    int64_t m = THTensor_sizeLegacyNoScalars(weight, 1) * THTensor_sizeLegacyNoScalars(weight, 2) * THTensor_sizeLegacyNoScalars(weight, 3);
     int64_t n = THTensor_sizeLegacyNoScalars(columns, 1);
     int64_t k = THTensor_sizeLegacyNoScalars(weight, 0);
 
@@ -244,8 +244,8 @@ void THNN_(SpatialFullDilatedConvolution_updateGradInput)(
   if (input->dim() == 3) {
     // Force batch
     is_batch = 0;
-    THCTensor_(resize4d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), input->size(1), input->size(2));
-    THCTensor_(resize4d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), gradOutput->size(1), gradOutput->size(2));
+    THCTensor_(resize4d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1), THTensor_sizeLegacyNoScalars(input, 2));
+    THCTensor_(resize4d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), THTensor_sizeLegacyNoScalars(gradOutput, 1), THTensor_sizeLegacyNoScalars(gradOutput, 2));
   }
 
   int64_t inputWidth   = THTensor_sizeLegacyNoScalars(input, 3);
@@ -287,7 +287,7 @@ void THNN_(SpatialFullDilatedConvolution_updateGradInput)(
     // (see http://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gemm)
     int64_t m = THTensor_sizeLegacyNoScalars(weight, 0);
     int64_t n = THTensor_sizeLegacyNoScalars(gradColumns, 1);
-    int64_t k = THTensor_sizeLegacyNoScalars(weight, 1) * weight->size(2) * weight->size(3);
+    int64_t k = THTensor_sizeLegacyNoScalars(weight, 1) * THTensor_sizeLegacyNoScalars(weight, 2) * THTensor_sizeLegacyNoScalars(weight, 3);
 
     // Do GEMM (note: this is a bit confusing because gemm assumes column-major matrices)
     #ifdef THC_REAL_IS_FLOAT
@@ -371,8 +371,8 @@ void THNN_(SpatialFullDilatedConvolution_accGradParameters)(
   if (input->dim() == 3) {
     // Force batch
     is_batch = 0;
-    THCTensor_(resize4d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), input->size(1), input->size(2));
-    THCTensor_(resize4d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), gradOutput->size(1), gradOutput->size(2));
+    THCTensor_(resize4d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1), THTensor_sizeLegacyNoScalars(input, 2));
+    THCTensor_(resize4d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), THTensor_sizeLegacyNoScalars(gradOutput, 1), THTensor_sizeLegacyNoScalars(gradOutput, 2));
   }
 
   int64_t inputWidth   = THTensor_sizeLegacyNoScalars(input, 3);
@@ -384,7 +384,7 @@ void THNN_(SpatialFullDilatedConvolution_accGradParameters)(
   int64_t batchSize = THTensor_sizeLegacyNoScalars(input, 0);
 
   // Define a buffer of ones, for bias accumulation
-  if (ones->dim() != 2 || THTensor_sizeLegacyNoScalars(ones, 0)*ones->size(1) < outputHeight*outputWidth) {
+  if (ones->dim() != 2 || THTensor_sizeLegacyNoScalars(ones, 0)*THTensor_sizeLegacyNoScalars(ones, 1) < outputHeight*outputWidth) {
     // Resize plane and fill with ones...
     THCTensor_(resize2d)(state, ones, outputHeight, outputWidth);
     THCTensor_(fill)(state, ones, ScalarConvert<int, real>::to(1));

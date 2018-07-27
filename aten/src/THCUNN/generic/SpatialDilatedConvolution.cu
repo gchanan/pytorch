@@ -105,7 +105,7 @@ void THNN_(SpatialDilatedConvolution_updateOutput)(
   if (input->dim() == 3) {
     // Force batch
     is_batch = 0;
-    THCTensor_(resize4d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), input->size(1), input->size(2));
+    THCTensor_(resize4d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1), THTensor_sizeLegacyNoScalars(input, 2));
   }
 
   int64_t inputWidth   = THTensor_sizeLegacyNoScalars(input, 3);
@@ -125,7 +125,7 @@ void THNN_(SpatialDilatedConvolution_updateOutput)(
   // Define a buffer of ones, for bias accumulation
   // Note: this buffer can be shared with other modules, it only ever gets increased,
   // and always contains ones.
-  if (ones->dim() != 2 || THTensor_sizeLegacyNoScalars(ones, 0)*ones->size(1) < outputHeight*outputWidth) {
+  if (ones->dim() != 2 || THTensor_sizeLegacyNoScalars(ones, 0)*THTensor_sizeLegacyNoScalars(ones, 1) < outputHeight*outputWidth) {
     // Resize plane and fill with ones...
     THCTensor_(resize2d)(state, ones, outputHeight, outputWidth);
     THCTensor_(fill)(state, ones, ScalarConvert<int, real>::to(1));
@@ -251,8 +251,8 @@ void THNN_(SpatialDilatedConvolution_updateGradInput)(
   if (input->dim() == 3) {
     // Force batch
     is_batch = 0;
-    THCTensor_(resize4d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), input->size(1), input->size(2));
-    THCTensor_(resize4d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), gradOutput->size(1), gradOutput->size(2));
+    THCTensor_(resize4d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1), THTensor_sizeLegacyNoScalars(input, 2));
+    THCTensor_(resize4d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), THTensor_sizeLegacyNoScalars(gradOutput, 1), THTensor_sizeLegacyNoScalars(gradOutput, 2));
   }
 
   int64_t inputWidth   = THTensor_sizeLegacyNoScalars(input, 3);
@@ -367,8 +367,8 @@ void THNN_(SpatialDilatedConvolution_accGradParameters)(
   if (input->dim() == 3) {
     // Force batch
     is_batch = 0;
-    THCTensor_(resize4d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), input->size(1), input->size(2));
-    THCTensor_(resize4d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), gradOutput->size(1), gradOutput->size(2));
+    THCTensor_(resize4d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1), THTensor_sizeLegacyNoScalars(input, 2));
+    THCTensor_(resize4d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), THTensor_sizeLegacyNoScalars(gradOutput, 1), THTensor_sizeLegacyNoScalars(gradOutput, 2));
   }
 
   int64_t nInputPlane = THTensor_sizeLegacyNoScalars(input, 1);
@@ -382,7 +382,7 @@ void THNN_(SpatialDilatedConvolution_accGradParameters)(
   int64_t batchSize = THTensor_sizeLegacyNoScalars(input, 0);
 
   // Define a buffer of ones, for bias accumulation
-  if (ones->dim() != 2 || THTensor_sizeLegacyNoScalars(ones, 0)*ones->size(1) < outputHeight*outputWidth) {
+  if (ones->dim() != 2 || THTensor_sizeLegacyNoScalars(ones, 0)*THTensor_sizeLegacyNoScalars(ones, 1) < outputHeight*outputWidth) {
     // Resize plane and fill with ones...
     THCTensor_(resize2d)(state, ones, outputHeight, outputWidth);
     THCTensor_(fill)(state, ones, ScalarConvert<int, real>::to(1));

@@ -116,7 +116,7 @@ void THNN_(VolumetricDilatedConvolution_updateOutput)(
   if (input->dim() == 4) {
     // Force batch
     is_batch = 0;
-    THCTensor_(resize5d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), input->size(1), input->size(2), input->size(3));
+    THCTensor_(resize5d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1), THTensor_sizeLegacyNoScalars(input, 2), THTensor_sizeLegacyNoScalars(input, 3));
   }
 
   int64_t inputDepth  = THTensor_sizeLegacyNoScalars(input, 2);
@@ -138,7 +138,7 @@ void THNN_(VolumetricDilatedConvolution_updateOutput)(
   // Define a buffer of ones, for bias accumulation
   // Note: this buffer can be shared with other modules, it only ever gets increased,
   // and always contains ones.
-  if (ones->dim() != 2 || THTensor_sizeLegacyNoScalars(ones, 0)*ones->size(1)*ones->size(2) < outputDepth*outputHeight*outputWidth) {
+  if (ones->dim() != 2 || THTensor_sizeLegacyNoScalars(ones, 0)*THTensor_sizeLegacyNoScalars(ones, 1)*THTensor_sizeLegacyNoScalars(ones, 2) < outputDepth*outputHeight*outputWidth) {
     // Resize plane and fill with ones...
     THCTensor_(resize3d)(state, ones, outputDepth, outputHeight, outputWidth);
     THCTensor_(fill)(state, ones, ScalarConvert<int, real>::to(1));
@@ -265,8 +265,8 @@ void THNN_(VolumetricDilatedConvolution_updateGradInput)(
   if (input->dim() == 4) {
     // Force batch
     is_batch = 0;
-    THCTensor_(resize5d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), input->size(1), input->size(2), input->size(3));
-    THCTensor_(resize5d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), gradOutput->size(1), gradOutput->size(2), gradOutput->size(3));
+    THCTensor_(resize5d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1), THTensor_sizeLegacyNoScalars(input, 2), THTensor_sizeLegacyNoScalars(input, 3));
+    THCTensor_(resize5d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), THTensor_sizeLegacyNoScalars(gradOutput, 1), THTensor_sizeLegacyNoScalars(gradOutput, 2), THTensor_sizeLegacyNoScalars(gradOutput, 3));
   }
 
   int64_t inputDepth  = THTensor_sizeLegacyNoScalars(input, 2);
@@ -375,8 +375,8 @@ void THNN_(VolumetricDilatedConvolution_accGradParameters)(
   if (input->dim() == 4) {
     // Force batch
     is_batch = 0;
-    THCTensor_(resize5d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), input->size(1), input->size(2), input->size(3));
-    THCTensor_(resize5d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), gradOutput->size(1), gradOutput->size(2), gradOutput->size(3));
+    THCTensor_(resize5d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1), THTensor_sizeLegacyNoScalars(input, 2), THTensor_sizeLegacyNoScalars(input, 3));
+    THCTensor_(resize5d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), THTensor_sizeLegacyNoScalars(gradOutput, 1), THTensor_sizeLegacyNoScalars(gradOutput, 2), THTensor_sizeLegacyNoScalars(gradOutput, 3));
   }
 
   int64_t nInputPlane = THTensor_sizeLegacyNoScalars(input, 1);
@@ -392,7 +392,7 @@ void THNN_(VolumetricDilatedConvolution_accGradParameters)(
   int64_t batchSize = THTensor_sizeLegacyNoScalars(input, 0);
 
   // Define a buffer of ones, for bias accumulation
-  if (ones->dim() != 3 || THTensor_sizeLegacyNoScalars(ones, 0)*ones->size(1)*ones->size(2) < outputDepth*outputHeight*outputWidth) {
+  if (ones->dim() != 3 || THTensor_sizeLegacyNoScalars(ones, 0)*THTensor_sizeLegacyNoScalars(ones, 1)*THTensor_sizeLegacyNoScalars(ones, 2) < outputDepth*outputHeight*outputWidth) {
     // Resize plane and fill with ones...
     THCTensor_(resize3d)(state, ones, outputDepth, outputHeight, outputWidth);
     THCTensor_(fill)(state, ones, ScalarConvert<int, real>::to(1));

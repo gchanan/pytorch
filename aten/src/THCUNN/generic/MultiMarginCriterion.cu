@@ -109,7 +109,7 @@ void THNN_(MultiMarginCriterion_updateOutput)(
           THCTensor_(data)(state, input),
           THCIndexTensor_(data)(state, target),
           weights ? THCTensor_(data)(state, weights) : NULL,
-          THTensor_sizeLegacyNoScalars(input, 0), input->size(1),
+          THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1),
           reduction == Reduction::ElementwiseMean,
           margin
         );

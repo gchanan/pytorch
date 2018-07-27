@@ -103,12 +103,12 @@ void THNN_(SpatialConvolutionMM_updateOutput)(
   int freeWeight = 0;
 
   // Params:
-  int nInputPlane = weight->dim() == 2 ? THTensor_sizeLegacyNoScalars(weight, 1)/(kH*kW) : weight->size(1);
+  int nInputPlane = weight->dim() == 2 ? THTensor_sizeLegacyNoScalars(weight, 1)/(kH*kW) : THTensor_sizeLegacyNoScalars(weight, 1);
   int nOutputPlane = THTensor_sizeLegacyNoScalars(weight, 0);
 
   if (weight->dim() == 4) {
     int64_t s1 = THTensor_sizeLegacyNoScalars(weight, 0);
-    int64_t s2 = THTensor_sizeLegacyNoScalars(weight, 1) * weight->size(2) * weight->size(3);
+    int64_t s2 = THTensor_sizeLegacyNoScalars(weight, 1) * THTensor_sizeLegacyNoScalars(weight, 2) * THTensor_sizeLegacyNoScalars(weight, 3);
     weight = THCTensor_(newWithStorage2d)(state, THTensor_getStoragePtr(weight), weight->storage_offset(), s1, -1, s2, -1);
     freeWeight = 1;
   }
@@ -121,7 +121,7 @@ void THNN_(SpatialConvolutionMM_updateOutput)(
   if (input->dim() == 3) {
     // Force batch
     is_batch = 0;
-    THCTensor_(resize4d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), input->size(1), input->size(2));
+    THCTensor_(resize4d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1), THTensor_sizeLegacyNoScalars(input, 2));
   }
 
   int64_t inputWidth   = THTensor_sizeLegacyNoScalars(input, 3);
@@ -141,7 +141,7 @@ void THNN_(SpatialConvolutionMM_updateOutput)(
   // Define a buffer of ones, for bias accumulation
   // Note: this buffer can be shared with other modules, it only ever gets increased,
   // and always contains ones.
-  if (ones->dim() != 2 || THTensor_sizeLegacyNoScalars(ones, 0)*ones->size(1) < outputHeight*outputWidth) {
+  if (ones->dim() != 2 || THTensor_sizeLegacyNoScalars(ones, 0)*THTensor_sizeLegacyNoScalars(ones, 1) < outputHeight*outputWidth) {
     // Resize plane and fill with ones...
     THCTensor_(resize2d)(state, ones, outputHeight, outputWidth);
     THCTensor_(fill)(state, ones, ScalarConvert<int, real>::to(1));
@@ -257,13 +257,13 @@ void THNN_(SpatialConvolutionMM_updateGradInput)(
        (state, input, gradOutput, weight, NULL, kH, kW, dH, dW, padH, padW, 0);
 
   // Params
-  int nInputPlane = weight->dim() == 2 ? THTensor_sizeLegacyNoScalars(weight, 1)/(kW*kH) : weight->size(1);
+  int nInputPlane = weight->dim() == 2 ? THTensor_sizeLegacyNoScalars(weight, 1)/(kW*kH) : THTensor_sizeLegacyNoScalars(weight, 1);
   int nOutputPlane = THTensor_sizeLegacyNoScalars(weight, 0);
 
   int freeWeight = 0;
   if (weight->dim() == 4) {
     int64_t s1 = THTensor_sizeLegacyNoScalars(weight, 0);
-    int64_t s2 = THTensor_sizeLegacyNoScalars(weight, 1) * weight->size(2) * weight->size(3);
+    int64_t s2 = THTensor_sizeLegacyNoScalars(weight, 1) * THTensor_sizeLegacyNoScalars(weight, 2) * THTensor_sizeLegacyNoScalars(weight, 3);
     weight = THCTensor_(newWithStorage2d)(state, THTensor_getStoragePtr(weight), weight->storage_offset(), s1, -1, s2, -1);
     freeWeight = 1;
   }
@@ -275,8 +275,8 @@ void THNN_(SpatialConvolutionMM_updateGradInput)(
   if (input->dim() == 3) {
     // Force batch
     is_batch = 0;
-    THCTensor_(resize4d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), input->size(1), input->size(2));
-    THCTensor_(resize4d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), gradOutput->size(1), gradOutput->size(2));
+    THCTensor_(resize4d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1), THTensor_sizeLegacyNoScalars(input, 2));
+    THCTensor_(resize4d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), THTensor_sizeLegacyNoScalars(gradOutput, 1), THTensor_sizeLegacyNoScalars(gradOutput, 2));
   }
 
   int64_t inputWidth   = THTensor_sizeLegacyNoScalars(input, 3);
@@ -387,8 +387,8 @@ void THNN_(SpatialConvolutionMM_accGradParameters)(
   if (input->dim() == 3) {
     // Force batch
     is_batch = 0;
-    THCTensor_(resize4d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), input->size(1), input->size(2));
-    THCTensor_(resize4d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), gradOutput->size(1), gradOutput->size(2));
+    THCTensor_(resize4d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1), THTensor_sizeLegacyNoScalars(input, 2));
+    THCTensor_(resize4d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), THTensor_sizeLegacyNoScalars(gradOutput, 1), THTensor_sizeLegacyNoScalars(gradOutput, 2));
   }
 
   int64_t nInputPlane = THTensor_sizeLegacyNoScalars(input, 1);
@@ -397,7 +397,7 @@ void THNN_(SpatialConvolutionMM_accGradParameters)(
   int freeWeight = 0;
   if (gradWeight && gradWeight->dim() == 4) {
     int64_t s1 = THTensor_sizeLegacyNoScalars(gradWeight, 0);
-    int64_t s2 = THTensor_sizeLegacyNoScalars(gradWeight, 1) * gradWeight->size(2) * gradWeight->size(3);
+    int64_t s2 = THTensor_sizeLegacyNoScalars(gradWeight, 1) * THTensor_sizeLegacyNoScalars(gradWeight, 2) * THTensor_sizeLegacyNoScalars(gradWeight, 3);
     gradWeight = THCTensor_(newWithStorage2d)(state, THTensor_getStoragePtr(gradWeight), gradWeight->storage_offset(), s1, -1, s2, -1);
     freeWeight = 1;
   }
@@ -411,7 +411,7 @@ void THNN_(SpatialConvolutionMM_accGradParameters)(
   int64_t batchSize = THTensor_sizeLegacyNoScalars(input, 0);
 
   // Define a buffer of ones, for bias accumulation
-  if (ones->dim() != 2 || THTensor_sizeLegacyNoScalars(ones, 0)*ones->size(1) < outputHeight*outputWidth) {
+  if (ones->dim() != 2 || THTensor_sizeLegacyNoScalars(ones, 0)*THTensor_sizeLegacyNoScalars(ones, 1) < outputHeight*outputWidth) {
     // Resize plane and fill with ones...
     THCTensor_(resize2d)(state, ones, outputHeight, outputWidth);
     THCTensor_(fill)(state, ones, ScalarConvert<int, real>::to(1));

@@ -9,7 +9,7 @@ static bool THNN_(checkInput)(THCTensor* t)
 
 static bool THNN_(checkSize2D)(THCTensor* t, int64_t size0, int64_t size1)
 {
-  return !t->is_empty() && THTensor_nDimensionLegacyAll(t) == 2 && THTensor_sizeLegacyNoScalars(t, 0) == size0 && t->size(1) == size1;
+  return !t->is_empty() && THTensor_nDimensionLegacyAll(t) == 2 && THTensor_sizeLegacyNoScalars(t, 0) == size0 && THTensor_sizeLegacyNoScalars(t, 1) == size1;
 }
 
 static bool THNN_(checkSize1D)(THCTensor* t, int64_t size0)

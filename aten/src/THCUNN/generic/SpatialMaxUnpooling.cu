@@ -78,9 +78,9 @@ void THNN_(SpatialMaxUnpooling_updateGradInput)(
   nInputCols = THTensor_sizeLegacyNoScalars(input, dimw);
   nInputRows = THTensor_sizeLegacyNoScalars(input, dimh);
 
-  if(owidth!=THTensor_sizeLegacyNoScalars(gradOutput, dimw) || oheight!=gradOutput->size(dimh)){
+  if(owidth!=THTensor_sizeLegacyNoScalars(gradOutput, dimw) || oheight!=THTensor_sizeLegacyNoScalars(gradOutput, dimh)){
      THError("Inconsistent gradOutput size. oheight= %d, owidth= %d, gradOutput: %dx%d",
-             oheight, owidth,THTensor_sizeLegacyNoScalars(gradOutput, dimh),gradOutput->size(dimw));
+             oheight, owidth,THTensor_sizeLegacyNoScalars(gradOutput, dimh),THTensor_sizeLegacyNoScalars(gradOutput, dimw));
   }
 
   input = THCTensor_(newContiguous)(state, input);

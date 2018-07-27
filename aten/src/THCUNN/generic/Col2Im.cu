@@ -69,7 +69,7 @@ void THNN_(Col2Im_updateOutput)(
   if (input->dim() == 2) {
       // Force batch
       batched_input = false;
-      THCTensor_(resize3d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), input->size(1));
+      THCTensor_(resize3d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1));
   }
 
   int64_t batchSize = THTensor_sizeLegacyNoScalars(input, 0);

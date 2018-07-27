@@ -139,8 +139,8 @@ void THNN_(VolumetricConvolution_updateOutput)(
   {
     // Force batch
     batch = 0;
-    THCTensor_(resize5d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), input->size(1),
-                          THTensor_sizeLegacyNoScalars(input, 2), input->size(3));
+    THCTensor_(resize5d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1),
+                          THTensor_sizeLegacyNoScalars(input, 2), THTensor_sizeLegacyNoScalars(input, 3));
   }
 
   int64_t inputWidth   = THTensor_sizeLegacyNoScalars(input, 3);
@@ -163,7 +163,7 @@ void THNN_(VolumetricConvolution_updateOutput)(
   // Define a buffer of ones, for bias accumulation
   // Note: this buffer can be shared with other modules, it only ever gets increased,
   // and always contains ones.
-  if (ones->dim() != 3 || THTensor_sizeLegacyNoScalars(ones, 0)*ones->size(1)*ones->size(2) < outputDepth*outputHeight*outputWidth)
+  if (ones->dim() != 3 || THTensor_sizeLegacyNoScalars(ones, 0)*THTensor_sizeLegacyNoScalars(ones, 1)*THTensor_sizeLegacyNoScalars(ones, 2) < outputDepth*outputHeight*outputWidth)
   {
     // Resize plane and fill with ones...
     THCTensor_(resize3d)(state, ones, outputHeight, outputWidth, outputDepth);
@@ -222,7 +222,7 @@ void THNN_(VolumetricConvolution_updateOutput)(
     // (see http://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gemm)
     int64_t m = THTensor_sizeLegacyNoScalars(weight, 0);
     int64_t n = THTensor_sizeLegacyNoScalars(columns, 1);
-    int64_t k = THTensor_sizeLegacyNoScalars(weight, 1)*weight->size(2)*weight->size(3)*weight->size(4);
+    int64_t k = THTensor_sizeLegacyNoScalars(weight, 1)*THTensor_sizeLegacyNoScalars(weight, 2)*THTensor_sizeLegacyNoScalars(weight, 3)*THTensor_sizeLegacyNoScalars(weight, 4);
 
     // Do GEMM (note: this is a bit confusing because gemm assumes column-major matrices)
     #ifdef THC_REAL_IS_FLOAT
@@ -287,8 +287,8 @@ void THNN_(VolumetricConvolution_updateGradInput)(
     input = THCTensor_(newContiguous)(state, input);
     // Force batch
     batch = 0;
-    THCTensor_(resize5d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), input->size(1), input->size(2), input->size(3));
-    THCTensor_(resize5d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), gradOutput->size(1), gradOutput->size(2), gradOutput->size(3));
+    THCTensor_(resize5d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1), THTensor_sizeLegacyNoScalars(input, 2), THTensor_sizeLegacyNoScalars(input, 3));
+    THCTensor_(resize5d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), THTensor_sizeLegacyNoScalars(gradOutput, 1), THTensor_sizeLegacyNoScalars(gradOutput, 2), THTensor_sizeLegacyNoScalars(gradOutput, 3));
   }
 
   int64_t inputWidth   = THTensor_sizeLegacyNoScalars(input, 3);
@@ -320,7 +320,7 @@ void THNN_(VolumetricConvolution_updateGradInput)(
 
     // M,N,K are dims of matrix A and B
     // (see http://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gemm)
-    int64_t m = THTensor_sizeLegacyNoScalars(weight, 1)*weight->size(2)*weight->size(3)*weight->size(4);
+    int64_t m = THTensor_sizeLegacyNoScalars(weight, 1)*THTensor_sizeLegacyNoScalars(weight, 2)*THTensor_sizeLegacyNoScalars(weight, 3)*THTensor_sizeLegacyNoScalars(weight, 4);
     int64_t n = THTensor_sizeLegacyNoScalars(gradColumns, 1);
     int64_t k = THTensor_sizeLegacyNoScalars(weight, 0);
 
@@ -401,8 +401,8 @@ void THNN_(VolumetricConvolution_accGradParameters)(
   {
     // Force batch
     batch = 0;
-    THCTensor_(resize5d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), input->size(1), input->size(2), input->size(3));
-    THCTensor_(resize5d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), gradOutput->size(1), gradOutput->size(2), gradOutput->size(3));
+    THCTensor_(resize5d)(state, input, 1, THTensor_sizeLegacyNoScalars(input, 0), THTensor_sizeLegacyNoScalars(input, 1), THTensor_sizeLegacyNoScalars(input, 2), THTensor_sizeLegacyNoScalars(input, 3));
+    THCTensor_(resize5d)(state, gradOutput, 1, THTensor_sizeLegacyNoScalars(gradOutput, 0), THTensor_sizeLegacyNoScalars(gradOutput, 1), THTensor_sizeLegacyNoScalars(gradOutput, 2), THTensor_sizeLegacyNoScalars(gradOutput, 3));
   }
 
   int64_t inputWidth   = THTensor_sizeLegacyNoScalars(input, 3);
@@ -416,7 +416,7 @@ void THNN_(VolumetricConvolution_accGradParameters)(
   int64_t batchSize = THTensor_sizeLegacyNoScalars(input, 0);
 
   // Define a buffer of ones, for bias accumulation
-  if (ones->dim() != 3 || THTensor_sizeLegacyNoScalars(ones, 0)*ones->size(1)*ones->size(2) < outputDepth*outputHeight*outputWidth)
+  if (ones->dim() != 3 || THTensor_sizeLegacyNoScalars(ones, 0)*THTensor_sizeLegacyNoScalars(ones, 1)*THTensor_sizeLegacyNoScalars(ones, 2) < outputDepth*outputHeight*outputWidth)
   {
     // Resize plane and fill with ones...
     THCTensor_(resize3d)(state, ones, outputHeight, outputWidth, outputDepth);
@@ -448,7 +448,7 @@ void THNN_(VolumetricConvolution_accGradParameters)(
     // M,N,K are dims of matrix A and B
     // (see http://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gemm)
     int64_t m = THTensor_sizeLegacyNoScalars(gradWeight, 0);
-    int64_t n = THTensor_sizeLegacyNoScalars(gradWeight, 1)*gradWeight->size(2)*gradWeight->size(3)*gradWeight->size(4);
+    int64_t n = THTensor_sizeLegacyNoScalars(gradWeight, 1)*THTensor_sizeLegacyNoScalars(gradWeight, 2)*THTensor_sizeLegacyNoScalars(gradWeight, 3)*THTensor_sizeLegacyNoScalars(gradWeight, 4);
     int64_t k = THTensor_sizeLegacyNoScalars(columns, 1);
 
     // Do GEMM (note: this is a bit confusing because gemm assumes column-major matrices)

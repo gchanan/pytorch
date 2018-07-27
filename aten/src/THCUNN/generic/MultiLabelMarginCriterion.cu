@@ -144,7 +144,7 @@ void THNN_(MultiLabelMarginCriterion_updateGradInput)(
         THCTensor_(data)(state, input),
         THCIndexTensor_(data)(state, target),
         THCTensor_(data)(state, istarget),
-        THTensor_sizeLegacyNoScalars(gradInput, 0), gradInput->size(1),
+        THTensor_sizeLegacyNoScalars(gradInput, 0), THTensor_sizeLegacyNoScalars(gradInput, 1),
         reduction == Reduction::ElementwiseMean,
         reduction != Reduction::None);
   }

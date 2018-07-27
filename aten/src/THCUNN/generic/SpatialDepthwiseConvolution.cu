@@ -27,11 +27,11 @@ void THNN_(SpatialDepthwiseConvolution_updateOutput)(
 
   // Input Tensor is shape (N, input_channels, H, W)
   // We verify that the # of output_channels is a multiple of input_channels
-  THAssert(THTensor_sizeLegacyNoScalars(weight, 0) % input->size(1) == 0);
+  THAssert(THTensor_sizeLegacyNoScalars(weight, 0) % THTensor_sizeLegacyNoScalars(input, 1) == 0);
 
   // Bias has same # of channels as output
   if (bias) {
-    THAssert(THTensor_sizeLegacyNoScalars(bias, 0) == weight->size(0));
+    THAssert(THTensor_sizeLegacyNoScalars(bias, 0) == THTensor_sizeLegacyNoScalars(weight, 0));
   }
 
   input = THCTensor_(newContiguous)(state, input);
@@ -113,9 +113,9 @@ void THNN_(SpatialDepthwiseConvolution_updateGradInput)(
 
   // Minimal shape checking, as above
   // Same # of elements in batch
-  THAssert(THTensor_sizeLegacyNoScalars(input, 0) == gradOutput->size(0));
+  THAssert(THTensor_sizeLegacyNoScalars(input, 0) == THTensor_sizeLegacyNoScalars(gradOutput, 0));
   // Same # of filters as outputChannels
-  THAssert(THTensor_sizeLegacyNoScalars(weight, 0) == gradOutput->size(1));
+  THAssert(THTensor_sizeLegacyNoScalars(weight, 0) == THTensor_sizeLegacyNoScalars(gradOutput, 1));
 
   // Resize GradInput
   THCTensor_(resizeAs)(state, gradInput, input);
@@ -210,9 +210,9 @@ void THNN_(SpatialDepthwiseConvolution_accGradParameters)(
 
   // Minimal shape checking as above
   // Same # of elements in batch
-  THAssert(THTensor_sizeLegacyNoScalars(input, 0) == gradOutput->size(0));
+  THAssert(THTensor_sizeLegacyNoScalars(input, 0) == THTensor_sizeLegacyNoScalars(gradOutput, 0));
   // Same # of filters as outputChannels
-  THAssert(THTensor_sizeLegacyNoScalars(gradWeight, 0) == gradOutput->size(1));
+  THAssert(THTensor_sizeLegacyNoScalars(gradWeight, 0) == THTensor_sizeLegacyNoScalars(gradOutput, 1));
 
   int batchSize = THTensor_sizeLegacyNoScalars(input, 0);
   int inputChannels = THTensor_sizeLegacyNoScalars(input, 1);

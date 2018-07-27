@@ -56,9 +56,9 @@ static THCTensor* THNN_(view_weight_local)(
   AT_CHECK(!weight->is_empty() && (weight->dim() == 3 || weight->dim() == 6), 4,
            "weight tensor should be (non-empty) 3D or 6D - got size: ", weight->sizes());
   if (weight->dim() == 6) {
-    int64_t s1 = THTensor_sizeLegacyNoScalars(weight, 0) * weight->size(1);
+    int64_t s1 = THTensor_sizeLegacyNoScalars(weight, 0) * THTensor_sizeLegacyNoScalars(weight, 1);
     int64_t s2 = THTensor_sizeLegacyNoScalars(weight, 2);
-    int64_t s3 = THTensor_sizeLegacyNoScalars(weight, 3) * weight->size(4) * weight->size(5);
+    int64_t s3 = THTensor_sizeLegacyNoScalars(weight, 3) * THTensor_sizeLegacyNoScalars(weight, 4) * THTensor_sizeLegacyNoScalars(weight, 5);
     THCTensor *old_weight = weight;
     weight = THCTensor_(newWithStorage3d)(state,
                           THTensor_getStoragePtr(weight),
