@@ -25,7 +25,12 @@ int THCTensor_(nDimensionLegacyAll)(THCState *state, const THCTensor *self)
 
 int64_t THCTensor_(size)(THCState *state, const THCTensor *self, int dim)
 {
-  return THCTensor_size(state, self, dim);
+  return THCTensor_sizeLegacyNoScalars(state, self, dim);
+}
+
+int64_t THCTensor_(sizeLegacyNoScalars)(THCState *state, const THCTensor *self, int dim)
+{
+  return THCTensor_sizeLegacyNoScalars(state, self, dim);
 }
 
 int64_t THCTensor_(strideLegacyNoScalars)(THCState *state, const THCTensor *self, int dim)
@@ -241,9 +246,9 @@ THCTensor *THCTensor_(newFoldBatchDim)(THCState *state, THCTensor *input) {
   THArgCheck(THCTensor_(isContiguous)(state, input), 1,
              "Tensor must be contiguous");
   THLongStorage *newSize = THLongStorage_newWithSize(in_dims - 1);
-  THLongStorage_data(newSize)[0] = THCTensor_(size)(state, input, 0) * THCTensor_(size)(state, input, 1);
+  THLongStorage_data(newSize)[0] = THCTensor_(sizeLegacyNoScalars)(state, input, 0) * THCTensor_(sizeLegacyNoScalars)(state, input, 1);
   for (int i = 2; i < in_dims; i++) {
-    THLongStorage_data(newSize)[i - 1] = THCTensor_(size)(state, input, i);
+    THLongStorage_data(newSize)[i - 1] = THCTensor_(sizeLegacyNoScalars)(state, input, i);
   }
   THCTensor *output = THCTensor_(newView)(state, input, newSize);
   THLongStorage_free(newSize);
