@@ -110,7 +110,7 @@ void THNN_(VolumetricAdaptiveAveragePooling_updateOutput)(
   if (input->dim() == 5)
   {
     istrideB = THTensor_strideLegacyNoScalars(input, 0);
-    sizeB = input->size(0);
+    sizeB = THTensor_sizeLegacyNoScalars(input, 0);
     dimD++;
     dimT++;
     dimH++;
@@ -118,10 +118,10 @@ void THNN_(VolumetricAdaptiveAveragePooling_updateOutput)(
   }
 
   /* sizes */
-  sizeD  = input->size(dimD);
-  isizeT = input->size(dimT);
-  isizeH = input->size(dimH);
-  isizeW = input->size(dimW);
+  sizeD  = THTensor_sizeLegacyNoScalars(input, dimD);
+  isizeT = THTensor_sizeLegacyNoScalars(input, dimT);
+  isizeH = THTensor_sizeLegacyNoScalars(input, dimH);
+  isizeW = THTensor_sizeLegacyNoScalars(input, dimW);
   /* strides */
   istrideD = THTensor_strideLegacyNoScalars(input, dimD);
   istrideT = THTensor_strideLegacyNoScalars(input, dimT);
@@ -253,7 +253,7 @@ void THNN_(VolumetricAdaptiveAveragePooling_updateGradInput)(
   THTensor_(zero)(gradInput);
 
   if (input->dim() == 5) {
-    sizeB = input->size(0);
+    sizeB = THTensor_sizeLegacyNoScalars(input, 0);
     dimD++;
     dimT++;
     dimH++;
@@ -261,13 +261,13 @@ void THNN_(VolumetricAdaptiveAveragePooling_updateGradInput)(
   }
 
   /* sizes */
-  sizeD  = input->size(dimD);
-  isizeT = input->size(dimT);
-  isizeH = input->size(dimH);
-  isizeW = input->size(dimW);
-  osizeT = gradOutput->size(dimT);
-  osizeH = gradOutput->size(dimH);
-  osizeW = gradOutput->size(dimW);
+  sizeD  = THTensor_sizeLegacyNoScalars(input, dimD);
+  isizeT = THTensor_sizeLegacyNoScalars(input, dimT);
+  isizeH = THTensor_sizeLegacyNoScalars(input, dimH);
+  isizeW = THTensor_sizeLegacyNoScalars(input, dimW);
+  osizeT = THTensor_sizeLegacyNoScalars(gradOutput, dimT);
+  osizeH = THTensor_sizeLegacyNoScalars(gradOutput, dimH);
+  osizeW = THTensor_sizeLegacyNoScalars(gradOutput, dimW);
 
   /* get raw pointers */
   gradInput_data = THTensor_(data)(gradInput);

@@ -55,14 +55,14 @@ void THNN_(TemporalReflectionPadding_updateOutput)(THNNState *state,
 
   if (input->dim() == 3)
   {
-    nbatch = input->size(0);
+    nbatch = THTensor_sizeLegacyNoScalars(input, 0);
     dimw++;
     dimslices++;
   }
 
   /* input size */
-  nslices = input->size(dimslices);
-  iwidth = input->size(dimw);
+  nslices = THTensor_sizeLegacyNoScalars(input, dimslices);
+  iwidth = THTensor_sizeLegacyNoScalars(input, dimw);
 
   AT_CHECK(pad_l < iwidth && pad_r < iwidth,
            "Argument #4: Padding size should be less than the corresponding input dimension, "
@@ -167,14 +167,14 @@ void THNN_(TemporalReflectionPadding_updateGradInput)(THNNState *state,
 
   if (input->dim() == 3)
   {
-    nbatch = input->size(0);
+    nbatch = THTensor_sizeLegacyNoScalars(input, 0);
     dimw++;
     dimslices++;
   }
 
   /* sizes */
-  nslices = input->size(dimslices);
-  iwidth = input->size(dimw);
+  nslices = THTensor_sizeLegacyNoScalars(input, dimslices);
+  iwidth = THTensor_sizeLegacyNoScalars(input, dimw);
   owidth  = iwidth + pad_l + pad_r;
 
   THArgCheck(owidth == THTensor_(sizeLegacyNoScalars)(gradOutput, dimw), 3,
