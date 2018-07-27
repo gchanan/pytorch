@@ -92,9 +92,9 @@
       } \
 \
       TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i]++; \
-      TENSOR1##_data += TENSOR1->stride(TH_TENSOR_DIM_APPLY_i); \
-      TENSOR2##_data += TENSOR2->stride(TH_TENSOR_DIM_APPLY_i); \
-      TENSOR3##_data += TENSOR3->stride(TH_TENSOR_DIM_APPLY_i); \
+      TENSOR1##_data += THTensor_strideLegacyNoScalars(TENSOR1, TH_TENSOR_DIM_APPLY_i); \
+      TENSOR2##_data += THTensor_strideLegacyNoScalars(TENSOR2, TH_TENSOR_DIM_APPLY_i); \
+      TENSOR3##_data += THTensor_strideLegacyNoScalars(TENSOR3, TH_TENSOR_DIM_APPLY_i); \
 \
       if(TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i] == TENSOR1->size(TH_TENSOR_DIM_APPLY_i)) \
       { \
@@ -105,9 +105,9 @@
         } \
         else \
         { \
-          TENSOR1##_data -= TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i]*TENSOR1->stride(TH_TENSOR_DIM_APPLY_i); \
-          TENSOR2##_data -= TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i]*TENSOR2->stride(TH_TENSOR_DIM_APPLY_i); \
-          TENSOR3##_data -= TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i]*TENSOR3->stride(TH_TENSOR_DIM_APPLY_i); \
+          TENSOR1##_data -= TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i]*THTensor_strideLegacyNoScalars(TENSOR1, TH_TENSOR_DIM_APPLY_i); \
+          TENSOR2##_data -= TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i]*THTensor_strideLegacyNoScalars(TENSOR2, TH_TENSOR_DIM_APPLY_i); \
+          TENSOR3##_data -= TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i]*THTensor_strideLegacyNoScalars(TENSOR3, TH_TENSOR_DIM_APPLY_i); \
           TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i] = 0; \
         } \
       } \
@@ -195,8 +195,8 @@
       } \
 \
       TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i]++; \
-      TENSOR1##_data += TENSOR1->stride(TH_TENSOR_DIM_APPLY_i); \
-      TENSOR2##_data += TENSOR2->stride(TH_TENSOR_DIM_APPLY_i); \
+      TENSOR1##_data += THTensor_strideLegacyNoScalars(TENSOR1, TH_TENSOR_DIM_APPLY_i); \
+      TENSOR2##_data += THTensor_strideLegacyNoScalars(TENSOR2, TH_TENSOR_DIM_APPLY_i); \
 \
       if(TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i] == TENSOR1->size(TH_TENSOR_DIM_APPLY_i)) \
       { \
@@ -207,8 +207,8 @@
         } \
         else \
         { \
-          TENSOR1##_data -= TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i]*TENSOR1->stride(TH_TENSOR_DIM_APPLY_i); \
-          TENSOR2##_data -= TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i]*TENSOR2->stride(TH_TENSOR_DIM_APPLY_i); \
+          TENSOR1##_data -= TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i]*THTensor_strideLegacyNoScalars(TENSOR1, TH_TENSOR_DIM_APPLY_i); \
+          TENSOR2##_data -= TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i]*THTensor_strideLegacyNoScalars(TENSOR2, TH_TENSOR_DIM_APPLY_i); \
           TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i] = 0; \
         } \
       } \
@@ -302,7 +302,7 @@
 \
       /* Bump the counter at this index, update the pointer */ \
       TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i]++; \
-      TENSOR##_data += TENSOR->stride(TH_TENSOR_DIM_APPLY_i); \
+      TENSOR##_data += THTensor_strideLegacyNoScalars(TENSOR, TH_TENSOR_DIM_APPLY_i); \
 \
       if(TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i] == TENSOR->size(TH_TENSOR_DIM_APPLY_i)) \
       { \
@@ -315,7 +315,7 @@
         else \
         { \
           /* Reset the counter, and the pointer to the beginning of the storage for this combination of indices */ \
-          TENSOR##_data -= TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i]*TENSOR->stride(TH_TENSOR_DIM_APPLY_i); \
+          TENSOR##_data -= TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i]*THTensor_strideLegacyNoScalars(TENSOR, TH_TENSOR_DIM_APPLY_i); \
           TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i] = 0; \
         } \
       } \

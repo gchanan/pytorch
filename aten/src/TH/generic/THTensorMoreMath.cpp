@@ -88,7 +88,7 @@ void THTensor_(max)(THTensor *values_, THLongTensor *indices_, THTensor *t, int 
   THLongStorage_free(dim);
 
   // two implementations optimized for data locality
-  if (t->stride(dimension) == 1) {
+  if (THTensor_strideLegacyNoScalars(t, dimension) == 1) {
     real theMax;
     real value;
     int64_t theIndex;
@@ -172,7 +172,7 @@ void THTensor_(min)(THTensor *values_, THLongTensor *indices_, THTensor *t, int 
   THLongStorage_free(dim);
 
   // two implementations optimized for data locality
-  if (t->stride(dimension) == 1) {
+  if (THTensor_strideLegacyNoScalars(t, dimension) == 1) {
     real theMax;
     real value;
     int64_t theIndex;
@@ -274,16 +274,16 @@ void THTensor_(sum)(THTensor *r_, THTensor *t, int dimension, int keepdim)
 
         for(j = 0; j < r_Dim; ++j) {
           if(j != dimension){
-            quot = rem/r_->stride(j);
-            rem = rem%r_->stride(j);
-            tBasicIndex += quot*t->stride(j);
+            quot = rem/THTensor_strideLegacyNoScalars(r_, j);
+            rem = rem%THTensor_strideLegacyNoScalars(r_, j);
+            tBasicIndex += quot*THTensor_strideLegacyNoScalars(t, j);
           }
         }
         real *t_data = tp+tBasicIndex;
         real *r__data = rp+iter;
         *r__data = 0;
         for(j=0; j < t->size(dimension); ++j) {
-          *r__data += *(t_data + j*t->stride(dimension));
+          *r__data += *(t_data + j*THTensor_strideLegacyNoScalars(t, dimension));
         }
       }
     } else {
@@ -295,7 +295,7 @@ void THTensor_(sum)(THTensor *r_, THTensor *t, int dimension, int keepdim)
 #endif
   if (serial_path) {
     // two implementations optimized for data locality
-    if (t->stride(dimension) == 1) {
+    if (THTensor_strideLegacyNoScalars(t, dimension) == 1) {
       TH_TENSOR_DIM_APPLY2(real, t, real, r_, dimension,
                            accreal sum = 0;
                            int64_t i;
@@ -354,16 +354,16 @@ void THTensor_(prod)(THTensor *r_, THTensor *t, int dimension, int keepdim)
 
         for(j = 0; j < r_Dim; ++j) {
           if(j != dimension){
-            quot = rem/r_->stride(j);
-            rem = rem%r_->stride(j);
-            tBasicIndex += quot*t->stride(j);
+            quot = rem/THTensor_strideLegacyNoScalars(r_, j);
+            rem = rem%THTensor_strideLegacyNoScalars(r_, j);
+            tBasicIndex += quot*THTensor_strideLegacyNoScalars(t, j);
           }
         }
         real *t_data = tp+tBasicIndex;
         real *r__data = rp+iter;
         *r__data = 1;
         for(j=0; j < t->size(dimension); ++j) {
-          *r__data *= *(t_data + j*t->stride(dimension));
+          *r__data *= *(t_data + j*THTensor_strideLegacyNoScalars(t, dimension));
         }
       }
     } else {
@@ -376,7 +376,7 @@ void THTensor_(prod)(THTensor *r_, THTensor *t, int dimension, int keepdim)
 
   if(serial_path) {
     // two implementations optimized for data locality
-    if (t->stride(dimension) == 1) {
+    if (THTensor_strideLegacyNoScalars(t, dimension) == 1) {
       TH_TENSOR_DIM_APPLY2(real, t, real, r_, dimension,
                            accreal prod = 1;
                            int64_t i;
@@ -624,7 +624,7 @@ void THTensor_(eye)(THTensor *r_, int64_t n, int64_t m)
   r__data = THTensor_(data)(r_);
   sz = THMin(THTensor_(size)(r_, 0), THTensor_(size)(r_, 1));
   for(i = 0; i < sz; i++)
-    r__data[i*(r_->stride(0)+r_->stride(1))] = 1;
+    r__data[i*(THTensor_strideLegacyNoScalars(r_, 0)+r_->stride(1))] = 1;
 }
 
 
@@ -1690,16 +1690,16 @@ void THTensor_(logicalAnd)(THTensor *r_, THTensor *t, int dimension, int keepdim
 
         for(j = 0; j < r_Dim; ++j) {
           if(j != dimension){
-            quot = rem/r_->stride(j);
-            rem = rem%r_->stride(j);
-            tBasicIndex += quot*t->stride(j);
+            quot = rem/THTensor_strideLegacyNoScalars(r_, j);
+            rem = rem%THTensor_strideLegacyNoScalars(r_, j);
+            tBasicIndex += quot*THTensor_strideLegacyNoScalars(t, j);
           }
         }
         real *t_data = tp+tBasicIndex;
         real *r__data = rp+iter;
         *r__data = 1;
         for(j=0; j < t->size(dimension); ++j) {
-          *r__data = *r__data && *(t_data + j*t->stride(dimension));
+          *r__data = *r__data && *(t_data + j*THTensor_strideLegacyNoScalars(t, dimension));
         }
       }
     } else {
@@ -1712,7 +1712,7 @@ void THTensor_(logicalAnd)(THTensor *r_, THTensor *t, int dimension, int keepdim
 
   if(serial_path) {
     // two implementations optimized for data locality
-    if (t->stride(dimension) == 1) {
+    if (THTensor_strideLegacyNoScalars(t, dimension) == 1) {
       TH_TENSOR_DIM_APPLY2(real, t, real, r_, dimension,
                            accreal prod = 1;
                            int64_t i;
@@ -1770,16 +1770,16 @@ void THTensor_(logicalAny)(THTensor *r_, THTensor *t, int dimension, int keepdim
 
         for(j = 0; j < r_Dim; ++j) {
           if(j != dimension){
-            quot = rem/r_->stride(j);
-            rem = rem%r_->stride(j);
-            tBasicIndex += quot*t->stride(j);
+            quot = rem/THTensor_strideLegacyNoScalars(r_, j);
+            rem = rem%THTensor_strideLegacyNoScalars(r_, j);
+            tBasicIndex += quot*THTensor_strideLegacyNoScalars(t, j);
           }
         }
         real *t_data = tp+tBasicIndex;
         real *r__data = rp+iter;
         *r__data = 0;
         for(j=0; j < t->size(dimension); ++j) {
-          *r__data = *r__data || *(t_data + j*t->stride(dimension));
+          *r__data = *r__data || *(t_data + j*THTensor_strideLegacyNoScalars(t, dimension));
         }
       }
     } else {
@@ -1791,7 +1791,7 @@ void THTensor_(logicalAny)(THTensor *r_, THTensor *t, int dimension, int keepdim
 #endif
   if (serial_path) {
     // two implementations optimized for data locality
-    if (t->stride(dimension) == 1) {
+    if (THTensor_strideLegacyNoScalars(t, dimension) == 1) {
       TH_TENSOR_DIM_APPLY2(real, t, real, r_, dimension,
                            accreal sum = 0;
                            int64_t i;
