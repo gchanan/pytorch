@@ -40,7 +40,7 @@ static void THCTensor_(copyTensor2d)(THCState *state, real *dst, THCTensor *self
 static THCTensor* THCTensor_(newColumnMajor)(THCState *state, THCTensor *self, THCTensor *src)
 {
   THAssert(src->dim() == 2);
-  if (self == src && THTensor_strideLegacyNoScalars(self, 0) == 1 && self->stride(1) == self->size(0))
+  if (self == src && THTensor_strideLegacyNoScalars(self, 0) == 1 && THTensor_strideLegacyNoScalars(self, 1) == self->size(0))
   {
     THCTensor_(retain)(state, self);
     return self;

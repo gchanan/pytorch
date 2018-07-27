@@ -349,9 +349,9 @@ THCTensor_(addmm)(THCState *state, THCTensor *r_, real beta, THCTensor *t, real 
                    m1_->size((transpose_r == 'n' ? 1 : 0)),
                    alpha,
                    THCTensor_(data)(state, m1_),
-                   (transpose_m1 == 'n' ? THTensor_strideLegacyNoScalars(m1_, (transpose_r == 'n' ? 1 : 0)) : m1_->stride((transpose_r == 'n' ? 0 : 1))),
+                   (transpose_m1 == 'n' ? THTensor_strideLegacyNoScalars(m1_, (transpose_r == 'n' ? 1 : 0)) : THTensor_strideLegacyNoScalars(m1_, (transpose_r == 'n' ? 0 : 1))),
                    THCTensor_(data)(state, m2_),
-                   (transpose_m2 == 'n' ? THTensor_strideLegacyNoScalars(m2_, (transpose_r == 'n' ? 1 : 0)) : m2_->stride((transpose_r == 'n' ? 0 : 1))),
+                   (transpose_m2 == 'n' ? THTensor_strideLegacyNoScalars(m2_, (transpose_r == 'n' ? 1 : 0)) : THTensor_strideLegacyNoScalars(m2_, (transpose_r == 'n' ? 0 : 1))),
                    beta,
                    THCTensor_(data)(state, r__),
                    THTensor_strideLegacyNoScalars(r__, (transpose_r == 'n' ? 1 : 0)));
@@ -364,9 +364,9 @@ THCTensor_(addmm)(THCState *state, THCTensor *r_, real beta, THCTensor *t, real 
                    m1_->size((transpose_r == 'n' ? 1 : 0)),
                    alpha,
                    THCTensor_(data)(state, m1_),
-                   (transpose_m1 == 'n' ? THTensor_strideLegacyNoScalars(m1_, (transpose_r == 'n' ? 1 : 0)) : m1_->stride((transpose_r == 'n' ? 0 : 1))),
+                   (transpose_m1 == 'n' ? THTensor_strideLegacyNoScalars(m1_, (transpose_r == 'n' ? 1 : 0)) : THTensor_strideLegacyNoScalars(m1_, (transpose_r == 'n' ? 0 : 1))),
                    THCTensor_(data)(state, m2_),
-                   (transpose_m2 == 'n' ? THTensor_strideLegacyNoScalars(m2_, (transpose_r == 'n' ? 1 : 0)) : m2_->stride((transpose_r == 'n' ? 0 : 1))),
+                   (transpose_m2 == 'n' ? THTensor_strideLegacyNoScalars(m2_, (transpose_r == 'n' ? 1 : 0)) : THTensor_strideLegacyNoScalars(m2_, (transpose_r == 'n' ? 0 : 1))),
                    beta,
                    THCTensor_(data)(state, r__),
                    THTensor_strideLegacyNoScalars(r__, (transpose_r == 'n' ? 1 : 0)));
@@ -379,9 +379,9 @@ THCTensor_(addmm)(THCState *state, THCTensor *r_, real beta, THCTensor *t, real 
                    m1_->size((transpose_r == 'n' ? 1 : 0)),
                    alpha,
                    THCTensor_(data)(state, m1_),
-                   (transpose_m1 == 'n' ? THTensor_strideLegacyNoScalars(m1_, (transpose_r == 'n' ? 1 : 0)) : m1_->stride((transpose_r == 'n' ? 0 : 1))),
+                   (transpose_m1 == 'n' ? THTensor_strideLegacyNoScalars(m1_, (transpose_r == 'n' ? 1 : 0)) : THTensor_strideLegacyNoScalars(m1_, (transpose_r == 'n' ? 0 : 1))),
                    THCTensor_(data)(state, m2_),
-                   (transpose_m2 == 'n' ? THTensor_strideLegacyNoScalars(m2_, (transpose_r == 'n' ? 1 : 0)) : m2_->stride((transpose_r == 'n' ? 0 : 1))),
+                   (transpose_m2 == 'n' ? THTensor_strideLegacyNoScalars(m2_, (transpose_r == 'n' ? 1 : 0)) : THTensor_strideLegacyNoScalars(m2_, (transpose_r == 'n' ? 0 : 1))),
                    beta,
                    THCTensor_(data)(state, r__),
                    THTensor_strideLegacyNoScalars(r__, (transpose_r == 'n' ? 1 : 0)));
@@ -597,7 +597,7 @@ THCTensor_(baddbmm)(THCState *state, THCTensor *result, real beta, THCTensor *t,
   createBatchGemmBuffer3<<<grid, block, 0, THCState_getCurrentStream(state)>>>(
     d_matrices1, d_matrices2, (const real**)d_result_matrices, THCTensor_(data)(state, batch1_),
     THCTensor_(data)(state, batch2_), THCTensor_(data)(state, result_),
-    THTensor_strideLegacyNoScalars(batch1_, 0), batch2_->stride(0), result_->stride(0), num_batches);
+    THTensor_strideLegacyNoScalars(batch1_, 0), THTensor_strideLegacyNoScalars(batch2_, 0), result_->stride(0), num_batches);
 
 #ifdef THC_REAL_IS_FLOAT
   THCudaBlas_SgemmBatched(
