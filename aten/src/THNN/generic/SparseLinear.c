@@ -6,8 +6,8 @@
 #include <omp.h>
 #endif
 
-#define ROW_PTR2(t, r) (THTensor_(data)(t) + (r) * (t)->stride(0))
-#define COL_PTR2(t, c) (THTensor_(data)(t) + (c) * (t)->stride(1))
+#define ROW_PTR2(t, r) (THTensor_(data)(t) + (r) * THTensor_strideLegacyNoScalars(t, 0))
+#define COL_PTR2(t, c) (THTensor_(data)(t) + (c) * THTensor_strideLegacyNoScalars(t, 1))
 
 static bool THNN_(checkLegacyInput)(THTensor* t)
 {
@@ -34,11 +34,11 @@ static void THNN_(set1d)(THTensor *t, int64_t x0, real value) {
 }
 static real THNN_(get3d)(const THTensor *t, int64_t x0, int64_t x1, int64_t x2) {
   return THStorage_(get)(THTensor_getStoragePtr(t), t->storage_offset() +
-                         x0*THTensor_strideLegacyNoScalars(t, 0) + x1*t->stride(1) + x2*t->stride(2));
+                         x0*THTensor_strideLegacyNoScalars(t, 0) + x1*THTensor_strideLegacyNoScalars(t, 1) + x2*THTensor_strideLegacyNoScalars(t, 2));
 }
 static real THNN_(get2d)(const THTensor *t, int64_t x0, int64_t x1) {
   return THStorage_(get)(THTensor_getStoragePtr(t), t->storage_offset() +
-                         x0*THTensor_strideLegacyNoScalars(t, 0) + x1*t->stride(1));
+                         x0*THTensor_strideLegacyNoScalars(t, 0) + x1*THTensor_strideLegacyNoScalars(t, 1));
 }
 
 void THNN_(SparseLinear_updateOutput)(
