@@ -102,7 +102,7 @@ void THNN_(SpatialAdaptiveMaxPooling_updateOutput)(
 
   if (input->dim() == 4)
   {
-    istrideB = input->stride(0);
+    istrideB = THTensor_strideLegacyNoScalars(input, 0);
     sizeB = input->size(0);
     dimW++;
     dimH++;
@@ -113,9 +113,9 @@ void THNN_(SpatialAdaptiveMaxPooling_updateOutput)(
   isizeH = input->size(dimH);
   isizeW = input->size(dimW);
   /* strides */
-  istrideD = input->stride(dimH-1);
-  istrideH = input->stride(dimH);
-  istrideW = input->stride(dimW);
+  istrideD = THTensor_strideLegacyNoScalars(input, dimH-1);
+  istrideH = THTensor_strideLegacyNoScalars(input, dimH);
+  istrideW = THTensor_strideLegacyNoScalars(input, dimW);
 
   /* resize output */
   if (input->dim() == 3)
