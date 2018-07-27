@@ -33,10 +33,10 @@ void THNN_(VolumetricAdaptiveAveragePooling_updateOutput)(
     isizeH = input->size(2);
     isizeW = input->size(3);
 
-    istrideD = input->stride(0);
-    istrideT = input->stride(1);
-    istrideH = input->stride(2);
-    istrideW = input->stride(3);
+    istrideD = THTensor_strideLegacyNoScalars(input, 0);
+    istrideT = THTensor_strideLegacyNoScalars(input, 1);
+    istrideH = THTensor_strideLegacyNoScalars(input, 2);
+    istrideW = THTensor_strideLegacyNoScalars(input, 3);
 
     THCTensor_(resize4d)(state, output, sizeD, osizeT, osizeH, osizeW);
 
@@ -50,10 +50,10 @@ void THNN_(VolumetricAdaptiveAveragePooling_updateOutput)(
     isizeH = input->size(3);
     isizeW = input->size(4);
 
-    istrideD = input->stride(1);
-    istrideT = input->stride(2);
-    istrideH = input->stride(3);
-    istrideW = input->stride(4);
+    istrideD = THTensor_strideLegacyNoScalars(input, 1);
+    istrideT = THTensor_strideLegacyNoScalars(input, 2);
+    istrideH = THTensor_strideLegacyNoScalars(input, 3);
+    istrideW = THTensor_strideLegacyNoScalars(input, 4);
 
     THCTensor_(resize5d)(state, output, sizeB, sizeD, osizeT, osizeH, osizeW);
 
