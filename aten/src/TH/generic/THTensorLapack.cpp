@@ -7,7 +7,7 @@ Check if self is transpose of a contiguous matrix
 */
 static int THTensor_(isTransposedContiguous)(THTensor *self)
 {
-  return THTensor_strideLegacyNoScalars(self, 0) == 1 && self->stride(1) == self->size(0);
+  return THTensor_strideLegacyNoScalars(self, 0) == 1 && THTensor_strideLegacyNoScalars(self, 1) == self->size(0);
 }
 /*
 If a matrix is a regular contiguous matrix, make sure it is transposed

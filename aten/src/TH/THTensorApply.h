@@ -61,7 +61,7 @@
       TENSOR##_dim = 1; \
       for(TENSOR##_i = THTensor_nDimensionLegacyAll(TENSOR)-2; TENSOR##_i >= 0; TENSOR##_i--) \
       { \
-        if(THTensor_strideLegacyNoScalars(TENSOR, TENSOR##_i) != TENSOR->stride(TENSOR##_i+1) * TENSOR->size(TENSOR##_i+1) || TENSOR##_i == DIM || TENSOR##_i+1 == DIM) \
+        if(THTensor_strideLegacyNoScalars(TENSOR, TENSOR##_i) != THTensor_strideLegacyNoScalars(TENSOR, TENSOR##_i+1) * TENSOR->size(TENSOR##_i+1) || TENSOR##_i == DIM || TENSOR##_i+1 == DIM) \
           TENSOR##_dim++; \
       } \
       /* Allocate an array of 3*dim elements, where dim is the number of contiguous sections */ \
@@ -79,7 +79,7 @@
         TENSOR##_counter[TENSOR##_i] = 0; \
       } \
       for(TENSOR##_i = THTensor_nDimensionLegacyAll(TENSOR)-2; TENSOR##_i >= 0; --TENSOR##_i) { \
-        if (THTensor_strideLegacyNoScalars(TENSOR, TENSOR##_i) == TENSOR->stride(TENSOR##_i+1) * TENSOR->size(TENSOR##_i+1) && TENSOR##_i != DIM && TENSOR##_i+1 != DIM) { \
+        if (THTensor_strideLegacyNoScalars(TENSOR, TENSOR##_i) == THTensor_strideLegacyNoScalars(TENSOR, TENSOR##_i+1) * TENSOR->size(TENSOR##_i+1) && TENSOR##_i != DIM && TENSOR##_i+1 != DIM) { \
           TENSOR##_sizes[TH_TENSOR_dim_index] = TENSOR->size(TENSOR##_i) * TENSOR##_sizes[TH_TENSOR_dim_index]; \
           if (DIM != THTensor_nDimensionLegacyAll(TENSOR)-1 && TENSOR##_i < DIM) \
             TENSOR##_dimOffset--; \

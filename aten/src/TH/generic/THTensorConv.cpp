@@ -949,7 +949,7 @@ void THTensor_(conv2Dmv)(THTensor *r_, real beta, real alpha, THTensor *t_, THTe
   THArgCheck(*xc == 'C' || *xc == 'X', 7, "type of convolution can 'X' or 'C'");
 
   input = THTensor_(newContiguous)(t_);
-  if (!(THTensor_strideLegacyNoScalars(k_, 3) == 1) || !(k_->stride(2) == k_->size(3))) {
+  if (!(THTensor_strideLegacyNoScalars(k_, 3) == 1) || !(THTensor_strideLegacyNoScalars(k_, 2) == k_->size(3))) {
     kernel = THTensor_(newContiguous)(k_);
   } else {
     THTensor_(retain)(k_);
@@ -1087,7 +1087,7 @@ void THTensor_(conv2Dmm)(THTensor *r_, real beta, real alpha, THTensor *t_, THTe
   THArgCheck(*xc == 'C' || *xc == 'X', 7, "type of convolution can 'X' or 'C'");
 
   input = THTensor_(newContiguous)(t_);
-  if (!(THTensor_strideLegacyNoScalars(k_, 3) == 1) || !(k_->stride(2) == k_->size(3))) {
+  if (!(THTensor_strideLegacyNoScalars(k_, 3) == 1) || !(THTensor_strideLegacyNoScalars(k_, 2) == k_->size(3))) {
     kernel = THTensor_(newContiguous)(k_);
   } else {
     THTensor_(retain)(k_);
@@ -1639,7 +1639,7 @@ void THTensor_(conv3Dmv)(THTensor *r_, real beta, real alpha, THTensor *t_, THTe
   THArgCheck(*xc == 'C' || *xc == 'X', 8, "type of convolution can 'X' or 'C'");
 
   input = THTensor_(newContiguous)(t_);
-  if (!(THTensor_strideLegacyNoScalars(k_, 4) == 1) || !(k_->stride(3) == k_->size(4))) {
+  if (!(THTensor_strideLegacyNoScalars(k_, 4) == 1) || !(THTensor_strideLegacyNoScalars(k_, 3) == k_->size(4))) {
     kernel = THTensor_(newContiguous)(k_);
   } else {
     THTensor_(retain)(k_);

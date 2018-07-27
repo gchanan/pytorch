@@ -833,14 +833,14 @@ void THTensor_(addmv)(THTensor *r_, real beta, THTensor *t, real alpha, THTensor
   // n == 1 || lda >= max(1, m)
   #define LDA_COND(M, N, LDA) ((N) == 1 || (LDA) >= THMax(1, (M)))
 
-  if(THTensor_strideLegacyNoScalars(mat, 0) == 1 && LDA_COND(mat->size(0), mat->size(1), mat->stride(1)))
+  if(THTensor_strideLegacyNoScalars(mat, 0) == 1 && LDA_COND(mat->size(0), mat->size(1), THTensor_strideLegacyNoScalars(mat, 1)))
   {
     THBlas_(gemv)('n', mat->size(0), mat->size(1),
                   alpha, THTensor_(data)(mat), THTensor_strideLegacyNoScalars(mat, 1),
                   THTensor_(data)(vec), THTensor_strideLegacyNoScalars(vec, 0),
                   beta, THTensor_(data)(r_), THTensor_strideLegacyNoScalars(r_, 0));
   }
-  else if(THTensor_strideLegacyNoScalars(mat, 1) == 1 && LDA_COND(mat->size(1), mat->size(0), mat->stride(0)))
+  else if(THTensor_strideLegacyNoScalars(mat, 1) == 1 && LDA_COND(mat->size(1), mat->size(0), THTensor_strideLegacyNoScalars(mat, 0)))
   {
     THBlas_(gemv)('t',  mat->size(1), mat->size(0),
                   alpha, THTensor_(data)(mat), THTensor_strideLegacyNoScalars(mat, 0),
@@ -1026,8 +1026,8 @@ void THTensor_(addmm)(THTensor *r_, real beta, THTensor *t, real alpha, THTensor
     free_m2 = 1;
   }
 
-  int64_t ldm1_ = (transpose_m1 == 'n' ? THTensor_strideLegacyNoScalars(m1_, (transpose_r == 'n' ? 1 : 0)) : m1_->stride((transpose_r == 'n' ? 0 : 1)));
-  int64_t ldm2_ = (transpose_m2 == 'n' ? THTensor_strideLegacyNoScalars(m2_, (transpose_r == 'n' ? 1 : 0)) : m2_->stride((transpose_r == 'n' ? 0 : 1)));
+  int64_t ldm1_ = (transpose_m1 == 'n' ? THTensor_strideLegacyNoScalars(m1_, (transpose_r == 'n' ? 1 : 0)) : THTensor_strideLegacyNoScalars(m1_, (transpose_r == 'n' ? 0 : 1)));
+  int64_t ldm2_ = (transpose_m2 == 'n' ? THTensor_strideLegacyNoScalars(m2_, (transpose_r == 'n' ? 1 : 0)) : THTensor_strideLegacyNoScalars(m2_, (transpose_r == 'n' ? 0 : 1)));
 
 #pragma omp critical(blasgemm)
   /* do the operation */
@@ -1087,14 +1087,14 @@ void THTensor_(addr)(THTensor *r_, real beta, THTensor *t, real alpha, THTensor 
   // n == 1 || lda >= max(1, m)
   #define LDA_COND(M, N, LDA) ((N) == 1 || (LDA) >= THMax(1, (M)))
 
-  if(THTensor_strideLegacyNoScalars(r_, 0) == 1 && LDA_COND(vec1->size(0), vec2->size(0), r_->stride(1)))
+  if(THTensor_strideLegacyNoScalars(r_, 0) == 1 && LDA_COND(vec1->size(0), vec2->size(0), THTensor_strideLegacyNoScalars(r_, 1)))
   {
     THBlas_(ger)(vec1->size(0), vec2->size(0),
                  alpha, THTensor_(data)(vec1), THTensor_strideLegacyNoScalars(vec1, 0),
                  THTensor_(data)(vec2), THTensor_strideLegacyNoScalars(vec2, 0),
                  THTensor_(data)(r_), THTensor_strideLegacyNoScalars(r_, 1));
   }
-  else if(THTensor_strideLegacyNoScalars(r_, 1) == 1 && LDA_COND(vec2->size(0), vec1->size(0), r_->stride(0)))
+  else if(THTensor_strideLegacyNoScalars(r_, 1) == 1 && LDA_COND(vec2->size(0), vec1->size(0), THTensor_strideLegacyNoScalars(r_, 0)))
   {
     THBlas_(ger)(vec2->size(0), vec1->size(0),
                  alpha, THTensor_(data)(vec2), THTensor_strideLegacyNoScalars(vec2, 0),

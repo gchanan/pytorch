@@ -399,7 +399,7 @@ void THTensor_(multinomial)(THLongTensor *self, THGenerator *_generator, THTenso
     {
       val = THStorage_(get)( \
         THTensor_getStoragePtr(prob_dist), \
-        prob_dist->storage_offset()+i*THTensor_strideLegacyNoScalars(prob_dist, 0)+j*prob_dist->stride(1) \
+        prob_dist->storage_offset()+i*THTensor_strideLegacyNoScalars(prob_dist, 0)+j*THTensor_strideLegacyNoScalars(prob_dist, 1) \
       );
       THArgCheckWithCleanup((val >= 0),
                             THCleanup(THDoubleTensor_free(cum_dist); if (start_dim == 1) THTensor_(squeeze1d)(prob_dist, prob_dist, 0);),
@@ -465,7 +465,7 @@ void THTensor_(multinomial)(THLongTensor *self, THGenerator *_generator, THTenso
        /* store in result tensor (will be incremented for lua compat by wrapper) */
       THLongStorage_set( \
         THTensor_getStoragePtr(self), \
-        self->storage_offset()+i*THTensor_strideLegacyNoScalars(self, 0)+j*self->stride(1), \
+        self->storage_offset()+i*THTensor_strideLegacyNoScalars(self, 0)+j*THTensor_strideLegacyNoScalars(self, 1), \
         sample_idx \
       );
 
