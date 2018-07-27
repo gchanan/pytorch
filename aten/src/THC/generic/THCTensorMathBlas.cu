@@ -597,7 +597,7 @@ THCTensor_(baddbmm)(THCState *state, THCTensor *result, real beta, THCTensor *t,
   createBatchGemmBuffer3<<<grid, block, 0, THCState_getCurrentStream(state)>>>(
     d_matrices1, d_matrices2, (const real**)d_result_matrices, THCTensor_(data)(state, batch1_),
     THCTensor_(data)(state, batch2_), THCTensor_(data)(state, result_),
-    THTensor_strideLegacyNoScalars(batch1_, 0), THTensor_strideLegacyNoScalars(batch2_, 0), result_->stride(0), num_batches);
+    THTensor_strideLegacyNoScalars(batch1_, 0), THTensor_strideLegacyNoScalars(batch2_, 0), THTensor_strideLegacyNoScalars(result_, 0), num_batches);
 
 #ifdef THC_REAL_IS_FLOAT
   THCudaBlas_SgemmBatched(
