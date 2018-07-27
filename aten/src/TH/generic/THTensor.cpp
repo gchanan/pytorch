@@ -25,11 +25,6 @@ int THTensor_(nDimensionLegacyAll)(const THTensor *self)
   return THTensor_nDimensionLegacyAll(self);
 }
 
-int64_t THTensor_(size)(const THTensor *self, int dim)
-{
-  return THTensor_sizeLegacyNoScalars(self, dim);
-}
-
 int64_t THTensor_(sizeLegacyNoScalars)(const THTensor *self, int dim)
 {
   return THTensor_sizeLegacyNoScalars(self, dim);

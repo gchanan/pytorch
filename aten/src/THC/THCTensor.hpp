@@ -14,7 +14,6 @@
 THC_API int THCTensor_nDimensionLegacyNoScalars(THCState *state, const THCTensor *self);
 THC_API int THCTensor_nDimensionLegacyAll(THCState *state, const THCTensor *self);
 
-THC_API int64_t THCTensor_size(THCState *state, const THCTensor *self, int dim);
 THC_API int64_t THCTensor_sizeLegacyNoScalars(THCState *state, const THCTensor *self, int dim);
 THC_API int64_t THCTensor_strideLegacyNoScalars(THCState *state, const THCTensor *self, int dim);
 THC_API THLongStorage *THCTensor_newSizeOf(THCState *state, THCTensor *self);

@@ -17,10 +17,6 @@ int THCTensor_nDimensionLegacyAll(THCState *state, const THCTensor *self) {
   return THTensor_nDimensionLegacyAll(self);
 }
 
-int64_t THCTensor_size(THCState *state, const THCTensor *self, int dim) {
-  return THTensor_sizeLegacyNoScalars(self, dim);
-}
-
 int64_t THCTensor_sizeLegacyNoScalars(THCState *state, const THCTensor *self, int dim) {
   return THTensor_sizeLegacyNoScalars(self, dim);
 }

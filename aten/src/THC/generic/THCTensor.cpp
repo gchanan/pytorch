@@ -23,11 +23,6 @@ int THCTensor_(nDimensionLegacyAll)(THCState *state, const THCTensor *self)
   return THCTensor_nDimensionLegacyAll(state, self);
 }
 
-int64_t THCTensor_(size)(THCState *state, const THCTensor *self, int dim)
-{
-  return THCTensor_sizeLegacyNoScalars(state, self, dim);
-}
-
 int64_t THCTensor_(sizeLegacyNoScalars)(THCState *state, const THCTensor *self, int dim)
 {
   return THCTensor_sizeLegacyNoScalars(state, self, dim);
