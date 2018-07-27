@@ -97,8 +97,8 @@ void THNN_(SpatialReflectionPadding_updateGradInput)(
     dimh++;
     dimw++;
   }
-  int iheight = input->size(dimh);
-  int iwidth = input->size(dimw);
+  int iheight = THTensor_sizeLegacyNoScalars(input, dimh);
+  int iwidth = THTensor_sizeLegacyNoScalars(input, dimw);
   int oheight = iheight + padT + padB;
   int owidth  = iwidth + padL + padR;
 

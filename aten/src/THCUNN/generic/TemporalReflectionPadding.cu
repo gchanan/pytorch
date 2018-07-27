@@ -84,7 +84,7 @@ void THNN_(TemporalReflectionPadding_updateGradInput)(
     planeDim++;
     dimw++;
   }
-  int iwidth = input->size(dimw);
+  int iwidth = THTensor_sizeLegacyNoScalars(input, dimw);
   int owidth  = iwidth + padL + padR;
 
   THArgCheck(owidth == THCTensor_(sizeLegacyNoScalars)(state, gradOutput, dimw), 3,

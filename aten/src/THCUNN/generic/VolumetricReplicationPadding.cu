@@ -28,9 +28,9 @@ static inline void THNN_(VolumetricReplicationPadding_shapeCheck)(
     }
 
   int numPlanes = THCTensor_(sizeLegacyNoScalars)(state, input, planeDim);
-  int idepth = input->size(dimd);
-  int iheight = input->size(dimh);
-  int iwidth = input->size(dimw);
+  int idepth = THTensor_sizeLegacyNoScalars(input, dimd);
+  int iheight = THTensor_sizeLegacyNoScalars(input, dimh);
+  int iwidth = THTensor_sizeLegacyNoScalars(input, dimw);
   int odepth = idepth + pfront + pback;
   int oheight = iheight + ptop + pbottom;
   int owidth  = iwidth + pleft + pright;

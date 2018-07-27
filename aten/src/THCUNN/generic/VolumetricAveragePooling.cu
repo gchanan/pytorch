@@ -32,11 +32,11 @@ static inline void THNN_(VolumetricAveragePooling_shapeCheck)(
 
   if (!input->is_empty() && THCTensor_(nDimensionLegacyNoScalars)(state, input) == 4)
   {
-    THArgCheck(input->size(dimw) >= kW && input->size(dimh) >= kH
-               && input->size(dimt) >= kT, 2,
+    THArgCheck(THTensor_sizeLegacyNoScalars(input, dimw) >= kW && input->size(dimh) >= kH
+               && THTensor_sizeLegacyNoScalars(input, dimt) >= kT, 2,
                "input image (T: %d H: %d W: %d) smaller than "
                "kernel size (kT: %d kH: %d kW: %d)",
-               input->size(dimt), input->size(dimh), input->size(dimw),
+               THTensor_sizeLegacyNoScalars(input, dimt), input->size(dimh), input->size(dimw),
                kT, kH, kW);
 
     /* sizes */
@@ -47,11 +47,11 @@ static inline void THNN_(VolumetricAveragePooling_shapeCheck)(
   }
   else if (!input->is_empty() && THCTensor_(nDimensionLegacyNoScalars)(state, input) == 5)
   {
-    THArgCheck(input->size(dimw) >= kW && input->size(dimh) >= kH
-               && input->size(dimt) >= kT, 2,
+    THArgCheck(THTensor_sizeLegacyNoScalars(input, dimw) >= kW && input->size(dimh) >= kH
+               && THTensor_sizeLegacyNoScalars(input, dimt) >= kT, 2,
                "input image (T: %d H: %d W: %d) smaller than "
                "kernel size (kT: %d kH: %d kW: %d)",
-               input->size(dimt), input->size(dimh), input->size(dimw),
+               THTensor_sizeLegacyNoScalars(input, dimt), input->size(dimh), input->size(dimw),
                kT, kH, kW);
 
     /* sizes */
