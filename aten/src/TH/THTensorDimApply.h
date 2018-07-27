@@ -61,15 +61,15 @@
     TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i] = 0; \
 \
   TENSOR1##_data = THTensor_getStoragePtr(TENSOR1)->data<TYPE1>()+(TENSOR1)->storage_offset(); \
-  TENSOR1##_stride = (TENSOR1)->stride(DIMENSION); \
+  TENSOR1##_stride = THTensor_strideLegacyNoScalars(TENSOR1, DIMENSION); \
   TENSOR1##_size = TENSOR1->size(DIMENSION); \
 \
   TENSOR2##_data = THTensor_getStoragePtr(TENSOR2)->data<TYPE2>()+(TENSOR2)->storage_offset(); \
-  TENSOR2##_stride = (TENSOR2)->stride(DIMENSION); \
+  TENSOR2##_stride = THTensor_strideLegacyNoScalars(TENSOR2, DIMENSION); \
   TENSOR2##_size = TENSOR2->size(DIMENSION); \
 \
   TENSOR3##_data = THTensor_getStoragePtr(TENSOR3)->data<TYPE3>()+(TENSOR3)->storage_offset(); \
-  TENSOR3##_stride = (TENSOR3)->stride(DIMENSION); \
+  TENSOR3##_stride = THTensor_strideLegacyNoScalars(TENSOR3, DIMENSION); \
   TENSOR3##_size = TENSOR3->size(DIMENSION); \
 \
   while(!TH_TENSOR_DIM_APPLY_hasFinished) \
@@ -168,11 +168,11 @@
     TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i] = 0; \
 \
   TENSOR1##_data = THTensor_getStoragePtr(TENSOR1)->data<TYPE1>()+(TENSOR1)->storage_offset(); \
-  TENSOR1##_stride = (TENSOR1)->stride(DIMENSION); \
+  TENSOR1##_stride = THTensor_strideLegacyNoScalars(TENSOR1, DIMENSION); \
   TENSOR1##_size = TENSOR1->size(DIMENSION); \
 \
   TENSOR2##_data = THTensor_getStoragePtr(TENSOR2)->data<TYPE2>()+(TENSOR2)->storage_offset(); \
-  TENSOR2##_stride = (TENSOR2)->stride(DIMENSION); \
+  TENSOR2##_stride = THTensor_strideLegacyNoScalars(TENSOR2, DIMENSION); \
   TENSOR2##_size = TENSOR2->size(DIMENSION); \
 \
   while(!TH_TENSOR_DIM_APPLY_hasFinished) \
@@ -270,7 +270,7 @@
     THError("invalid dimension"); \
 \
   TENSOR##_data = THTensor_getStoragePtr(TENSOR)->data<TYPE>()+(TENSOR)->storage_offset(); \
-  TENSOR##_stride = (TENSOR)->stride(DIMENSION); \
+  TENSOR##_stride = THTensor_strideLegacyNoScalars(TENSOR, DIMENSION); \
   TENSOR##_size = TENSOR->size(DIMENSION); \
   /* Counter stores the indices into the Tensor at any time */ \
   TH_TENSOR_DIM_APPLY_counter = (int64_t*)THAlloc(sizeof(int64_t)*(THTensor_nDimensionLegacyAll(TENSOR))); \
