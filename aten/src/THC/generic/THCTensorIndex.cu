@@ -111,7 +111,7 @@ void THCTensor_(indexCopy)(THCState *state, THCTensor *dst, int dim, THCudaLongT
   // of the tensor `indices`.
   ptrdiff_t sliceSize = THCTensor_(getSliceSize)(state, dst, dim, indices, src);
   ptrdiff_t srcTotalSize = THCTensor_(nElement)(state, src);
-  int64_t dstCopyDimSize = THCTensor_(size)(state, dst, dim);
+  int64_t dstCopyDimSize = THCTensor_(sizeLegacyNoScalars)(state, dst, dim);
   ptrdiff_t numIndices = THCudaLongTensor_nElement(state, indices);
 
   if (sliceSize == 0) {
@@ -300,7 +300,7 @@ void THCTensor_(indexAdd)(THCState *state, THCTensor *dst, int dim, THCudaLongTe
   // of the tensor `indices`.
   ptrdiff_t sliceSize = THCTensor_(getSliceSize)(state, dst, dim, indices, src);
   ptrdiff_t srcTotalSize = THCTensor_(nElement)(state, src);
-  int64_t dstAddDimSize = THCTensor_(size)(state, dst, dim);
+  int64_t dstAddDimSize = THCTensor_(sizeLegacyNoScalars)(state, dst, dim);
   ptrdiff_t numIndices = THCudaLongTensor_nElement(state, indices);
 
   if (sliceSize == 0) {
@@ -422,7 +422,7 @@ void THCTensor_(indexFill)(THCState *state, THCTensor *dst, int dim, THCudaLongT
   ptrdiff_t sliceSize =
     THCTensor_(getSliceSize)(state, dst, dim, indices, nullptr);
   ptrdiff_t dstTotalSize = THCTensor_(nElement)(state, dst);
-  int64_t dstFillDimSize = THCTensor_(size)(state, dst, dim);
+  int64_t dstFillDimSize = THCTensor_(sizeLegacyNoScalars)(state, dst, dim);
   ptrdiff_t numIndices = THCudaLongTensor_nElement(state, indices);
 
   if (sliceSize == 0) {
@@ -554,7 +554,7 @@ void THCTensor_(indexSelect)(THCState *state, THCTensor *dst, THCTensor *src, in
   // total size of the tensor ignoring dimension `dim`;
   // -the number of indices we are choosing, which is the total size
   // of the tensor `indices`.
-  int64_t srcSelectDimSize = THCTensor_(size)(state, src, dim);
+  int64_t srcSelectDimSize = THCTensor_(sizeLegacyNoScalars)(state, src, dim);
   ptrdiff_t sliceSize = dstTotalSize / numIndices;
 
   int mpc = THCState_getCurrentDeviceProperties(state)->multiProcessorCount;
