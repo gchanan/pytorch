@@ -79,7 +79,7 @@ void THNN_(TemporalReflectionPadding_updateGradInput)(
   int planeDim = 0;
   int dimw = 1;
 
-  int numInputDims = THCTensor_(nDimensionLegacyNoScalars)(state, input);
+  int numInputDims = THCTensor_(nDimension)(state, input);
   if (numInputDims == 3) {
     planeDim++;
     dimw++;

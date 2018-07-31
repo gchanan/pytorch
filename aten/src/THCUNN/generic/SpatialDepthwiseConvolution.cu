@@ -31,7 +31,7 @@ void THNN_(SpatialDepthwiseConvolution_updateOutput)(
 
   // Bias has same # of channels as output
   if (bias) {
-    THAssert(bias->size(0) == weight->size(0));
+    THAssert(THTensor_sizeLegacyNoScalars(bias, 0) == weight->size(0));
   }
 
   input = THCTensor_(newContiguous)(state, input);
@@ -46,7 +46,7 @@ void THNN_(SpatialDepthwiseConvolution_updateOutput)(
   int width = input->size(3);
   int outputHeight = (height + 2 * padH - (dilationH * (kH - 1) + 1)) / dH + 1;
   int outputWidth = (width + 2 * padW - (dilationW * (kW - 1) + 1)) / dW + 1;
-  int outputChannels = weight->size(0);
+  int outputChannels = THTensor_sizeLegacyNoScalars(weight, 0);
 
   THCTensor_(resize4d)(state, output, batchSize, outputChannels, outputHeight, outputWidth);
 
@@ -115,7 +115,7 @@ void THNN_(SpatialDepthwiseConvolution_updateGradInput)(
   // Same # of elements in batch
   THAssert(input->size(0) == gradOutput->size(0));
   // Same # of filters as outputChannels
-  THAssert(weight->size(0) == gradOutput->size(1));
+  THAssert(THTensor_sizeLegacyNoScalars(weight, 0) == gradOutput->size(1));
 
   // Resize GradInput
   THCTensor_(resizeAs)(state, gradInput, input);
@@ -212,7 +212,7 @@ void THNN_(SpatialDepthwiseConvolution_accGradParameters)(
   // Same # of elements in batch
   THAssert(input->size(0) == gradOutput->size(0));
   // Same # of filters as outputChannels
-  THAssert(gradWeight->size(0) == gradOutput->size(1));
+  THAssert(THTensor_sizeLegacyNoScalars(gradWeight, 0) == gradOutput->size(1));
 
   int batchSize = input->size(0);
   int inputChannels = input->size(1);
