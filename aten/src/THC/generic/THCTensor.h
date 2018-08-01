@@ -30,7 +30,6 @@ THC_API int64_t THCTensor_(sizeLegacyNoScalars)(THCState *state, const THCTensor
 THC_API int64_t THCTensor_(stride)(THCState *state, const THCTensor *self, int dim);
 THC_API int64_t THCTensor_(strideLegacyNoScalars)(THCState *state, const THCTensor *self, int dim);
 THC_API THLongStorage *THCTensor_(newSizeOf)(THCState *state, THCTensor *self);
-THC_API THLongStorage *THCTensor_(newStrideOf)(THCState *state, THCTensor *self);
 THC_API real *THCTensor_(data)(THCState *state, const THCTensor *self);
 
 THC_API void THCTensor_(setFlag)(THCState *state, THCTensor *self, const char flag);

@@ -2,6 +2,8 @@
 #define THC_GENERIC_FILE "generic/THCTensorMode.cu"
 #else
 
+#include <vector>
+
 THC_API void THCTensor_(calculateMode)(THCState *state,
                                         THCTensor *values,
                                         THCudaLongTensor *indices,
@@ -161,7 +163,6 @@ THC_API void THCTensor_(mode)(THCState *state,
                               THCTensor *input,
                               int dimension,
                               int keepdim) {
-  THLongStorage *dim;
   THCTensor *transposed, *contiguous, *valuesTransposed;
   THLongStorage *position;
   THCudaLongStorage *sortBuffer;
@@ -184,11 +185,10 @@ THC_API void THCTensor_(mode)(THCState *state,
       state, values, ndim, dimension, keepdim);
   THCTensor_preserveReduceDimSemantics(
       state, indices, ndim, dimension, keepdim);
-  dim = THCTensor_(newSizeOf)(state, input);
-  THLongStorage_set(dim, dimension, 1);
-  THCTensor_(resize)(state, values, dim, NULL);
-  THCudaLongTensor_resize(state, indices, dim, NULL);
-  THLongStorage_free(dim);
+  std::vector<int64_t> dim = input->sizes();
+  dim[dimension] = 1;
+  THCTensor_(resizeNd)(state, values, dim.size(), dim.data(), NULL);
+  THCudaLongTensor_resizeNd(state, indices, dim.size(), dim.data(), NULL);
 
   // If sliceSize is 1, copy input to values and set indices
   if (sliceSize == 1) {

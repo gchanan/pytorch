@@ -48,13 +48,6 @@ THLongStorage *THCTensor_(newSizeOf)(THCState *state, THCTensor *self)
   return THCTensor_newSizeOf(state, self);
 }
 
-THLongStorage *THCTensor_(newStrideOf)(THCState *state, THCTensor *self)
-{
-  THLongStorage *stride = THLongStorage_newWithSize(self->dim());
-  THLongStorage_rawCopy(stride, THTensor_getStridePtr(self));
-  return stride;
-}
-
 real *THCTensor_(data)(THCState *state, const THCTensor *self)
 {
   if(THTensor_getStoragePtr(self))
