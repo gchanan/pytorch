@@ -423,7 +423,7 @@ void THTensor_(gather)(THTensor *tensor, THTensor *src, int dim, THLongTensor *i
   THArgCheck(THTensor_(nDimensionLegacyNoScalars)(src) == THTensor_(nDimensionLegacyNoScalars)(tensor), 2,
              "Input tensor must have same dimensions as output tensor");
 
-  elems_per_row = THLongTensor_sizeLegacyNoScalars(index, dim);
+  elems_per_row = THTensor_sizeLegacyNoScalars(index, dim);
 
   TH_TENSOR_DIM_APPLY3(real, tensor, real, src, int64_t, index, dim,
                        TH_TENSOR_DIM_APPLY3_SIZE_EQ_EXCEPT_DIM,
@@ -449,7 +449,7 @@ void THTensor_(scatter)(THTensor *tensor, int dim, THLongTensor *index, THTensor
   THArgCheck(THTensor_(nDimensionLegacyNoScalars)(src) == THTensor_(nDimensionLegacyNoScalars)(tensor), 4,
              "Input tensor must have same dimensions as output tensor");
 
-  elems_per_row = THLongTensor_sizeLegacyNoScalars(index, dim);
+  elems_per_row = THTensor_sizeLegacyNoScalars(index, dim);
 
   TH_TENSOR_DIM_APPLY3(real, tensor, real, src, int64_t, index, dim,
                        TH_TENSOR_DIM_APPLY3_SIZE_SCATTER,
@@ -475,7 +475,7 @@ void THTensor_(scatterAdd)(THTensor *tensor, int dim, THLongTensor *index, THTen
   THArgCheck(THTensor_(nDimensionLegacyNoScalars)(src) == THTensor_(nDimensionLegacyNoScalars)(tensor), 4,
              "Input tensor must have same dimensions as output tensor");
 
-  elems_per_row = THLongTensor_sizeLegacyNoScalars(index, dim);
+  elems_per_row = THTensor_sizeLegacyNoScalars(index, dim);
 
   TH_TENSOR_DIM_APPLY3(real, tensor, real, src, int64_t, index, dim,
                        TH_TENSOR_DIM_APPLY3_SIZE_SCATTER,
@@ -499,7 +499,7 @@ void THTensor_(scatterFill)(THTensor *tensor, int dim, THLongTensor *index, real
   THArgCheck(THLongTensor_nDimensionLegacyAll(index) == THTensor_(nDimensionLegacyAll)(tensor), 3,
              "Index tensor must have same dimensions as output tensor");
 
-  elems_per_row = THLongTensor_sizeLegacyNoScalars(index, dim);
+  elems_per_row = THTensor_sizeLegacyNoScalars(index, dim);
 
   TH_TENSOR_DIM_APPLY2(real, tensor, int64_t, index, dim,
                        for (i = 0; i < elems_per_row; ++i)
