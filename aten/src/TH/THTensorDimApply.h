@@ -96,7 +96,7 @@
       TENSOR2##_data += THTensor_strideLegacyNoScalars(TENSOR2, TH_TENSOR_DIM_APPLY_i); \
       TENSOR3##_data += THTensor_strideLegacyNoScalars(TENSOR3, TH_TENSOR_DIM_APPLY_i); \
 \
-      if(TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i] == TENSOR1->size(TH_TENSOR_DIM_APPLY_i)) \
+      if(TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i] == THTensor_sizeLegacyNoScalars(TENSOR1, TH_TENSOR_DIM_APPLY_i)) \
       { \
         if(TH_TENSOR_DIM_APPLY_i == THTensor_nDimensionLegacyNoScalars(TENSOR1)-1) \
         { \
@@ -155,7 +155,7 @@
   { \
     if(TH_TENSOR_DIM_APPLY_i == DIMENSION) \
       continue; \
-    if(TENSOR1->size(TH_TENSOR_DIM_APPLY_i) != TENSOR2->size(TH_TENSOR_DIM_APPLY_i)) { \
+    if(THTensor_sizeLegacyNoScalars(TENSOR1, TH_TENSOR_DIM_APPLY_i) != THTensor_sizeLegacyNoScalars(TENSOR2, TH_TENSOR_DIM_APPLY_i)) { \
       AT_ERROR("Expected ", #TENSOR1, " ", TENSOR1->sizes(), " and ", #TENSOR2, " ", TENSOR2->sizes(), " to have the same size in dimension ", DIMENSION); \
     }                                                                   \
   } \
@@ -198,7 +198,7 @@
       TENSOR1##_data += THTensor_strideLegacyNoScalars(TENSOR1, TH_TENSOR_DIM_APPLY_i); \
       TENSOR2##_data += THTensor_strideLegacyNoScalars(TENSOR2, TH_TENSOR_DIM_APPLY_i); \
 \
-      if(TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i] == TENSOR1->size(TH_TENSOR_DIM_APPLY_i)) \
+      if(TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i] == THTensor_sizeLegacyNoScalars(TENSOR1, TH_TENSOR_DIM_APPLY_i)) \
       { \
         if(TH_TENSOR_DIM_APPLY_i == THTensor_nDimensionLegacyNoScalars(TENSOR1)-1) \
         { \
@@ -304,7 +304,7 @@
       TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i]++; \
       TENSOR##_data += THTensor_strideLegacyNoScalars(TENSOR, TH_TENSOR_DIM_APPLY_i); \
 \
-      if(TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i] == TENSOR->size(TH_TENSOR_DIM_APPLY_i)) \
+      if(TH_TENSOR_DIM_APPLY_counter[TH_TENSOR_DIM_APPLY_i] == THTensor_sizeLegacyNoScalars(TENSOR, TH_TENSOR_DIM_APPLY_i)) \
       { \
         /* Handled TENSOR_size(dim) iterations for DIM_APPLY_i. If this is the last dimension, exit */ \
         if(TH_TENSOR_DIM_APPLY_i == THTensor_nDimensionLegacyAll(TENSOR)-1) \
