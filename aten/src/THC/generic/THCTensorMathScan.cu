@@ -34,7 +34,7 @@ __host__ void THCTensor_(scanOuterDim)(THCState *state, THCTensor *tgt,
   for (int dim = 0; dim < dimension; dim++) {
     num_orows *= THCTensor_(sizeLegacyNoScalars)(state, src, dim);
   }
-  unsigned row_size = THCTensor_(sizeLEgacyNoScalars)(state, src, dimension);
+  unsigned row_size = THCTensor_(sizeLegacyNoScalars)(state, src, dimension);
   // Treat all inner dimensions (i.e. dim > dimension) as one.
   unsigned num_irows = 1;
   for (unsigned dim = dimension + 1; dim < ndim; dim++) {
