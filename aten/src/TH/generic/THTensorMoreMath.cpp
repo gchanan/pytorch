@@ -88,7 +88,7 @@ void THTensor_(max)(THTensor *values_, THLongTensor *indices_, THTensor *t, int 
   THLongStorage_free(dim);
 
   // two implementations optimized for data locality
-  if (t->stride(dimension) == 1) {
+  if (THTensor_strideLegacyNoScalars(t, dimension) == 1) {
     real theMax;
     real value;
     int64_t theIndex;
@@ -172,7 +172,7 @@ void THTensor_(min)(THTensor *values_, THLongTensor *indices_, THTensor *t, int 
   THLongStorage_free(dim);
 
   // two implementations optimized for data locality
-  if (t->stride(dimension) == 1) {
+  if (THTensor_strideLegacyNoScalars(t, dimension) == 1) {
     real theMax;
     real value;
     int64_t theIndex;
@@ -283,7 +283,7 @@ void THTensor_(sum)(THTensor *r_, THTensor *t, int dimension, int keepdim)
         real *r__data = rp+iter;
         *r__data = 0;
         for(j=0; j < t->size(dimension); ++j) {
-          *r__data += *(t_data + j*t->stride(dimension));
+          *r__data += *(t_data + j*THTensor_strideLegacyNoScalars(t, dimension));
         }
       }
     } else {
@@ -295,7 +295,7 @@ void THTensor_(sum)(THTensor *r_, THTensor *t, int dimension, int keepdim)
 #endif
   if (serial_path) {
     // two implementations optimized for data locality
-    if (t->stride(dimension) == 1) {
+    if (THTensor_strideLegacyNoScalars(t, dimension) == 1) {
       TH_TENSOR_DIM_APPLY2(real, t, real, r_, dimension,
                            accreal sum = 0;
                            int64_t i;
@@ -363,7 +363,7 @@ void THTensor_(prod)(THTensor *r_, THTensor *t, int dimension, int keepdim)
         real *r__data = rp+iter;
         *r__data = 1;
         for(j=0; j < t->size(dimension); ++j) {
-          *r__data *= *(t_data + j*t->stride(dimension));
+          *r__data *= *(t_data + j*THTensor_strideLegacyNoScalars(t, dimension));
         }
       }
     } else {
@@ -376,7 +376,7 @@ void THTensor_(prod)(THTensor *r_, THTensor *t, int dimension, int keepdim)
 
   if(serial_path) {
     // two implementations optimized for data locality
-    if (t->stride(dimension) == 1) {
+    if (THTensor_strideLegacyNoScalars(t, dimension) == 1) {
       TH_TENSOR_DIM_APPLY2(real, t, real, r_, dimension,
                            accreal prod = 1;
                            int64_t i;
@@ -562,8 +562,8 @@ void THTensor_(diag)(THTensor *r_, THTensor *t, int k)
   if(THTensor_(nDimensionLegacyNoScalars)(t) == 1)
   {
     real *t_data = THTensor_(data)(t);
-    int64_t t_stride_0 = THTensor_(stride)(t, 0);
-    int64_t t_size = THTensor_(size)(t, 0);
+    int64_t t_stride_0 = THTensor_strideLegacyNoScalars(t, 0);
+    int64_t t_size = THTensor_sizeLegacyNoScalars(t, 0);
     int64_t sz = t_size + (k >= 0 ? k : -k);
     real *r__data;
     int64_t r__stride_0;
@@ -1688,7 +1688,7 @@ void THTensor_(logicalAnd)(THTensor *r_, THTensor *t, int dimension, int keepdim
         real *r__data = rp+iter;
         *r__data = 1;
         for(j=0; j < t->size(dimension); ++j) {
-          *r__data = *r__data && *(t_data + j*t->stride(dimension));
+          *r__data = *r__data && *(t_data + j*THTensor_strideLegacyNoScalars(t, dimension));
         }
       }
     } else {
@@ -1701,7 +1701,7 @@ void THTensor_(logicalAnd)(THTensor *r_, THTensor *t, int dimension, int keepdim
 
   if(serial_path) {
     // two implementations optimized for data locality
-    if (t->stride(dimension) == 1) {
+    if (THTensor_strideLegacyNoScalars(t, dimension) == 1) {
       TH_TENSOR_DIM_APPLY2(real, t, real, r_, dimension,
                            accreal prod = 1;
                            int64_t i;
@@ -1768,7 +1768,7 @@ void THTensor_(logicalAny)(THTensor *r_, THTensor *t, int dimension, int keepdim
         real *r__data = rp+iter;
         *r__data = 0;
         for(j=0; j < t->size(dimension); ++j) {
-          *r__data = *r__data || *(t_data + j*t->stride(dimension));
+          *r__data = *r__data || *(t_data + j*THTensor_strideLegacyNoScalars(t, dimension));
         }
       }
     } else {
@@ -1780,7 +1780,7 @@ void THTensor_(logicalAny)(THTensor *r_, THTensor *t, int dimension, int keepdim
 #endif
   if (serial_path) {
     // two implementations optimized for data locality
-    if (t->stride(dimension) == 1) {
+    if (THTensor_strideLegacyNoScalars(t, dimension) == 1) {
       TH_TENSOR_DIM_APPLY2(real, t, real, r_, dimension,
                            accreal sum = 0;
                            int64_t i;

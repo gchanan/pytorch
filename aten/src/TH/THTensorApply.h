@@ -48,8 +48,8 @@
     TENSOR##_stride = 1; \
     for(TENSOR##_i = THTensor_nDimensionLegacyAll(TENSOR)-1; TENSOR##_i >= 0; TENSOR##_i--) { \
       if(TENSOR->size(TENSOR##_i) != 1) { \
-        if(TENSOR->stride(TENSOR##_i) == TENSOR##_size && TENSOR##_i != DIM) \
-          TENSOR##_size *= TENSOR->size(TENSOR##_i); \
+        if(THTensor_strideLegacyNoScalars(TENSOR, TENSOR##_i) == TENSOR##_size && TENSOR##_i != DIM) \
+          TENSOR##_size *= THTensor_sizeLegacyNoScalars(TENSOR, TENSOR##_i); \
         else{ \
           TENSOR##_contiguous = 0; \
           break; \

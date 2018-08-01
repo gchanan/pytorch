@@ -563,7 +563,7 @@ int THTensor_(isTransposed)(const THTensor *self)
   int64_t size_max_stride = 1;
   int64_t z = 1;
   int d;
-  for (d = 0; d < THTensor_nDimensionLegacyAll(self); ++d) {
+  for (d = 0; d < self->dim(); ++d) {
     if (self->stride(d) == 0 && self->size(d) != 1)
       return 0;
     if (self->stride(d) > max_stride) {
