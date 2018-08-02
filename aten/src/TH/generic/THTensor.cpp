@@ -2,6 +2,7 @@
 #define TH_GENERIC_FILE "generic/THTensor.cpp"
 #else
 
+#include <ATen/InferSize.h>
 #include <new>
 
 /**** access methods ****/
@@ -224,8 +225,8 @@ THTensor *THTensor_(newView)(THTensor *tensor, THLongStorage *size)
 {
   ptrdiff_t numel = THTensor_(nElement)(tensor);
   THTensor *self = THTensor_(new)();
-  THLongStorage *inferred_size_th = THLongStorage_newInferSize(size, numel);
-  at::IntList inferred_size(inferred_size_th->data<int64_t>(), inferred_size_th->size);
+  at::IntList shape(size->data<int64_t>(), size->size);
+  auto inferred_size = at::infer_size(shape, numel);
   auto stride = THTensor_compute_stride(tensor->sizes(),
                                         tensor->strides(),
                                         inferred_size);
@@ -234,7 +235,6 @@ THTensor *THTensor_(newView)(THTensor *tensor, THLongStorage *size)
     "across two contiguous subspaces). Call .contiguous() before .view().");
   auto stride_value = *stride;
   THTensor_setStorage(self, THTensor_getStoragePtr(tensor), tensor->storage_offset(), inferred_size, stride_value);
-  THLongStorage_free(inferred_size_th);
   return self;
 }
 

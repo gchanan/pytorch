@@ -2,6 +2,8 @@
 #define THC_GENERIC_FILE "generic/THCTensor.cpp"
 #else
 
+#include <ATen/InferSize.h>
+
 /**** access methods ****/
 THCStorage *THCTensor_(storage)(THCState *state, const THCTensor *self)
 {
@@ -227,8 +229,8 @@ THCTensor *THCTensor_(newView)(THCState *state, THCTensor *tensor, THLongStorage
 {
   ptrdiff_t numel = THCTensor_(nElement)(state, tensor);
   THCTensor *self = THCTensor_(new)(state);
-  THLongStorage *inferred_size_th = THLongStorage_newInferSize(size, numel);
-  at::IntList inferred_size(inferred_size_th->data<int64_t>(), inferred_size_th->size);
+  at::IntList shape(size->data<int64_t>(), size->size);
+  auto inferred_size = at::infer_size(shape, numel);
   auto stride = THTensor_compute_stride(tensor->sizes(),
                                         tensor->strides(),
                                         inferred_size);
@@ -237,7 +239,6 @@ THCTensor *THCTensor_(newView)(THCState *state, THCTensor *tensor, THLongStorage
     "across two contiguous subspaces). Call .contiguous() before .view().");
   auto stride_value = *stride;
   THCTensor_setStorage(state, self, THTensor_getStoragePtr(tensor), tensor->storage_offset(), inferred_size, stride_value);
-  THLongStorage_free(inferred_size_th);
   return self;
 }
 
