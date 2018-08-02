@@ -80,29 +80,11 @@ THTensor *THTensor_(newWithTensor)(THTensor *tensor)
 }
 
 /* Storage init */
-THTensor *THTensor_(newWithStorage)(THStorage *storage, ptrdiff_t storageOffset, THLongStorage *size, THLongStorage *stride)
-{
-  if(size && stride) {
-    THArgCheck(size->size == stride->size, 4, "inconsistent size");
+THTensor *THTensor_(newWithStorage)(THStorage *storage, ptrdiff_t storageOffset, at::IntList sizes, at::IntList strides) {
+  if (sizes.data() && strides.data()) {
+    AT_CHECK(sizes.size() == strides.size(), "number of sizes and strides must match");
   }
-  AT_CHECK(size, "size must not be null");
-
-  THTensor *self = new THTensor(THStorage_(new)());
-#ifdef DEBUG
-  THAssert(size->size <= INT_MAX);
-#endif
-  THTensor_(setStorageNd)(self,
-                          storage,
-                          storageOffset,
-                          size->size,
-                          THLongStorage_data(size),
-                          (stride ? THLongStorage_data(stride) : NULL));
-
-  return self;
-}
-
-THTensor *THTensor_(newWithStorageIntLists)(THStorage *storage, ptrdiff_t storageOffset, at::IntList sizes, at::IntList strides) {
-  AT_CHECK(sizes.size() == strides.size(), "number of sizes and strides must match");
+  AT_CHECK(sizes.data(), "size must not be null");
   THTensor *self = new THTensor(THStorage_(new)());
   THTensor_(setStorageNd)(self, storage, storageOffset, sizes.size(),
                           const_cast<int64_t*>(sizes.data()), const_cast<int64_t*>(strides.data()));
@@ -113,14 +95,14 @@ THTensor *THTensor_(newWithStorageIntLists)(THStorage *storage, ptrdiff_t storag
 THTensor *THTensor_(newWithStorage1d)(THStorage *storage, ptrdiff_t storageOffset,
                                int64_t size0, int64_t stride0)
 {
-  return THTensor_(newWithStorageIntLists)(storage, storageOffset, {size0}, {stride0});
+  return THTensor_(newWithStorage)(storage, storageOffset, {size0}, {stride0});
 }
 
 THTensor *THTensor_(newWithStorage2d)(THStorage *storage, ptrdiff_t storageOffset,
                                int64_t size0, int64_t stride0,
                                int64_t size1, int64_t stride1)
 {
-  return THTensor_(newWithStorageIntLists)(storage, storageOffset, {size0, size1}, {stride0, stride1});
+  return THTensor_(newWithStorage)(storage, storageOffset, {size0, size1}, {stride0, stride1});
 }
 
 THTensor *THTensor_(newWithStorage3d)(THStorage *storage, ptrdiff_t storageOffset,
@@ -128,7 +110,7 @@ THTensor *THTensor_(newWithStorage3d)(THStorage *storage, ptrdiff_t storageOffse
                                int64_t size1, int64_t stride1,
                                int64_t size2, int64_t stride2)
 {
-  return THTensor_(newWithStorageIntLists)(storage, storageOffset, {size0, size1, size2}, {stride0, stride1, stride2});
+  return THTensor_(newWithStorage)(storage, storageOffset, {size0, size1, size2}, {stride0, stride1, stride2});
 }
 
 THTensor *THTensor_(newWithStorage4d)(THStorage *storage, ptrdiff_t storageOffset,
@@ -137,14 +119,16 @@ THTensor *THTensor_(newWithStorage4d)(THStorage *storage, ptrdiff_t storageOffse
                                int64_t size2, int64_t stride2,
                                int64_t size3, int64_t stride3)
 {
-  return THTensor_(newWithStorageIntLists)(storage, storageOffset,
+  return THTensor_(newWithStorage)(storage, storageOffset,
                                           {size0, size1, size2, size3},
                                           {stride0, stride1, stride2, stride3});
 }
 
 THTensor *THTensor_(newWithSize)(THLongStorage *size, THLongStorage *stride)
 {
-  return THTensor_(newWithStorage)(NULL, 0, size, stride);
+  at::IntList size_(size == nullptr ? nullptr : size->data<int64_t>(), size == nullptr ? 0 : size->get_size());
+  at::IntList stride_(stride == nullptr ? nullptr : stride->data<int64_t>(), stride == nullptr ? 0 : stride->get_size());
+  return THTensor_(newWithStorage)(NULL, 0, size_, stride_);
 }
 
 THTensor *THTensor_(newWithSizeIntList)(at::IntList sizes) {
