@@ -14,6 +14,15 @@
 #include "generic/THStorageCopy.cpp"
 #include "THGenerateHalfType.h"
 
+THStorage* THStorage_new(at::ScalarType scalar_type) {
+  THStorage* storage = new THStorage(
+      scalar_type,
+      0,
+      getTHDefaultAllocator(),
+      true);
+  return storage;
+}
+
 // Free a non-weak pointer to THStorage
 void THStorage_free(THStorage* storage) {
   if (!storage) {

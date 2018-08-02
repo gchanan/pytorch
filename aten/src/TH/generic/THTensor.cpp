@@ -224,33 +224,24 @@ THTensor *THTensor_(newView)(THTensor *tensor, THLongStorage *size)
 {
   ptrdiff_t numel = THTensor_(nElement)(tensor);
   THTensor *self = THTensor_(new)();
-  THLongStorage *inferred_size = THLongStorage_newInferSize(size, numel);
+  THLongStorage *inferred_size_th = THLongStorage_newInferSize(size, numel);
+  at::IntList inferred_size(inferred_size_th->data<int64_t>(), inferred_size_th->size);
   auto stride = THTensor_compute_stride(tensor->sizes(),
                                         tensor->strides(),
-                                        at::IntList(inferred_size->data<int64_t>(), inferred_size->size));
+                                        inferred_size);
   THArgCheck(stride.has_value(), 2, "view size is "
     "not compatible with input tensor's size and stride (at least one dimension spans "
     "across two contiguous subspaces). Call .contiguous() before .view().");
   auto stride_value = *stride;
-  THLongStorage *new_stride = THLongStorage_newWithSize(stride_value.size());
-  THLongStorage_rawCopy(new_stride, stride_value.data());
-  THTensor_(setStorage)(self, THTensor_getStoragePtr(tensor), tensor->storage_offset(), inferred_size, new_stride);
-  THLongStorage_free(inferred_size);
-  THLongStorage_free(new_stride);
+  THTensor_setStorage(self, THTensor_getStoragePtr(tensor), tensor->storage_offset(), inferred_size, stride_value);
+  THLongStorage_free(inferred_size_th);
   return self;
 }
 
 /* Resize */
 void THTensor_(resize)(THTensor *self, THLongStorage *size, THLongStorage *stride)
 {
-  THArgCheck(size != NULL, 2, "invalid size");
-  if(stride)
-    THArgCheck(stride->size == size->size, 3, "invalid stride");
-
-#ifdef DEBUG
-  THAssert(size->size <= INT_MAX);
-#endif
-  THTensor_(resizeNd)(self, size->size, THLongStorage_data(size), (stride ? THLongStorage_data(stride) : NULL));
+  return THTensor_resize(self, size, stride);
 }
 
 void THTensor_(resizeAs)(THTensor *self, THTensor *src)
@@ -300,7 +291,7 @@ void THTensor_(set)(THTensor *self, THTensor *src)
                             THTensor_getStridePtr(src));
 }
 
-void THTensor_(setStorage)(THTensor *self, THStorage *storage_, ptrdiff_t storageOffset_, THLongStorage *size_, THLongStorage *stride_)
+void THTensor_(setStorage2)(THTensor *self, THStorage *storage_, ptrdiff_t storageOffset_, THLongStorage *size_, THLongStorage *stride_)
 {
   if(size_ && stride_)
     THArgCheck(size_->size == stride_->size, 5, "inconsistent size/stride sizes");
@@ -664,93 +655,12 @@ void THTensor_(freeCopyTo)(THTensor *self, THTensor *dst)
 
 void THTensor_(setStorageNd)(THTensor *self, THStorage *storage, ptrdiff_t storageOffset, int nDimension, int64_t *size, int64_t *stride)
 {
-  /* storage */
-  if(THTensor_getStoragePtr(self) != storage)
-  {
-    if(THTensor_getStoragePtr(self))
-      THStorage_(free)(THTensor_getStoragePtr(self));
-
-    if(storage)
-    {
-      THTensor_stealAndSetStoragePtr(self, storage);
-      THStorage_(retain)(THTensor_getStoragePtr(self));
-    }
-    else
-      THTensor_stealAndSetStoragePtr(self, THStorage_(new)());
-  }
-
-  /* storageOffset */
-  if(storageOffset < 0)
-    THError("Tensor: invalid storage offset");
-  THTensor_setStorageOffset(self, storageOffset);
-
-  /* size and stride */
-  THTensor_(resizeNd)(self, nDimension, size, stride);
+  return THTensor_setStorageNd(self, storage, storageOffset, nDimension, size, stride);
 }
 
 void THTensor_(resizeNd)(THTensor *self, int nDimension, int64_t *size, int64_t *stride)
 {
-  int d;
-  ptrdiff_t totalSize;
-  bool hascorrectsize = true;
-
-#ifndef USE_TH_SCALAR
-  AT_CHECK(nDimension > 0, "resizeNd nDimension must be greater than 0");
-#else
-  AT_CHECK(nDimension >= 0, "resizeNd nDimension must be non-negative");
-#endif
-
-  for(d = 0; d < nDimension; d++)
-  {
-    if((self->dim() > d) && (size[d] != self->size(d))) {
-      hascorrectsize = false;
-    }
-
-    // NB: this used to test that stride[d] was >= 0
-    if((self->dim() > d) && stride && (stride[d] != self->stride(d))) {
-      hascorrectsize = false;
-    }
-  }
-
-  if(nDimension != self->dim()) {
-    hascorrectsize = false;
-  }
-
-  if(hascorrectsize) {
-    return;
-  }
-
-  if(nDimension != self->dim())
-  {
-    THTensor_resizeDim(self, nDimension);
-  }
-
-  totalSize = 1;
-  for(d = nDimension-1; d >= 0; d--)
-  {
-    THTensor_setSizeAtDim(self, d, size[d]);
-    if(stride && (stride[d] >= 0) ) {
-      THTensor_setStrideAtDim(self, d, stride[d]);
-    } else {
-      if(d == nDimension-1) {
-        THTensor_setStrideAtDim(self, d, 1);
-      } else {
-        // Keep stride monotonically increasing to match NumPy.
-        THTensor_setStrideAtDim(self, d, std::max<int64_t>(self->size(d+1), 1)*self->stride(d+1));
-      }
-    }
-    totalSize += (self->size(d)-1)*self->stride(d);
-  }
-
-  if(totalSize+self->storage_offset() > 0)
-  {
-    if(!THTensor_getStoragePtr(self)) {
-      THTensor_stealAndSetStoragePtr(self, THStorage_(new)());
-    }
-    if(totalSize+self->storage_offset() > THTensor_getStoragePtr(self)->size) {
-      THStorage_(resize)(THTensor_getStoragePtr(self), totalSize+self->storage_offset());
-    }
-  }
+  return THTensor_resizeNd(self, nDimension, size, stride);
 }
 
 void THTensor_(set1d)(THTensor *tensor, int64_t x0, real value)

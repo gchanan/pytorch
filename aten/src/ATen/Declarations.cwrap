@@ -39,12 +39,12 @@
       arguments:
         - THTensor* self
         - THTensor* source
-    - cname: setStorage
+    - cname: setStorage2
       scalar_check: False
       arguments:
         - THTensor* self
         - CONSTANT NULL, 0, THLongStorageView({0}, THLongStorageViewKind::SIZE), NULL
-    - cname: setStorage
+    - cname: setStorage2
       scalar_check: False
       arguments:
         - THTensor* self
@@ -52,7 +52,7 @@
         - CONSTANT 0
         - CONSTANT __storage_size.get()
         - CONSTANT NULL
-    - cname: setStorage
+    - cname: setStorage2
       arguments:
         - THTensor* self
         - THStorage* source

@@ -227,19 +227,17 @@ THCTensor *THCTensor_(newView)(THCState *state, THCTensor *tensor, THLongStorage
 {
   ptrdiff_t numel = THCTensor_(nElement)(state, tensor);
   THCTensor *self = THCTensor_(new)(state);
-  THLongStorage *inferred_size = THLongStorage_newInferSize(size, numel);
+  THLongStorage *inferred_size_th = THLongStorage_newInferSize(size, numel);
+  at::IntList inferred_size(inferred_size_th->data<int64_t>(), inferred_size_th->size);
   auto stride = THTensor_compute_stride(tensor->sizes(),
                                         tensor->strides(),
-                                        at::IntList(inferred_size->data<int64_t>(), inferred_size->size));
+                                        inferred_size);
   THArgCheck(stride.has_value(), 2, "view size is "
     "not compatible with input tensor's size and stride (at least one dimension spans "
     "across two contiguous subspaces). Call .contiguous() before .view().");
   auto stride_value = *stride;
-  THLongStorage *new_stride = THLongStorage_newWithSize(stride_value.size());
-  THLongStorage_rawCopy(new_stride, stride_value.data());
-  THCTensor_(setStorage)(state, self, THTensor_getStoragePtr(tensor), tensor->storage_offset(), inferred_size, new_stride);
-  THLongStorage_free(inferred_size);
-  THLongStorage_free(new_stride);
+  THCTensor_setStorage(state, self, THTensor_getStoragePtr(tensor), tensor->storage_offset(), inferred_size, stride_value);
+  THLongStorage_free(inferred_size_th);
   return self;
 }
 
@@ -306,7 +304,7 @@ void THCTensor_(set)(THCState *state, THCTensor *self, THCTensor *src)
   THCTensor_set(state, self, src);
 }
 
-void THCTensor_(setStorage)(THCState *state, THCTensor *self, THCStorage *storage_, ptrdiff_t storageOffset_, THLongStorage *size_, THLongStorage *stride_)
+void THCTensor_(setStorage2)(THCState *state, THCTensor *self, THCStorage *storage_, ptrdiff_t storageOffset_, THLongStorage *size_, THLongStorage *stride_)
 {
   if(size_ && stride_)
     THArgCheck(size_->size == stride_->size, 5, "inconsistent size/stride sizes");
