@@ -304,19 +304,8 @@ void THCTensor_(set)(THCState *state, THCTensor *self, THCTensor *src)
   THCTensor_set(state, self, src);
 }
 
-void THCTensor_(setStorage2)(THCState *state, THCTensor *self, THCStorage *storage_, ptrdiff_t storageOffset_, THLongStorage *size_, THLongStorage *stride_)
-{
-  if(size_ && stride_)
-    THArgCheck(size_->size == stride_->size, 5, "inconsistent size/stride sizes");
-
-  AT_CHECK(size_, "size must not be null");
-  THCTensor_(setStorageNd)(state,
-                           self,
-                           storage_,
-                           storageOffset_,
-                           size_->size,
-                           THLongStorage_data(size_),
-                           (stride_ ? THLongStorage_data(stride_) : NULL));
+void THCTensor_(setStorage)(THCState *state, THCTensor *self, THCStorage *storage_, ptrdiff_t storageOffset_, at::IntList size_, at::IntList stride_) {
+  THCTensor_setStorage(state, self, storage_, storageOffset_, size_, stride_);
 }
 
 void THCTensor_(setStorageIntLists)(THCState *state, THCTensor *self, THCStorage *storage_, ptrdiff_t storageOffset_,
