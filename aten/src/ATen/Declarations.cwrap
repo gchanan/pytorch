@@ -57,8 +57,8 @@
         - THTensor* self
         - THStorage* source
         - long storage_offset
-        - IntList size
-        - arg: IntList stride
+        - IntListSize size
+        - arg: IntListStride stride
           default: {}
 ]]
 [[
@@ -171,7 +171,7 @@
   return: THTensor*
   arguments:
     - THTensor* self
-    - arg: IntList size
+    - arg: IntListSize size
       long_args: True
 ]]
 [[
@@ -3410,8 +3410,8 @@
       arguments:
         - THStorage* storage
         - int64_t storageOffset
-        - IntList size
-        - arg: IntList stride
+        - IntListSize size
+        - arg: IntListStride stride
           default: {}
 ]]
 
