@@ -217,3 +217,9 @@ TH_API void THTensor_resizeNd(THTensor *self, int nDimension, const int64_t *siz
 TH_CPP_API void THTensor_setStorage(THTensor *self, THStorage *storage_, ptrdiff_t storageOffset_, at::IntList size_, at::IntList stride_);
 TH_CPP_API at::optional<std::vector<int64_t>> THTensor_compute_stride(at::IntList oldshape, at::IntList oldstride,
                                                                       at::IntList newshape);
+
+#include "generic/THTensor.hpp"
+#include "THGenerateAllTypes.h"
+
+#include "generic/THTensor.hpp"
+#include "THGenerateHalfType.h"

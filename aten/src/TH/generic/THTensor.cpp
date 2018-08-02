@@ -291,21 +291,9 @@ void THTensor_(set)(THTensor *self, THTensor *src)
                             THTensor_getStridePtr(src));
 }
 
-void THTensor_(setStorage2)(THTensor *self, THStorage *storage_, ptrdiff_t storageOffset_, THLongStorage *size_, THLongStorage *stride_)
+void THTensor_(setStorage)(THTensor *self, THStorage *storage_, ptrdiff_t storageOffset_, at::IntList size_, at::IntList stride_)
 {
-  if(size_ && stride_)
-    THArgCheck(size_->size == stride_->size, 5, "inconsistent size/stride sizes");
-
-  AT_CHECK(size_, "size must not be null");
-#ifdef DEBUG
-  THAssert(size_ <= INT_MAX);
-#endif
-  THTensor_(setStorageNd)(self,
-                          storage_,
-                          storageOffset_,
-                          size_->size,
-                          THLongStorage_data(size_),
-                          (stride_ ? THLongStorage_data(stride_) : NULL));
+  THTensor_setStorage(self, storage_, storageOffset_, size_, stride_);
 }
 
 void THTensor_(setStorageIntLists)(THTensor *self, THStorage *storage_, ptrdiff_t storageOffset_,

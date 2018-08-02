@@ -39,27 +39,27 @@
       arguments:
         - THTensor* self
         - THTensor* source
-    - cname: setStorage2
+    - cname: setStorage
       scalar_check: False
       arguments:
         - THTensor* self
-        - CONSTANT NULL, 0, THLongStorageView({0}, THLongStorageViewKind::SIZE), NULL
-    - cname: setStorage2
+        - CONSTANT NULL, 0, {0}, {}
+    - cname: setStorage
       scalar_check: False
       arguments:
         - THTensor* self
         - THStorage* source
         - CONSTANT 0
-        - CONSTANT __storage_size.get()
-        - CONSTANT NULL
-    - cname: setStorage2
+        - CONSTANT {static_cast<int64_t>(source.pImpl()->get_size())}
+        - CONSTANT {}
+    - cname: setStorage
       arguments:
         - THTensor* self
         - THStorage* source
         - long storage_offset
-        - THSize* size
-        - arg: THStride* stride
-          default: NULL
+        - IntList size
+        - arg: IntList stride
+          default: {}
 ]]
 [[
   name: _fill_
