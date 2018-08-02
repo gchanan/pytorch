@@ -9,5 +9,6 @@
 // new functions in here, they should probably be un-genericized.
 
 TH_CPP_API void THTensor_(setStorage)(THTensor *self, THStorage *storage_, ptrdiff_t storageOffset_, at::IntList size_, at::IntList stride_);
+TH_CPP_API THTensor *THTensor_(newView)(THTensor *tensor, at::IntList size);
 
 #endif

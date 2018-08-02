@@ -171,7 +171,7 @@
   return: THTensor*
   arguments:
     - THTensor* self
-    - arg: THSize* size
+    - arg: IntList size
       long_args: True
 ]]
 [[

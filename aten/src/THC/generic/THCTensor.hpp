@@ -9,5 +9,6 @@
 // new functions in here, they should probably be un-genericized.
 
 THC_API void THCTensor_(setStorage)(THCState *state, THCTensor *self, THCStorage *storage_, ptrdiff_t storageOffset_, at::IntList size_, at::IntList stride_);
+THC_API THCTensor *THCTensor_(newView)(THCState *state, THCTensor *tensor, at::IntList size);
 
 #endif

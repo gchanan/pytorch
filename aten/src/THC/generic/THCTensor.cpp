@@ -225,12 +225,11 @@ THCTensor *THCTensor_(newUnfold)(THCState *state, THCTensor *tensor, int dimensi
   return self;
 }
 
-THCTensor *THCTensor_(newView)(THCState *state, THCTensor *tensor, THLongStorage *size)
+THCTensor *THCTensor_(newView)(THCState *state, THCTensor *tensor, at::IntList size)
 {
   ptrdiff_t numel = THCTensor_(nElement)(state, tensor);
   THCTensor *self = THCTensor_(new)(state);
-  at::IntList shape(size->data<int64_t>(), size->size);
-  auto inferred_size = at::infer_size(shape, numel);
+  auto inferred_size = at::infer_size(size, numel);
   auto stride = THTensor_compute_stride(tensor->sizes(),
                                         tensor->strides(),
                                         inferred_size);
@@ -249,13 +248,12 @@ THCTensor *THCTensor_(newFoldBatchDim)(THCState *state, THCTensor *input) {
   THArgCheck(in_dims >= 2, 1, "Tensor needs to have at least two dimensions");
   THArgCheck(THCTensor_(isContiguous)(state, input), 1,
              "Tensor must be contiguous");
-  THLongStorage *newSize = THLongStorage_newWithSize(in_dims - 1);
-  THLongStorage_data(newSize)[0] = THCTensor_(size)(state, input, 0) * THCTensor_(size)(state, input, 1);
+  std::vector<int64_t> new_size(in_dims - 1);
+  new_size[0] = THCTensor_(size)(state, input, 0) * THCTensor_(size)(state, input, 1);
   for (int i = 2; i < in_dims; i++) {
-    THLongStorage_data(newSize)[i - 1] = THCTensor_(size)(state, input, i);
+    new_size[i - 1] = THCTensor_(size)(state, input, i);
   }
-  THCTensor *output = THCTensor_(newView)(state, input, newSize);
-  THLongStorage_free(newSize);
+  THCTensor *output = THCTensor_(newView)(state, input, new_size);
   return output;
 }
 

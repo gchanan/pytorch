@@ -221,12 +221,11 @@ THTensor *THTensor_(newUnfold)(THTensor *tensor, int dimension_, int64_t size_, 
   return self;
 }
 
-THTensor *THTensor_(newView)(THTensor *tensor, THLongStorage *size)
+THTensor *THTensor_(newView)(THTensor *tensor, at::IntList size)
 {
   ptrdiff_t numel = THTensor_(nElement)(tensor);
   THTensor *self = THTensor_(new)();
-  at::IntList shape(size->data<int64_t>(), size->size);
-  auto inferred_size = at::infer_size(shape, numel);
+  auto inferred_size = at::infer_size(size, numel);
   auto stride = THTensor_compute_stride(tensor->sizes(),
                                         tensor->strides(),
                                         inferred_size);
