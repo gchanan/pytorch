@@ -45,11 +45,6 @@ int64_t THCTensor_(strideLegacyNoScalars)(THCState *state, const THCTensor *self
   return THTensor_strideLegacyNoScalars(self, dim);
 }
 
-THLongStorage *THCTensor_(newSizeOf)(THCState *state, THCTensor *self)
-{
-  return THCTensor_newSizeOf(state, self);
-}
-
 real *THCTensor_(data)(THCState *state, const THCTensor *self)
 {
   if(THTensor_getStoragePtr(self))

@@ -84,11 +84,11 @@ struct THTensor
       return strides_[d];
     }
 
-    inline at::IntList sizes() {
+    inline at::IntList sizes() const {
       return sizes_;
     }
 
-    inline at::IntList strides() {
+    inline at::IntList strides() const {
       return strides_;
     }
 

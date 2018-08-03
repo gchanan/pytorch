@@ -40,13 +40,6 @@ int64_t THTensor_(stride)(const THTensor *self, int dim)
   return self->stride(dim);
 }
 
-THLongStorage *THTensor_(newSizeOf)(THTensor *self)
-{
-  THLongStorage *size = THLongStorage_newWithSize(self->dim());
-  THLongStorage_rawCopy(size, THTensor_getSizePtr(self));
-  return size;
-}
-
 real *THTensor_(data)(const THTensor *self) {
   return self->data<real>();
 }
@@ -688,9 +681,7 @@ THDescBuff THTensor_(desc)(const THTensor *tensor) {
 }
 
 THDescBuff THTensor_(sizeDesc)(const THTensor *tensor) {
-  THLongStorage *size = THTensor_(newSizeOf)((THTensor*)tensor);
-  THDescBuff buf = THLongStorage_sizeDesc(size);
-  THLongStorage_free(size);
+  THDescBuff buf = _THSizeDesc(tensor->sizes().data(), tensor->sizes().size());
   return buf;
 }
 
