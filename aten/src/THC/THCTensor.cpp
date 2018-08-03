@@ -36,12 +36,6 @@ int64_t THCTensor_strideLegacyNoScalars(THCState *state, const THCTensor *self, 
   return THTensor_strideLegacyNoScalars(self, dim);
 }
 
-THLongStorage *THCTensor_newSizeOf(THCState *state, THCTensor *self) {
-  THLongStorage *size = THLongStorage_newWithSize(self->dim());
-  THLongStorage_rawCopy(size, THTensor_getSizePtr(self));
-  return size;
-}
-
 THCTensor *THCTensor_new(THCState *state, at::ScalarType scalar_type) {
   switch(scalar_type) {
     case at::ScalarType::Byte:
