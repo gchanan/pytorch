@@ -59,14 +59,13 @@ THCTensor_(maskedCopy)(THCState* state,
   // iterator prefix sums? Convert `mask` to the same datatype as what
   // we're accumulating the prefix sum in (int64_t) to get around it
   THCudaLongTensor* maskLong = THCudaLongTensor_new(state);
-  THLongStorage* maskSizes = THCudaByteTensor_newSizeOf(state, mask);
-  THCudaLongTensor_resize(state, maskLong, maskSizes, NULL);
+  at::IntList maskSizes = mask->sizes();
+  THCudaLongTensor_resize(state, maskLong, maskSizes, {});
   THCudaLongTensor_copyCudaByte(state, maskLong, mask);
 
   // Use a prefix sum to determine the output locations of the masked elements
   THCudaLongTensor* maskPrefixSum = THCudaLongTensor_new(state);
-  THCudaLongTensor_resize(state, maskPrefixSum, maskSizes, NULL);
-  THLongStorage_free(maskSizes);
+  THCudaLongTensor_resize(state, maskPrefixSum, maskSizes, {});
 
   THCThrustAllocator thrustAlloc(state);
   thrust::device_ptr<int64_t>
@@ -134,14 +133,13 @@ THCTensor_(maskedSelect)(THCState* state,
   // iterator prefix sums? Convert `mask` to the same datatype as what
   // we're accumulating the prefix sum in (int64_t) to get around it
   THCudaLongTensor* maskLong = THCudaLongTensor_new(state);
-  THLongStorage* maskSizes = THCudaByteTensor_newSizeOf(state, mask);
-  THCudaLongTensor_resize(state, maskLong, maskSizes, NULL);
+  at::IntList maskSizes = mask->sizes();
+  THCudaLongTensor_resize(state, maskLong, maskSizes, {});
   THCudaLongTensor_copyCudaByte(state, maskLong, mask);
 
   // Use a prefix sum to determine the output locations of the masked elements
   THCudaLongTensor* maskPrefixSum = THCudaLongTensor_new(state);
-  THCudaLongTensor_resize(state, maskPrefixSum, maskSizes, NULL);
-  THLongStorage_free(maskSizes);
+  THCudaLongTensor_resize(state, maskPrefixSum, maskSizes, {});
 
   THCThrustAllocator thrustAlloc(state);
   thrust::device_ptr<int64_t>

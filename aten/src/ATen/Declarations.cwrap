@@ -23,9 +23,9 @@
   cpu_half: True
   arguments:
     - THTensor* self
-    - arg: THSize* size
+    - arg: IntListSize size
       long_args: True
-    - CONSTANT NULL
+    - CONSTANT {}
 ]]
 [[
   name: set_

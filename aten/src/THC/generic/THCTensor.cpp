@@ -245,7 +245,7 @@ THCTensor *THCTensor_(newFoldBatchDim)(THCState *state, THCTensor *input) {
 }
 
 /* Resize */
-void THCTensor_(resize)(THCState *state, THCTensor *self, THLongStorage *size, THLongStorage *stride)
+void THCTensor_(resize)(THCState *state, THCTensor *self, at::IntList size, at::IntList stride)
 {
   THCTensor_resize(state, self, size, stride);
 }

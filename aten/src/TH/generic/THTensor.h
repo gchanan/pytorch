@@ -69,7 +69,6 @@ TH_API THTensor *THTensor_(newUnfold)(THTensor *tensor, int dimension_, int64_t 
 // resize* methods simply resize the storage. So they may not retain the current data at current indices.
 // This is especially likely to happen when the tensor is not contiguous. In general, if you still need the
 // values, unless you are doing some size and stride tricks, do not use resize*.
-TH_API void THTensor_(resize)(THTensor *tensor, THLongStorage *size, THLongStorage *stride);
 TH_API void THTensor_(resizeNd)(THTensor *tensor, int nDimension, int64_t *size, int64_t *stride);
 TH_API void THTensor_(resizeAs)(THTensor *tensor, THTensor *src);
 TH_API void THTensor_(resize1d)(THTensor *tensor, int64_t size0_);

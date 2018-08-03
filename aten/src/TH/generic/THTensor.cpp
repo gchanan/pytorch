@@ -222,7 +222,7 @@ THTensor *THTensor_(newView)(THTensor *tensor, at::IntList size)
 }
 
 /* Resize */
-void THTensor_(resize)(THTensor *self, THLongStorage *size, THLongStorage *stride)
+void THTensor_(resize)(THTensor *self, at::IntList size, at::IntList stride)
 {
   return THTensor_resize(self, size, stride);
 }
