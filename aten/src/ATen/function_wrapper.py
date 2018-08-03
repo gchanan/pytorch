@@ -211,7 +211,6 @@ TYPE_FORMAL_GENERIC = {
     'THStorage*': 'Storage &',
     'THGenerator*': 'Generator *',
     'THSize*': 'IntList',
-    'THStride*': 'IntList',
     'IntListSize': 'IntList',
     'IntListStride': 'IntList',
     'accreal': 'Scalar',
@@ -230,7 +229,6 @@ DYNAMIC_TYPE = {
     'THStorage*': 'Storage',
     'THGenerator*': 'Generator*',
     'THSize*': 'IntList',
-    'THStride*': 'IntList',
     'IntListSize': 'IntList',
     'IntListStride': 'IntList',
     'accreal': 'accreal',
@@ -302,8 +300,6 @@ CHECKED_CAST = {
             'check_generator<${Backend}Generator>(${arg_name}, &globalContext().defaultGenerator(backend()))'),
     # This is a cast done via direct-construction
     'THSize*': CodeTemplate('THLongStorageView ${result_name}(${arg_name}, THLongStorageViewKind::SIZE);'),
-    # This is a cast done via direct-construction
-    'THStride*': CodeTemplate('THLongStorageView ${result_name}(${arg_name}, THLongStorageViewKind::STRIDE);'),
     'IntListSize': CodeTemplate('std::vector<int64_t> ${result_name} = get_intlist_size_th(${arg_name});'),
     'IntListStride': CodeTemplate('at::IntList ${result_name} = get_intlist_stride_th(${arg_name});'),
     'real': CodeTemplate('${arg_name}.to${ScalarName}()'),
@@ -315,7 +311,7 @@ CHECKED_CAST = {
     'IntList': CodeTemplate('check_intlist<${size}>(${arg_name}, "${arg_name}", ${arg_pos}${,default_init})')
 }
 
-DIRECT_CONSTRUCTION_CHECKED_CAST = {'THSize*', 'THStride*', 'IntListSize', 'IntListStride'}
+DIRECT_CONSTRUCTION_CHECKED_CAST = {'THSize*', 'IntListSize', 'IntListStride'}
 
 CHECKED_USE = {
     'THTensor*': '{}_->tensor',
