@@ -1633,7 +1633,7 @@ void THTensor_(logicalAnd)(THTensor *r_, THTensor *t, int dimension, int keepdim
   THTensor_(preserveReduceDimSemantics)(r_, THTensor_(nDimensionLegacyAll)(t), dimension, keepdim);
   std::vector<int64_t> dim = t->sizes().vec();
   dim[dimension] = 1;
-  THTensor_(resize)(r_, dim, NULL);
+  THTensor_(resize)(r_, dim, {});
 
   int serial_path = 0;
 #ifdef _OPENMP

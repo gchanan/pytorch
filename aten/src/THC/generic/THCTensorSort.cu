@@ -290,7 +290,7 @@ THC_API void THCTensor_(sort)(THCState* state,
 
   // Make sure sufficient output space is allocated
   THCTensor_(resizeAs)(state, sorted, input);
-  THCudaLongTensor_resize(state, indices, input->sizes(), NULL);
+  THCudaLongTensor_resize(state, indices, input->sizes(), {});
 
   // How large are the slices that we are sorting?
   int64_t sliceSize = THCTensor_(sizeLegacyNoScalars)(state, input, dim);

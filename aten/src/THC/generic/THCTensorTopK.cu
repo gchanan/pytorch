@@ -26,8 +26,8 @@ THC_API void THCTensor_(topk)(THCState* state,
   // size k
   std::vector<int64_t> topKSize = input->sizes().vec();
   topKSize[dim] = k;
-  THCTensor_(resize)(state, topK, topKSize, NULL);
-  THCudaLongTensor_resize(state, indices, topKSize, NULL);
+  THCTensor_(resize)(state, topK, topKSize, {});
+  THCudaLongTensor_resize(state, indices, topKSize, {});
 
 #define RUN_K(INDEX_T, DIM, DIR)                                        \
   gatherTopK<real, INDEX_T, DIM, DIR>                                   \

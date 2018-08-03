@@ -488,7 +488,7 @@ bool THC_reduceDim(THCState* state,
   // Resize out
   std::vector<int64_t> sizes = in->sizes().vec();
   sizes[dim] = 1;
-  THCTensor_resize(state, out, sizes, NULL);
+  THCTensor_resize(state, out, sizes, {});
 
   // It is possible that the tensor dimensions are able to be collapsed,
   // and thus we can reduce the actual code complexity of the copy by
