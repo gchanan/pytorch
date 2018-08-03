@@ -47,13 +47,6 @@ THLongStorage *THTensor_(newSizeOf)(THTensor *self)
   return size;
 }
 
-THLongStorage *THTensor_(newStrideOf)(THTensor *self)
-{
-  THLongStorage *stride = THLongStorage_newWithSize(self->dim());
-  THLongStorage_rawCopy(stride, THTensor_getStridePtr(self));
-  return stride;
-}
-
 real *THTensor_(data)(const THTensor *self) {
   return self->data<real>();
 }
@@ -124,11 +117,9 @@ THTensor *THTensor_(newWithStorage4d)(THStorage *storage, ptrdiff_t storageOffse
                                           {stride0, stride1, stride2, stride3});
 }
 
-THTensor *THTensor_(newWithSize)(THLongStorage *size, THLongStorage *stride)
+THTensor *THTensor_(newWithSize)(at::IntList size, at::IntList stride)
 {
-  at::IntList size_(size == nullptr ? nullptr : size->data<int64_t>(), size == nullptr ? 0 : size->size());
-  at::IntList stride_(stride == nullptr ? nullptr : stride->data<int64_t>(), stride == nullptr ? 0 : stride->size());
-  return THTensor_(newWithStorage)(NULL, 0, size_, stride_);
+  return THTensor_(newWithStorage)(NULL, 0, size, stride);
 }
 
 THTensor *THTensor_(newWithSizeIntList)(at::IntList sizes) {

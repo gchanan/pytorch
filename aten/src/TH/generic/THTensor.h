@@ -30,7 +30,6 @@ TH_API int THTensor_(nDimensionLegacyAll)(const THTensor *self);
 TH_API int64_t THTensor_(size)(const THTensor *self, int dim);
 TH_API int64_t THTensor_(stride)(const THTensor *self, int dim);
 TH_API THLongStorage *THTensor_(newSizeOf)(THTensor *self);
-TH_API THLongStorage *THTensor_(newStrideOf)(THTensor *self);
 TH_API real *THTensor_(data)(const THTensor *self);
 
 
@@ -53,7 +52,6 @@ TH_API THTensor *THTensor_(newWithStorage4d)(THStorage *storage_, ptrdiff_t stor
                                 int64_t size3_, int64_t stride3_);
 
 /* stride might be NULL */
-TH_API THTensor *THTensor_(newWithSize)(THLongStorage *size_, THLongStorage *stride_);
 TH_API THTensor *THTensor_(newWithSize1d)(int64_t size0_);
 TH_API THTensor *THTensor_(newWithSize2d)(int64_t size0_, int64_t size1_);
 TH_API THTensor *THTensor_(newWithSize3d)(int64_t size0_, int64_t size1_, int64_t size2_);

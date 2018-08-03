@@ -16,5 +16,6 @@ THC_API THCTensor *THCTensor_(newWithStorage)(THCState *state, THCStorage *stora
                                               at::IntList sizes, at::IntList strides);
 
 THC_API void THCTensor_(resize)(THCState *state, THCTensor *self, at::IntList size, at::IntList stride);
+THC_API THCTensor *THCTensor_(newWithSize)(THCState *state, at::IntList size, at::IntList stride);
 
 #endif

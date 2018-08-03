@@ -16,5 +16,6 @@ TH_CPP_API THTensor *THTensor_(newWithStorage)(THStorage *storage, ptrdiff_t sto
                                                at::IntList sizes, at::IntList strides);
 
 TH_CPP_API void THTensor_(resize)(THTensor *self, at::IntList size, at::IntList stride);
+TH_CPP_API THTensor *THTensor_(newWithSize)(at::IntList size, at::IntList stride);
 
 #endif
