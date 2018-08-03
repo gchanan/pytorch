@@ -122,31 +122,24 @@ THTensor *THTensor_(newWithSize)(at::IntList size, at::IntList stride)
   return THTensor_(newWithStorage)(NULL, 0, size, stride);
 }
 
-THTensor *THTensor_(newWithSizeIntList)(at::IntList sizes) {
-  THTensor *self = new THTensor(THStorage_(new)());
-  THTensor_(resizeNd)(self, sizes.size(), const_cast<int64_t*>(sizes.data()), nullptr);
-
-  return self;
-}
-
 THTensor *THTensor_(newWithSize1d)(int64_t size0)
 {
-  return THTensor_(newWithSizeIntList)({size0});
+  return THTensor_(newWithSize)({size0}, {});
 }
 
 THTensor *THTensor_(newWithSize2d)(int64_t size0, int64_t size1)
 {
-  return THTensor_(newWithSizeIntList)({size0, size1});
+  return THTensor_(newWithSize)({size0, size1}, {});
 }
 
 THTensor *THTensor_(newWithSize3d)(int64_t size0, int64_t size1, int64_t size2)
 {
-  return THTensor_(newWithSizeIntList)({size0, size1, size2});
+  return THTensor_(newWithSize)({size0, size1, size2}, {});
 }
 
 THTensor *THTensor_(newWithSize4d)(int64_t size0, int64_t size1, int64_t size2, int64_t size3)
 {
-  return THTensor_(newWithSizeIntList)({size0, size1, size2, size3});
+  return THTensor_(newWithSize)({size0, size1, size2, size3}, {});
 }
 
 THTensor *THTensor_(newClone)(THTensor *self)
