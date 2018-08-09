@@ -42,6 +42,11 @@ Variable::Impl::Impl(at::Tensor data, bool requires_grad, Edge gradient_edge)
 
 Variable::Impl::~Impl() = default;
 
+Type & Variable::Impl::type() const {
+  Type* base_type = &(data_.type());
+  return at::detail::getVariableHooks().getVariableType(*base_type);
+}
+
 IntList Variable::Impl::sizes() const {
   return data_.sizes();
 }

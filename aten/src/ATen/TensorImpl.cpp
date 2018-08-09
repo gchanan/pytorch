@@ -12,6 +12,9 @@
 namespace at {
 
 Type& TensorImpl::type() const {
+  if (!tensor) {
+    return globalContext().getType(at::Backend::Undefined, at::ScalarType::Undefined);
+  }
   Type* base_type =
       &globalContext().getType(tensor->backend_, tensor->scalar_type_);
   if (tensor->is_variable_) {
@@ -64,6 +67,9 @@ TensorImpl::TensorImpl(Backend backend, ScalarType scalar_type, bool is_variable
   tensor->backend_ = backend;
   tensor->scalar_type_ = scalar_type;
   tensor->is_variable_ = is_variable;
+  backend_ = backend;
+  scalar_type_ = scalar_type;
+  is_variable_ = is_variable;
 }
 
 TensorImpl::TensorImpl(
@@ -73,12 +79,17 @@ TensorImpl::TensorImpl(
     bool is_variable) {
   if (tensor_) {
     tensor = tensor_;
+    tensor->is_variable_ = is_variable;
+    tensor->backend_ = backend;
+    tensor->scalar_type_ = scalar_type;
   } else {
-    tensor = new THTensor(nullptr);
+    //tensor = new THTensor(nullptr);
+    tensor = nullptr;
+    std::cerr << "SETTING TO NULLPTR: " << backend << " " << scalar_type << " " << is_variable << std::endl;
   }
-  tensor->is_variable_ = is_variable;
-  tensor->backend_ = backend;
-  tensor->scalar_type_ = scalar_type;
+  backend_ = backend;
+  scalar_type_ = scalar_type;
+  is_variable_ = is_variable;
 }
 
 TensorImpl::~TensorImpl() {

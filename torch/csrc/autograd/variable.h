@@ -6,6 +6,7 @@
 #include "torch/csrc/autograd/edge.h"
 #include "torch/csrc/autograd/function_hook.h"
 #include "torch/csrc/autograd/variable_version.h"
+#include "ATen/detail/VariableHooksInterface.h"
 
 #include <ATen/ATen.h>
 #include <ATen/core/Error.h>
@@ -267,6 +268,7 @@ struct Variable::Impl : public at::TensorImpl {
 
   ~Impl() override;
 
+  at::Type & type() const override;
   at::IntList sizes() const override;
   at::IntList strides() const override;
   int64_t dim() const override;

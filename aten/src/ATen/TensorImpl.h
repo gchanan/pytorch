@@ -32,7 +32,7 @@ struct AT_API TensorImpl : public Retainable {
   // The implementation of this method will have to be hoisted out and
   // hooked in, so that Caffe2 doesn't need to know about Context
   // TODO: This really really needs to be inlined.
-  Type & type() const;
+  virtual Type & type() const;
 
   const char * toString() const;
   virtual IntList sizes() const;
@@ -93,5 +93,10 @@ struct AT_API TensorImpl : public Retainable {
 
 protected:
   THTensor * tensor;
+  at::Backend backend_;
+  bool is_variable_ = false;
+  at::ScalarType scalar_type_;
+  
+  
 };
 } // namespace at
