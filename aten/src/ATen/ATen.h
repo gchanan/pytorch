@@ -12,7 +12,7 @@
 #include "ATen/Formatting.h"
 #include "ATen/Functions.h"
 #include "ATen/Generator.h"
-#include "ATen/Layout.h"
+#include "ATen/core/Layout.h"
 #include "ATen/OptionsGuard.h"
 #include "ATen/Scalar.h"
 #include "ATen/Storage.h"
