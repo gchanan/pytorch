@@ -7,7 +7,7 @@
 #include "ATen/Tensor.h"
 #include "ATen/Storage.h"
 #include "ATen/Generator.h"
-#include "ATen/Deprecated.h"
+#include "ATen/core/Deprecated.h"
 #include "ATen/NativeFunctions.h"
 #include "ATen/DeviceGuard.h"
 #include "ATen/TensorOptions.h"
