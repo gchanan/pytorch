@@ -6,7 +6,7 @@
 #include "ATen/Allocator.h"
 #include "ATen/Deprecated.h"
 #include "ATen/Generator.h"
-#include "ATen/Layout.h"
+#include "ATen/core/Layout.h"
 #include "ATen/Scalar.h"
 #include "ATen/ScalarType.h"
 #include "ATen/SparseTensorRef.h"
