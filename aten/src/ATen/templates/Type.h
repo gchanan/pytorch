@@ -5,7 +5,7 @@
 #include "ATen/core/ATenGeneral.h"
 #include "ATen/Allocator.h"
 #include "ATen/core/Deprecated.h"
-#include "ATen/Generator.h"
+#include "ATen/core/Generator.h"
 #include "ATen/core/Layout.h"
 #include "ATen/Scalar.h"
 #include "ATen/core/ScalarType.h"
