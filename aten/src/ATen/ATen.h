@@ -11,7 +11,7 @@
 #include "ATen/Dispatch.h"
 #include "ATen/Formatting.h"
 #include "ATen/Functions.h"
-#include "ATen/Generator.h"
+#include "ATen/core/Generator.h"
 #include "ATen/core/Layout.h"
 #include "ATen/OptionsGuard.h"
 #include "ATen/Scalar.h"

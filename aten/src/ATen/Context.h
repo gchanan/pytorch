@@ -3,7 +3,7 @@
 #include <ATen/CPUGeneral.h>
 #include "ATen/core/ATenGeneral.h"
 #include "ATen/CUDAStream.h"
-#include "ATen/Generator.h"
+#include "ATen/core/Generator.h"
 #include "ATen/Type.h"
 #include "ATen/Utils.h"
 #include "ATen/core/Error.h"
