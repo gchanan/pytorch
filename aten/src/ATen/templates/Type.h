@@ -4,11 +4,11 @@
 
 #include "ATen/core/ATenGeneral.h"
 #include "ATen/Allocator.h"
-#include "ATen/Deprecated.h"
+#include "ATen/core/Deprecated.h"
 #include "ATen/Generator.h"
 #include "ATen/core/Layout.h"
 #include "ATen/Scalar.h"
-#include "ATen/ScalarType.h"
+#include "ATen/core/ScalarType.h"
 #include "ATen/SparseTensorRef.h"
 #include "ATen/Tensor.h"
 #include "ATen/core/ArrayRef.h"
