@@ -2,7 +2,7 @@
 
 // ${generated_comment}
 
-#include "ATen/ATenGeneral.h"
+#include "ATen/core/ATenGeneral.h"
 #include "ATen/Allocator.h"
 #include "ATen/Deprecated.h"
 #include "ATen/Generator.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ATen/ATenGeneral.h>
+#include <ATen/core/ATenGeneral.h>
 #include <ATen/core/Error.h>
 #include <ATen/core/DeviceType.h>
 #include <ATen/core/Error.h>

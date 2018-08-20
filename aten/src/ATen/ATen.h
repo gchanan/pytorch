@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ATen/ATenGeneral.h"
+#include "ATen/core/ATenGeneral.h"
 #include "ATen/Allocator.h"
 #include "ATen/CPUGeneral.h"
 #include "ATen/CUDAGuard.h"
