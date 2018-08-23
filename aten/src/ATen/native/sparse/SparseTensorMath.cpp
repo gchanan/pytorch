@@ -144,10 +144,10 @@ SparseTensor pow_sparse_scalar(const SparseTensor& t, Scalar value) {
 // div(SparseTensor, Scalar)
 // --------------------------------------------------------------------
 
-SparseTensor& div_out_sparse_zero_dim(SparseTensor& r, const SparseTensor& t, const Tensor& value) {
-  AT_ASSERT(value.dim() == 0);
+SparseTensor& div_out_sparse_zerodim(SparseTensor& r, const SparseTensor& t, const Tensor& value) {
   AT_ASSERT(r.is_sparse());
   AT_ASSERT(t.is_sparse());
+  AT_ASSERT(value.dim() == 0);
 
   if (isSameTensor(r, t)) {
     r._values().div_(value);
@@ -164,7 +164,7 @@ SparseTensor& div_out_sparse_zero_dim(SparseTensor& r, const SparseTensor& t, co
 }
 
 SparseTensor& div_out_sparse_scalar(SparseTensor& r, const SparseTensor& t, Scalar value) {
-  return div_out_sparse_zero_dim(r, t, scalar_tensor(value));
+  return div_out_sparse_zerodim(r, t, scalar_tensor(value));
 }
 
 // --------------------------------------------------------------------
