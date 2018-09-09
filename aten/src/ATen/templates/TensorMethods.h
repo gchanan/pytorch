@@ -83,6 +83,13 @@ inline Tensor Tensor::to(Device device, bool non_blocking) const {
   return detail::to(*this, options().device(device), non_blocking);
 }
 
+inline void Tensor::backward(
+    at::optional<Tensor> gradient,
+    bool keep_graph,
+    bool create_graph) {
+  unsafeGetTensorImpl()->backward(std::move(gradient), keep_graph, create_graph);
+}
+
 // all static inline to allow for inlining of the non-dynamic part of dispatch
 ${tensor_method_definitions}
 
