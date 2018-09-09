@@ -87,7 +87,11 @@ inline void Tensor::backward(
     at::optional<Tensor> gradient,
     bool keep_graph,
     bool create_graph) {
-  unsafeGetTensorImpl()->backward(std::move(gradient), keep_graph, create_graph);
+  type().backward(*this, std::move(gradient), keep_graph, create_graph);
+}
+
+inline void Tensor::set_data(Tensor new_data) {
+  type().set_data(*this, new_data);
 }
 
 // all static inline to allow for inlining of the non-dynamic part of dispatch
