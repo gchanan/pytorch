@@ -549,7 +549,7 @@ def device_guard(option, formals, is_factory_method, dispatch_options):
             if tensor_arguments:
                 tensor_argument = tensor_arguments[0]['name']
                 return 'const DeviceGuard device_guard({});'.format(tensor_argument)
-        if option.get('device_guard', True) and dispatch_options:
+        if dispatch_options:
             return 'const DeviceGuard device_guard({});'.format(dispatch_options['name'])
     return '// DeviceGuard omitted'
 
@@ -1104,7 +1104,6 @@ def create_generic(top_env, declarations):
             abstract = True
             top_env['type_method_definitions'].append(
                 TYPE_METHOD_DEFINITION_ABSTRACT.substitute(env))
-            print('dispatch dict')
         elif is_deprecated_factory_method:
             top_env['type_method_definitions'].append(
                 DEPRECATED_TYPE_METHOD_DEFINITION_CONCRETE.substitute(env))
