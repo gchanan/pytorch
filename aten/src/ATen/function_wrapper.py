@@ -541,13 +541,16 @@ OutputDeclaration = NamedTuple('OutputDeclaration', [
 ])
 
 
-def device_guard(option, formals, is_factory_method=False):
+def device_guard(option, formals, is_factory_method, dispatch_options):
     # For factory methods the `DeviceGuard` is already in the template.
-    if option.get('device_guard', True) and not is_factory_method:
-        tensor_arguments = [f for f in formals if f['dynamic_type'] in {'Tensor', 'TensorList'}]
-        if tensor_arguments:
-            tensor_argument = tensor_arguments[0]['name']
-            return 'const DeviceGuard device_guard({});'.format(tensor_argument)
+    if option.get('device_guard', True):
+        if not is_factory_method:
+            tensor_arguments = [f for f in formals if f['dynamic_type'] in {'Tensor', 'TensorList'}]
+            if tensor_arguments:
+                tensor_argument = tensor_arguments[0]['name']
+                return 'const DeviceGuard device_guard({});'.format(tensor_argument)
+        if option.get('device_guard', True) and dispatch_options:
+            return 'const DeviceGuard device_guard({});'.format(dispatch_options['name'])
     return '// DeviceGuard omitted'
 
 
@@ -831,7 +834,7 @@ def create_generic(top_env, declarations):
         broadcast_arg = get_broadcast_argument(option)
         # "s_" for "same size".
         option['method_prefix_derived'] = '' if broadcast_arg is None else 's_'
-        option['device_guard_declaration'] = device_guard(option, formals)
+        option['device_guard_declaration'] = device_guard(option, formals, False, False)
 
         env = nested_dict(option, top_env)
 
@@ -1064,11 +1067,10 @@ def create_generic(top_env, declarations):
             option['return_type'] == 'Tensor' and option['deprecated']
         needs_native_definition = not is_deprecated_factory_method
 
-        print('option', option, 'is factory method', is_factory_method, 'is namespace function', is_namespace_function, is_deprecated_factory_method)
         check_methods_do_not_start_with_underscore(option['name'], is_method)
 
         option['method_prefix_derived'] = ''
-        option['device_guard_declaration'] = device_guard(option, formals, is_factory_method)
+        option['device_guard_declaration'] = device_guard(option, formals, is_factory_method, dispatch_options)
 
         env = nested_dict(option, top_env)
 
