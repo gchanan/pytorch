@@ -1048,6 +1048,7 @@ def create_generic(top_env, declarations):
         dispatch_type = None if dispatch_tensor else find_formal('Type', formals)
         if dispatch_type:
             dispatch_type['is_type_dispatched'] = True
+        dispatch_options = None if dispatch_tensor or dispatch_type else find_formal('TensorOptions', formals)
 
         option['type_method_formals'] = [format_formal(f) for f in formals if f != dispatch_type]
         option['type_method_actuals'] = [f['name'] for f in formals if f != dispatch_type]
@@ -1063,6 +1064,7 @@ def create_generic(top_env, declarations):
             option['return_type'] == 'Tensor' and option['deprecated']
         needs_native_definition = not is_deprecated_factory_method
 
+        print('option', option, 'is factory method', is_factory_method, 'is namespace function', is_namespace_function, is_deprecated_factory_method)
         check_methods_do_not_start_with_underscore(option['name'], is_method)
 
         option['method_prefix_derived'] = ''
@@ -1075,8 +1077,10 @@ def create_generic(top_env, declarations):
             raise Exception("broadcasting is not yet supported for native functions, "
                             "but specified for function {}", option['name'])
 
-        # Factory methods are not dispatched over `Type`.
-        if not is_factory_method:
+        dispatch = option['type_method_definition_dispatch']
+
+        # Factory methods are not dispatched over `Type` (unless they dispatch via dict)
+        if not is_factory_method or isinstance(dispatch, dict):
             if option['deprecated']:
                 # Deprecated functions are always non-extended,
                 # because they need to be made available from Type
@@ -1094,7 +1098,6 @@ def create_generic(top_env, declarations):
                     top_env['pure_virtual_type_method_declarations'].append(
                         PURE_VIRTUAL_TYPE_METHOD_DECLARATION.substitute(env))
             top_env['type_method_declarations'].append(TYPE_METHOD_DECLARATION_CONCRETE.substitute(env))
-        dispatch = option['type_method_definition_dispatch']
         option['native_type_method_dispatch'] = dispatch
 
         # Note [Abstract ATen methods]
@@ -1110,6 +1113,7 @@ def create_generic(top_env, declarations):
             abstract = True
             top_env['type_method_definitions'].append(
                 TYPE_METHOD_DEFINITION_ABSTRACT.substitute(env))
+            print('dispatch dict')
         elif is_deprecated_factory_method:
             top_env['type_method_definitions'].append(
                 DEPRECATED_TYPE_METHOD_DEFINITION_CONCRETE.substitute(env))
@@ -1147,12 +1151,14 @@ def create_generic(top_env, declarations):
                 option['inferred_type'] = 'static_cast<const TypeExtendedInterface&>({})'.format(dispatch_type['name'])
             elif dispatch_tensor:
                 option['inferred_type'] = 'detail::infer_type({})'.format(dispatch_tensor)
+            elif dispatch_options:
+                option['inferred_type'] = 'at::getType({})'.format(dispatch_options['name'])
             else:
                 # doesn't depend on a specific type, use undefined float
                 option['inferred_type'] = 'at::getNonVariableType(at::Backend::Undefined, at::ScalarType::Float)'
             declaration = DEPRECATED_FUNCTION_DECLARATION if option['deprecated'] else FUNCTION_DECLARATION
             top_env['function_declarations'].append(declaration.substitute(env))
-            if is_factory_method:
+            if is_factory_method and not isinstance(dispatch, dict):
                 top_env['function_definitions'].append(FACTORY_DEFINITION.substitute(env))
             elif is_deprecated_factory_method:
                 top_env['function_definitions'].append(DEPRECATED_FACTORY_DEFINITION.substitute(env))
