@@ -1078,25 +1078,14 @@ def create_generic(top_env, declarations):
                             "but specified for function {}", option['name'])
 
         dispatch = option['type_method_definition_dispatch']
-
-        # Factory methods are not dispatched over `Type` (unless they dispatch via dict)
+        # Factory methods are not dispatched over `Type`  (unless they dispatch via dict)
         if not is_factory_method or isinstance(dispatch, dict):
-            if option['deprecated']:
-                # Deprecated functions are always non-extended,
-                # because they need to be made available from Type
-                # (the public interface) so that code like
-                # tensor.type().arange(...) keeps working.  Once
-                # we remove the deprecated functions, we can eliminate
-                # these methods entirely.
-                top_env['pure_virtual_type_method_declarations'].append(
-                    DEPRECATED_PURE_VIRTUAL_TYPE_METHOD_DECLARATION.substitute(env))
+            if option['extended_method']:
+                top_env['pure_virtual_extended_type_method_declarations'].append(
+                    PURE_VIRTUAL_TYPE_METHOD_DECLARATION.substitute(env))
             else:
-                if option['extended_method']:
-                    top_env['pure_virtual_extended_type_method_declarations'].append(
-                        PURE_VIRTUAL_TYPE_METHOD_DECLARATION.substitute(env))
-                else:
-                    top_env['pure_virtual_type_method_declarations'].append(
-                        PURE_VIRTUAL_TYPE_METHOD_DECLARATION.substitute(env))
+                top_env['pure_virtual_type_method_declarations'].append(
+                    PURE_VIRTUAL_TYPE_METHOD_DECLARATION.substitute(env))
             top_env['type_method_declarations'].append(TYPE_METHOD_DECLARATION_CONCRETE.substitute(env))
         option['native_type_method_dispatch'] = dispatch
 
