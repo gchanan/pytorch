@@ -544,13 +544,13 @@ OutputDeclaration = NamedTuple('OutputDeclaration', [
 def device_guard(option, formals, is_factory_method, dispatch_options):
     # For factory methods the `DeviceGuard` is already in the template.
     if option.get('device_guard', True):
+        if dispatch_options:
+            return 'const DeviceGuard device_guard({}.device());'.format(dispatch_options['name'])
         if not is_factory_method:
             tensor_arguments = [f for f in formals if f['dynamic_type'] in {'Tensor', 'TensorList'}]
             if tensor_arguments:
                 tensor_argument = tensor_arguments[0]['name']
                 return 'const DeviceGuard device_guard({});'.format(tensor_argument)
-        if dispatch_options:
-            return 'const DeviceGuard device_guard({}.device());'.format(dispatch_options['name'])
     return '// DeviceGuard omitted'
 
 
@@ -1066,7 +1066,7 @@ def create_generic(top_env, declarations):
 
         is_method = 'method' in option['variants']
         is_namespace_function = 'function' in option['variants']
-        is_factory_method = find_formal('TensorOptions', formals)
+        is_factory_method = find_formal('TensorOptions', formals) and not dispatch_options
         is_deprecated_factory_method = len(formals) > 0 and \
             formals[0]['dynamic_type'] == 'Type' and \
             option['return_type'] == 'Tensor' and option['deprecated']
@@ -1084,8 +1084,8 @@ def create_generic(top_env, declarations):
             raise Exception("broadcasting is not yet supported for native functions, "
                             "but specified for function {}", option['name'])
 
-        # Factory methods are not dispatched over `Type`  (unless they dispatch via dict)
-        if not is_factory_method or dispatch_options:
+        # Factory methods are not dispatched over `Type`
+        if not is_factory_method:
             if option['extended_method']:
                 top_env['pure_virtual_extended_type_method_declarations'].append(
                     PURE_VIRTUAL_TYPE_METHOD_DECLARATION.substitute(env))
@@ -1152,7 +1152,7 @@ def create_generic(top_env, declarations):
                 option['inferred_type'] = 'at::getNonVariableType(at::Backend::Undefined, at::ScalarType::Float)'
             declaration = DEPRECATED_FUNCTION_DECLARATION if option['deprecated'] else FUNCTION_DECLARATION
             top_env['function_declarations'].append(declaration.substitute(env))
-            if is_factory_method and not isinstance(type_method_dispatch, dict):
+            if is_factory_method:
                 top_env['function_definitions'].append(FACTORY_DEFINITION.substitute(env))
             elif is_deprecated_factory_method:
                 top_env['function_definitions'].append(DEPRECATED_FACTORY_DEFINITION.substitute(env))
