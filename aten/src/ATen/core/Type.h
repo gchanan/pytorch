@@ -579,12 +579,9 @@ struct AT_API Type {
   virtual Tensor & addmm_(Tensor & self, const Tensor & mat1, const Tensor & mat2, Scalar beta, Scalar alpha) const = 0;
   virtual Tensor native_tensor(const TensorOptions & options) const = 0;
   virtual Tensor native_tensor(IntList size, const TensorOptions & options) const = 0;
-  virtual Tensor tensor() const = 0;
-  virtual Tensor tensor(IntList size) const = 0;
   virtual Tensor native_sparse_coo_tensor(IntList size, const TensorOptions & options) const = 0;
   virtual Tensor native_sparse_coo_tensor(const Tensor & indices, const Tensor & values) const = 0;
   virtual Tensor native_sparse_coo_tensor(const Tensor & indices, const Tensor & values, IntList size) const = 0;
-  virtual Tensor sparse_coo_tensor(IntList size) const = 0;
   virtual Tensor sparse_coo_tensor(const Tensor & indices, const Tensor & values) const = 0;
   virtual Tensor sparse_coo_tensor(const Tensor & indices, const Tensor & values, IntList size) const = 0;
   virtual Tensor _native_sparse_coo_tensor_unsafe(const Tensor & indices, const Tensor & values, IntList size) const = 0;

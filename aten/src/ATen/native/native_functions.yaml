@@ -1873,10 +1873,10 @@
     SparseCPU: new_with_size_sparse
     SparseCUDA: new_with_size_sparse
 
-- func: tensor(Type dtype) -> Tensor
+- func: tensor(TensorOptions options) -> Tensor
   variants: []
 
-- func: tensor(Type dtype, IntList size) -> Tensor
+- func: tensor(IntList size, TensorOptions options) -> Tensor
   variants: []
 
 
@@ -1909,7 +1909,7 @@
     SparseCPU: new_with_tensor_and_size_sparse
     SparseCUDA: new_with_tensor_and_size_sparse
 
-- func: sparse_coo_tensor(Type dtype, IntList size) -> Tensor
+- func: sparse_coo_tensor(IntList size, TensorOptions options) -> Tensor
   variants: []
 
 - func: sparse_coo_tensor(IndexTensor indices, Tensor values) -> Tensor
