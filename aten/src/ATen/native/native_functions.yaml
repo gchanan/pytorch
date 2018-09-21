@@ -1861,12 +1861,14 @@
   variants: method
 
 
-- func: native_tensor(Type self_ty) -> Tensor
+- func: native_tensor(TensorOptions options) -> Tensor
+  variants: []
   dispatch:
     SparseCPU: new_sparse
     SparseCUDA: new_sparse
 
-- func: native_tensor(Type self_ty, IntList size) -> Tensor
+- func: native_tensor(IntList size, TensorOptions options) -> Tensor
+  variants: []
   dispatch:
     SparseCPU: new_with_size_sparse
     SparseCUDA: new_with_size_sparse
@@ -1889,7 +1891,7 @@
 # just only ever dispatch to CPULongTensor or CUDALongTensor, but that
 # seems a bit too finely balanced.)
 
-- func: native_sparse_coo_tensor(Type self_ty, IntList size) -> Tensor
+- func: native_sparse_coo_tensor(IntList size, TensorOptions options) -> Tensor
   variants: []
   dispatch:
     SparseCPU: new_with_size_sparse
