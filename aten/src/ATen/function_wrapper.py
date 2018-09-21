@@ -550,7 +550,7 @@ def device_guard(option, formals, is_factory_method, dispatch_options):
                 tensor_argument = tensor_arguments[0]['name']
                 return 'const DeviceGuard device_guard({});'.format(tensor_argument)
         if dispatch_options:
-            return 'const DeviceGuard device_guard({});'.format(dispatch_options['name'])
+            return 'const DeviceGuard device_guard({}.device());'.format(dispatch_options['name'])
     return '// DeviceGuard omitted'
 
 
@@ -1047,11 +1047,16 @@ def create_generic(top_env, declarations):
                     return formal
             return None
 
+        type_method_dispatch = option['type_method_definition_dispatch']
         dispatch_tensor = find_dispatch_tensor(formals)
         dispatch_type = None if dispatch_tensor else find_formal('Type', formals)
         if dispatch_type:
             dispatch_type['is_type_dispatched'] = True
-        dispatch_options = None if dispatch_tensor or dispatch_type else find_formal('TensorOptions', formals)
+        dispatch_options = None
+        if not dispatch_tensor and not dispatch_type and isinstance(type_method_dispatch, dict):
+            # we only dispatch via options if there is backend-specific dispatch (otherwise it's a factory function that
+            # can dispatch directly to the native function.
+            dispatch_options = find_formal('TensorOptions', formals)
 
         option['type_method_formals'] = [format_formal(f) for f in formals if f != dispatch_type]
         option['type_method_actuals'] = [f['name'] for f in formals if f != dispatch_type]
@@ -1079,9 +1084,8 @@ def create_generic(top_env, declarations):
             raise Exception("broadcasting is not yet supported for native functions, "
                             "but specified for function {}", option['name'])
 
-        dispatch = option['type_method_definition_dispatch']
         # Factory methods are not dispatched over `Type`  (unless they dispatch via dict)
-        if not is_factory_method or isinstance(dispatch, dict):
+        if not is_factory_method or dispatch_options:
             if option['extended_method']:
                 top_env['pure_virtual_extended_type_method_declarations'].append(
                     PURE_VIRTUAL_TYPE_METHOD_DECLARATION.substitute(env))
@@ -1089,7 +1093,7 @@ def create_generic(top_env, declarations):
                 top_env['pure_virtual_type_method_declarations'].append(
                     PURE_VIRTUAL_TYPE_METHOD_DECLARATION.substitute(env))
             top_env['type_method_declarations'].append(TYPE_METHOD_DECLARATION_CONCRETE.substitute(env))
-        option['native_type_method_dispatch'] = dispatch
+        option['native_type_method_dispatch'] = type_method_dispatch
 
         # Note [Abstract ATen methods]
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1100,7 +1104,7 @@ def create_generic(top_env, declarations):
         # we just implement it in the base Type.  This is exposed
         # in Declarations.yaml via a field named 'abstract'.
         abstract = False
-        if isinstance(dispatch, dict):
+        if isinstance(type_method_dispatch, dict):
             abstract = True
             top_env['type_method_definitions'].append(
                 TYPE_METHOD_DEFINITION_ABSTRACT.substitute(env))
@@ -1115,10 +1119,10 @@ def create_generic(top_env, declarations):
 
         # generate the at::native function declarations (i.e. what the user will implement)
         if needs_native_definition:
-            if isinstance(dispatch, dict):
+            if isinstance(type_method_dispatch, dict):
                 generated_native_functions = []  # type: List[str]
-                for key in sorted(dispatch.keys()):
-                    value = dispatch[key]
+                for key in sorted(type_method_dispatch.keys()):
+                    value = type_method_dispatch[key]
                     if value not in generated_native_functions:
                         option['native_type_method_dispatch'] = value
                         top_env['native_function_declarations'].append(
@@ -1148,7 +1152,7 @@ def create_generic(top_env, declarations):
                 option['inferred_type'] = 'at::getNonVariableType(at::Backend::Undefined, at::ScalarType::Float)'
             declaration = DEPRECATED_FUNCTION_DECLARATION if option['deprecated'] else FUNCTION_DECLARATION
             top_env['function_declarations'].append(declaration.substitute(env))
-            if is_factory_method and not isinstance(dispatch, dict):
+            if is_factory_method and not isinstance(type_method_dispatch, dict):
                 top_env['function_definitions'].append(FACTORY_DEFINITION.substitute(env))
             elif is_deprecated_factory_method:
                 top_env['function_definitions'].append(DEPRECATED_FACTORY_DEFINITION.substitute(env))
