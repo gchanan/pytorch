@@ -748,6 +748,8 @@
     CPU: _floor_out_cpu
     CUDA: _floor_out_cuda
 
+- func: from_storage(Storage storage, int64_t storage_offset, IntList size, IntList stride, *, TensorOptions options) -> Tensor
+
 - func: full(IntList size, Scalar fill_value, TensorOptions options={}) -> Tensor
 
 - func: full_out(Tensor result, IntList size, Scalar fill_value) -> Tensor
@@ -1925,13 +1927,10 @@
     SparseCUDA: new_with_tensor_and_size_sparse
 
 - func: sparse_coo_tensor(Type dtype, IntList size) -> Tensor
-  variants: []
 
 - func: sparse_coo_tensor(IndexTensor indices, Tensor values) -> Tensor
-  variants: []
 
 - func: sparse_coo_tensor(IndexTensor indices, Tensor values, IntList size) -> Tensor
-  variants: []
 
 - func: _native_sparse_coo_tensor_unsafe(IndexTensor indices, Tensor values, IntList size) -> Tensor
   variants: []
