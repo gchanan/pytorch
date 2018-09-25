@@ -436,7 +436,7 @@ namespace {
           // TODO: The use of CPU tensor here is a bit goofy in C++,
           // some sort of alloca would be good enough except that it is
           // kind of convenient to be able to prod() on it.
-          Tensor filter_dim_a = at::CPU(kInt).tensor(min_dim);
+          Tensor filter_dim_a = at::empty(min_dim, TensorOptions(false).dtype(kInt));
           AT_CUDNN_CHECK(cudnnGetFilterNdDescriptor(
                 lin_layer_mat_desc.desc(),
                 min_dim,

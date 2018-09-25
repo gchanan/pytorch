@@ -1,6 +1,7 @@
 #include "ATen/ATen.h"
 #include "ATen/NativeFunctions.h"
 #include "ATen/core/Error.h"
+#include "ATen/cuda/CUDAContext.h"
 
 #include <THC/THCGeneral.h>
 #include <THC/THCThrustAllocator.cuh>
@@ -37,6 +38,21 @@ Tensor& eye_out_cuda(Tensor& result, int64_t n, int64_t m) {
   return result;
 }
 
+Tensor empty_cuda(IntList size, const TensorOptions& options) {
+  AT_ASSERT(options.backend() == at::Backend::CUDA);
+  auto storage_impl = c10::make_intrusive<at::StorageImpl>(
+    scalarTypeToTypeMeta(options.dtype()),
+    0,
+    cuda::getCUDADeviceAllocator(),
+    true);
+  auto tensor_impl = c10::make_intrusive<at::TensorImpl, at::UndefinedTensorImpl>(
+    storage_impl,
+    CUDATensorId(),
+    false
+  );
+  return Tensor(tensor_impl);
+}
+
 Tensor& randperm_out_cuda(Tensor& result, int64_t n, Generator* generator) {
   AT_CHECK(n >= 0, "n must be non-negative, got", n);
   AT_CHECK(result.type().scalarTensor(n).defined(),
@@ -45,7 +61,7 @@ Tensor& randperm_out_cuda(Tensor& result, int64_t n, Generator* generator) {
   result.resize_({n});
 
   if (result.type().scalarType() == at::ScalarType::Half) {
-    auto result_float = CUDA(kFloat).tensor({n});
+    auto result_float = at::empty({n}, TensorOptions(false).device(Device(DeviceType::CUDA)).dtype(kFloat));
     result.copy_(randperm_out_cuda(result_float, n, generator));
   } else {
     if (n < 30000) {  // For small inputs, we offload it to CPU instead.
