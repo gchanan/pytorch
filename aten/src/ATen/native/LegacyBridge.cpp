@@ -136,7 +136,7 @@ Tensor& addmm_(Tensor& self, const Tensor& mat1, const Tensor& mat2, Scalar beta
 
 Tensor tensor(const Type& dtype) {
   if (_type_has_native(dtype)) {
-    return at::getType(dtype.options()).native_tensor();
+    return at::getType(dtype.options()).native_tensor(dtype.options());
   } else {
     return at::getType(dtype.options()).th_tensor();
   }
@@ -144,7 +144,7 @@ Tensor tensor(const Type& dtype) {
 
 Tensor tensor(const Type& dtype, ArrayRef<int64_t> size) {
   if (_type_has_native(dtype)) {
-    return at::getType(dtype.options()).native_tensor(size);
+    return at::getType(dtype.options()).native_tensor(size, dtype.options());
   } else {
     return at::getType(dtype.options()).th_tensor(size);
   }
