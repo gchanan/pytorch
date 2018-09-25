@@ -98,7 +98,7 @@ SparseTensor new_with_tensor_sparse(const LongTensor& indices, const Tensor& val
     computed_indices_sizes.add_(1); // len = max_index + 1
     LongTensor cpu_computed_indices_sizes;
     if (computed_indices_sizes.is_cuda()) {
-      cpu_computed_indices_sizes = at::CPU(kLong).tensor(computed_indices_sizes.sizes());
+      cpu_computed_indices_sizes = at::empty(computed_indices_sizes.sizes(), TensorOptions(false).dtype(kLong));
       cpu_computed_indices_sizes.copy_(computed_indices_sizes);
     } else {
       cpu_computed_indices_sizes = computed_indices_sizes;
@@ -128,6 +128,23 @@ SparseTensor new_with_dims_and_size_sparse(const SparseType& dtype, int64_t spar
 or you must provide a single-element `values` tensor (e.g. x = torch.sparse_coo_tensor(torch.zeros(0, 1), 12.3, [])) if you want to create a scalar sparse tensor");
   _get_sparse_impl(self)->resize_and_clear_(sparseDims, denseDims, size);
   return self;
+}
+
+Tensor empty_sparse(IntList size, const TensorOptions& options) {
+  AT_CHECK(size.size() != 0,
+    "cannot construct sparse tensor with 0 dimensions and no values; you must specify at least 1 dimension if you want to create a sparse tensor with no elements, \
+     or you must provide a single-element `values` tensor (e.g. x = torch.sparse_coo_tensor(torch.zeros(0, 1), 12.3, [])) if you want to create a scalar sparse tensor");
+  AT_ASSERT(!options.is_variable());
+  AT_ASSERT(options.layout() == kSparse);
+  TensorTypeId type_id;
+  if (options.device().type() == kCUDA) {
+    type_id = SparseCUDATensorId();
+  } else {
+    type_id = SparseCPUTensorId();
+  }
+  auto tensor = Tensor(c10::make_intrusive<SparseTensorImpl>(type_id, scalarTypeToTypeMeta(options.dtype())));
+  _get_sparse_impl(tensor)->resize_and_clear_(size.size(), 0, size);
+  return tensor;
 }
 
 SparseTensor new_with_size_sparse(const SparseType& dtype, ArrayRef<int64_t> size) {

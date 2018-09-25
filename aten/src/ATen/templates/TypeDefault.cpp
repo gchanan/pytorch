@@ -37,7 +37,7 @@ Tensor TypeDefault::copy(const Tensor & src, bool non_blocking, optional<Device>
     auto values_copy = this_dense.copy(values, non_blocking);
     return _sparse_coo_tensor_unsafe(indices_copy, values_copy, src.sizes());
   } else {
-    Tensor r = this->tensor(src.sizes());
+    Tensor r = at::empty(src.sizes(), this->options());
     r.copy_(src, non_blocking);
     return r;
   }
@@ -125,7 +125,7 @@ Storage TypeDefault::unsafeStorageFromTH(void * th_pointer, bool retain) const {
 
 
 Tensor TypeDefault::scalarTensor(Scalar s) const {
-  return tensor({}).fill_(s);
+  return at::empty({}, this->options()).fill_(s);
 }
 
 ${type_method_definitions}
