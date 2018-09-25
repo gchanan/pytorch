@@ -160,7 +160,8 @@ Tensor sparse_coo_tensor(const Tensor& indices, const Tensor& values, ArrayRef<i
 
 Tensor sparse_coo_tensor(ArrayRef<int64_t> size, const TensorOptions& options) {
   TensorOptions toptions = options;
-  return at::getType(toptions.layout(at::kSparse)).native_sparse_coo_tensor(size);
+  toptions.layout(at::kSparse);
+  return at::getType(toptions).native_sparse_coo_tensor(size, toptions);
 }
 
 Tensor sparse_coo_tensor(const Tensor& indices, const Tensor& values, const TensorOptions& options) {
