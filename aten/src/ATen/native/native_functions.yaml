@@ -45,7 +45,7 @@
   dispatch:
     CUDA: _cudnn_rnn_backward
 
-- func: _cudnn_init_dropout_state(Type self_ty, double dropout, bool train, int64_t dropout_seed) -> Tensor
+- func: _cudnn_init_dropout_state(double dropout, bool train, int64_t dropout_seed, TensorOptions options) -> Tensor
   dispatch:
     CUDA: _cudnn_init_dropout_state
 
@@ -640,6 +640,11 @@
     CUDA: _embedding_bag_dense_backward_cuda
 
 - func: empty(IntList size, TensorOptions options={}) -> Tensor
+  dispatch:
+    CPU: empty_cpu
+    CUDA: empty_cuda
+    SparseCPU: empty_sparse
+    SparseCUDA: empty_sparse
 
 - func: empty_out(Tensor result, IntList size) -> Tensor
 
@@ -1895,23 +1900,22 @@
 - func: addmm_(Tensor self, Tensor mat1, Tensor mat2, *, Scalar beta=1, Scalar alpha=1) -> Tensor
   variants: method
 
-
-- func: native_tensor(Type self_ty) -> Tensor
+- func: native_tensor(TensorOptions options) -> Tensor
   variants: []
   dispatch:
     SparseCPU: new_sparse
     SparseCUDA: new_sparse
 
-- func: native_tensor(Type self_ty, IntList size) -> Tensor
+- func: native_tensor(IntList size, TensorOptions options) -> Tensor
   variants: []
   dispatch:
     SparseCPU: new_with_size_sparse
     SparseCUDA: new_with_size_sparse
 
-- func: tensor(Type dtype) -> Tensor
+- func: tensor(TensorOptions options) -> Tensor
   variants: []
 
-- func: tensor(Type dtype, IntList size) -> Tensor
+- func: tensor(IntList size, TensorOptions options) -> Tensor
   variants: []
 
 
@@ -1926,7 +1930,7 @@
 # just only ever dispatch to CPULongTensor or CUDALongTensor, but that
 # seems a bit too finely balanced.)
 
-- func: native_sparse_coo_tensor(Type self_ty, IntList size) -> Tensor
+- func: native_sparse_coo_tensor(IntList size, TensorOptions options) -> Tensor
   variants: []
   dispatch:
     SparseCPU: new_with_size_sparse
