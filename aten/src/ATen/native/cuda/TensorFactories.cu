@@ -50,7 +50,9 @@ Tensor empty_cuda(IntList size, const TensorOptions& options) {
     CUDATensorId(),
     false
   );
-  return Tensor(tensor_impl);
+  auto tensor = Tensor(tensor_impl);
+  tensor.resize_(size);
+  return tensor;
 }
 
 Tensor& randperm_out_cuda(Tensor& result, int64_t n, Generator* generator) {

@@ -116,7 +116,9 @@ Tensor empty_cpu(IntList size, const TensorOptions& options) {
     at::CPUTensorId(),
     false
   );
-  return Tensor(tensor_impl);
+  auto tensor = Tensor(tensor_impl);
+  tensor.resize_(size);
+  return tensor;
 }
 
 Tensor empty_sparse(IntList size, const TensorOptions& options) {
@@ -128,7 +130,9 @@ Tensor empty_sparse(IntList size, const TensorOptions& options) {
   } else {
     type_id = SparseCPUTensorId();
   }
-  return Tensor(c10::make_intrusive<SparseTensorImpl>(type_id, scalarTypeToTypeMeta(options.dtype())));
+  auto tensor = Tensor(c10::make_intrusive<SparseTensorImpl>(type_id, scalarTypeToTypeMeta(options.dtype())));
+  tensor.resize_(size);
+  return tensor;
 }
 
 Tensor& empty_out(Tensor& result, IntList size) {
