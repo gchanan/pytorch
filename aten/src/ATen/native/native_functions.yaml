@@ -1900,12 +1900,6 @@
 - func: addmm_(Tensor self, Tensor mat1, Tensor mat2, *, Scalar beta=1, Scalar alpha=1) -> Tensor
   variants: method
 
-- func: native_tensor(TensorOptions options) -> Tensor
-  variants: []
-  dispatch:
-    SparseCPU: new_sparse
-    SparseCUDA: new_sparse
-
 - func: native_tensor(IntList size, TensorOptions options) -> Tensor
   variants: []
   dispatch:
