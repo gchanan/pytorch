@@ -97,7 +97,7 @@ TEST(atest, atest) {
   if(at::hasCUDA()) {
     int isgone = 0;
     {
-      auto base = CUDA(kFloat).tensor({1,2,3});
+      auto base = at::empty({1,2,3}, TensorOptions(false).device(kCUDA).dtype(kFloat));
       auto f2 = CUDA(kFloat).tensorFromBlob(base.data_ptr(), {1,2,3}, [&](void*) {
         isgone++;
       });
