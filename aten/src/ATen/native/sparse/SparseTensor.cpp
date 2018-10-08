@@ -222,7 +222,7 @@ SparseTensor new_with_tensor_and_size_sparse(const LongTensor& indices, const Te
 
 SparseTensor clone_sparse(const SparseTensor& self) {
   SparseTensor other = new_with_dims_and_size_sparse(self._sparseDims(), self._denseDims(), self.sizes(), self.options());
-  _copy_into_sparse(other, _get_sparse_impl(self)->indices(), _get_sparse_impl(self)->values());
+  _copy_into_sparse(other, _get_sparse_impl(self)->indices(), _get_sparse_impl(self)->values(), true);
   _get_sparse_impl(other)->set_coalesced(self.is_coalesced());
   return other;
 }
