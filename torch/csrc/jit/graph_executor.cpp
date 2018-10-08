@@ -7,8 +7,10 @@
 #include "torch/csrc/jit/interpreter.h"
 #include "torch/csrc/jit/ir.h"
 #include "torch/csrc/jit/tracer.h"
+#include "torch/csrc/jit/passes/annotate_effects.h"
 #include "torch/csrc/jit/passes/batch_mm.h"
 #include "torch/csrc/jit/passes/common_subexpression_elimination.h"
+#include "torch/csrc/jit/passes/constant_pooling.h"
 #include "torch/csrc/jit/passes/create_autodiff_subgraphs.h"
 #include "torch/csrc/jit/passes/dead_code_elimination.h"
 #include "torch/csrc/jit/passes/erase_number_types.h"
@@ -55,7 +57,7 @@ struct ExecutionPlan {
     , graph(std::move(graph)) {}
 
   void run(Stack& stack) const {
-    return InterpreterState(code).runOneStage(stack);
+    return InterpreterState(code).run(stack);
   }
 
   operator bool() const {
@@ -169,7 +171,7 @@ struct DifferentiableGraphOp {
     }
 
     detachVariables(stack);
-    InterpreterState(f).runOneStage(stack);
+    InterpreterState(f).run(stack);
 
     {
       auto outputs = last(stack, num_outputs);
@@ -361,6 +363,14 @@ struct GraphExecutorImpl {
     return state;
   }
 
+  // This function should be used only for testing purposes
+  void debugDisableAutodiffSubgraphInlining() {
+    // Allow single-node autodiff subgraphs
+    autodiffSubgraphNodeThreshold = 1;
+    // Don't inline autodiff subgraphs into autograd functions
+    autodiffSubgraphInlineThreshold = 1;
+  }
+
 private:
   friend struct GraphExecutor;
 
@@ -416,14 +426,14 @@ private:
     // Phase 5. Apply non-differentiable optimizations to the graphs we've found
     //          (or the whole grpah if we know we won't need its derivative).
     if (needsGradient(opt_graph)) {
-      auto diff_nodes = CreateAutodiffSubgraphs(*opt_graph);
+      auto diff_nodes = CreateAutodiffSubgraphs(*opt_graph, autodiffSubgraphNodeThreshold);
       for (Node * dnode : diff_nodes) {
         auto diff_graph = std::move(dnode->g(attr::Subgraph));
         Gradient gradient = differentiate(diff_graph);
         runNondiffOptimization(gradient.f);
         packGradient(gradient, dnode);
       }
-      InlineAutodiffSubgraphs(opt_graph);
+      InlineAutodiffSubgraphs(opt_graph, autodiffSubgraphInlineThreshold);
     } else {
       runNondiffOptimization(opt_graph);
     }
@@ -435,6 +445,7 @@ private:
   void runOptimization(std::shared_ptr<Graph>& graph, const ArgumentSpec& spec) {
     EliminateDeadCode(graph);
     EliminateCommonSubexpression(graph);
+    ConstantPooling(graph);
     UnrollLoops(graph);
     PeepholeOptimize(graph);
     CheckInplace(graph);
@@ -523,6 +534,10 @@ private:
   // GraphExecutors can be accessed from multiple threads, so this thread needs to be
   // held every time we access the fallback or plan_cache.
   std::mutex compile_mutex;
+
+  // Some tunable parameters
+  size_t autodiffSubgraphNodeThreshold = 2;
+  size_t autodiffSubgraphInlineThreshold = 5;
 };
 
 GraphExecutor::GraphExecutor(std::shared_ptr<Graph> graph, bool optimize)
@@ -542,6 +557,10 @@ std::shared_ptr<Graph> GraphExecutor::graphFor(const Stack& inputs) const {
 
 GraphExecutorState GraphExecutor::getDebugState() {
   return pImpl->getDebugState();
+}
+
+void GraphExecutor::debugDisableAutodiffSubgraphInlining() {
+  return pImpl->debugDisableAutodiffSubgraphInlining();
 }
 
 

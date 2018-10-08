@@ -1,5 +1,6 @@
 #include "ATen/ATen.h"
 #include "ATen/NativeFunctions.h"
+#include "ATen/InitialTensorOptions.h"
 #include "ATen/core/Error.h"
 #include "ATen/cuda/CUDAContext.h"
 
@@ -63,7 +64,7 @@ Tensor& randperm_out_cuda(Tensor& result, int64_t n, Generator* generator) {
   result.resize_({n});
 
   if (result.type().scalarType() == at::ScalarType::Half) {
-    auto result_float = at::empty({n}, TensorOptions(false).device(Device(DeviceType::CUDA)).dtype(kFloat));
+    auto result_float = at::empty({n}, initialTensorOptions().device(Device(DeviceType::CUDA)));
     result.copy_(randperm_out_cuda(result_float, n, generator));
   } else {
     if (n < 30000) {  // For small inputs, we offload it to CPU instead.

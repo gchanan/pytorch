@@ -18,7 +18,8 @@ namespace at {
 
 Tensor & TypeDefault::copy_(Tensor & self, const Tensor & src, bool non_blocking) const {
   Tensor b_src;
-  std::tie(b_src) = expand_inplace(self, src, "copy");
+  if (is_sparse()) b_src = src;
+  else std::tie(b_src) = expand_inplace(self, src, "copy");
   return s_copy_(self, b_src, non_blocking);
 }
 
@@ -28,6 +29,7 @@ Tensor TypeDefault::copy(const Tensor & src, bool non_blocking, optional<Device>
     device_guard.set_index(to_device.value().index());
   }
   AT_CHECK(src.defined(), "attempt to copy an undefined tensor");
+<<<<<<< HEAD
   if (is_sparse()) {
     auto indices = src._indices();
     auto values = src._values();
@@ -41,6 +43,13 @@ Tensor TypeDefault::copy(const Tensor & src, bool non_blocking, optional<Device>
     r.copy_(src, non_blocking);
     return r;
   }
+=======
+  Tensor r;
+  if (is_sparse()) r = this->native_tensor({0});
+  else r = at::empty(src.sizes(), this->options());
+  r.copy_(src, non_blocking);
+  return r;
+>>>>>>> origin/master
 }
 
 void TypeDefault::backward(Tensor & self, at::optional<Tensor> gradient, bool keep_graph, bool create_graph) const {

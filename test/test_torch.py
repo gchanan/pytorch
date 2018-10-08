@@ -1600,6 +1600,10 @@ class TestTorch(TestCase):
         for i in range(num_batches):
             r = torch.mm(b1[i], b2[i])
             self.assertEqual(r, res[i])
+        if torch.cuda.is_available():
+            # check that mixed arguments are rejected
+            self.assertRaises(RuntimeError, lambda: torch.bmm(b1, b2.cuda()))
+            self.assertRaises(RuntimeError, lambda: torch.bmm(b1.cuda(), b2))
 
     def test_addbmm(self):
         # num_batches = 10
@@ -3999,6 +4003,7 @@ class TestTorch(TestCase):
         self.assertEqual(torch.cuda.HalfTensor(10).is_signed(), True)
 
     @skipIfNoLapack
+    @skipIfRocm
     def test_gesv(self):
         a = torch.Tensor(((6.80, -2.11, 5.66, 5.97, 8.23),
                           (-6.05, -3.30, 5.36, -4.44, 1.08),
@@ -4130,6 +4135,7 @@ class TestTorch(TestCase):
         self._test_gesv_batched_dims(self, lambda t: t)
 
     @skipIfNoLapack
+    @skipIfRocm
     def test_qr(self):
 
         # Since the QR decomposition is unique only up to the signs of the rows of
@@ -4312,10 +4318,12 @@ class TestTorch(TestCase):
         self.assertEqual(res1, tb, 0)
 
     @skipIfNoLapack
+    @skipIfRocm
     def test_trtrs(self):
         self._test_trtrs(self, lambda t: t)
 
     @skipIfNoLapack
+    @skipIfRocm
     def test_gels(self):
         def _test_underdetermined(a, b, expectedNorm):
             m = a.size()[0]
@@ -4431,6 +4439,7 @@ class TestTorch(TestCase):
         self.assertEqual((torch.mm(a, tb) - b).norm(), expectedNorm, 1e-8)
 
     @skipIfNoLapack
+    @skipIfRocm
     def test_eig(self):
         a = torch.Tensor(((1.96, 0.00, 0.00, 0.00, 0.00),
                           (-6.49, 3.80, 0.00, 0.00, 0.00),
@@ -7679,7 +7688,6 @@ class TestTorch(TestCase):
             self.assertEqual(device, device_copied)
 
     @unittest.skipIf(not torch.cuda.is_available(), 'no CUDA')
-    @skipIfRocm
     def test_half_tensor_cuda(self):
         x = torch.randn(5, 5).half()
         self.assertEqual(x.cuda(), x)
