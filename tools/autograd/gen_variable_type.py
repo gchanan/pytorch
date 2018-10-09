@@ -248,9 +248,11 @@ def gen_variable_type(out, aten_declarations, template_path):
     type_definitions = []
 
     for declaration in aten_declarations:
-        # Factory methods shall not appear in `VariableType` at all, since they
-        # don't dispatch via `Type`.
-        if any(arg['simple_type'] == 'TensorOptions' for arg in declaration['arguments']):
+        # Factory methods usually do not appear in `VariableType` at all, since they
+        # don't dispatch via `Type`; except in the case where the implementation is 'abstract'
+        # in which case they do!
+        if (not declaration['abstract'] and
+                any(arg['simple_type'] == 'TensorOptions' for arg in declaration['arguments'])):
             continue
         type_declarations.append(METHOD_DECLARATION.substitute(declaration))
         if declaration['name'] not in MANUAL_IMPLEMENTATIONS:
@@ -286,6 +288,8 @@ def emit_body(declaration):
 
     # These exclude things like BoolTensor, int64_t, and Scalar
     def is_differentiable(arg):
+        if 'TensorOptions' in arg['type']:
+            return False
         if 'Tensor' not in arg['type']:
             return False
         if arg['dynamic_type'] in {'IndexTensor', 'BoolTensor'}:
@@ -526,7 +530,7 @@ def emit_body(declaration):
 
 def unpack_args(env, declaration):
     def requires_unpack(arg):
-        return 'Tensor' in arg['dynamic_type']
+        return 'Tensor' in arg['dynamic_type'] and not 'TensorOptions' in arg['dynamic_type']
 
     body = []
     unpacked_args = []
