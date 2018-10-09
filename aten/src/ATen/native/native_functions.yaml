@@ -640,6 +640,7 @@
     CUDA: _embedding_bag_dense_backward_cuda
 
 - func: empty(IntList size, TensorOptions options={}) -> Tensor
+  cpu_half: True
   dispatch:
     CPU: empty_cpu
     CUDA: empty_cuda
