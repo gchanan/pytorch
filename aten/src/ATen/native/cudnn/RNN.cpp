@@ -1047,7 +1047,7 @@ Tensor _cudnn_init_dropout_state(double dropout, bool train, int64_t dropout_see
   auto handle = getCudnnHandle();
   DropoutDescriptor dropout_desc;
   auto dropout_p = train ? dropout : 0;
-  dropout_desc.initialize_rng(at::getType(options), handle, dropout_p, dropout_seed);
+  dropout_desc.initialize_rng(handle, dropout_p, dropout_seed, options);
   return dropout_desc.state;
 }
 

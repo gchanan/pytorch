@@ -42,16 +42,9 @@ Tensor& eye_out_cuda(Tensor& result, int64_t n, int64_t m) {
 Tensor empty_cuda(IntList size, const TensorOptions& options) {
   AT_ASSERT(options.backend() == at::Backend::CUDA);
   auto storage_impl = c10::make_intrusive<at::StorageImpl>(
-    scalarTypeToTypeMeta(options.dtype()),
-    0,
-    cuda::getCUDADeviceAllocator(),
-    true);
-  auto tensor_impl = c10::make_intrusive<at::TensorImpl, at::UndefinedTensorImpl>(
-    storage_impl,
-    CUDATensorId(),
-    false
-  );
-  auto tensor = Tensor(tensor_impl);
+    scalarTypeToTypeMeta(options.dtype()), 0, cuda::getCUDADeviceAllocator(), true);
+
+  auto tensor = detail::make_tensor<TensorImpl>(storage_impl, CUDATensorId(), false);
   tensor.resize_(size);
   return tensor;
 }

@@ -11,7 +11,6 @@
 #include "ATen/Dispatch.h"
 #include "ATen/NativeFunctions.h"
 #include "ATen/ScalarType.h"
-#include "ATen/SparseTensorImpl.h"
 #include "ATen/core/TensorOptions.h"
 #include "ATen/core/Error.h"
 #include "TH/THRandom.h"
@@ -107,16 +106,9 @@ Tensor _dim_arange(const Tensor& like, int64_t dim) {
 Tensor empty_cpu(IntList size, const TensorOptions& options) {
   AT_ASSERT(options.backend() == Backend::CPU);
   auto storage_impl = c10::make_intrusive<StorageImpl>(
-    scalarTypeToTypeMeta(options.dtype()),
-    0,
-    at::getCPUAllocator(),
-    true);
-  auto tensor_impl = c10::make_intrusive<TensorImpl, UndefinedTensorImpl>(
-    storage_impl,
-    at::CPUTensorId(),
-    false
-  );
-  auto tensor = Tensor(tensor_impl);
+    scalarTypeToTypeMeta(options.dtype()), 0, at::getCPUAllocator(), true);
+
+  auto tensor = detail::make_tensor<TensorImpl>(storage_impl, at::CPUTensorId(), false);
   tensor.resize_(size);
   return tensor;
 }
