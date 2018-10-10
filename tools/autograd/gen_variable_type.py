@@ -92,6 +92,9 @@ ${return_type} VariableType::${method_prefix_derived}${api_name}(${type_method_f
 UNPACK_TENSOR = CodeTemplate("""\
 auto${ref} ${arg_name}_ = unpack${suffix}(${arg_name}, "${arg_name}", ${arg_pos});""")
 
+UNPACK_OPTIONS = CodeTemplate("""\
+auto ${arg_name}_ = TensorOptions(${arg_name}).is_variable(false);""")
+
 DECLARE_GRAD_FN = CodeTemplate("""\
 std::shared_ptr<${op}> grad_fn;
 """)
@@ -530,7 +533,7 @@ def emit_body(declaration):
 
 def unpack_args(env, declaration):
     def requires_unpack(arg):
-        return 'Tensor' in arg['dynamic_type'] and not 'TensorOptions' in arg['dynamic_type']
+        return 'Tensor' in arg['dynamic_type']
 
     body = []
     unpacked_args = []
@@ -543,16 +546,23 @@ def unpack_args(env, declaration):
             continue
 
         dynamic_type = arg['dynamic_type']
-        is_nullable = arg.get('is_nullable', False)
-        ref = (not is_nullable) and dynamic_type not in ['TensorList', 'SparseTensorRef']
-        suffix = '_opt' if is_nullable else ''
+        if 'TensorOptions' not in dynamic_type:
+            is_nullable = arg.get('is_nullable', False)
+            ref = (not is_nullable) and dynamic_type not in ['TensorList', 'SparseTensorRef']
+            suffix = '_opt' if is_nullable else ''
 
-        body.append(UNPACK_TENSOR.substitute(
-            arg_name=arg['name'],
-            arg_pos=i,
-            suffix=suffix,
-            ref='&' if ref else '',
-        ))
+            body.append(UNPACK_TENSOR.substitute(
+                arg_name=arg['name'],
+                arg_pos=i,
+                suffix=suffix,
+                ref='&' if ref else '',
+            ))
+        else:
+            # Okay, we are abusing the definition of 'unpack' here a bit,
+            # although it's stll getting the non-variable from the variable
+            # (in this case via TensorOptions rather than Variable/Tensor).
+            body.append(UNPACK_OPTIONS.substitute(arg_name=arg['name']))
+
         unpacked_args.append(arg['name'] + '_')
 
     env['unpacked_args'] = unpacked_args
