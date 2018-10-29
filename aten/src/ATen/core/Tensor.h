@@ -330,15 +330,15 @@ public:
   Tensor _th_ne(const Tensor & other) const;
   Tensor & _th_ne_(Scalar other);
   Tensor & _th_ne_(const Tensor & other);
-  Tensor min(const Tensor & other) const;
-  Tensor min() const;
-  Tensor max(const Tensor & other) const;
-  Tensor max() const;
-  Tensor median() const;
-  std::tuple<Tensor,Tensor> sort(int64_t dim=-1, bool descending=false) const;
-  std::tuple<Tensor,Tensor> topk(int64_t k, int64_t dim=-1, bool largest=true, bool sorted=true) const;
-  Tensor all() const;
-  Tensor any() const;
+  Tensor _th_min(const Tensor & other) const;
+  Tensor _th_min() const;
+  Tensor _th_max(const Tensor & other) const;
+  Tensor _th_max() const;
+  Tensor _th_median() const;
+  std::tuple<Tensor,Tensor> _th_sort(int64_t dim=-1, bool descending=false) const;
+  std::tuple<Tensor,Tensor> _th_topk(int64_t k, int64_t dim=-1, bool largest=true, bool sorted=true) const;
+  Tensor _th_all() const;
+  Tensor _th_any() const;
   Tensor _th_lgamma() const;
   Tensor & _th_lgamma_();
   Tensor _th_digamma() const;
@@ -349,7 +349,7 @@ public:
   Tensor _th_erfinv() const;
   Tensor & _th_frac_();
   Tensor _th_frac() const;
-  Tensor renorm(Scalar p, int64_t dim, Scalar maxnorm) const;
+  Tensor _th_renorm(Scalar p, int64_t dim, Scalar maxnorm) const;
   Tensor & _th_renorm_(Scalar p, int64_t dim, Scalar maxnorm);
   Tensor _th_dist(const Tensor & other, Scalar p=2) const;
   Tensor _th_reciprocal() const;
@@ -771,6 +771,16 @@ public:
   Tensor fmod(const Tensor & other) const;
   Tensor remainder(Scalar other) const;
   Tensor remainder(const Tensor & other) const;
+  Tensor min(const Tensor & other) const;
+  Tensor min() const;
+  Tensor max(const Tensor & other) const;
+  Tensor max() const;
+  Tensor median() const;
+  std::tuple<Tensor,Tensor> sort(int64_t dim=-1, bool descending=false) const;
+  std::tuple<Tensor,Tensor> topk(int64_t k, int64_t dim=-1, bool largest=true, bool sorted=true) const;
+  Tensor all() const;
+  Tensor any() const;
+  Tensor renorm(Scalar p, int64_t dim, Scalar maxnorm) const;
 
   template <typename F, typename... Args>
   auto m(F func, Args&&... params) const -> decltype(func(*this, std::forward<Args>(params)...)) {

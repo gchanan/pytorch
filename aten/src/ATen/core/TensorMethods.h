@@ -266,32 +266,32 @@ inline Tensor & Tensor::_th_ne_(Scalar other) {
 inline Tensor & Tensor::_th_ne_(const Tensor & other) {
     return type()._th_ne_(*this, other);
 }
-inline Tensor Tensor::min(const Tensor & other) const {
-    return type().min(*this, other);
+inline Tensor Tensor::_th_min(const Tensor & other) const {
+    return type()._th_min(*this, other);
 }
-inline Tensor Tensor::min() const {
-    return type().min(*this);
+inline Tensor Tensor::_th_min() const {
+    return type()._th_min(*this);
 }
-inline Tensor Tensor::max(const Tensor & other) const {
-    return type().max(*this, other);
+inline Tensor Tensor::_th_max(const Tensor & other) const {
+    return type()._th_max(*this, other);
 }
-inline Tensor Tensor::max() const {
-    return type().max(*this);
+inline Tensor Tensor::_th_max() const {
+    return type()._th_max(*this);
 }
-inline Tensor Tensor::median() const {
-    return type().median(*this);
+inline Tensor Tensor::_th_median() const {
+    return type()._th_median(*this);
 }
-inline std::tuple<Tensor,Tensor> Tensor::sort(int64_t dim, bool descending) const {
-    return type().sort(*this, dim, descending);
+inline std::tuple<Tensor,Tensor> Tensor::_th_sort(int64_t dim, bool descending) const {
+    return type()._th_sort(*this, dim, descending);
 }
-inline std::tuple<Tensor,Tensor> Tensor::topk(int64_t k, int64_t dim, bool largest, bool sorted) const {
-    return type().topk(*this, k, dim, largest, sorted);
+inline std::tuple<Tensor,Tensor> Tensor::_th_topk(int64_t k, int64_t dim, bool largest, bool sorted) const {
+    return type()._th_topk(*this, k, dim, largest, sorted);
 }
-inline Tensor Tensor::all() const {
-    return type().all(*this);
+inline Tensor Tensor::_th_all() const {
+    return type()._th_all(*this);
 }
-inline Tensor Tensor::any() const {
-    return type().any(*this);
+inline Tensor Tensor::_th_any() const {
+    return type()._th_any(*this);
 }
 inline Tensor Tensor::_th_lgamma() const {
     return type()._th_lgamma(*this);
@@ -323,8 +323,8 @@ inline Tensor & Tensor::_th_frac_() {
 inline Tensor Tensor::_th_frac() const {
     return type()._th_frac(*this);
 }
-inline Tensor Tensor::renorm(Scalar p, int64_t dim, Scalar maxnorm) const {
-    return type().renorm(*this, p, dim, maxnorm);
+inline Tensor Tensor::_th_renorm(Scalar p, int64_t dim, Scalar maxnorm) const {
+    return type()._th_renorm(*this, p, dim, maxnorm);
 }
 inline Tensor & Tensor::_th_renorm_(Scalar p, int64_t dim, Scalar maxnorm) {
     return type()._th_renorm_(*this, p, dim, maxnorm);
@@ -1588,6 +1588,36 @@ inline Tensor Tensor::remainder(Scalar other) const {
 }
 inline Tensor Tensor::remainder(const Tensor & other) const {
     return type().remainder(*this, other);
+}
+inline Tensor Tensor::min(const Tensor & other) const {
+    return type().min(*this, other);
+}
+inline Tensor Tensor::min() const {
+    return type().min(*this);
+}
+inline Tensor Tensor::max(const Tensor & other) const {
+    return type().max(*this, other);
+}
+inline Tensor Tensor::max() const {
+    return type().max(*this);
+}
+inline Tensor Tensor::median() const {
+    return type().median(*this);
+}
+inline std::tuple<Tensor,Tensor> Tensor::sort(int64_t dim, bool descending) const {
+    return type().sort(*this, dim, descending);
+}
+inline std::tuple<Tensor,Tensor> Tensor::topk(int64_t k, int64_t dim, bool largest, bool sorted) const {
+    return type().topk(*this, k, dim, largest, sorted);
+}
+inline Tensor Tensor::all() const {
+    return type().all(*this);
+}
+inline Tensor Tensor::any() const {
+    return type().any(*this);
+}
+inline Tensor Tensor::renorm(Scalar p, int64_t dim, Scalar maxnorm) const {
+    return type().renorm(*this, p, dim, maxnorm);
 }
 
 inline bool Tensor::is_variable() const noexcept {

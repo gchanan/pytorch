@@ -791,7 +791,7 @@
         - THTensor* other
 ]]
 [[
-  name: min
+  name: _th_min
   variants:
     - method
     - function
@@ -828,7 +828,7 @@
           default: "false"
 ]]
 [[
-  name: max
+  name: _th_max
   variants:
     - method
     - function
@@ -904,7 +904,7 @@
       default: "false"
 ]]
 [[
-  name: median
+  name: _th_median
   variants:
     - method
     - function
@@ -935,7 +935,8 @@
           default: "false"
 ]]
 [[
-  name: sort
+  name: _th_sort
+  cname: sort
   variants:
     - method
     - function
@@ -953,7 +954,8 @@
       default: "false"
 ]]
 [[
-  name: topk
+  name: _th_topk
+  cname: topk
   variants:
     - method
     - function
@@ -974,7 +976,7 @@
       default: "true"
 ]]
 [[
-  name: all
+  name: _th_all
   types:
     - Byte
   variants:
@@ -1011,7 +1013,7 @@
           default: "false"
 ]]
 [[
-  name: any
+  name: _th_any
   types:
     - Byte
   variants:
@@ -1665,7 +1667,8 @@
           default: "false"
 ]]
 [[
-  name: renorm
+  name: _th_renorm
+  cname: renorm
   types:
     - floating_point
   backends:
