@@ -52,7 +52,7 @@
           default: {}
 ]]
 [[
-  name: _fill_
+  name: _th_fill_
   return: self
   cname: fill
   variants: function
@@ -269,7 +269,7 @@
     - long step
 ]]
 [[
-  name: _range
+  name: _th_range
   cname: range
   variants:
     - function
@@ -285,7 +285,7 @@
     - accreal step
 ]]
 [[
-  name: _arange
+  name: _th_arange
   variants:
     - function
   backends:
@@ -377,6 +377,7 @@
 ]]
 [[
   name: __and__
+  cname: __and__
   variants:
     - method
     - function
@@ -398,6 +399,7 @@
 ]]
 [[
   name: __iand__
+  cname: __iand__
   variants:
     - method
   return: argument 0
@@ -416,6 +418,7 @@
 ]]
 [[
   name: __or__
+  cname: __or__
   variants:
     - method
     - function
@@ -437,6 +440,7 @@
 ]]
 [[
   name: __ior__
+  cname: __ior__
   variants:
     - method
   return: argument 0
@@ -455,6 +459,7 @@
 ]]
 [[
   name: __xor__
+  cname: __xor__
   variants:
     - method
     - function
@@ -476,6 +481,7 @@
 ]]
 [[
   name: __ixor__
+  cname: __ixor__
   variants:
     - method
   return: argument 0
@@ -1916,7 +1922,7 @@
     - real weight
 ]]
 [[
-  name: _linspace
+  name: _th_linspace
   cname: linspace
   types:
     - Float
@@ -1935,7 +1941,7 @@
     - long steps
 ]]
 [[
-  name: _logspace
+  name: _th_logspace
   cname: logspace
   types:
     - Float
@@ -2553,7 +2559,7 @@
     - THTensor* tensor2
 ]]
 [[
-  name: _gesv_single
+  name: _th_gesv_single
   cname: gesv
   types:
     - Float
@@ -2708,7 +2714,7 @@
       default: S
 ]]
 [[
-  name: _getri_single
+  name: _th_getri_single
   cname: getri
   types:
     - Float
