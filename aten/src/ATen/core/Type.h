@@ -192,13 +192,13 @@ struct CAFFE2_API Type {
   virtual Tensor & _th_index_add_(Tensor & self, int64_t dim, const Tensor & index, const Tensor & source) const = 0;
   virtual Tensor & _th_index_fill_(Tensor & self, int64_t dim, const Tensor & index, Scalar value) const = 0;
   virtual Tensor & _th_index_fill_(Tensor & self, int64_t dim, const Tensor & index, const Tensor & value) const = 0;
-  virtual Tensor unfold(const Tensor & self, int64_t dimension, int64_t size, int64_t step) const = 0;
+  virtual Tensor _th_unfold(const Tensor & self, int64_t dimension, int64_t size, int64_t step) const = 0;
   virtual Tensor & _th_scatter_(Tensor & self, int64_t dim, const Tensor & index, const Tensor & src) const = 0;
   virtual Tensor & _th_scatter_(Tensor & self, int64_t dim, const Tensor & index, Scalar value) const = 0;
   virtual Tensor & _th_scatter_add_(Tensor & self, int64_t dim, const Tensor & index, const Tensor & src) const = 0;
   virtual Tensor _th_gather(const Tensor & self, int64_t dim, const Tensor & index) const = 0;
   virtual void* data_ptr(const Tensor & self) const = 0;
-  virtual bool equal(const Tensor & self, const Tensor & other) const = 0;
+  virtual bool _th_equal(const Tensor & self, const Tensor & other) const = 0;
   virtual Tensor __and__(const Tensor & self, Scalar other) const = 0;
   virtual Tensor s___and__(const Tensor & self, const Tensor & other) const = 0;
   virtual Tensor __and__(const Tensor & self, const Tensor & other) const = 0;
@@ -303,9 +303,10 @@ struct CAFFE2_API Type {
   virtual Tensor _th_atan2(const Tensor & self, const Tensor & other) const = 0;
   virtual Tensor & s__th_atan2_(Tensor & self, const Tensor & other) const = 0;
   virtual Tensor & _th_atan2_(Tensor & self, const Tensor & other) const = 0;
-  virtual Tensor s_pow(const Tensor & self, const Tensor & exponent) const = 0;
-  virtual Tensor pow(const Tensor & self, const Tensor & exponent) const = 0;
-  virtual Tensor pow(Scalar self, const Tensor & exponent) const = 0;
+  virtual Tensor _th_pow(const Tensor & self, Scalar exponent) const = 0;
+  virtual Tensor s__th_pow(const Tensor & self, const Tensor & exponent) const = 0;
+  virtual Tensor _th_pow(const Tensor & self, const Tensor & exponent) const = 0;
+  virtual Tensor _th_pow(Scalar self, const Tensor & exponent) const = 0;
   virtual Tensor & _th_pow_(Tensor & self, Scalar exponent) const = 0;
   virtual Tensor & s__th_pow_(Tensor & self, const Tensor & exponent) const = 0;
   virtual Tensor & _th_pow_(Tensor & self, const Tensor & exponent) const = 0;
@@ -372,7 +373,7 @@ struct CAFFE2_API Type {
   virtual Tensor & _th_log_normal_(Tensor & self, double mean, double std, Generator * generator) const = 0;
   virtual Tensor & _th_exponential_(Tensor & self, double lambd, Generator * generator) const = 0;
   virtual Tensor & _th_geometric_(Tensor & self, double p, Generator * generator) const = 0;
-  virtual Tensor alias(const Tensor & self) const = 0;
+  virtual Tensor _th_alias(const Tensor & self) const = 0;
   virtual Tensor abs(const Tensor & self) const = 0;
   virtual Tensor & abs_(Tensor & self) const = 0;
   virtual Tensor acos(const Tensor & self) const = 0;
@@ -740,6 +741,11 @@ struct CAFFE2_API Type {
   virtual Tensor all(const Tensor & self) const = 0;
   virtual Tensor any(const Tensor & self) const = 0;
   virtual Tensor renorm(const Tensor & self, Scalar p, int64_t dim, Scalar maxnorm) const = 0;
+  virtual Tensor unfold(const Tensor & self, int64_t dimension, int64_t size, int64_t step) const = 0;
+  virtual bool equal(const Tensor & self, const Tensor & other) const = 0;
+  virtual Tensor pow(const Tensor & self, const Tensor & exponent) const = 0;
+  virtual Tensor pow(Scalar self, const Tensor & exponent) const = 0;
+  virtual Tensor alias(const Tensor & self) const = 0;
 protected:
   TensorTypeId type_id_;
   bool is_variable_;

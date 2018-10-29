@@ -760,4 +760,55 @@ Tensor renorm(const Tensor & self, Scalar p, int64_t dim, Scalar maxnorm) {
   return at::_th_renorm(self, p, dim, maxnorm);
 }
 
+Tensor unfold(const Tensor & self, int64_t dimension, int64_t size, int64_t step) {
+  return self._th_unfold(dimension, size, step);
+}
+
+bool equal(const Tensor & self, const Tensor & other) {
+  return at::_th_equal(self, other);
+}
+
+Tensor & pow_out(Tensor & result, const Tensor & self, const Tensor & exponent) {
+  return at::_th_pow_out(result, self, exponent);
+}
+
+Tensor pow(const Tensor & self, const Tensor & exponent) {
+  return at::_th_pow(self, exponent);
+}
+Tensor & pow_out(Tensor & result, Scalar self, const Tensor & exponent) {
+  return at::_th_pow_out(result, self, exponent);
+}
+
+Tensor pow(Scalar self, const Tensor & exponent) {
+  return at::_th_pow(self, exponent);
+}
+
+Tensor & normal_out(Tensor & output, const Tensor & mean, double std, Generator * generator) {
+  return at::_th_normal_out(output, mean, std, generator);
+}
+
+Tensor normal(const Tensor & mean, double std, Generator * generator) {
+  return at::_th_normal(mean, std, generator);
+}
+
+Tensor & normal_out(Tensor & output, double mean, const Tensor & std, Generator * generator) {
+  return at::_th_normal_out(output, mean, std, generator);
+}
+
+Tensor normal(double mean, const Tensor & std, Generator * generator) {
+  return at::_th_normal(mean, std, generator);
+}
+
+Tensor & normal_out(Tensor & output, const Tensor & mean, const Tensor & std, Generator * generator) {
+  return at::_th_normal_out(output, mean, std, generator);
+}
+
+Tensor normal(const Tensor & mean, const Tensor & std, Generator * generator) {
+  return at::_th_normal(mean, std, generator);
+}
+
+Tensor alias(const Tensor & self) {
+  return at::_th_alias(self);
+}
+
 }} // namespace at::native

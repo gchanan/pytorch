@@ -254,7 +254,8 @@
         - THTensor* value
 ]]
 [[
-  name: unfold
+  name: _th_unfold
+  cname: unfold
   cpu_half: True
   device_guard: False
   return: argument 0
@@ -364,7 +365,8 @@
     - THTensor* self
 ]]
 [[
-  name: equal
+  name: _th_equal
+  cname: equal
   variants:
     - method
     - function
@@ -1833,7 +1835,7 @@
         - real exponent
 ]]
 [[
-  name: pow
+  name: _th_pow
   variants:
     - method
     - function
@@ -1848,7 +1850,7 @@
         - THTensor* exponent
 ]]
 [[
-  name: pow
+  name: _th_pow
   variants:
     - function
   return: argument 0
@@ -3039,8 +3041,7 @@
       default: 1
 ]]
 [[
-  name: normal
-  cname: normal
+  name: _th_normal
   types:
     - floating_point
   backends:
@@ -3208,7 +3209,7 @@
 # practice this leads to all sorts of problems with ambiguous overloads.
 # So we add it here with a separate name.
 [[
-  name: alias
+  name: _th_alias
   return: THTensor*
   cpu_half: True
   variants:

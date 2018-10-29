@@ -113,8 +113,8 @@ inline Tensor & Tensor::_th_index_fill_(int64_t dim, const Tensor & index, Scala
 inline Tensor & Tensor::_th_index_fill_(int64_t dim, const Tensor & index, const Tensor & value) {
     return type()._th_index_fill_(*this, dim, index, value);
 }
-inline Tensor Tensor::unfold(int64_t dimension, int64_t size, int64_t step) const {
-    return type().unfold(*this, dimension, size, step);
+inline Tensor Tensor::_th_unfold(int64_t dimension, int64_t size, int64_t step) const {
+    return type()._th_unfold(*this, dimension, size, step);
 }
 inline Tensor & Tensor::_th_scatter_(int64_t dim, const Tensor & index, const Tensor & src) {
     return type()._th_scatter_(*this, dim, index, src);
@@ -131,8 +131,8 @@ inline Tensor Tensor::_th_gather(int64_t dim, const Tensor & index) const {
 inline void* Tensor::data_ptr() const {
     return type().data_ptr(*this);
 }
-inline bool Tensor::equal(const Tensor & other) const {
-    return type().equal(*this, other);
+inline bool Tensor::_th_equal(const Tensor & other) const {
+    return type()._th_equal(*this, other);
 }
 inline Tensor Tensor::__and__(Scalar other) const {
     return type().__and__(*this, other);
@@ -350,8 +350,8 @@ inline Tensor Tensor::_th_atan2(const Tensor & other) const {
 inline Tensor & Tensor::_th_atan2_(const Tensor & other) {
     return type()._th_atan2_(*this, other);
 }
-inline Tensor Tensor::pow(const Tensor & exponent) const {
-    return type().pow(*this, exponent);
+inline Tensor Tensor::_th_pow(const Tensor & exponent) const {
+    return type()._th_pow(*this, exponent);
 }
 inline Tensor & Tensor::_th_pow_(Scalar exponent) {
     return type()._th_pow_(*this, exponent);
@@ -515,8 +515,8 @@ inline Tensor & Tensor::_th_exponential_(double lambd, Generator * generator) {
 inline Tensor & Tensor::_th_geometric_(double p, Generator * generator) {
     return type()._th_geometric_(*this, p, generator);
 }
-inline Tensor Tensor::alias() const {
-    return type().alias(*this);
+inline Tensor Tensor::_th_alias() const {
+    return type()._th_alias(*this);
 }
 inline Tensor Tensor::abs() const {
     return type().abs(*this);
@@ -1618,6 +1618,18 @@ inline Tensor Tensor::any() const {
 }
 inline Tensor Tensor::renorm(Scalar p, int64_t dim, Scalar maxnorm) const {
     return type().renorm(*this, p, dim, maxnorm);
+}
+inline Tensor Tensor::unfold(int64_t dimension, int64_t size, int64_t step) const {
+    return type().unfold(*this, dimension, size, step);
+}
+inline bool Tensor::equal(const Tensor & other) const {
+    return type().equal(*this, other);
+}
+inline Tensor Tensor::pow(const Tensor & exponent) const {
+    return type().pow(*this, exponent);
+}
+inline Tensor Tensor::alias() const {
+    return type().alias(*this);
 }
 
 inline bool Tensor::is_variable() const noexcept {
