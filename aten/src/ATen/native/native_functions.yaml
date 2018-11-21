@@ -3498,3 +3498,21 @@
 
 - func: tanh_backward(Tensor grad_output, Tensor output) -> Tensor
   python_module: nn
+
+- func: thnn_conv_transpose2d_out(Tensor output, Tensor self, Tensor weight, IntList[2] kernel_size, Tensor? bias={}, IntList[2] stride=1, IntList[2] padding=0, IntList[2] output_padding=0, IntList[2] dilation=1) -> Tensor
+  python_module: nn
+
+- func: thnn_conv_transpose2d(Tensor self, Tensor weight, IntList[2] kernel_size, Tensor? bias={}, IntList[2] stride=1, IntList[2] padding=0, IntList[2] output_padding=0, IntList[2] dilation=1) -> Tensor
+  python_module: nn
+
+- func: thnn_conv_transpose2d_forward_out(Tensor output, Tensor columns, Tensor ones, Tensor self, Tensor weight, IntList[2] kernel_size, Tensor? bias, IntList[2] stride, IntList[2] padding, IntList[2] output_padding, IntList[2] dilation) -> (Tensor, Tensor, Tensor)
+  python_module: nn
+
+- func: thnn_conv_transpose2d_forward(Tensor self, Tensor weight, IntList[2] kernel_size, Tensor? bias, IntList[2] stride, IntList[2] padding, IntList[2] output_padding, IntList[2] dilation) -> (Tensor output, Tensor columns, Tensor ones)
+  python_module: nn
+
+- func: thnn_conv_transpose2d_backward_out(Tensor? grad_input, Tensor? grad_weight, Tensor? grad_bias, Tensor grad_output, Tensor self, Tensor weight, IntList[2] kernel_size, IntList[2] stride, IntList[2] padding, IntList[2] output_padding, IntList[2] dilation, Tensor columns, Tensor ones) -> (Tensor, Tensor, Tensor)
+  python_module: nn
+
+- func: thnn_conv_transpose2d_backward(Tensor grad_output, Tensor self, Tensor weight, IntList[2] kernel_size, IntList[2] stride, IntList[2] padding, IntList[2] output_padding, IntList[2] dilation, Tensor columns, Tensor ones, std::array<bool,3> output_mask) -> (Tensor grad_input, Tensor grad_weight, Tensor grad_bias)
+  python_module: nn
