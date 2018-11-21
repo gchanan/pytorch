@@ -804,20 +804,20 @@ std::tuple<Tensor,Tensor,Tensor> thnn_conv3d_backward(const Tensor & grad_output
 }
 
 /*Tensor & thnn_conv_dilated2d_out(Tensor & output, const Tensor & self, const Tensor & weight, IntList kernel_size, const Tensor & bias, IntList stride, IntList padding, IntList dilation) {
-  return at::_thnn_conv_dilated2d_out(output, self, weight, kernel_size, bias, stride, padding, dilation);
+  return at::thnn_conv_dilated2d_forward_out(output, self, weight, kernel_size, bias, stride, padding, dilation);
 }
-
 Tensor thnn_conv_dilated2d(const Tensor & self, const Tensor & weight, IntList kernel_size, const Tensor & bias, IntList stride, IntList padding, IntList dilation) {
-  return at::_thnn_conv_dilated2d(self, weight, kernel_size, bias, stride, padding, dilation);
+  return at::thnn_conv_dilated2d_forward(self, weight, kernel_size, bias, stride, padding, dilation);
 }*/
 
-//Tensor & thnn_conv_dilated2d_forward_out(Tensor & output, const Tensor & columns, const Tensor & ones, const Tensor & self, const Tensor & weight, IntList kernel_size, const Tensor & bias, IntList stride, IntList padding, IntList dilation) {
-//  return at::_thnn_conv_dilated2d_forward_out(output, columns, ones, self, weight, kernel_size, bias, stride, padding, dilation);
-//}
+std::tuple<Tensor &,Tensor &,Tensor &> thnn_conv_dilated2d_forward_out(Tensor & output, Tensor & columns, Tensor & ones, const Tensor & self,
+                                                                       const Tensor & weight, IntList kernel_size, const Tensor & bias, IntList stride, IntList padding, IntList dilation) {
+  return at::_thnn_conv_dilated2d_forward_out(output, columns, ones, self, weight, kernel_size, bias, stride, padding, dilation);
+}
 
-//Tensor thnn_conv_dilated2d_forward(const Tensor & self, const Tensor & weight, IntList kernel_size, const Tensor & bias, IntList stride, IntList padding, IntList dilation) {
-//  return at::_thnn_conv_dilated2d_forward(self, weight, kernel_size, bias, stride, padding, dilation);
-//}
+std::tuple<Tensor,Tensor,Tensor> thnn_conv_dilated2d_forward(const Tensor & self, const Tensor & weight, IntList kernel_size, const Tensor & bias, IntList stride, IntList padding, IntList dilation) {
+  return at::_thnn_conv_dilated2d_forward(self, weight, kernel_size, bias, stride, padding, dilation);
+}
 
 std::tuple<Tensor &,Tensor &,Tensor &> thnn_conv_dilated2d_backward_out(Tensor & grad_input, Tensor & grad_weight, Tensor & grad_bias, const Tensor & grad_output, const Tensor & self, const Tensor & weight, IntList kernel_size, IntList stride, IntList padding, IntList dilation, const Tensor & columns, const Tensor & ones) {
   return at::_thnn_conv_dilated2d_backward_out(grad_input, grad_weight, grad_bias, grad_output, self, weight, kernel_size, stride, padding, dilation, columns, ones);
