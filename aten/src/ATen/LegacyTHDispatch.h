@@ -56,13 +56,13 @@ class CAFFE2_API LegacyTHDispatch {
   void registerDispatcher(Backend b, ScalarType s, LegacyTHDispatcherUniquePtr&& t) {
     dispatcher_registry[static_cast<int>(b)][static_cast<int>(s)] = std::move(t);
   }
-  
-  LegacyTHDispatcher* getNonVariableTypeRaw(Backend p, ScalarType s) {
+
+  LegacyTHDispatcher* getLegacyTHDispatcherRaw(Backend p, ScalarType s) {
     return dispatcher_registry[static_cast<int>(p)][static_cast<int>(s)].get();
   }
 
   LegacyTHDispatcher & getLegacyTHDispatcher(Backend p, ScalarType s) {
-    auto* type = getNonVariableTypeRaw(p, s);
+    auto* type = getLegacyTHDispatcherRaw(p, s);
     if (!type) AT_ERROR(toString(p), toString(s), "THDispatcher is not enabled.");
     return *type;
   }
