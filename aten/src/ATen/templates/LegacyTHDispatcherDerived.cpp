@@ -12,6 +12,4 @@ namespace at {
 ${Dispatcher}::${Dispatcher}()
   : LegacyTHDispatcher(${Backend}TensorId()) {}
 
-${dispatcher_derived_method_definitions}
-
 }
