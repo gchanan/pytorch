@@ -1,5 +1,7 @@
 #pragma once
 
+// ${generated_comment}
+
 #include <c10/core/TensorTypeIdRegistration.h>
 
 namespace at {
