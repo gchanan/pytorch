@@ -10,6 +10,7 @@
 #include "ATen/Dispatch.h"
 #include "ATen/NativeFunctions.h"
 #include "ATen/LegacyTHFunctions.h"
+#include "ATen/LegacyTHDispatcher.h"
 #include <c10/core/ScalarType.h>
 #include "ATen/core/Deprecated.h"
 #include "ATen/core/TensorOptions.h"
@@ -61,8 +62,9 @@ void window_function_checks(
       window_length);
 }
 
-const LegacyTHType& getFactoryLegacyTHType(const TensorOptions& options) {
-  return at::getLegacyTHType(options);
+// FIXME: point to LegacyTHDispatcher.
+const TypeExtendedInterface& getFactoryLegacyTHDispatcher(const TensorOptions& options) {
+  return at::getType(options);
 }
 
 } // namespace
@@ -79,7 +81,7 @@ Tensor arange(
     Scalar step,
     const TensorOptions& options) {
   // Note [Native bindings for legacy TH factory functions]
-  return getFactoryType(options)._th_arange(start, end, step);
+  return getFactoryLegacyTHDispatcher(options)._th_arange(start, end, step);
 }
 
 Tensor& arange_out(Tensor& result, Scalar start, Scalar end) {
@@ -92,7 +94,7 @@ Tensor& arange_out(Tensor& result, Scalar start, Scalar end, Scalar step) {
 
 Tensor arange(Scalar end, const TensorOptions& options) {
   // Note [Native bindings for legacy TH factory functions]
-  return getFactoryType(options)._th_arange(end);
+  return getFactoryLegacyTHDispatcher(options)._th_arange(end);
 }
 
 Tensor& arange_out(Tensor& result, Scalar end) {
@@ -138,7 +140,7 @@ Tensor& empty_out(Tensor& result, IntList size) {
 
 Tensor empty_strided(IntList size, IntList stride, const TensorOptions& options) {
   // Note [Native bindings for legacy TH factory functions]
-  return getFactoryType(options)._th_tensor(size, stride);
+  return getFactoryLegacyTHDispatcher(options)._th_tensor(size, stride);
 }
 
 
@@ -246,7 +248,7 @@ Tensor linspace(
     int64_t steps,
     const TensorOptions& options) {
   // Note [Native bindings for legacy TH factory functions]
-  return getFactoryType(options)._th_linspace(start, end, steps);
+  return getFactoryLegacyTHDispatcher(options)._th_linspace(start, end, steps);
 }
 
 Tensor& linspace_out(Tensor& result, Scalar start, Scalar end) {
@@ -269,7 +271,7 @@ Tensor logspace(
     int64_t steps,
     const TensorOptions& options) {
   // Note [Native bindings for legacy TH factory functions]
-  return getFactoryType(options)._th_logspace(start, end, steps);
+  return getFactoryLegacyTHDispatcher(options)._th_logspace(start, end, steps);
 }
 
 Tensor& logspace_out(Tensor& result, Scalar start, Scalar end) {
@@ -504,7 +506,7 @@ Tensor range(
     Scalar step,
     const TensorOptions& options) {
   // Note [Native bindings for legacy TH factory functions]
-  return getFactoryType(options)._th_range(start, end, step);
+  return getFactoryLegacyTHDispatcher(options)._th_range(start, end, step);
 }
 
 Tensor& range_out(Tensor& result, Scalar start, Scalar end) {
