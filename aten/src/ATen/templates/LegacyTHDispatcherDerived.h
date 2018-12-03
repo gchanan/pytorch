@@ -2,12 +2,13 @@
 
 // ${generated_comment}
 
+#include "ATen/LegacyTHDispatcher.h"
+
 namespace at {
 
 struct ${Dispatcher} final : public LegacyTHDispatcher {
   explicit ${Dispatcher}();
 
-  ${dispatcher_derived_method_declarations}
 };
 
 } // namespace at
