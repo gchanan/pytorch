@@ -8,8 +8,18 @@
 // ATen operators to call this mechanism for their implementation, but the
 // operator itself is declared separately (e.g. as a native function "wrapper").
 //
-// This is very similar to the LegacyTypeDispatch design, with the following
-// simplications:
+// Q: Why don't we just use LegacyTypeDispatch here?
+// A: Mainly separation of concerns:
+//   1) Type is for implementation of operators, which requires codegen of
+//      Variables, JIT, etc.  That is handled by the native function "wrappers";
+//      just calling into TH does not require that.
+//   2) Type does not require scalar-specific dispatch, whereas calling into TH
+//      does.  Thus, this separation allows us to evolve operator dispatch
+//      separately (i.e. to use the C10 dispatcher) from details of how to
+//      call TH functionality.
+//
+// The implmentation here is very similar to the LegacyTypeDispatch design, with
+// the following simplications:
 // 1) This is not required for a mobile build, so does not have to live in /core.
 // 2) Because these only contain function implementations, we do not have to
 //    handle the Variable/Tensor split; that is handled at the native function
@@ -23,6 +33,8 @@
 //
 // NB: We don't use Registry for this, because we don't want to
 // pay for a hash table lookup every time we do an operation.
+//
+// NB: we can delete this when we don't call into any TH implementations.
 
 #include <ATen/core/Backend.h>
 #include <c10/core/ScalarType.h>
