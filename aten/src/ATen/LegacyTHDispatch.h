@@ -37,6 +37,7 @@
 // NB: we can delete this when we don't call into any TH implementations.
 
 #include <ATen/core/Backend.h>
+#include <ATen/core/LegacyDeviceTypeInit.h>
 #include <c10/core/ScalarType.h>
 #include <ATen/LegacyTHDispatcher.h>
 
@@ -73,12 +74,47 @@ class CAFFE2_API LegacyTHDispatch {
     return dispatcher_registry[static_cast<int>(p)][static_cast<int>(s)].get();
   }
 
+  LegacyTHDispatcher * getLegacyTHDispatcherOpt(Backend p, ScalarType s) {
+    if (p != Backend::Undefined) {
+      initForDeviceType(backendToDeviceType(p));
+      // NB: there is no Complex for TH, so no initialization to be done.
+    }
+    auto dispatcher = getLegacyTHDispatcherRaw(p, s);
+
+    if(!dispatcher) {
+      // there is only a single Undefined Type.
+      if (p == Backend::Undefined || s == ScalarType::Undefined) {
+        return getLegacyTHDispatcherRaw(Backend::Undefined, ScalarType::Undefined);
+      }
+    }
+
+    return dispatcher;
+  }
+
   LegacyTHDispatcher & getLegacyTHDispatcher(Backend p, ScalarType s) {
-    auto* type = getLegacyTHDispatcherRaw(p, s);
-    if (!type) AT_ERROR(toString(p), toString(s), "THDispatcher is not enabled.");
-    return *type;
+    auto* dispatcher = getLegacyTHDispatcherOpt(p, s);
+    if (!dispatcher) AT_ERROR(toString(p), toString(s), "THDispatcher is not enabled.");
+    return *dispatcher;
   }
 private:
+  void initForDeviceType(DeviceType p) {
+    static std::once_flag cpu_once;
+    static std::once_flag cuda_once;
+    if (p == DeviceType::CPU) {
+      std::call_once(cpu_once, [] {
+        getLegacyDeviceTypeInit().initCPU();
+      });
+    } else if (p == DeviceType::CUDA) {
+      std::call_once(cuda_once, [] {
+        getLegacyDeviceTypeInit().initCUDA();
+      });
+    } else if (p == DeviceType::HIP) {
+      std::call_once(cuda_once, [] {
+        getLegacyDeviceTypeInit().initHIP();
+      });
+    }
+  }
+
   // NB: dispatcher_registry has nullptr for all CUDA backends until
   // CUDA initialization has occurred
   LegacyTHDispatcherUniquePtr dispatcher_registry
