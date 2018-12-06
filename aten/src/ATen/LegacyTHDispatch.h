@@ -70,11 +70,17 @@ class CAFFE2_API LegacyTHDispatch {
     dispatcher_registry[static_cast<int>(b)][static_cast<int>(s)] = std::move(t);
   }
 
+  LegacyTHDispatcher & getLegacyTHDispatcher(Backend p, ScalarType s) {
+    auto* dispatcher = getLegacyTHDispatcherOpt(p, s);
+    if (!dispatcher) AT_ERROR(toString(p), toString(s), "THDispatcher is not enabled.");
+    return *dispatcher;
+  }
+private:
   LegacyTHDispatcher* getLegacyTHDispatcherRaw(Backend p, ScalarType s) {
     return dispatcher_registry[static_cast<int>(p)][static_cast<int>(s)].get();
   }
 
-  LegacyTHDispatcher * getLegacyTHDispatcherOpt(Backend p, ScalarType s) {
+  LegacyTHDispatcher* getLegacyTHDispatcherOpt(Backend p, ScalarType s) {
     if (p != Backend::Undefined) {
       initForDeviceType(backendToDeviceType(p));
       // NB: there is no Complex for TH, so no initialization to be done.
@@ -82,21 +88,15 @@ class CAFFE2_API LegacyTHDispatch {
     auto dispatcher = getLegacyTHDispatcherRaw(p, s);
 
     if(!dispatcher) {
-      // there is only a single Undefined Type.
       if (p == Backend::Undefined || s == ScalarType::Undefined) {
-        return getLegacyTHDispatcherRaw(Backend::Undefined, ScalarType::Undefined);
+        AT_ERROR("Requested Undefined THDispatcher which is invalid.  Backend:",
+                 toString(p), "ScalarType: ", toString(s));
       }
     }
 
     return dispatcher;
   }
 
-  LegacyTHDispatcher & getLegacyTHDispatcher(Backend p, ScalarType s) {
-    auto* dispatcher = getLegacyTHDispatcherOpt(p, s);
-    if (!dispatcher) AT_ERROR(toString(p), toString(s), "THDispatcher is not enabled.");
-    return *dispatcher;
-  }
-private:
   void initForDeviceType(DeviceType p) {
     static std::once_flag cpu_once;
     static std::once_flag cuda_once;
