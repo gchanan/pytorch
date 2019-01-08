@@ -23,22 +23,6 @@
 #include <cmath>
 #include <cstddef>
 
-// Note [Native bindings for legacy TH factory functions]
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// A number of factory functions are implemented in the following way:
-//
-//    return at::getType(options)._arange(start, end, step);
-//
-// That is to say, they grab a Type for TensorOptions, and then call some
-// internal method.  What's going on?
-//
-// The reason for the folderol is that these particular factory functions
-// are still implemented in a legacy way in TH.  The TH bindings don't
-// (and never will) understand TensorOptions, so we need to handle TensorOptions
-// inside native before batting over to TH.  The expectation is that when
-// these factories get ported to native, this is no longer necessary,
-// and we can eliminate the getType call.
-
 namespace at {
 namespace native {
 namespace {
@@ -133,12 +117,6 @@ Tensor& empty_out(Tensor& result, IntList size) {
   }
   return result;
 }
-
-Tensor empty_strided(IntList size, IntList stride, const TensorOptions& options) {
-  // Note [Native bindings for legacy TH factory functions]
-  return getFactoryType(options)._th_tensor(size, stride);
-}
-
 
 // Temporary type cast operators. These are needed to trace type-casts now since
 // Type's are not supported in the IR. Instead, we call down to these
