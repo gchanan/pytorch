@@ -1128,24 +1128,32 @@ class _TestTorchMixin(object):
     @unittest.skipIf(not TEST_SCIPY, "Scipy not found")
     def test_pdist_scipy(self):
         from scipy.spatial.distance import pdist
+
+        def test_pdist_single(shape, device, p, trans):
+            x = torch.randn(shape, device=device)
+            if trans:
+                x.transpose_(0, 1)
+            actual = torch.pdist(x, p=p)
+            # pdist doesn't handle 0 or inf norm properly
+            if p == 0:
+                expected = pdist(x.cpu(), 'hamming') * x.shape[1]
+            elif p == float('inf'):
+                expected = pdist(x.cpu(), lambda a, b: np.abs(a - b).max())
+            else:
+                expected = pdist(x.cpu(), 'minkowski', p=p)
+                self.assertEqual(expected.shape, actual.shape)
+                self.assertTrue(np.allclose(expected, actual.cpu().numpy()))
+
         devices = ['cpu'] if not torch.cuda.is_available() else ['cpu', 'cuda']
         for device in devices:
             for shape in [(4, 5), (3, 2), (2, 1)]:
                 for p in [0, 1, 2, 3, 1.5, 2.5, float('inf')]:
                     for trans in [False, True]:
-                        x = torch.randn(shape, device=device)
-                        if trans:
-                            x.transpose_(0, 1)
-                        actual = torch.pdist(x, p=p)
-                        # pdist doesn't handle 0 or inf norm properly
-                        if p == 0:
-                            expected = pdist(x.cpu(), 'hamming') * x.shape[1]
-                        elif p == float('inf'):
-                            expected = pdist(x.cpu(), lambda a, b: np.abs(a - b).max())
-                        else:
-                            expected = pdist(x.cpu(), 'minkowski', p=p)
-                        self.assertEqual(expected.shape, actual.shape)
-                        self.assertTrue(np.allclose(expected, actual.cpu().numpy()))
+                        test_pdist_single(shape, device, p, trans)
+
+            # do a simplified comparison with big inputs, see:
+            # https://github.com/pytorch/pytorch/issues/15511
+            test_pdist_single((1000, 2), device, 2, False)
 
     @unittest.skipIf(not TEST_SCIPY, "Scipy not found")
     def test_logsumexp(self):
