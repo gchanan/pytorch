@@ -13,6 +13,7 @@
 #include <ATen/LegacyTHDispatcher.h>
 #include <c10/core/ScalarType.h>
 #include <ATen/core/Deprecated.h>
+#include <ATen/native/Resize.h>
 #include <ATen/native/TensorFactories.h>
 #include <c10/core/TensorOptions.h>
 #include <TH/THRandom.h>
@@ -107,6 +108,12 @@ Tensor empty_cpu(IntList size, const TensorOptions& options) {
     tensor.unsafeGetTensorImpl()->set_sizes_contiguous(size);
   }
   return tensor;
+}
+
+Tensor empty_strided_cpu(IntList size, IntList stride, const TensorOptions& options) {
+  auto t = at::native::empty_cpu({0}, options);
+  at::native::resize_impl_cpu_(t.unsafeGetTensorImpl(), size, stride);
+  return t;
 }
 
 Tensor& empty_out(Tensor& result, IntList size) {
