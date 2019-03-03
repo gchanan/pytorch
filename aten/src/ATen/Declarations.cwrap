@@ -921,7 +921,7 @@
     - THTensor* self
 ]]
 [[
-  name: _th_sigmoid
+  name: sigmoid
   types:
     - floating_point
   backends:
