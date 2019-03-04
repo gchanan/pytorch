@@ -1,9 +1,10 @@
 # Tensor[N, H, W, C]
 x = torch.randn(100, 50, 50, 3)
 
+# conv expects NCHW format, but the user forgot to transpose
 # Tensor[N, H, W, C]
 x = torch.randn(100, 50, 50, 3)
-conv(x)  # conv expects NCHW format, but the user forgot to transpose
+conv(x)
 
 # Pointwise loss on target of size (batch) and output of size (batch, 1) is wrong
 # and happens frequently.
