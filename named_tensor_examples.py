@@ -17,5 +17,9 @@ torch.Size(10, 10)  # This is wrong
 
 x = torch.randn(100, 50, 50, 3)
 per_example_norm = torch.randn(100)
+x + per_example_norm.unsqueeze(1).unsqueeze(1).unsqueeze(1)
+
 # would be nice if we could add per_example_norm and x without unsqeezing 3 times.
 # if x had, say, 50 dimensions, unsqueezing 50 times is not scalable.
+
+x = torch.randn(100, 50, 3)
