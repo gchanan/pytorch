@@ -162,14 +162,14 @@ std::shared_ptr<${op}> grad_fn;
 """)
 
 SETUP_DERIVATIVE = CodeTemplate("""\
-if (compute_requires_grad( ${args_with_derivatives} )) {
+if (compute_requires_grad( ${args_with_derivatives5} )) {
   ${setup}
 }
 """)
 
 ASSIGN_GRAD_FN = CodeTemplate("""\
 grad_fn = std::shared_ptr<${op}>(new ${op}(${op_ctor}), deleteFunction);
-grad_fn->set_next_edges(collect_next_edges( ${args_with_derivatives} ));
+grad_fn->set_next_edges(collect_next_edges( ${args_with_derivatives5} ));
 """)
 
 CALL_VIA_TYPE = CodeTemplate("""\
@@ -507,12 +507,21 @@ def emit_body(declaration):
     inputs = [arg for arg in arguments if not arg.get('output', False)]
     differentiable_inputs = list(filter(is_differentiable, inputs))
     args_with_derivatives = find_args_with_derivatives(differentiable_inputs)
+    if func is not None:
+        assert [f['name'] for f in args_with_derivatives] == [g['name'] for g in declaration['args_with_derivatives']]
+    else:
+        print("\nargs_with_derivatives@@@", args_with_derivatives, "in decl", declaration['args_with_derivatives'], "name", declaration['name'], "func is None", func is None)
+    #args_with_derivatives = declaration['args_with_derivatives']
     non_diffferentiable_arg_names = declaration.get('non_diffferentiable_arg_names', [])
     candidate_differentiable_outputs = list(filter(is_differentiable, returns))
 
-    if func is not None and func.get('output_differentiability') is not None:
+    if declaration.get('output_differentiability') is not None:
+    #if func is not None and func.get('output_differentiability') is not None:
         differentiable_outputs = []
-        output_differentiability = func.get('output_differentiability')
+        output_differentiability = declaration['output_differentiability']
+        #output_differentiability = func.get('output_differentiability')
+        #print (func.get('output_differentiability'), declaration.get('output_differentiability'))
+        #assert func.get('output_differentiability') == declaration.get('output_differentiability')
         for differentiable, output in zip(output_differentiability, returns):
             if differentiable:
                 differentiable_outputs.append(output)
@@ -528,13 +537,14 @@ def emit_body(declaration):
 
     if func is not None and not requires_derivative:
         print('WARNING: derivative ignored for {}'.format(name), file=sys.stderr)
+        assert False
 
     def emit_save_inputs():
         setup = []
         if func is None:
             return setup
 
-        has_tensorlist_arg = any(arg['type'] == 'TensorList' for arg in func['args_with_derivatives'])
+        has_tensorlist_arg = any(arg['type'] == 'TensorList' for arg in func['args_with_derivatives2'])
 
         # We don't want to save tensors if we know that they will never be used
         # when computing the derivative, so we add guards to those statements
@@ -554,7 +564,7 @@ def emit_body(declaration):
 
             # If there's a single derivative we could compute, we already have
             # a requires_grad check that is sufficient
-            if len(func['args_with_derivatives']) <= 1:
+            if len(func['args_with_derivatives2']) <= 1:
                 return None
 
             # We really only care about trimming down the amount of tensors we save
@@ -573,7 +583,7 @@ def emit_body(declaration):
             derivative_var_name = derivative['var_names'][0]
 
             # Figure out the offset of the edge that uses this variable
-            for edge_off, arg in enumerate(func['args_with_derivatives']):
+            for edge_off, arg in enumerate(func['args_with_derivatives2']):
                 if arg['name'] == derivative_var_name:
                     break
             else:
@@ -582,7 +592,7 @@ def emit_body(declaration):
             return 'grad_fn->should_compute_output({})'.format(edge_off)
 
         setup.extend(save_variables(func['saved_inputs'], False, guard_for))
-        for arg in func['args_with_derivatives']:
+        for arg in func['args_with_derivatives2']:
             if arg['type'] == 'TensorList':
                 setup.append("grad_fn->{}_size_ = {}.size();".format(arg['name'], arg['name']))
 
@@ -591,7 +601,8 @@ def emit_body(declaration):
     def setup_derivative(differentiable_inputs):
 
         env = {}
-        env['args_with_derivatives'] = reference_args(args_with_derivatives)
+        print("args_with_derivatives7", args_with_derivatives, "@@@", declaration['args_with_derivatives'])
+        env['args_with_derivatives5'] = reference_args(args_with_derivatives)
         env['op'] = func['op'] if func is not None else 'NotImplemented'
         env['op_ctor'] = '' if func is not None else '"{}"'.format(declaration['api_name'])
 
@@ -601,10 +612,10 @@ def emit_body(declaration):
             body.append(DECLARE_GRAD_FN.substitute(op='Function'))
             body.append(SETUP_DERIVATIVE.substitute(
                 setup=setup,
-                args_with_derivatives=reference_args(differentiable_inputs)))
+                args_with_derivatives5=reference_args(differentiable_inputs)))
             body.append(SETUP_DERIVATIVE.substitute(
                 setup=setup,
-                args_with_derivatives=reference_args(differentiable_outputs)))
+                args_with_derivatives5=reference_args(differentiable_outputs)))
             return body
 
         setup = []
@@ -617,11 +628,11 @@ def emit_body(declaration):
         body.append(SETUP_DERIVATIVE.substitute(env, setup=setup))
         return body
 
-    def emit_check_no_requires_grad(tensor_args, args_with_derivatives):
+    def emit_check_no_requires_grad(tensor_args, args_with_derivatives4):
         """Checks that arguments without derivatives don't require grad"""
         body = []
         for arg in tensor_args:
-            if arg in args_with_derivatives:
+            if arg in args_with_derivatives4:
                 continue
             name = arg['name']
             if name in non_diffferentiable_arg_names:
