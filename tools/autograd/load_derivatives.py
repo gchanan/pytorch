@@ -20,20 +20,20 @@ def load_derivatives(path, declarations):
         declarations_by_signature[get_signature(declaration)].append(declaration)
 
     autograd_functions = []
-    not_differentiable_args_by_signature = dict()
+    non_differentiable_args_by_signature = dict()
     for defn in definitions:
-        autograd_fn, not_differentiable_arg_names = process_definition(defn, declarations_by_signature)
+        autograd_fn, non_differentiable_arg_names = process_definition(defn, declarations_by_signature)
         autograd_functions.append(autograd_fn)
-        not_differentiable_args_by_signature[autograd_fn['signature']] = not_differentiable_arg_names
+        non_differentiable_args_by_signature[autograd_fn['signature']] = non_differentiable_arg_names
 
     ensure_unique_names(autograd_functions)
     match_declarations_with_autograd_functions(declarations, autograd_functions,
-                                               not_differentiable_args_by_signature)
+                                               non_differentiable_args_by_signature)
 
     return autograd_functions
 
 # How do you feel about pasting declaration inside autograd function...
-def create_autograd_function(name, derivatives, args_with_derivatives, not_differentiable_arg_names,
+def create_autograd_function(name, derivatives, args_with_derivatives, non_differentiable_arg_names,
                              signature, declaration, output_differentiability):
     op = to_camel_case(name) + 'Backward'
     op = op.replace('ForwardBackward', 'Backward')
@@ -147,26 +147,26 @@ def process_definition(defn, declarations_by_signature):
 
         # Set up the derivative information
         derivatives = []
-        not_differentiable_arg_names = []
+        non_differentiable_arg_names = []
         for raw_names in sorted(defn.keys()):
             formula = defn[raw_names]
             names = split_names(raw_names)
             derivative = create_derivative(declaration['arguments'], declaration['returns'],
                                            declaration['name'], formula, names)
-            if formula.lower().strip() == 'not_differentiable':
+            if formula.lower().strip() == 'non_differentiable':
                 assert not sum([type(var_name) == list
                                 for var_name in derivative['var_names']]), \
                     "Variable names associated to a formula should be a flat list"
-                not_differentiable_arg_names += derivative['var_names']
+                non_differentiable_arg_names += derivative['var_names']
             else:
                 derivatives.append(derivative)
-        args_with_derivatives = list(filter(lambda x: x['name'] not in not_differentiable_arg_names,
+        args_with_derivatives = list(filter(lambda x: x['name'] not in non_differentiable_arg_names,
                                             args_with_derivatives))
 
         # Test to see if the use of 'grads' makes sense.
         check_grad_usage(defn_name, declaration, derivatives)
 
-        return derivatives, args_with_derivatives, not_differentiable_arg_names
+        return derivatives, args_with_derivatives, non_differentiable_arg_names
 
     def unzip(xs):
         return zip(*xs)
@@ -209,9 +209,9 @@ def process_definition(defn, declarations_by_signature):
                                'Declarations.yaml ({})'
                                .format(i, defn_name, x, y))
 
-    derivatives, args_with_derivatives, not_differentiable_arg_names = set_up_derivatives(defn_name, defn, canonical)
-    return create_autograd_function(defn_name, derivatives, args_with_derivatives, not_differentiable_arg_names,
-                                    signature, canonical, output_differentiability), not_differentiable_arg_names
+    derivatives, args_with_derivatives, non_differentiable_arg_names = set_up_derivatives(defn_name, defn, canonical)
+    return create_autograd_function(defn_name, derivatives, args_with_derivatives, non_differentiable_arg_names,
+                                    signature, canonical, output_differentiability), non_differentiable_arg_names
 
 
 def ensure_unique_names(autograd_functions):
@@ -347,7 +347,7 @@ def to_camel_case(name):
 
 
 def match_declarations_with_autograd_functions(declarations, autograd_functions,
-                                               not_differentiable_args_by_signature):
+                                               non_differentiable_args_by_signature):
     """Sets the "derivative" key on declarations to matching autograd functions
 
     In-place functions will use the out-of-place derivative definition if there
@@ -368,5 +368,5 @@ def match_declarations_with_autograd_functions(declarations, autograd_functions,
 
     for declaration in declarations:
         declaration['derivative'] = find_function(declaration, functions_by_signature)
-        declaration['not_differentiable_arg_names'] = find_function(declaration,
-                                                                    not_differentiable_args_by_signature)
+        declaration['non_differentiable_arg_names'] = find_function(declaration,
+                                                                    non_differentiable_args_by_signature)
