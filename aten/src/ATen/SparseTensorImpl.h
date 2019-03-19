@@ -80,8 +80,9 @@ public:
   // 1. When we attempt to change the number of sparse dimensions on a non-empty sparse tensor
   // (such an operation will invalidate the indices stored).
   // 2. When we attempt to change the number of dense dimensions on a non-empty sparse tensor
-  // (such an operation will behave differently from an equivalent dense tensor's resize method,
-  // and for API consistency we don't support it).
+  // (the values tensor would be invalid.).  We have sparse_dim + dense_dim = len(shape).  Given constraint 1.
+  // this means changing the dense_dim has to change shape.  But the values tensor is constrained to be of shape
+  // (nnz, shape[sparse_dim:]) -- because shape has changed but sparse_dim hasn't, the shape of values is wrong.
   // 3. When we attempt to shrink the size of any of the dense dimensions on a non-empty sparse tensor
   // (such an operation will behave differently from an equivalent dense tensor's resize method,
   // and for API consistency we don't support it).
