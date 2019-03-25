@@ -884,6 +884,10 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
         " backend");
   }
 
+  c10::optional<c10::Device> device_opt() const {
+    return device_opt_;
+  }
+
  public:
 
   /**
@@ -1125,6 +1129,7 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
      */
     storage_ = src.storage();
     data_type_ = src.dtype();
+    device_opt_ = src.device_opt();
     storage_offset_ = src.storage_offset();
   }
 
@@ -1143,6 +1148,7 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
       storage_.UniqueStorageShareExternalPointer(
           std::move(data_ptr), data_type, capacity);
       data_type_ = data_type;
+      device_opt_ = storage_.device();
       storage_offset_ = 0;
     } else {
       int64_t numel = capacity / data_type.itemsize();
@@ -1154,6 +1160,7 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
           /*allocator=*/nullptr,
           /*resizable=*/false);
       data_type_ = data_type;
+      device_opt_ = storage_.device();
       storage_offset_ = 0;
     }
   }
@@ -1184,6 +1191,7 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
         }
       }
       data_type_ = meta;
+      // NB: device is not changed
 
       // We can reuse the existing buffer if the current data does not have
       // a special destructor and the new data doesn't have a special
@@ -1264,6 +1272,7 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
     AT_CHECK(allow_tensor_metadata_change(), "set_storage is not allowed on Tensor created from .data or .detach()");
     storage_ = std::move(storage);
     data_type_ = storage_.dtype();
+    device_opt_ = storage_.device();
   }
 
 private:
@@ -1401,6 +1410,10 @@ protected:
   // agree with the type meta in storage
   caffe2::TypeMeta data_type_;
 
+  // INVARIANT: When storage is non-null, this Device must
+  // agree with the type meta in storage.
+  c10::optional<c10::Device> device_opt_;
+
   // You get to have eight byte-size fields here, before you
   // should pack this into a bitfield.
   TensorTypeId type_id_;
@@ -1475,12 +1488,13 @@ protected:
 //    storage offset
 //    numel
 //    data type pointer
+//    (optional) device
 //    autograd metadata pointer
 //    PyObject pointer
 //    miscellaneous bitfield
 //
 static_assert(sizeof(void*) != sizeof(int64_t) || // if 64-bit...
-              sizeof(TensorImpl) == sizeof(int64_t) * 26,
+              sizeof(TensorImpl) == sizeof(int64_t) * 27,
               "You changed the size of TensorImpl on 64-bit arch."
               "See Note [TensorImpl size constraints] on how to proceed.");
 
