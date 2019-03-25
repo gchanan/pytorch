@@ -366,19 +366,18 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
     }
 
     AT_ERROR(
-      "get_device is not implemented for tensors with ",
-      toString(tensorTypeIdToBackend(type_id())),
-      " backend");
+        "tensor with backend ", toString(tensorTypeIdToBackend(type_id())),
+        " does not have a device");
   }
 
   Device device() const {
     if (device_opt_.has_value()) {
       return device_opt_.value();
     }
+
     AT_ERROR(
-        "device is not implemented for tensors with ",
-        toString(tensorTypeIdToBackend(type_id())),
-        " backend");
+        "tensor with backend ", toString(tensorTypeIdToBackend(type_id())),
+        " does not have a device");
   }
 
   Layout layout() const {
@@ -596,15 +595,6 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
     return static_cast<void*>(
         static_cast<char*>(storage_.data()) +
         data_type_.itemsize() * storage_offset_);
-  }
-
-  /**
-   * This is just like data(), except it works with Variables.
-   * This function will go away once Variable and Tensor are merged.
-   * See Note [We regret making Variable hold a Tensor]
-   */
-  virtual void* slow_data() const {
-    return data();
   }
 
   /**
@@ -866,17 +856,6 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
   }
 
  private:
-  // As an optimization, get_device handles the typical CUDA Tensor case and
-  // calls get_device_slow if the tensor stores its device somewhere else
-  // (VariableImpl, SparseTensorImpl). This methods does a virtual dispatch
-  // that makes it 10-20ns slower than the special-cased CUDA Tensor case.
-  virtual int64_t get_device_slow() const {
-    AT_ERROR(
-        "get_device is not implemented for tensors with ",
-        toString(tensorTypeIdToBackend(type_id())),
-        " backend");
-  }
-
   c10::optional<c10::Device> device_opt() const {
     return device_opt_;
   }
