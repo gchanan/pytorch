@@ -87,10 +87,6 @@ void Variable::Impl::set_storage_offset(int64_t storage_offset) {
   AT_ERROR("variable impl does not have set_storage_offset");
 }
 
-void* Variable::Impl::slow_data() const {
-  return data_.unsafeGetTensorImpl()->slow_data();
-}
-
 bool Variable::Impl::has_storage() const {
   return data_.has_storage();
 }
