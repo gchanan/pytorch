@@ -361,31 +361,24 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
   }
 
   int64_t get_device() const {
-    // NB: This method is not virtual and tries to avoid dispatches in the common case for perf.
-    const auto tid = type_id();
-    if (tid == CUDATensorId() || tid == HIPTensorId() || tid == MSNPUTensorId() || tid == XLATensorId()) {
-      // TODO: #12934 investigate caching device on TensorImpl to avoid this vdispatch.
-      return storage().device().index();
+    if (device_opt_.has_value()) {
+      return device_opt_.value().index();
     }
-    return get_device_slow();
+
+    AT_ERROR(
+      "get_device is not implemented for tensors with ",
+      toString(tensorTypeIdToBackend(type_id())),
+      " backend");
   }
 
   Device device() const {
-    // Special case the common case for performance reasons
-    // TODO: This is a little convoluted so it would be good to investigate
-    // caching device on TensorImpl (#12934) to speed up device() calls in all cases.
-    const auto tid = type_id();
-    if (tid == CPUTensorId() || tid == CUDATensorId() || tid == HIPTensorId() || tid == MSNPUTensorId() ||
-        tid == XLATensorId()) {
-      // NB: storage(), not storage_, b/c of Variable.
-      const auto& mystorage = storage();
-      if (mystorage) {
-        return mystorage.device();
-      }
+    if (device_opt_.has_value()) {
+      return device_opt_.value();
     }
-    const auto device_type = computeDeviceType(tid);
-    bool not_cpu = device_type != DeviceType::CPU;
-    return Device(device_type, not_cpu ? get_device() : -1);
+    AT_ERROR(
+        "device is not implemented for tensors with ",
+        toString(tensorTypeIdToBackend(type_id())),
+        " backend");
   }
 
   Layout layout() const {
@@ -895,7 +888,8 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
    */
   DeviceType device_type() const {
     AT_ASSERT(!is_variable());  // TODO: remove this when Variable and Tensor are merged
-    return storage_.device_type();
+    AT_ASSERT(device_opt_.has_value());
+    return device_opt_.value().type();
   }
 
   /**
@@ -903,7 +897,7 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
    * device).
    */
   Device GetDevice() const {
-    return storage_.device();
+    return device_opt_.value();
   }
 
   /**
