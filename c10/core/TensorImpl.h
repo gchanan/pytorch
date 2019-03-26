@@ -362,7 +362,8 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
 
   int64_t get_device() const {
     if (device_opt_.has_value()) {
-      return device_opt_.value().index();
+      // See NOTE [c10::optional operator usage in CUDA]
+      return (*device_opt_).index();
     }
 
     AT_ERROR(
@@ -373,7 +374,8 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
 
   Device device() const {
     if (device_opt_.has_value()) {
-      return device_opt_.value();
+      // See NOTE [c10::optional operator usage in CUDA]
+      return *device_opt_;
     }
     AT_ERROR(
         "device is not implemented for tensors with ",
@@ -877,6 +879,9 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
         " backend");
   }
 
+  // See NOTE [c10::optional operator usage in CUDA]
+  // We probably don't want to expose this publically until
+  // the note is addressed.
   c10::optional<c10::Device> device_opt() const {
     return device_opt_;
   }
@@ -889,7 +894,8 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
   DeviceType device_type() const {
     AT_ASSERT(!is_variable());  // TODO: remove this when Variable and Tensor are merged
     AT_ASSERT(device_opt_.has_value());
-    return device_opt_.value().type();
+    // See NOTE [c10::optional operator usage in CUDA]
+    return (*device_opt_).type();
   }
 
   /**
@@ -897,7 +903,8 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
    * device).
    */
   Device GetDevice() const {
-    return device_opt_.value();
+    // See NOTE [c10::optional operator usage in CUDA]
+    return *device_opt_;
   }
 
   /**
@@ -1403,6 +1410,13 @@ protected:
   // INVARIANT: When storage is non-null, this type meta must
   // agree with the type meta in storage
   caffe2::TypeMeta data_type_;
+
+  // NOTE [c10::optional operator usage in CUDA]
+  // Our optional definition doesn't compile in .cu file if `value()` or
+  // `operator->` are used.  Instead, we always use `operator*`.
+  // See https://github.com/pytorch/pytorch/issues/18496 for more info.
+  // If this is too burdensome to maintain, we can just
+  // manually implement this with an additional bool.
 
   // INVARIANT: When storage is non-null, this Device must
   // agree with the type meta in storage.
