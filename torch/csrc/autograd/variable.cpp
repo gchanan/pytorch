@@ -99,10 +99,6 @@ int64_t Variable::Impl::storage_offset() const {
   return data_.storage_offset();
 }
 
-int64_t Variable::Impl::get_device_slow() const {
-  return data_.get_device();
-}
-
 std::shared_ptr<Function> Variable::grad_accumulator() const {
   auto autograd_meta = get_autograd_meta();
   if (autograd_meta->grad_fn_) {
