@@ -51,6 +51,7 @@ TensorImpl::TensorImpl(Storage&& storage, TensorTypeId type_id, const caffe2::Ty
       storage_offset_(0),
       numel_(0),
       data_type_(data_type),
+      device_opt_(c10::nullopt),
       type_id_(type_id),
       is_variable_(is_variable) {
   strides_.push_back(1);
