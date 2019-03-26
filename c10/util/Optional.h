@@ -215,6 +215,11 @@ class bad_optional_access : public std::logic_error {
   explicit bad_optional_access(const char* what_arg) : logic_error{what_arg} {}
 };
 
+class bad_optional_access2 {
+ public:
+  constexpr explicit bad_optional_access2() noexcept {}
+};
+
 template <class T>
 union storage_t {
   unsigned char dummy_;
@@ -577,8 +582,8 @@ class optional : private OptionalBase<T> {
 
   OPTIONAL_MUTABLE_CONSTEXPR T&& value() && {
     if (!initialized())
-      throw bad_optional_access("bad optional access");
-    return std::move(contained_val());
+      throw bad_optional_access();
+    return std::move(contained_val("bad optional access"));
   }
 
 #else
@@ -597,10 +602,14 @@ class optional : private OptionalBase<T> {
     return contained_val();
   }
 
+  constexpr T const& throw_bad_optional_access() const {
+    return (throw bad_optional_access2(), contained_val());
+  }
+
   constexpr T const& value() const {
     return initialized()
         ? contained_val()
-        : (throw bad_optional_access("bad optional access"), contained_val());
+        : throw_bad_optional_access();
   }
 
   T& value() {
