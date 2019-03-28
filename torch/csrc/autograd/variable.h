@@ -423,6 +423,7 @@ struct TORCH_API Variable::Impl : public at::TensorImpl {
   int64_t dim() const override;
   bool has_storage() const override;
   const at::Storage& storage() const override;
+  void* slow_data() const override;
 
   void set_data(const at::Tensor &new_data);
 
