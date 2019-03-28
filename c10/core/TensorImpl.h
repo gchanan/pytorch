@@ -217,19 +217,24 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
    * The provided allocator will be used to allocate data on
    * subsequent resize.
    */
-  TensorImpl(TensorTypeId type_id, const caffe2::TypeMeta& data_type, Allocator *allocator, bool is_variable);
+  TensorImpl(TensorTypeId type_id, const caffe2::TypeMeta& data_type, Allocator *allocator, bool is_variable, bool something);
 
   /**
    * Construct a 1-dim 0-size tensor backed by the given storage.
    */
   TensorImpl(Storage&& storage, TensorTypeId type_id, bool is_variable);
 
+  /**
+   * Construct a 1-dim 0 size tensor that doesn't have a storage.
+   */
+  TensorImpl(TensorTypeId type_id, const caffe2::TypeMeta& data_type, c10::optional<c10::Device> device_opt, bool is_variable);
+
  private:
   // This constructor is private, because the data_type is redundant with
   // storage.  Still, we pass it in separately because it's easier to write
   // the initializer list if we're not worried about storage being moved out
   // from under us.
-  TensorImpl(Storage&& storage, TensorTypeId type_id, const caffe2::TypeMeta& data_type, bool is_variable);
+  TensorImpl(Storage&& storage, TensorTypeId type_id, const caffe2::TypeMeta& data_type, c10::optional<c10::Device>, bool is_variable);
 
  public:
   TensorImpl(const TensorImpl&) = delete;
