@@ -595,6 +595,11 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
    * See Note [We regret making Variable hold a Tensor]
    */
   inline void* data() const {
+    if (is_variable()) {
+      std::cerr << "omg!" << std::endl;  
+    } else {
+      std::cerr << "not omg!" << std::endl;  
+    }
     AT_ASSERT(!is_variable());  // TODO: remove this when Variable and Tensor are merged
     AT_CHECK(has_storage(),
         "Cannot access data pointer of Tensor that doesn't have storage");
