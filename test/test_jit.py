@@ -18,7 +18,7 @@ from torch.onnx import OperatorExportTypes
 from torch._six import inf, PY2, builtins
 from common_utils import TestCase, run_tests, IS_WINDOWS, TEST_WITH_UBSAN, \
     skipIfRocm, skipIfNoLapack, suppress_warnings, load_tests, IS_SANDCASTLE, \
-    freeze_rng_state, set_rng_seed
+    freeze_rng_state, set_rng_seed, slowTest
 from common_nn import module_tests, new_module_tests, criterion_tests
 from textwrap import dedent
 from functools import wraps
@@ -991,6 +991,24 @@ class TestJit(JitTestCase):
         self.run_pass('cse', graph)
         FileCheck().check("block").check_not("aten::add").check_not("aten::gt").run(str(graph))
 
+    def test_expand_fakequant(self):
+        pass
+
+    def test_expand_propagate_qinfo(self):
+        pass
+
+    def test_expand_insert_observers(self):
+        pass
+
+    def test_expand_insert_fakequant(self):
+        pass
+
+    def test_expand_quantlint(self):
+        pass
+
+    def test_expand_fold_quant_inputs(self):
+        pass
+
     def test_shape_analysis_broadcast(self):
         def broadcast(a, b):
             return a + b
@@ -1344,6 +1362,8 @@ class TestJit(JitTestCase):
             self.assertEqual(outputs, m(*inputs))
 
     @unittest.skipIf(not RUN_CUDA, "test_dropout_cuda require CUDA")
+    @unittest.skipIf(IS_WINDOWS, "NYI: fuser support for Windows")
+    @skipIfRocm
     def test_dropout_cuda(self):
         # Dropout AD is dispatched to _fused_dropout in CUDA case,
         # which is not included in TestJitGeneratedFunctional
@@ -1860,6 +1880,26 @@ class TestJit(JitTestCase):
 
         # testing that 1 // 0 error is not thrownn
         self.run_pass('constant_propagation', constant_prop.graph)
+
+    def test_short_circuit_optimization(self):
+        @torch.jit.script
+        def const_expressions(x):
+            # type: (int) -> Tuple[bool, bool]
+            return x == 1 and False, x == 1 or True
+        self.run_pass('constant_propagation', const_expressions.graph)
+        FileCheck().check_not("prim::If").check_not("aten::eq").run(const_expressions.graph)
+        self.assertEqual(const_expressions(1), (False, True))
+
+        @torch.jit.script
+        def redundant_expressions(x):
+            # type: (int) -> Tuple[bool, bool]
+            return x == 1 and True, x == 1 or False
+
+        self.run_pass('peephole', redundant_expressions.graph)
+        self.assertEqual(redundant_expressions(1), (True, True))
+        self.assertEqual(redundant_expressions(0), (False, False))
+        # and True / or False are removed from graph
+        FileCheck().check("aten::eq").check_not("prim::If").run(redundant_expressions.graph)
 
     def test_trace_records_names(self):
         def foo(bar, baz):
@@ -2813,6 +2853,7 @@ class TestBatched(TestCase):
                          w_hi, w_hf, w_ho, w_hc, b_i, b_f, b_o, b_c)
         self.assertEqual(ys, ybs.examples())
 
+    @slowTest
     def test_greedy_search(self):
         def greedy(x, h, c, embed, w_xi, w_xf, w_xo, w_xc, w_hi, w_hf, w_ho, w_hc,
                    b_i, b_f, b_o, b_c, w_hs, b_s, iter_num):
@@ -2876,6 +2917,7 @@ class TestBatched(TestCase):
                            w_hi, w_hf, w_ho, w_hc, b_i, b_f, b_o, b_c, w_hs, b_s, iter_num_batch)
         self.assertEqual(ys, ybs.examples())
 
+    @slowTest
     def test_beam_search(self):
         def beam(x, h, c, embed, w_xi, w_xf, w_xo, w_xc, w_hi, w_hf, w_ho, w_hc,
                  b_i, b_f, b_o, b_c, w_hs, b_s, iter_num, idx):
@@ -7227,6 +7269,21 @@ a")
 
             self.checkScript(good_fn, (torch.ones(2, 2),), optimize=True)
 
+    def test_tensor_with_grad_as_constant(self):
+        param = torch.randn(3).requires_grad_()
+        x = torch.randn(3)
+
+        def f(x):
+            return x + param
+        with self.assertRaisesRegex(RuntimeError, "Cannot insert a Tensor that requires grad as a constant"):
+            torch.jit.trace(f, x)
+
+    def test_non_tensor_tracing(self):
+        def f(x):
+            return x + param
+        with self.assertRaisesRegex(RuntimeError, "inputs or outputs of traced functions, but instead got value of type int."):
+            torch.jit.trace(f, (1,))
+
     def test_type_annotation_module(self):
         class BaseModule(torch.jit.ScriptModule):
             def foo(self, x):
@@ -7423,6 +7480,7 @@ a")
         self.assertEqual(m_orig.doit3(input), m_import.doit3(input))
         self.assertEqual(m_orig.forward(input), m_import.forward(input))
 
+    @slowTest
     @skipIfNoTorchVision
     def test_script_module_trace_resnet18(self):
         x = torch.ones(1, 3, 224, 224)
@@ -7442,6 +7500,7 @@ a")
         self.assertEqual(output_orig, output_import)
         self.assertEqual(grad_orig, grad_import)
 
+    @slowTest
     @skipIfNoTorchVision
     def test_script_module_script_resnet(self):
         def conv1x1(in_planes, out_planes, stride=1):
@@ -12886,6 +12945,28 @@ class TestAutodiffSubgraphSlicing(JitTestCase):
         # We should not have combined the two multiplications into
         # the same group; they should each be a separate DiffGraph
         self.assertGraphContainsExactly(graph, 'prim::DifferentiableGraph', 2)
+
+    def test_mutation_subgraph_inlining(self):
+        # cannot move a node which has writers into a differentiable subgraph,
+        # bc CSE might lose context that it has writers
+
+        def fn(x):
+            a = x.t()
+            a = a + 1
+            c = x.t()
+            c = c + 1
+            e = a + c
+            b = a.add_(x)
+            d = c.add_(x)
+            return e, b, d
+
+        fn_script = torch.jit.script(fn)
+        outs1 = fn_script(torch.tensor(0.5, requires_grad=True))
+        outs2 = fn(torch.tensor(0.5, requires_grad=True))
+        for i in range(len(outs1)):
+            self.assertEqual(outs1[i], outs2[i])
+        graph = fn_script.graph_for(torch.tensor(0.5, requires_grad=True))
+        FileCheck().check_not("DifferentiableGraph").run(graph)
 
 
 class TestCustomOperators(JitTestCase):
