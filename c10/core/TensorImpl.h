@@ -213,13 +213,6 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
   TensorImpl() = delete;
 
   /**
-   * Construct a 1-dim 0-size tensor with the given settings.
-   * The provided allocator will be used to allocate data on
-   * subsequent resize.
-   */
-  TensorImpl(TensorTypeId type_id, const caffe2::TypeMeta& data_type, Allocator *allocator, bool is_variable, bool something);
-
-  /**
    * Construct a 1-dim 0-size tensor backed by the given storage.
    */
   TensorImpl(Storage&& storage, TensorTypeId type_id, bool is_variable);

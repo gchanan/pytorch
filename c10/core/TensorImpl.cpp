@@ -33,16 +33,6 @@ const at::Tensor& TensorImpl::grad() const {
   }
 }
 
-TensorImpl::TensorImpl(TensorTypeId type_id, const caffe2::TypeMeta& data_type, Allocator *allocator, bool is_variable, bool something)
-    : TensorImpl({}, type_id, data_type, c10::nullopt, is_variable) {
-  // Variables, UndefinedTensors and SparseTensors don't have storages.
-  if (!is_variable && type_id != UndefinedTensorId() && data_type.id() != caffe2::TypeIdentifier::uninitialized()
-      && type_id != SparseCPUTensorId() && type_id != SparseCUDATensorId()) {
-    storage_ = Storage(data_type, 0, allocator, true);
-    device_opt_ = storage_.device();
-  }
-}
-
 TensorImpl::TensorImpl(Storage&& storage, TensorTypeId type_id, bool is_variable)
     : TensorImpl(std::move(storage), type_id, storage.dtype(), storage.device(), is_variable) {}
 
