@@ -1623,8 +1623,10 @@ class TestAutograd(TestCase):
         # these numbers are just empirical results that seem to work.
         self.assertWarnsRegex(lambda: gradcheck(func, [root], atol=4e-2, rtol=1e-2),
                               'double precision floating point')
-        self.assertWarnsRegex(lambda: gradgradcheck(func, [root], atol=4e-2, rtol=1e-2),
-                              'double precision floating point')
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.assertRaisesRegex(ValueError, 'MKLDNN output is not supported at gradcheck yet',
+                                   lambda: gradgradcheck(func, [root], atol=4e-2, rtol=1e-2))
 
     def test_gc_in_destructor(self):
         """
