@@ -1,6 +1,7 @@
 import torch
 from common_utils import TestCase, run_tests
-
+from torch.autograd.gradcheck import gradgradcheck, gradcheck
+import warnings
 
 class TestMkldnn(TestCase):
     def test_conversion(self):
@@ -41,6 +42,36 @@ class TestMkldnn(TestCase):
         for creator in [torch.empty, torch.ones, torch.zeros, torch.randn, torch.rand]:
             with self.assertRaises(RuntimeError) as context:
                 creator(1, 2, 3, 4, dtype=torch.float, device=torch.device('cpu'), layout=torch._mkldnn)
+
+    def test_autograd_to_mkldnn(self):
+        # MKLDNN only supports float32
+        root = torch.randn(4, 5, dtype=torch.float32, requires_grad=True)
+
+        def func(root):
+            return root.to_mkldnn().to_dense()
+
+        # because MKLDNN only supports float32, we need to lessen the precision.
+        # these numbers are just empirical results that seem to work.
+        self.assertWarnsRegex(lambda: gradcheck(func, [root], atol=4e-2, rtol=1e-2),
+                              'double precision floating point')
+        self.assertWarnsRegex(lambda: gradgradcheck(func, [root], atol=4e-2, rtol=1e-2),
+                              'double precision floating point')
+
+    def test_autograd_from_mkldnn(self):
+        # MKLDNN only supports float32
+        root = torch.randn(4, 5, dtype=torch.float32).to_mkldnn().requires_grad_()
+
+        def func(root):
+            return root.to_dense()
+
+        # because MKLDNN only supports float32, we need to lessen the precision.
+        # these numbers are just empirical results that seem to work.
+        self.assertWarnsRegex(lambda: gradcheck(func, [root], atol=4e-2, rtol=1e-2),
+                              'double precision floating point')
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.assertRaisesRegex(ValueError, 'MKLDNN output is not supported at gradcheck yet',
+                                   lambda: gradgradcheck(func, [root], atol=4e-2, rtol=1e-2))
 
 if __name__ == '__main__':
     run_tests()
