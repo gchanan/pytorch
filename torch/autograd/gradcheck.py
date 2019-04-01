@@ -117,6 +117,9 @@ def get_analytical_jacobian(input, output):
     if output.is_sparse:
         raise ValueError('Sparse output is not supported at gradcheck yet. '
                          'Please call to_dense() on the output of fn for gradcheck.')
+    if output.layout == torch._mkldnn:
+        raise ValueError('MKLDNN output is not supported at gradcheck yet. '
+                         'Please call to_dense() on the output of fn for gradcheck.')
     diff_input_list = list(iter_tensors(input, True))
     jacobian = make_jacobian(input, output.numel())
     jacobian_reentrant = make_jacobian(input, output.numel())

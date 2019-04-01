@@ -1598,6 +1598,34 @@ class TestAutograd(TestCase):
     def test_sparse_gather_both_scalar(self):
         self._test_sparse_gather((), (), 0)
 
+    def test_to_mkldnn(self):
+        # MKLDNN only supports float32
+        root = torch.randn(4, 5, dtype=torch.float32, requires_grad=True)
+
+        def func(root):
+            return root.to_mkldnn().to_dense()
+
+        # because MKLDNN only supports float32, we need to lessen the precision.
+        # these numbers are just empirical results that seem to work.
+        self.assertWarnsRegex(lambda: gradcheck(func, [root], atol=4e-2, rtol=1e-2),
+                              'double precision floating point')
+        self.assertWarnsRegex(lambda: gradgradcheck(func, [root], atol=4e-2, rtol=1e-2),
+                              'double precision floating point')
+
+    def test_from_mkldnn(self):
+        # MKLDNN only supports float32
+        root = torch.randn(4, 5, dtype=torch.float32).to_mkldnn().requires_grad_()
+
+        def func(root):
+            return root.to_dense()
+
+        # because MKLDNN only supports float32, we need to lessen the precision.
+        # these numbers are just empirical results that seem to work.
+        self.assertWarnsRegex(lambda: gradcheck(func, [root], atol=4e-2, rtol=1e-2),
+                              'double precision floating point')
+        self.assertWarnsRegex(lambda: gradgradcheck(func, [root], atol=4e-2, rtol=1e-2),
+                              'double precision floating point')
+
     def test_gc_in_destructor(self):
         """
         Previously, if a Function destructor triggered a garbage collection,
