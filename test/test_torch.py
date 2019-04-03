@@ -2685,7 +2685,7 @@ class _TestTorchMixin(object):
         inplace().set_(x.storage())
         inplace().set_(x.storage(), x.storage_offset(), x.size(), x.stride())
         inplace().set_(x)
-        self.assertRaises(RuntimeError, lambda: inplace().set_())
+        inplace().set_()
         y_sparse._coalesced_(True)
 
         # shape modification
