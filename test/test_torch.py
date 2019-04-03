@@ -2692,7 +2692,7 @@ class _TestTorchMixin(object):
         x.as_strided(y.size(), y.stride())
         x.expand((5, 2, 3))
         x.expand_as(x)
-        self.assertRaises(RuntimeError, lambda: x.sum_to_size((1,)))
+        x.sum_to_size((1,))
         torch.broadcast_tensors(x , x)
         x.reshape((1, 3, 2))
         x.reshape_as(y)
@@ -2701,14 +2701,14 @@ class _TestTorchMixin(object):
         x.squeeze().t()
         x.transpose(1, 2)
         x.unsqueeze(2)
-        self.assertRaises(RuntimeError, lambda: x.view((1, 3, 2)))
-        self.assertRaises(RuntimeError, lambda: x.view_as(y))
+        x.view((1, 3, 2))
+        x.view_as(y)
 
         # chunk, split, etc.
         x.chunk(2, dim=1)
         x.split(1, dim=2)
         x.split_with_sizes([1, 2], dim=2)
-        self.assertRaises(RuntimeError, lambda: x.unfold(dimension=2, size=1, step=1))
+        x.unfold(dimension=2, size=1, step=1)
 
         x.narrow(1, 1, 1)
         x.select(1, 1)
