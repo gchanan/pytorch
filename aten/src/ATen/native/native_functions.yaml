@@ -4043,7 +4043,6 @@
 - func: unfold(Tensor(a) self, int dimension, int size, int step) -> Tensor(a)
   matches_jit_signature: True
   variants: method
-  device_guard: False
 
 - func: equal(Tensor self, Tensor other) -> bool
   matches_jit_signature: True
