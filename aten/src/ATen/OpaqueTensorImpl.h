@@ -15,7 +15,8 @@ struct CAFFE2_API OpaqueTensorImpl : public TensorImpl {
 
 public:
   // Public for now...
-  explicit OpaqueTensorImpl(at::TensorTypeId, const caffe2::TypeMeta&, c10::Device, c10::intrusive_ptr<c10::intrusive_ptr_target>);
+  OpaqueTensorImpl(at::TensorTypeId, const caffe2::TypeMeta&, c10::Device,
+                   c10::intrusive_ptr<c10::intrusive_ptr_target>, c10::IntArrayRef);
 
   IntArrayRef strides() const override;
   bool is_contiguous() const override;
