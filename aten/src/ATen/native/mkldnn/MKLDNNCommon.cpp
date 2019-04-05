@@ -34,15 +34,6 @@ c10::Storage new_with_itensor_storage(const ideep::tensor& it, const TensorOptio
     std::move(data_ptr), /*allocator=*/nullptr, /*resizeable=*/false);
 }
 
-Tensor new_with_sizes_mkldnn(IntArrayRef sizes, const TensorOptions& options) {
-  // NOTE: int32_t dims from ideep::tensor but sizes needs int64_t
-  // TODO: support int64_t dims in ideep::tensor to avoid extra conversion
-  ideep::tensor::dims dst_dims (sizes.begin(), sizes.end());
-  ideep::tensor it;
-  it.resize<AllocForMKLDNN>(dst_dims, ideep::tensor::data_type::f32);
-  return new_with_itensor_mkldnn(std::move(it), options);
-}
-
 Tensor new_with_itensor_mkldnn(ideep::tensor&& it, const TensorOptions& options) {
   // NOTE: int32_t dims from ideep::tensor but sizes needs int64_t
   // TODO: support int64_t dims in ideep::tensor to avoid extra conversion
@@ -50,6 +41,15 @@ Tensor new_with_itensor_mkldnn(ideep::tensor&& it, const TensorOptions& options)
   auto handle = c10::make_intrusive<c10::OpaqueHandle<ideep::tensor> >(std::move(it));
   return detail::make_tensor<OpaqueTensorImpl>(
     MkldnnCPUTensorId(), options.dtype(), options.device(), handle, std::vector<int64_t>(dims.begin(), dims.end()));
+}
+
+Tensor new_with_sizes_mkldnn(IntArrayRef sizes, const TensorOptions& options) {
+  // NOTE: int32_t dims from ideep::tensor but sizes needs int64_t
+  // TODO: support int64_t dims in ideep::tensor to avoid extra conversion
+  ideep::tensor::dims dst_dims (sizes.begin(), sizes.end());
+  ideep::tensor it;
+  it.resize<AllocForMKLDNN>(dst_dims, ideep::tensor::data_type::f32);
+  return new_with_itensor_mkldnn(std::move(it), options);
 }
 
 using MKLDNNTensor = Tensor;
