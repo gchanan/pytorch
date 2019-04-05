@@ -1,0 +1,69 @@
+#include <ATen/ATen.h>
+#include <ATen/OpaqueTensorImpl.h>
+
+namespace at {
+
+OpaqueTensorImpl::OpaqueTensorImpl(at::TensorTypeId type_id, const caffe2::TypeMeta& data_type, c10::Device device)
+  :   TensorImpl(type_id, data_type, device, false)
+{
+}
+
+IntArrayRef OpaqueTensorImpl::strides() const {
+  AT_ERROR("opaque tensors do not have strides");
+}
+bool OpaqueTensorImpl::is_contiguous() const {
+  AT_ERROR("opaque tensors do not have is_contiguous");
+}
+int64_t OpaqueTensorImpl::stride(int64_t d) const {
+  AT_ERROR("opaque tensors do not have strides");
+}
+void OpaqueTensorImpl::resize_dim(int64_t ndim) {
+  AT_ERROR("opaque tensors do not have resize_dim");
+}
+void OpaqueTensorImpl::set_size(int64_t dim, int64_t new_size) {
+  AT_ERROR("opaque tensors do not have set_size");
+}
+void OpaqueTensorImpl::set_stride(int64_t dim, int64_t new_stride) {
+  AT_ERROR("opaque tensors do not have set_stride");
+}
+void OpaqueTensorImpl::set_storage_offset(int64_t storage_offset) {
+  AT_ERROR("opaque tensors do not have set_storage_offset");
+}
+
+TensorImpl* OpaqueTensorImpl::maybe_zero_dim(bool condition_when_zero_dim) {
+    AT_ERROR("opaque tensors do not support maybe_zero_dim");
+}
+
+bool OpaqueTensorImpl::has_storage() const {
+  return false;
+}
+const Storage& OpaqueTensorImpl::storage() const {
+  AT_ERROR("opaque tensors do not have storage");
+}
+int64_t OpaqueTensorImpl::storage_offset() const {
+  AT_ERROR("opaque tensors do not have storage");
+}
+
+// NOTE: `shallow_copy_and_detach()` does not copy the AutogradMeta pointer
+// because it is unique for each Variable.
+// NOTE: We don't set `allow_tensor_metadata_change_` to false here, because there are call sites
+// to this function that need to change the shallow copy's size or storage afterwards, and setting
+// `allow_tensor_metadata_change_` to false would prevent those changes from happening and is
+// undesirable.
+c10::intrusive_ptr<TensorImpl> OpaqueTensorImpl::shallow_copy_and_detach() const {
+    auto impl = c10::make_intrusive<OpaqueTensorImpl>(type_id(), dtype(), device());
+    // TensorImpl general fields
+    // Note that some of these fields are not used in sparse tensor code,
+    // and we copy them here only for completeness.
+    impl->sizes_ = sizes_;
+    impl->strides_ = strides_;
+    impl->storage_offset_ = storage_offset_;
+    impl->is_contiguous_ = is_contiguous_;
+    impl->is_wrapped_number_ = is_wrapped_number_;
+    impl->reserved_ = reserved_;
+
+    // Opaque-specific fields
+    return impl;
+}
+
+} // namespace at
