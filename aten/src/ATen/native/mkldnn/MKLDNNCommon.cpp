@@ -1,4 +1,3 @@
-#include <c10/core/OpaqueHandle.h>
 #include <ATen/OpaqueTensorImpl.h>
 #include <c10/core/Allocator.h>
 #include <ATen/native/mkldnn/MKLDNNCommon.h>
@@ -28,7 +27,7 @@ Tensor new_with_itensor_mkldnn(ideep::tensor&& it, const TensorOptions& options)
   // NOTE: int32_t dims from ideep::tensor but sizes needs int64_t
   // TODO: support int64_t dims in ideep::tensor to avoid extra conversion
   auto dims = it.get_dims();
-  auto handle = c10::make_intrusive<c10::OpaqueHandle<ideep::tensor> >(std::move(it));
+  auto handle = c10::make_intrusive<OpaqueHandle<ideep::tensor> >(std::move(it));
   return detail::make_tensor<OpaqueTensorImpl>(
     MkldnnCPUTensorId(), options.dtype(), options.device(), handle, std::vector<int64_t>(dims.begin(), dims.end()));
 }

@@ -17,14 +17,14 @@ namespace at {
  * See `OpaqueTensorImpl::opaque_handle_`.
  */
 template <typename T>
-struct C10_API OpaqueHandle : c10::intrusive_ptr_target {
+struct CAFFE2_API OpaqueHandle : c10::intrusive_ptr_target {
 private:
   T handle_;
 
 public:
   OpaqueHandle() = delete;
-  //OpaqueHandle(const T& handle): handle_(handle) {}
-  //OpaqueHandle(T&& handle): handle_(std::move(handle)) {}
+  OpaqueHandle(const T& handle): handle_(handle) {}
+  OpaqueHandle(T&& handle): handle_(std::move(handle)) {}
 
   T& get_handle() {
     return handle_;
