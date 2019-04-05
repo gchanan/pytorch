@@ -7,16 +7,14 @@
 
 namespace at {
 
-//template <class OpaqueHandleType>
-struct CAFFE2_API OpaqueTensorImpl : public TensorImpl {
-  // An "Opaque" TensorImpl -- there are no strides, no pointer-arithmetic, etc.
-  // For now, even data() is not supported, because code in PyTorch calls that and
-  // then does pointer arithmetic.
+// An "Opaque" TensorImpl -- there are no strides, no pointer-arithmetic, etc.
+// For now, even data() is not supported, because code in PyTorch calls that and
+// assumes pointer-arithmetic is valid.
 
-public:
+struct CAFFE2_API OpaqueTensorImpl : public TensorImpl {
   // Public for now...
-  OpaqueTensorImpl(at::TensorTypeId, const caffe2::TypeMeta&, c10::Device,
-                   c10::intrusive_ptr<c10::intrusive_ptr_target>, c10::IntArrayRef);
+  OpaqueTensorImpl(at::TensorTypeId type_id, const caffe2::TypeMeta& data_type, c10::Device device,
+                   c10::intrusive_ptr<c10::intrusive_ptr_target> opaque_handle, c10::IntArrayRef sizes);
 
   IntArrayRef strides() const override;
   bool is_contiguous() const override;
@@ -33,7 +31,7 @@ public:
 
   c10::intrusive_ptr<TensorImpl> shallow_copy_and_detach() const override;
 
- c10::intrusive_ptr_target* unsafe_opaque_handle() const {
+  c10::intrusive_ptr_target* unsafe_opaque_handle() const {
     return opaque_handle_.get();
   }
 
