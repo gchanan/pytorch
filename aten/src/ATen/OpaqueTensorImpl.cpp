@@ -3,8 +3,10 @@
 
 namespace at {
 
-OpaqueTensorImpl::OpaqueTensorImpl(at::TensorTypeId type_id, const caffe2::TypeMeta& data_type, c10::Device device)
-  :   TensorImpl(type_id, data_type, device, false)
+OpaqueTensorImpl::OpaqueTensorImpl(at::TensorTypeId type_id, const caffe2::TypeMeta& data_type,
+                                   c10::Device device, c10::intrusive_ptr<c10::intrusive_ptr_target> opaque_handle)
+  :   TensorImpl(type_id, data_type, device, false),
+      opaque_handle_(std::move(opaque_handle))
 {
 }
 

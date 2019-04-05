@@ -1,10 +1,13 @@
 #pragma once
 
 #include <ATen/Tensor.h>
+#include <ATen/OpaqueHandle.h>
 #include <c10/core/TensorImpl.h>
 #include <c10/util/Exception.h>
 
 namespace at {
+
+//template <class OpaqueHandleType>
 struct CAFFE2_API OpaqueTensorImpl : public TensorImpl {
   // An "Opaque" TensorImpl -- there are no strides, no pointer-arithmetic, etc.
   // For now, even data() is not supported, because code in PyTorch calls that and
@@ -12,7 +15,7 @@ struct CAFFE2_API OpaqueTensorImpl : public TensorImpl {
 
 public:
   // Public for now...
-  explicit OpaqueTensorImpl(at::TensorTypeId, const caffe2::TypeMeta&, c10::Device);
+  explicit OpaqueTensorImpl(at::TensorTypeId, const caffe2::TypeMeta&, c10::Device, c10::intrusive_ptr<c10::intrusive_ptr_target>);
 
   IntArrayRef strides() const override;
   bool is_contiguous() const override;
@@ -28,6 +31,13 @@ public:
   int64_t storage_offset() const override;
 
   c10::intrusive_ptr<TensorImpl> shallow_copy_and_detach() const override;
+
+ c10::intrusive_ptr_target* unsafe_opaque_handle() const {
+    return opaque_handle_.get();
+  }
+
+private:
+  c10::intrusive_ptr<c10::intrusive_ptr_target> opaque_handle_;
 };
 
 } // namespace at

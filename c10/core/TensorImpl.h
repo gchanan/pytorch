@@ -380,6 +380,10 @@ struct C10_API TensorImpl : public c10::intrusive_ptr_target {
         " does not have a device");
   }
 
+  bool is_mkldnn() const {
+    return true;  
+  }
+
   Layout layout() const {
     // NB: This method is not virtual and avoid dispatches for perf.
     if (is_sparse()) {

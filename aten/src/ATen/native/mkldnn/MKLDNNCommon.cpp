@@ -1,4 +1,5 @@
 #include <c10/core/OpaqueHandle.h>
+#include <ATen/OpaqueTensorImpl.h>
 #include <c10/core/Allocator.h>
 #include "MKLDNNCommon.h"
 
@@ -46,18 +47,34 @@ Tensor new_with_itensor_mkldnn(ideep::tensor&& it, const TensorOptions& options)
   // NOTE: int32_t dims from ideep::tensor but sizes needs int64_t
   // TODO: support int64_t dims in ideep::tensor to avoid extra conversion
   auto dims = it.get_dims();
-  c10::Storage storage(new_with_itensor_storage(it, options));
-  return detail::make_tensor<TensorImpl>(
-    std::move(storage), MkldnnCPUTensorId(), false,
-    c10::make_intrusive<c10::OpaqueHandle<ideep::tensor> >(std::move(it)),
-    std::vector<int64_t>(dims.begin(), dims.end()));
+  //c10::Storage storage(new_with_itensor_storage(it, options));
+  //at::TensorTypeId type_id, const caffe2::TypeMeta& data_type,
+  //                                   c10::Device device, c10::intrusive_ptr<c10::intrusive_ptr_target> opaque_handle
+  return detail::make_tensor<OpaqueTensorImpl>(
+    MkldnnCPUTensorId(), options.dtype(), options.device())
+    c10::make_intrusive<c10::OpaqueHandle<ideep::tensor> >(std::move(it)), std::vector<int64_t>(dims.begin(), dims.end()));
+}
+
+using MKLDNNTensor = Tensor;
+//using MKLDNNTensorImpl = OpaqueTensorImpl;
+
+
+inline OpaqueTensorImpl* get_mkldnn_impl(const MKLDNNTensor& self) {
+  AT_ASSERTM(!self.is_variable(), "_internal_get_SparseTensorImpl: should not be a variable");  // TODO: remove this when Variable and Tensor are merged
+  OpaqueTensorImpl *a = nullptr;
+  //AT_ASSERTM(self.is_mkldnn(), "_internal_get_SparseTensorImpl: not a sparse tensor");
+  //<ideel::Tensor>;
+  //return static_cast<MKLDNNTensorImpl *>(self.unsafeGetTensorImpl());
+  return nullptr;
 }
 
 ideep::tensor& itensor_from_mkldnn(const Tensor& mkldnn_tensor) {
   AT_ASSERTM(mkldnn_tensor.type_id() == MkldnnCPUTensorId(),
              "mkldnn_to_dense expects MKL-DNN tensor input");
-  auto it_handle =
-    (OpaqueHandle<ideep::tensor>*)mkldnn_tensor.unsafeGetTensorImpl()->unsafe_opaque_handle();
+  //auto it_handle = get_mkldnn_impl(mkldnn_tensor)->unsafe_opaque_handle();
+  //return it_handle->get_handle();
+   OpaqueHandle<ideep::tensor>* it_handle =
+    (OpaqueHandle<ideep::tensor>*)((get_mkldnn_impl(mkldnn_tensor))->unsafe_opaque_handle());
   return it_handle->get_handle();
 }
 
