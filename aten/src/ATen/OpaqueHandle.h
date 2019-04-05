@@ -5,14 +5,11 @@
 namespace at {
 
 /**
- * `OpaqueHandle` wraps a custom storage handle (as template param) of a tensor and inherits
- * `c10::intrusive_ptr_target` so that it can fit in `OpaqueTensorImpl::opaque_handle_`.
+ * `OpaqueHandle` wraps a custom storage handle  of a tensor (as template param) and inherits
+ * `c10::intrusive_ptr_target` so that it can be used in `OpaqueTensorImpl::opaque_handle_`.
  *
- * It supports several ways of wrapping the custom handle:
- * 1. Default constructor which initializes the custom handle with default constructor.
- *    Then the caller can do further initialization on the custom handle by calling
- *    `get_handle()`.
- * 2. Construct with an existing custom handle by copy/move constructor.
+ * It currently only supports wrapping the custom handle by:
+ * - Constructing with an existing custom handle by copy/move constructor.
  *
  * See `OpaqueTensorImpl::opaque_handle_`.
  */
