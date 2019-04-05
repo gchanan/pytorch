@@ -1,5 +1,4 @@
 import torch
-# import unittest
 from common_utils import TestCase, run_tests
 from torch.autograd.gradcheck import gradgradcheck, gradcheck
 import warnings
@@ -9,8 +8,10 @@ import warnings
 # @unittest.skipIf(not torch._C.has_mkldnn, "MKL-DNN build is disabled")
 class TestMkldnn(TestCase):
     def test_conversion(self):
-        for cpu_tensor in [torch.randn(1, 2, 3, 4, dtype=torch.float, device=torch.device('cpu')),
-                           torch.randn(1, 2, 3, 4, 5, dtype=torch.float, device=torch.device('cpu'))[:, :, :, :, 1]]:
+        for cpu_tensor in [torch.randn((1, 2, 3, 4),
+                                       dtype=torch.float, device=torch.device('cpu')),
+                           torch.randn((1, 2, 3, 4, 5),
+                                       dtype=torch.float, device=torch.device('cpu'))[:, :, :, :, 1]]:
             cpu_tensor.requires_grad_()
             mkldnn_tensor = cpu_tensor.to_mkldnn()
             cpu_tensor_1 = mkldnn_tensor.to_dense()
@@ -73,7 +74,8 @@ class TestMkldnn(TestCase):
                                    lambda: gradgradcheck(func, [root], atol=4e-2, rtol=1e-2))
 
     def test_repr(self):
-        self.assertTrue("layout=torch._mkldnn" in str(torch.randn(1, 2, 3, 4, dtype=torch.float, device=torch.device('cpu')).to_mkldnn()))
+        self.assertTrue("layout=torch._mkldnn" in str(torch.randn((1, 2, 3, 4),
+                        dtype=torch.float, device=torch.device('cpu')).to_mkldnn()))
 
 if __name__ == '__main__':
     run_tests()
