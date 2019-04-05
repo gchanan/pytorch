@@ -769,6 +769,9 @@ inline Tensor Tensor::to_sparse(int64_t sparse_dim) const {
 inline Tensor Tensor::to_sparse() const {
     return dispatch_type().to_sparse(*this);
 }
+inline Tensor Tensor::to_mkldnn() const {
+    return type().to_mkldnn(*this);
+}
 inline Tensor Tensor::quantize_linear(double scale, int64_t zero_point) const {
     return dispatch_type().quantize_linear(*this, scale, zero_point);
 }
