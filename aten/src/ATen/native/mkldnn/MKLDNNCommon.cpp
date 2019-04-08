@@ -1,6 +1,6 @@
+#include <ATen/native/mkldnn/MKLDNNCommon.h>
 #include <ATen/OpaqueTensorImpl.h>
 #include <c10/core/Allocator.h>
-#include <ATen/native/mkldnn/MKLDNNCommon.h>
 
 #if AT_MKLDNN_ENABLED()
 
