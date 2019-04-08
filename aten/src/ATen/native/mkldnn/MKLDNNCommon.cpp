@@ -58,6 +58,7 @@ struct AllocForMKLDNN {
 Tensor new_with_itensor_mkldnn(ideep::tensor&& it, const TensorOptions& options) {
   // NOTE: int32_t dims from ideep::tensor but sizes needs int64_t
   // TODO: support int64_t dims in ideep::tensor to avoid extra conversion
+  AT_ASSERT(!it.has_extra());
   auto dims = it.get_dims();
   IDeepTensorWrapperPtr handle = c10::make_intrusive<IDeepTensorWrapper>(std::move(it));
   return detail::make_tensor<MKLDNNTensorImpl>(
