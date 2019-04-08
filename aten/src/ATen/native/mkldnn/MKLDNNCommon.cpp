@@ -1,4 +1,5 @@
 #include <ATen/OpaqueTensorImpl.h>
+#include <ATen/IntrusivePtrTargetWrapper.h>
 #include <c10/core/Allocator.h>
 #include <ATen/native/mkldnn/MKLDNNCommon.h>
 
@@ -27,9 +28,9 @@ Tensor new_with_itensor_mkldnn(ideep::tensor&& it, const TensorOptions& options)
   // NOTE: int32_t dims from ideep::tensor but sizes needs int64_t
   // TODO: support int64_t dims in ideep::tensor to avoid extra conversion
   auto dims = it.get_dims();
-  c10::intrusive_ptr<OpaqueHandle<ideep::tensor>> handle =
-    c10::make_intrusive<OpaqueHandle<ideep::tensor> >(std::move(it));
-  return detail::make_tensor<OpaqueTensorImpl<c10::intrusive_ptr<OpaqueHandle<ideep::tensor>>>>(
+  c10::intrusive_ptr<IntrusivePtrTargetWrapper<ideep::tensor>> handle =
+    c10::make_intrusive<IntrusivePtrTargetWrapper<ideep::tensor> >(std::move(it));
+  return detail::make_tensor<OpaqueTensorImpl<c10::intrusive_ptr<IntrusivePtrTargetWrapper<ideep::tensor>>>>(
     MkldnnCPUTensorId(), options.dtype(), options.device(), handle, std::vector<int64_t>(dims.begin(), dims.end()));
 }
 
@@ -48,9 +49,9 @@ ideep::tensor& itensor_from_mkldnn(const MKLDNNTensor& mkldnn_tensor) {
   AT_ASSERTM(mkldnn_tensor.type_id() == MkldnnCPUTensorId(),
              "mkldnn_to_dense expects MKL-DNN tensor input");
   AT_ASSERTM(!mkldnn_tensor.is_variable(), "_internal_get_OpaqueTensorImpl: should not be a variable");
-  OpaqueTensorImpl<c10::intrusive_ptr<OpaqueHandle<ideep::tensor>>> *oti =
-    static_cast<OpaqueTensorImpl<c10::intrusive_ptr<OpaqueHandle<ideep::tensor>>> *>(mkldnn_tensor.unsafeGetTensorImpl());
-  return oti->unsafe_opaque_handle()->get_handle();
+  OpaqueTensorImpl<c10::intrusive_ptr<IntrusivePtrTargetWrapper<ideep::tensor>>> *oti =
+    static_cast<OpaqueTensorImpl<c10::intrusive_ptr<IntrusivePtrTargetWrapper<ideep::tensor>>> *>(mkldnn_tensor.unsafeGetTensorImpl());
+  return oti->unsafe_opaque_handle()->get_target();
 }
 
 }}

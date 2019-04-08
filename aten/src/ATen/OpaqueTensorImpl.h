@@ -1,7 +1,5 @@
 #pragma once
 
-#include <ATen/Tensor.h>
-#include <ATen/OpaqueHandle.h>
 #include <c10/core/TensorImpl.h>
 #include <c10/util/Exception.h>
 
@@ -17,13 +15,13 @@ namespace at {
 // `shallow_copy_and_detach`. We would need to define an interface to  "shallow copy"
 // in order to add support.
 
-template <typename Opaque>
+template <typename OpaqueHandle>
 struct CAFFE2_API OpaqueTensorImpl : public TensorImpl {
   // public constructor for now...
   OpaqueTensorImpl(at::TensorTypeId type_id, const caffe2::TypeMeta& data_type, c10::Device device,
-                   Opaque opaque_handle, c10::IntArrayRef sizes)
+                   OpaqueHandle opaque_handle, c10::IntArrayRef sizes)
   :   TensorImpl(type_id, data_type, device, false),
-      opaque_(std::move(opaque_handle))
+      opaque_handle_(std::move(opaque_handle))
   {
     sizes_ = sizes.vec();
     refresh_numel();
@@ -81,7 +79,8 @@ struct CAFFE2_API OpaqueTensorImpl : public TensorImpl {
 // undesirable.
 c10::intrusive_ptr<TensorImpl> shallow_copy_and_detach() const override {
   //AT_ASSERT(false);
-  auto impl = c10::make_intrusive<OpaqueTensorImpl<Opaque>>(type_id(), dtype(), device(), opaque_, sizes_);
+  auto impl = c10::make_intrusive<OpaqueTensorImpl<OpaqueHandle>>(
+    type_id(), dtype(), device(), opaque_handle_, sizes_);
   // TensorImpl general fields
   // Note that some of these fields are not used in opaque tensor code,
   // and we copy them here only for completeness.
@@ -95,12 +94,12 @@ c10::intrusive_ptr<TensorImpl> shallow_copy_and_detach() const override {
   // OpaqueTensorImpl-specific fields (none currently).
   return impl;
 }
-  Opaque& unsafe_opaque_handle() {
-    return opaque_;
+  OpaqueHandle& unsafe_opaque_handle() {
+    return opaque_handle_;
   }
 
 private:
-  Opaque opaque_;
+  OpaqueHandle opaque_handle_;
 };
 
 } // namespace at
