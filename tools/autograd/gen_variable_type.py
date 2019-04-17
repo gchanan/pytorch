@@ -537,7 +537,7 @@ def emit_body(declaration):
 
     if func is not None and not requires_derivative:
         print('WARNING: derivative ignored for {}'.format(name), file=sys.stderr)
-        #assert False
+        assert False
 
     def emit_save_inputs():
         setup = []
