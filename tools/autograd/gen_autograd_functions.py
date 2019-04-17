@@ -124,7 +124,7 @@ def process_function(func):
     unpack = []
 
     env['compute_index_ranges'] = []
-    for arg in func['args_with_derivatives']:
+    for arg in func['args_with_derivatives2']:
         if arg['type'] == 'TensorList':
             size = '{}_size_'.format(arg['name'])
             saved_list_sizes.append('size_t {}_size_;'.format(arg['name']))
