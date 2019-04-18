@@ -201,8 +201,6 @@ TYPE_FORMAL_GENERIC = {
     'THByteTensor*': 'Tensor &',
     'THIndexTensor*': 'Tensor &',
     'THIntegerTensor*': 'Tensor &',
-    'THDenseTensor*': 'Tensor &',
-    'THDenseIndexTensor*': 'Tensor &',
     'THStorage*': 'Storage',
     'THGenerator*': 'Generator *',
     'IntArrayRefSize': 'IntArrayRef',
@@ -217,8 +215,6 @@ DYNAMIC_TYPE = {
     'THByteTensor*': 'BoolTensor',
     'THIndexTensor*': 'IndexTensor',
     'THIntegerTensor*': 'IntegerTensor',
-    'THDenseTensor*': 'Tensor',
-    'THDenseIndexTensor*': 'IndexTensor',
     'THStorage*': 'Storage',
     'THGenerator*': 'Generator*',
     'IntArrayRefSize': 'IntArrayRef',
@@ -238,8 +234,6 @@ TYPE_RETURN = {
     'THByteTensor*': 'Tensor',
     'THIntegerTensor*': 'Tensor',
     'THSTensor*': 'Tensor',
-    'THDenseTensor*': 'Tensor',
-    'THDenseIndexTensor*': 'Tensor',
     'real': 'Tensor',
     'accreal': 'Tensor',
     'long': 'int64_t',
@@ -271,16 +265,6 @@ CHECKED_CAST = {
             'checked_tensor_unwrap('
             '${arg_name},"${arg_name}",${arg_pos}, ${null_okay}, '
             'Backend::${Backend}, ScalarType::Int)'),
-    'THDenseTensor*':
-        CodeTemplate(
-            'checked_tensor_unwrap('
-            '${arg_name},"${arg_name}",${arg_pos}, ${null_okay}, '
-            'Backend::${DenseBackend}, ScalarType::${ScalarName})'),
-    'THDenseIndexTensor*':
-        CodeTemplate(
-            'checked_tensor_unwrap('
-            '${arg_name},"${arg_name}",${arg_pos}, ${null_okay}, '
-            'Backend::${DenseBackend}, ScalarType::Long)'),
     'THStorage*':
         CodeTemplate(
             'checked_storage('
@@ -307,8 +291,6 @@ CHECKED_USE = {
     'THIndexTensor*': '{}_',
     'THByteTensor*': '{}_',
     'THIntegerTensor*': '{}_',
-    'THDenseTensor*': '{}_',
-    'THDenseIndexTensor*': '{}_',
     'THStorage*': '{}_.unsafeGetStorageImpl()',
     'THGenerator*': '{}_->generator',
     'TensorList': "{0}_.data(), {0}_.size()",
@@ -336,8 +318,6 @@ ALLOC_WRAP = {
     'THByteTensor*': '${arguments}',
     'THIndexTensor*': '${arguments}',
     'THIntegerTensor*': '${arguments}',
-    'THDenseTensor*': '${arguments}',
-    'THDenseIndexTensor*': '${arguments}',
 }
 
 # Replacements for constants when calling into TH
