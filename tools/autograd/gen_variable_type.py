@@ -484,10 +484,10 @@ def emit_body(declaration):
         if 'Tensor' not in arg['type']:
             return False
         if arg['dynamic_type'] in {'IndexTensor', 'BoolTensor'}:
-            # TODO: Enable this after native_functions.yaml schema unification.
             # These are necessary for legacy code and should be
             # used by legacy code only!
-            assert name.startswith('_th_'), "IndexTensor and BoolTensor are restricted to legacy _th_ functions only."
+            assert declaration['mode'] == 'TH' or declaration['mode'] == 'NN', \
+                "IndexTensor and BoolTensor are restricted to legacy TH/THNN functions only."
             return False
         if arg['name'] in declaration.get('non_differentiable_arg_names', []):
             return False
