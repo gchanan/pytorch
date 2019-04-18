@@ -1926,7 +1926,6 @@
     CUDA: _unique2_cuda
 
 - func: unique_dim(Tensor self, int dim, bool sorted=True, bool return_inverse=False, bool return_counts=False) -> (Tensor, Tensor, Tensor)
-  matches_jit_signature: True
   variants: function
   dispatch:
     CPU: unique_dim_cpu
