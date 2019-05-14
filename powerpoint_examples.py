@@ -1,6 +1,5 @@
 # Pointwise loss on target of size (batch) and output of size
 # (batch, 1) is wrong and occurs frequently.
-
 >>>> loss = lambda x, y: (x - y)**2
 >>> output = torch.randn(10, 1)
 >>> targets = torch.randn(10)
