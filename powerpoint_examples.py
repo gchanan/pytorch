@@ -25,6 +25,7 @@ ims2.align_as(ims1) * ims1
 
 >>> tensor = torch.tensor([[1, 0], [0, 1],
                            names=['height', 'width'])
+
 #  You can also pass a names argument to a tensor factory function
 >>> tensor = torch.randn(2, 1, 2
                          names=['batch', 'height', 'width'])
