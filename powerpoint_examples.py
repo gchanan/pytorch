@@ -8,8 +8,8 @@ torch.Size(10, 10)
 
 
 
-x.contiguous(memory_format=torch.channels_last)
 x.is_contiguous(memory_format=torch.channels_last)
+x.contiguous(memory_format=torch.channels_last)
 
 
 ims1 = torch.randn(100, 50, 50, 3)  # NHWC
