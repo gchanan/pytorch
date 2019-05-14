@@ -18,5 +18,20 @@ ims2 = torch.randn(100, 3, 50, 50)  # NCHW
 def rotate(ims):
     return ims.transpose(1, 2)
 
-rotate(ims1)
-rotate(ims2)  # NOT what we wanted.
+ims1 = rotate(ims1)
+ims2 = rotate(ims2)  # NOT what we wanted.
+
+ims2.align_as(ims1) * ims1
+
+>>> tensor = torch.tensor([[1, 0], [0, 1],
+                           names=['height', 'width'])
+#  You can also pass a names argument to a tensor factory function
+>>> tensor = torch.randn(2, 1, 2
+                         names=['batch', 'height', 'width'])
+tensor([[[-0.9437, -1.8355]],
+        [[-1.1989, -0.4061]]],
+       names=['batch', 'width', 'height'])
+
+# Python 3.6+
+>>> tensor = torch.randn(batch=2, height=1, width=2)
+
