@@ -16,11 +16,15 @@ def load_derivatives(path, declarations):
         definitions = yaml.load(f, Loader=YamlLoader)
 
     declarations_by_signature = defaultdict(list)
+    declarations_by_schema = defaultdict(list)
     for declaration in declarations:
-        declarations_by_signature[get_signature(declaration)].append(declaration)
+        declarations_by_signature[get_signature(declaration, False, True)].append(declaration)
+        if declaration.get('schema_string'):
+            print('adding schema', declaration['schema_string'])
+            declarations_by_schema[declaration['schema_string']].append(declaration)
 
     differentiability_infos = [
-        process_definition(defn, declarations_by_signature)
+        process_definition(defn, declarations_by_signature, declarations_by_schema)
         for defn in definitions]
 
     autograd_functions = [d['autograd_fn'] for d in differentiability_infos if d['autograd_fn'] is not None]
@@ -86,7 +90,7 @@ def create_derivative(arguments, returns, name, formula, var_names):
     }
 
 
-def process_definition(defn, declarations_by_signature):
+def process_definition(defn, declarations_by_signature, declarations_by_schema):
     """Processes a single entry `defn` in derivatives.yaml"""
 
     def canonical_declaration(declarations, name):
@@ -95,6 +99,7 @@ def process_definition(defn, declarations_by_signature):
                 return declaration
         # some functions only have in-place variants
         assert name + '_' == declarations[0]['name']
+        assert False
         return declarations[0]
 
     def split_names(raw_names):
@@ -179,42 +184,88 @@ def process_definition(defn, declarations_by_signature):
         return zip(*xs)
 
     # NB: Removes 'name' from defn dictionary
-    defn_name, params = split_name_params(defn.pop('name'))
+    specification = defn.pop('name')
+    #print('specification', specification)
+    defn_name, params = split_name_params(specification)
+    if defn_name == 'cumprod' or defn_name == 'cumprod_out':
+        print("&&&cumprod", defn_name, params)
     # NB: Removes 'output_differentiability' from defn dictionary
     #     `None` means all differentiable.
     output_differentiability = defn.pop('output_differentiability', None)
-    param_types, param_names = unzip([p.split(' ') for p in params if p != '*'])
 
-    if 'grad_input_mask' in param_names:
-        raise RuntimeError("Signature for {} has an argument named grad_input_mask, "
-                           "but this name would be shadowed by our codegen. "
-                           "Please use a different name in Declarations.cwrap."
-                           .format(defn_name))
-    signature = '{}({})'.format(defn_name, ', '.join(param_types))
+    # check if specification is a schema
+    schema_declarations = declarations_by_schema['aten::' + specification]
+    print(declarations_by_schema.keys())
+    #if False:
+    if len(schema_declarations) > 0:
+        #print(declarations_by_schema)
+        print("yes matching JIT", 'aten::' + specification)
+        assert len(schema_declarations) == 1  # schemas should be unique
+        #signature = '{}({})'.format(defn_name, ', '.join(param_types))
+        #if defn_name == 'cumprod' or defn_name == 'cumprod_out':
+        #    print("&&&cumprod", defn_name, signature)
 
-    declarations = declarations_by_signature[signature]
-    if len(declarations) == 0:
-        avail = [k for k, v in declarations_by_signature.items()
-                 if k.startswith(defn_name + '(') and len(v) > 0]
-        raise RuntimeError('no ATen declaration found for: {}.  '
-                           'Available signatures: {}'.format(signature, ', '.join(avail)))
-    canonical = canonical_declaration(declarations, defn_name)
+        signature = get_signature(schema_declarations[0], False, True)
+        declarations = declarations_by_signature[signature]
+        if len(declarations) == 0:
+            avail = [k for k, v in declarations_by_signature.items()
+                     if k.startswith(defn_name + '(') and len(v) > 0]
+            raise RuntimeError('no ATen declaration found for: {}.  '
+                               'Available signatures: {}'.format(signature, ', '.join(avail)))
+        canonical = canonical_declaration(declarations, defn_name)
 
-    # TODO: Check the types line up
-    if len(param_names) != len(canonical['args']):
-        raise RuntimeError('Signature for {} has {} arguments ({}), but '
-                           'Declarations.yaml records {} arguments ({})'
-                           .format(defn_name,
-                                   len(param_names),
-                                   ', '.join(param_names),
-                                   len(canonical['args']),
-                                   ', '.join(canonical['args'])))
-    for i, (x, y) in enumerate(zip(param_names, canonical['args'])):
-        if x != y:
-            raise RuntimeError('Argument {} of {} has different names in '
-                               'derivatives.yaml ({}) and '
-                               'Declarations.yaml ({})'
-                               .format(i, defn_name, x, y))
+        # TODO: Check the types line up
+        #if len(param_names) != len(canonical['args']):
+        #    raise RuntimeError('Signature for {} has {} arguments ({}), but '
+        #                       'Declarations.yaml records {} arguments ({})'
+        #                       .format(defn_name,
+        #                               len(param_names),
+        #                               ', '.join(param_names),
+        #                               len(canonical['args']),
+        #                               ', '.join(canonical['args'])))
+        #for i, (x, y) in enumerate(zip(param_names, canonical['args'])):
+        #    if x != y:
+        #        raise RuntimeError('Argument {} of {} has different names in '
+        #                           'derivatives.yaml ({}) and '
+        #                           'Declarations.yaml ({})'
+        #                           .format(i, defn_name, x, y))
+    else:
+        print("not matching JIT", defn_name, 'aten::' + specification)
+        param_types, param_names = unzip([p.split(' ') for p in params if p != '*'])
+        if 'grad_input_mask' in param_names:
+            raise RuntimeError("Signature for {} has an argument named grad_input_mask, "
+                                "but this name would be shadowed by our codegen. "
+                                "Please use a different name in Declarations.cwrap."
+                                .format(defn_name))
+        signature = '{}({})'.format(defn_name, ', '.join(param_types))
+        #if defn_name == 'cumprod' or defn_name == 'cumprod_out':
+        #    print("&&&cumprod", defn_name, signature)
+
+        declarations = declarations_by_signature[signature]
+        if len(declarations) == 0:
+            avail = [k for k, v in declarations_by_signature.items()
+                     if k.startswith(defn_name + '(') and len(v) > 0]
+            raise RuntimeError('no ATen declaration found for: {}.  '
+                               'Available signatures: {}'.format(signature, ', '.join(avail)))
+        canonical = canonical_declaration(declarations, defn_name)
+        #print('swap2@' + specification + '@' + canonical['schema_string'].replace('aten::',''))
+        #print('swap2', "\"" + specification + "\"", "\"" + canonical['schema_string'] + "\"")
+
+        # TODO: Check the types line up
+        if len(param_names) != len(canonical['args']):
+            raise RuntimeError('Signature for {} has {} arguments ({}), but '
+                               'Declarations.yaml records {} arguments ({})'
+                               .format(defn_name,
+                                       len(param_names),
+                                       ', '.join(param_names),
+                                       len(canonical['args']),
+                                       ', '.join(canonical['args'])))
+        for i, (x, y) in enumerate(zip(param_names, canonical['args'])):
+            if x != y:
+                raise RuntimeError('Argument {} of {} has different names in '
+                                   'derivatives.yaml ({}) and '
+                                   'Declarations.yaml ({})'
+                                   .format(i, defn_name, x, y))
 
     derivatives, args_with_derivatives, non_differentiable_arg_names = set_up_derivatives(defn_name, defn, canonical)
     autograd_fn = None
@@ -244,7 +295,7 @@ def ensure_unique_names(autograd_functions):
                 func['op'] += str(i)
 
 
-def get_signature(declaration, use_base_variant=False):
+def get_signature(declaration, use_base_variant=False, for_derivatives=False):
     name = declaration['name']
     arguments = declaration['arguments']
     if use_base_variant:
@@ -255,7 +306,10 @@ def get_signature(declaration, use_base_variant=False):
             name = name[:-4]
             arguments = [arg for arg in arguments if not arg.get('output', False)]
     simple_types = [arg['simple_type'] for arg in arguments]
-    return '{}({})'.format(name, ', '.join(simple_types))
+    ret = '{}({})'.format(name, ', '.join(simple_types))
+    if for_derivatives and (name == 'cumprod' or name == 'cumprod_out'):
+        print("@@@cumprod", ret)
+    return ret
 
 
 GRAD_INDEX_REGEX = r'(?:^|\W)grads\[(\d+)\]'
