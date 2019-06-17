@@ -3,7 +3,7 @@
 #include <THCUNN/im2col.h>
 
 #include <TH/THHalf.h>
-#include <THCUNN/THCHalfAutoNumerics.cuh>
+#include <THC/THCNumerics.cuh>
 #include <THC/THCTensor.hpp>
 #include <THC/THCStorage.hpp>
 

@@ -5,7 +5,7 @@
 #include <THC/THCStorage.hpp>
 
 #include <TH/THHalf.h>
-#include <THCUNN/THCHalfAutoNumerics.cuh>
+#include <THC/THCNumerics.cuh>
 
 #include <THCUNN/generic/Col2Im.cu>
 #include <THC/THCGenerateFloatTypes.h>

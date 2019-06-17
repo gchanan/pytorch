@@ -3,7 +3,7 @@
 #include <THCUNN/common.h>
 #include <THCUNN/vol2col.h>
 #include <TH/THHalf.h>
-#include <THCUNN/THCHalfAutoNumerics.cuh>
+#include <THC/THCNumerics.cuh>
 
 #include <THCUNN/generic/VolumetricDilatedConvolution.cu>
 #include <THC/THCGenerateFloatTypes.h>
