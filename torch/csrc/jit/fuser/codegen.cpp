@@ -67,8 +67,8 @@ static const char* scalarTypeName(const at::ScalarType type) {
   }
 
   switch (type) {
-#define DEFINE_CASE(ctype, name, _) \
-  case at::ScalarType::name:        \
+#define DEFINE_CASE(ctype, name) \
+  case at::ScalarType::name:     \
     return #ctype;
     AT_FORALL_SCALAR_TYPES_WITH_COMPLEX_AND_STUBS(DEFINE_CASE)
 #undef DEFINE_CASE
