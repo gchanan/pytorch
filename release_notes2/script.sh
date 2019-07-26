@@ -8,7 +8,7 @@ while read p <&3; do
     git log -s -n 1 "$p"
     echo -e 'JIT (j)  \tVisualization (v)\tBC (c)  \tFeature (f)\tImprovement (i)\t\tBug Fix (b)'
     echo -e 'Deprecation (r)\tPerformance (p)   \tDocs (d)\tOnnx (o)\tSkip (s)\tCaffe2 (2)'
-    echo -e 'Distributed (t)\tBuild(u)\tNot Important(n)'
+    echo -e 'Distributed (t)\tBuild(u)\tNot Important(n)\tQuantization (q)\tDistributions (w)\tAMD (a)'
     read -p "Enter option: " option < /dev/stdin
     echo "option " "$option"
     if [ "$option" == "j" ]; then
@@ -40,7 +40,13 @@ while read p <&3; do
     elif [ "$option" == "u" ]; then
 	echo "$p" >> results/build.txt
     elif [ "$option" == "n" ]; then
-    	 echo "$p" >> results/not.txt
+    	echo "$p" >> results/not.txt
+    elif [ "$option" == "q" ]; then
+	echo "$p" >> results/quantization.txt
+    elif [ "$option" == "w" ]; then
+	echo "$p" >> results/distributions.txt
+    elif [ "$option" == "a" ]; then
+	echo "$p" >> results/amd.txt
     else
 	echo "$p" >> results/wrong.txt
 	exit 1
