@@ -52,6 +52,6 @@ while read p <&3; do
 	exit 1
     fi
 	echo "$p" >> processed.txt
-done 3< commit_list.txt
+done 3< commit_list2.txt
 
 # bug.txt  compat.txt  deprecation.txt  docs.txt  feature.txt  improvement.txt  jit.txt  onnx.txt  performance.txt  skip.txt  visualization.txt caffe2.txt
