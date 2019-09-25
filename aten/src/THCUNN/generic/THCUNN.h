@@ -152,46 +152,6 @@ THC_API void THNN_(LookupTable_renorm)(
                   accreal maxNorm,
                   accreal normType);
 
-THC_API void THNN_(LookupTableBag_updateOutput)(
-           THCState *state,
-           THCIndexTensor *input,
-           THCIndexTensor *offsets,
-           THCTensor *weight,
-           THCTensor *output,
-           THCIndexTensor *offset2bag,
-           int mode,
-           THCIndexTensor *seq_length);       // [OPTIONAL]
-
-THC_API void THNN_(LookupTableBag_accGradParameters)(
-           THCState *state,
-           THCIndexTensor *input,
-           THCTensor *gradOutput,
-           THCTensor *gradWeight,
-           THCIndexTensor *offset2bag,
-           THCIndexTensor *count,
-           THCIndexTensor *sortedIndices,
-           THCIndexTensor *origIndices,
-           bool scaleGradByFreq,
-           int mode,
-           THCIndexTensor *seq_length,        // [OPTIONAL]
-           accreal scale_);
-
-THC_API void THNN_(MarginCriterion_updateOutput)(
-                  THCState *state,
-                  THCTensor *input,
-                  THCTensor *target,
-                  THCTensor *output,
-                  bool sizeAverage,
-                  accreal margin);
-
-THC_API void THNN_(MarginCriterion_updateGradInput)(
-                  THCState *state,
-                  THCTensor *input,
-                  THCTensor *target,
-                  THCTensor *gradInput,
-                  bool sizeAverage,
-                  accreal margin);
-
 THC_API void THNN_(MSECriterion_updateOutput)(
                   THCState *state,
                   THCTensor *input,
