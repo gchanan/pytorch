@@ -176,17 +176,6 @@ THC_API void THNN_(LookupTableBag_accGradParameters)(
            THCIndexTensor *seq_length,        // [OPTIONAL]
            accreal scale_);
 
-THC_API void THNN_(L1Cost_updateOutput)(
-                  THCState *state,
-                  THCTensor *input,
-                  THCTensor *output);
-
-THC_API void THNN_(L1Cost_updateGradInput)(
-                  THCState *state,
-                  THCTensor *input,
-                  THCTensor *gradOutput,       // [OPTIONAL]
-                  THCTensor *gradInput);
-
 THC_API void THNN_(MarginCriterion_updateOutput)(
                   THCState *state,
                   THCTensor *input,
