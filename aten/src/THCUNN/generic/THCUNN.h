@@ -57,21 +57,6 @@ THC_API void THNN_(ClassNLLCriterion_updateGradInput)(
                   THCTensor *total_weight,
                   int64_t ignore_index);
 
-THC_API void THNN_(DistKLDivCriterion_updateOutput)(
-                  THCState *state,
-                  THCTensor *input,
-                  THCTensor *target,
-                  THCTensor *output,
-                  int64_t reduction);
-
-THC_API void THNN_(DistKLDivCriterion_updateGradInput)(
-                  THCState *state,
-                  THCTensor *input,
-                  THCTensor *target,
-                  THCTensor *gradOutput,
-                  THCTensor *gradInput,
-                  int64_t reduction);
-
 THC_API void THNN_(ELU_updateOutput)(
                   THCState *state,
                   THCTensor *input,
