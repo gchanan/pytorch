@@ -4,17 +4,6 @@
 
 #include <ATen/core/Reduction.h>
 
-THC_API void THNN_(Abs_updateOutput)(
-                  THCState *state,
-                  THCTensor *input,
-                  THCTensor *output);
-
-THC_API void THNN_(Abs_updateGradInput)(
-                  THCState *state,
-                  THCTensor *input,
-                  THCTensor *gradOutput,
-                  THCTensor *gradInput);
-
 THC_API void THNN_(AbsCriterion_updateOutput)(
                   THCState *state,
                   THCTensor *input,
