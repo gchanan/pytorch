@@ -75,26 +75,6 @@ THC_API void THNN_(ELU_updateGradInput)(
                   accreal scale,
                   accreal input_scale);
 
-THC_API void THNN_(FeatureLPPooling_updateOutput)(
-                  THCState* state,
-                  THCTensor* inputTH,
-                  THCTensor* outputTH,
-                  accreal power,
-                  int width,
-                  int stride,
-                  bool batchMode);
-
-THC_API void THNN_(FeatureLPPooling_updateGradInput)(
-                  THCState* state,
-                  THCTensor* gradOutputTH,
-                  THCTensor* inputTH,
-                  THCTensor* outputTH,
-                  THCTensor* gradInputTH,
-                  accreal power,
-                  int width,
-                  int stride,
-                  bool batchMode);
-
 THC_API void THNN_(HardTanh_updateOutput)(
                   THCState *state,
                   THCTensor *input,
