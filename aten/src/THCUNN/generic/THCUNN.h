@@ -270,60 +270,6 @@ THC_API void THNN_(SmoothL1Criterion_updateGradInput)(
                   THCTensor *gradInput,
                   int64_t reduction);
 
-THC_API void THNN_(IndexLinear_updateOutput)(
-                  THCState *state,
-                  THCIndexTensor *keys,
-                  int64_t keysOffset,
-                  THCTensor *values,
-                  THCIndexTensor *sizes,
-                  THCIndexTensor *cumSumSizes,
-                  THCTensor *output,
-                  THCTensor *weight,
-                  THCTensor *bias,
-                  THCTensor *normalizedValues,
-                  int   train);
-
-THC_API void THNN_(IndexLinear_accGradParameters)(
-                  THCState *state,
-                  THCIndexTensor *keys,
-                  int64_t keysOffset,
-                  THCTensor *values,
-                  THCIndexTensor *sizes,
-                  THCIndexTensor *cumSumSizes,
-                  THCTensor *gradOutput,
-                  THCTensor *gradWeight,
-                  THCTensor *gradBias,
-                  THCTensor *weight,
-                  THCTensor *bias,
-                  THCTensor* valuesBuffer,
-                  accreal weightDecay,
-                  accreal scale);
-
-THC_API void THNN_(IndexLinear_accUpdateGradParameters)(
-                  THCState *state,
-                  THCIndexTensor *keys,
-                  int64_t keysOffset,
-                  THCTensor *values,
-                  THCIndexTensor *sizes,
-                  THCIndexTensor *cumSumSizes,
-                  THCTensor *gradOutput,
-                  THCTensor *weight,
-                  THCTensor *bias,
-                  accreal weightDecay,
-                  accreal scale);
-
-THC_API void THNN_(IndexLinear_updateParameters)(
-                  THCState *state,
-                  THCTensor *gradWeight,
-                  THCTensor *gradBias,
-                  THCTensor *weight,
-                  THCTensor *bias,
-                  THCIndexTensor *runningKeys,
-                  THCIndexTensor *cumSumSizes,
-                  int64_t keysOffset,
-                  accreal weightDecay,
-                  accreal learningRate);
-
 THC_API void THNN_(SpatialClassNLLCriterion_updateOutput)(
                   THCState *state,
                   THCTensor *input,
