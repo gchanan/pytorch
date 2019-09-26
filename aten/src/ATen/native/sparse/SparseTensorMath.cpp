@@ -165,6 +165,7 @@ Tensor& div_sparse_(Tensor& self, const Tensor& value) {
 SparseTensor& div_out_sparse_zerodim(SparseTensor& r, const SparseTensor& t, const Tensor& value) {
   TORCH_CHECK(value.dim() == 0, "sparse division only supports division by a scalar (got shape ",
       value.sizes(), " for argument 'other')");
+  std::cerr << "in div_out_sparse_zerodim " << is_same_tensor(r, t) << std::endl;
 
   AT_ASSERT(r.is_sparse());
   AT_ASSERT(t.is_sparse());
