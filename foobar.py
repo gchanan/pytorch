@@ -19,11 +19,7 @@ optimizer = torch.optim.SGD(linear.parameters(), lr=0.5)
 
 for epoch in range(10):
     optimizer.zero_grad()
-
     outputs = linear(inputs)
-
     loss = criterion(outputs, labels)
-
     loss.backward()
-
     optimizer.step()
