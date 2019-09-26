@@ -5,13 +5,11 @@ sample_size = 10
 feature_dim = 1
 
 weight = np.array([1]* feature_dim)
-full_input = np.random.normal(loc=0, size=(sample_size,feature_dim))
+input = np.random.normal(loc=0, size=(sample_size,feature_dim))
 label = np.matmul(full_input, weight)
-full_input = full_input.astype(np.float32)
-label = label.astype(np.float32)
 
-inputs = torch.from_numpy(full_input)
-labels = torch.from_numpy(label)
+inputs = torch.from_numpy(full_input.astype(np.float32))
+labels = torch.from_numpy(label.astype(np.float32))
 
 linear = torch.nn.Linear(1, 1, bias=False)
 criterion = torch.nn.MSELoss()
