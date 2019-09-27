@@ -278,34 +278,6 @@ THC_API void THNN_(SpatialDepthwiseConvolution_accGradParameters)(
                   int padW, int padH,
                   int dilationW, int dilationH);
 
-THC_API void THNN_(SpatialSubSampling_updateOutput)(
-                  THCState *state,
-                  THCTensor *input,
-                  THCTensor *output,
-                  THCTensor *weight,
-                  THCTensor *bias,
-                  int kW, int kH,
-                  int dW, int dH);
-
-THC_API void THNN_(SpatialSubSampling_updateGradInput)(
-                  THCState *state,
-                  THCTensor *input,
-                  THCTensor *gradOutput,
-                  THCTensor *gradInput,
-                  THCTensor *weight,
-                  int kW, int kH,
-                  int dW, int dH);
-
-THC_API void THNN_(SpatialSubSampling_accGradParameters)(
-                  THCState *state,
-                  THCTensor *input,
-                  THCTensor *gradOutput,
-                  THCTensor *gradWeight,
-                  THCTensor *gradBias,
-                  int kW, int kH,
-                  int dW, int dH,
-                  accreal scale);
-
 THC_API void THNN_(RReLU_updateOutput)(
                   THCState *state,
                   THCTensor *input,
