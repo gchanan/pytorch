@@ -366,19 +366,6 @@ THC_API void THNN_(Square_updateGradInput)(
                   THCTensor *gradOutput,
                   THCTensor *gradInput);
 
-THC_API void THNN_(Sqrt_updateOutput)(
-                  THCState *state,
-                  THCTensor *input,
-                  THCTensor *output,
-                  accreal eps);
-
-THC_API void THNN_(Sqrt_updateGradInput)(
-                  THCState *state,
-                  THCTensor *input,
-                  THCTensor *gradOutput,
-                  THCTensor *gradInput,
-                  THCTensor *output);
-
 THC_API void THNN_(Tanh_updateOutput)(
                   THCState *state,
                   THCTensor *input,
