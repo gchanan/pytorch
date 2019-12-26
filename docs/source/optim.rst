@@ -16,10 +16,19 @@ To construct an :class:`Optimizer` you have to give it an iterable containing th
 parameters (all should be :class:`~torch.autograd.Variable` s) to optimize. Then,
 you can specify optimizer-specific options such as the learning rate, weight decay, etc.
 
+.. note::
+
+    If you need to move a model to GPU via ``.cuda()``, please do so before
+    constructing optimizers for it. Parameters of a model after ``.cuda()`` will
+    be different objects with those before the call.
+
+    In general, you should make sure that optimized parameters live in
+    consistent locations when optimizers are constructed and used.
+
 Example::
 
-    optimizer = optim.SGD(model.parameters(), lr = 0.01, momentum=0.9)
-    optimizer = optim.Adam([var1, var2], lr = 0.0001)
+    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+    optimizer = optim.Adam([var1, var2], lr=0.0001)
 
 Per-parameter options
 ^^^^^^^^^^^^^^^^^^^^^
@@ -48,7 +57,7 @@ For example, this is very useful when one wants to specify per-layer learning ra
 
 This means that ``model.base``'s parameters will use the default learning rate of ``1e-2``,
 ``model.classifier``'s parameters will use a learning rate of ``1e-3``, and a momentum of
-``0.9`` will be used for all parameters
+``0.9`` will be used for all parameters.
 
 Taking an optimization step
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -91,6 +100,8 @@ Example::
             return loss
         optimizer.step(closure)
 
+.. _optimizer-algorithms:
+
 Algorithms
 ----------
 
@@ -101,6 +112,10 @@ Algorithms
 .. autoclass:: Adagrad
     :members:
 .. autoclass:: Adam
+    :members:
+.. autoclass:: AdamW
+    :members:
+.. autoclass:: SparseAdam
     :members:
 .. autoclass:: Adamax
     :members:
@@ -113,4 +128,50 @@ Algorithms
 .. autoclass:: Rprop
     :members:
 .. autoclass:: SGD
+    :members:
+
+How to adjust learning rate
+---------------------------
+
+:mod:`torch.optim.lr_scheduler` provides several methods to adjust the learning
+rate based on the number of epochs. :class:`torch.optim.lr_scheduler.ReduceLROnPlateau`
+allows dynamic learning rate reducing based on some validation measurements.
+
+Learning rate scheduling should be applied after optimizer's update; e.g., you
+should write your code this way:
+
+    >>> scheduler = ...
+    >>> for epoch in range(100):
+    >>>     train(...)
+    >>>     validate(...)
+    >>>     scheduler.step()
+
+.. warning::
+  Prior to PyTorch 1.1.0, the learning rate scheduler was expected to be called before
+  the optimizer's update; 1.1.0 changed this behavior in a BC-breaking way.  If you use
+  the learning rate scheduler (calling ``scheduler.step()``) before the optimizer's update
+  (calling ``optimizer.step()``), this will skip the first value of the learning rate schedule.
+  If you are unable to reproduce results after upgrading to PyTorch 1.1.0, please check
+  if you are calling ``scheduler.step()`` at the wrong time.
+
+
+.. autoclass:: torch.optim.lr_scheduler.LambdaLR
+    :members:
+.. autoclass:: torch.optim.lr_scheduler.MultiplicativeLR
+    :members:
+.. autoclass:: torch.optim.lr_scheduler.StepLR
+    :members:
+.. autoclass:: torch.optim.lr_scheduler.MultiStepLR
+    :members:
+.. autoclass:: torch.optim.lr_scheduler.ExponentialLR
+    :members:
+.. autoclass:: torch.optim.lr_scheduler.CosineAnnealingLR
+    :members:
+.. autoclass:: torch.optim.lr_scheduler.ReduceLROnPlateau
+    :members:
+.. autoclass:: torch.optim.lr_scheduler.CyclicLR
+    :members:
+.. autoclass:: torch.optim.lr_scheduler.OneCycleLR
+    :members:
+.. autoclass:: torch.optim.lr_scheduler.CosineAnnealingWarmRestarts
     :members:

@@ -1,22 +1,79 @@
+import os
 import ctypes
 import sys
 import torch
 import warnings
+from torch.version import cuda
+from contextlib import contextmanager
+from subprocess import Popen, PIPE
+from torch.backends import ContextProp, PropModule, __allow_nonbracketed_mutation
 
-enabled = True  # set to False to globally disable cuDNN
+# Write:
+#
+#   torch.backends.cudnn.enabled = False
+#
+# to globally disable CuDNN
 
 lib = None
 __cudnn_version = None
 # TODO: dynamic version checks via cudnnGetVersion
 
+def find_cudnn_windows_lib():
+    # Override the default search process
+    # Fixes https://github.com/pytorch/pytorch/issues/20202
+    # The library selection will be done in these directories one by one
+    # 1. [Package Root]\Lib 
+    #    That's where our libraries are in, which should be loaded first.
+    # 2. Default directories
+    #    That is stored in the environment variable `PATH`.
+    test_env = os.environ.copy()
+    old_path = test_env['PATH']
+    th_dll_path = os.path.join(os.path.dirname(
+        os.path.dirname(os.path.dirname(__file__))), 'lib')
+    test_env['PATH'] = ';'.join([th_dll_path, old_path])
+    proc = Popen(['where', 'cudnn64*.dll'], stdout=PIPE,
+                 stderr=PIPE, stdin=PIPE, env=test_env)
+    out, err = proc.communicate()
+    out = out.decode().strip()
+    if len(out) > 0:
+        if out.find('\r\n') != -1:
+            out = out.split('\r\n')[0]
+        cudnn_lib_name = os.path.basename(out)
+        cudnn_lib = os.path.splitext(cudnn_lib_name)[0]
+        cudnn_lib = str(cudnn_lib)
+        return ctypes.cdll.LoadLibrary(cudnn_lib)
+    else:
+        return None
+
 
 def _libcudnn():
     global lib, __cudnn_version
     if lib is None:
-        lib = ctypes.cdll.LoadLibrary(None)
+        if sys.platform == "win32":
+            lib = find_cudnn_windows_lib()
+        else:
+            lib = ctypes.cdll.LoadLibrary(None)
         if hasattr(lib, 'cudnnGetErrorString'):
             lib.cudnnGetErrorString.restype = ctypes.c_char_p
             __cudnn_version = lib.cudnnGetVersion()
+            compile_version = torch._C._cudnn_version()
+            # cuDNN version is MAJOR*1000 + MINOR*100 + PATCH
+            runtime_major = __cudnn_version // 1000
+            runtime_minor = (__cudnn_version % 1000) // 100
+            compile_major = compile_version // 1000
+            compile_minor = (compile_version % 1000) // 100
+            # Different major versions are always incompatible
+            # Starting with cuDNN 7, minor versions are backwards-compatible
+            if runtime_major != compile_major:
+                cudnn_compatible = False
+            elif runtime_major < 7:
+                cudnn_compatible = runtime_minor == compile_minor
+            else:
+                cudnn_compatible = runtime_minor >= compile_minor
+            if not cudnn_compatible:
+                raise RuntimeError(
+                    'cuDNN version incompatibility: PyTorch was compiled against {} '
+                    'but linked against {}'.format(compile_version, __cudnn_version))
         else:
             lib = None
     return lib
@@ -28,14 +85,24 @@ def version():
     return __cudnn_version
 
 
+CUDNN_TENSOR_TYPES = {
+    'torch.cuda.HalfTensor',
+    'torch.cuda.FloatTensor',
+    'torch.cuda.DoubleTensor',
+}
+
+
+def is_available():
+    r"""Returns a bool indicating if CUDNN is currently available."""
+    return torch._C.has_cudnn
+
+
 def is_acceptable(tensor):
-    if not enabled:
+    if not torch._C._get_cudnn_enabled():
         return False
-    if not (isinstance(tensor, torch.cuda.HalfTensor) or
-            isinstance(tensor, torch.cuda.FloatTensor) or
-            isinstance(tensor, torch.cuda.DoubleTensor)):
+    if tensor.type() not in CUDNN_TENSOR_TYPES:
         return False
-    if not torch._C.has_cudnn:
+    if not is_available():
         warnings.warn(
             "PyTorch was compiled without cuDNN support. To use cuDNN, rebuild "
             "PyTorch making sure the library is visible to the build system.")
@@ -52,7 +119,6 @@ def is_acceptable(tensor):
 
 _handles = {}
 
-benchmark = False
 verbose = False
 
 CUDNN_DATA_FLOAT = 0
@@ -73,6 +139,33 @@ CUDNN_SKIP_INPUT = 1
 CUDNN_RNN_ALGO_STANDARD = 0
 CUDNN_RNN_ALGO_PERSIST_STATIC = 1
 CUDNN_RNN_ALGO_PERSIST_DYNAMIC = 2
+
+CUDNN_DEFAULT_MATH = 0
+CUDNN_TENSOR_OP_MATH = 1
+
+
+def set_flags(_enabled, _benchmark, _deterministic, _verbose):
+    global benchmark, deterministic, verbose
+    orig_flags = (torch._C._get_cudnn_enabled(),
+                  torch._C._get_cudnn_benchmark(),
+                  torch._C._get_cudnn_deterministic(),
+                  verbose)
+    verbose = _verbose
+    torch._C._set_cudnn_enabled(_enabled)
+    torch._C._set_cudnn_benchmark(_benchmark)
+    torch._C._set_cudnn_deterministic(_deterministic)
+    return orig_flags
+
+@contextmanager
+def flags(enabled=False, benchmark=False, deterministic=False, verbose=False):
+    with __allow_nonbracketed_mutation():
+        orig_flags = set_flags(enabled, benchmark, deterministic, verbose)
+    try:
+        yield
+    finally:
+        # recover the previous values
+        with __allow_nonbracketed_mutation():
+            set_flags(orig_flags[0], orig_flags[1], orig_flags[2], orig_flags[3])
 
 
 class CuDNNHandle:
@@ -228,6 +321,11 @@ class RNNDescriptor(object):
                 CUDNN_RNN_ALGO_STANDARD,
                 datatype
             ))
+            if version() >= 7000 and int(cuda[0]) >= 9 and (
+                    torch.cuda.get_device_capability(torch.cuda.current_device())[0] >= 7):
+                lib.cudnnSetRNNMatrixMathType(self, CUDNN_DEFAULT_MATH)
+                if datatype == CUDNN_DATA_HALF:
+                    lib.cudnnSetRNNMatrixMathType(self, CUDNN_TENSOR_OP_MATH)
         else:
             check_error(lib.cudnnSetRNNDescriptor(
                 self,
@@ -245,7 +343,7 @@ class RNNDescriptor(object):
 
 
 def check_error(status):
-    if status is not 0:
+    if status != 0:
         raise CuDNNError(status)
 
 
@@ -320,3 +418,20 @@ def descriptor_sequence(tensor, batch_sizes):
 
 def add_tensor(*args):
     check_error(lib.cudnnAddTensor(*args))
+
+
+# The magic here is to allow us to intercept code like this:
+#
+#   torch.backends.<cudnn|mkldnn>.enabled = True
+
+class CudnnModule(PropModule):
+    def __init__(self, m, name):
+        super(CudnnModule, self).__init__(m, name)
+
+    enabled = ContextProp(torch._C._get_cudnn_enabled, torch._C._set_cudnn_enabled)
+    deterministic = ContextProp(torch._C._get_cudnn_deterministic, torch._C._set_cudnn_deterministic)
+    benchmark = ContextProp(torch._C._get_cudnn_benchmark, torch._C._set_cudnn_benchmark)
+
+# This is the sys.modules replacement trick, see
+# https://stackoverflow.com/questions/2447353/getattr-on-a-module/7668273#7668273
+sys.modules[__name__] = CudnnModule(sys.modules[__name__], __name__)

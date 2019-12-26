@@ -1,43 +1,20 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import torch
-import warnings
-
-warnings.warn("""
-================================================================================
-                                    WARNING
-================================================================================
-torch.distributed is a highly experimental package. The API will change without
-notice and we're can't guarantee full correctness and expected performance yet.
-We'll announce it once it's ready.
-""")
 
 
-_initialized = False
-_scope = locals()
+def is_available():
+    return hasattr(torch._C, "_c10d_init")
 
 
-def extend_scope(module):
-    _scope.update({k: getattr(module, k) for k in dir(module) if not k.startswith('_')})
+if is_available() and not torch._C._c10d_init():
+    raise RuntimeError("Failed to initialize torch.distributed")
 
 
-def init_process_group(backend):
-    global _initialized
-    if _initialized:
-        raise RuntimeError("trying to initialize torch.distributed twice!")
-    torch._C._dist_init_process_group(backend)
-    _initialized = True
-    import torch.distributed.collectives as collectives
-    extend_scope(collectives)
-    assert torch._C._dist_init_extension(False, reduce_op, group)
+if is_available():
+    from .distributed_c10d import *
+    # Variables prefixed with underscore are not auto imported
+    # See the comment in `distributed_c10d.py` above `_backend` on why we expose
+    # this.
 
-
-def init_master_worker(backend):
-    global _initialized
-    if _initialized:
-        raise RuntimeError("trying to initialize torch.distributed twice!")
-    torch._C._dist_init_master_worker(backend)
-    _initialized = True
-    import torch.distributed.collectives as collectives
-    import torch.distributed.remote_types as remote_types
-    extend_scope(collectives)
-    extend_scope(remote_types)
-    assert torch._C._dist_init_extension(True, reduce_op, group)
+    from .distributed_c10d import _backend

@@ -1,7 +1,6 @@
 import json
 import torch
 import torch.legacy.optim as optim
-from pprint import pprint
 
 
 def rosenbrock(tensor):
@@ -11,12 +10,13 @@ def rosenbrock(tensor):
 
 def drosenbrock(tensor):
     x, y = tensor
-    return torch.DoubleTensor((-400 * x * (y - x ** 2) - 2 * (1 - x), 200 * x * (y - x ** 2)))
+    return torch.DoubleTensor((-400 * x * (y - x ** 2) - 2 * (1 - x), 200 * (y - x ** 2)))
 
 algorithms = {
     'adadelta': optim.adadelta,
     'adagrad': optim.adagrad,
     'adam': optim.adam,
+    'adamw': optim.adamw,
     'adamax': optim.adamax,
     'asgd': optim.asgd,
     'cg': optim.cg,

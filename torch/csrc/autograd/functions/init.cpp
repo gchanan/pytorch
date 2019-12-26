@@ -1,77 +1,127 @@
 #include <Python.h>
-#include "batch_normalization.h"
-#include "convolution.h"
-#include "torch/csrc/autograd/python_cpp_function.h"
-#include "torch/csrc/utils/tuple_parser.h"
+#include <torch/csrc/autograd/functions/accumulate_grad.h>
+#include <torch/csrc/autograd/functions/basic_ops.h>
+#include <torch/csrc/autograd/functions/pybind.h>
+#include <torch/csrc/autograd/functions/tensor.h>
+#include <torch/csrc/autograd/generated/python_functions.h>
+#include <torch/csrc/autograd/python_cpp_function.h>
+#ifdef USE_DISTRIBUTED
+#include <torch/csrc/distributed/autograd/functions/sendrpc_backward.h>
+#endif
+#include <torch/csrc/jit/python_tracer.h>
+#include <torch/csrc/utils/pybind.h>
+#include <torch/csrc/utils/python_strings.h>
+#include <torch/csrc/utils/python_numbers.h>
 
 using namespace torch::autograd;
-using torch::TupleParser;
 
-struct BatchNormCtor {
-  BatchNormForward* operator()(PyObject* args) {
-    BatchNormParams params;
+struct DelayedErrorCtor {
+  DelayedError* operator()(PyObject* args) {
 
-    TupleParser parser(args, 6);
-    parser.parse(params.running_mean);
-    parser.parse(params.running_var);
-    parser.parse(params.training);
-    parser.parse(params.momentum);
-    parser.parse(params.eps);
-    parser.parse(params.cudnn_enabled);
-
-    return new BatchNormForward(std::move(params));
-  }
-};
-
-struct ConvCtor {
-  ConvForward* operator()(PyObject* args) {
-    ConvParams params;
-
-    TupleParser parser(args, 8);
-    parser.parse(params.stride);
-    parser.parse(params.padding);
-    parser.parse(params.dilation);
-    parser.parse(params.transposed);
-    parser.parse(params.output_padding);
-    parser.parse(params.groups);
-    parser.parse(params.benchmark);
-    parser.parse(params.cudnn_enabled);
-
-    return new ConvForward(std::move(params));
+    TORCH_CHECK(PyTuple_GET_SIZE(args) == 2, "Requires two arguments, got ", PyTuple_GET_SIZE(args));
+    auto arg1 = PyTuple_GET_ITEM(args, 0);
+    TORCH_CHECK(THPUtils_checkString(arg1), "argument 'msg' must be a string");
+    std::string msg = THPUtils_unpackString(arg1);
+    auto arg2 = PyTuple_GET_ITEM(args, 1);
+    TORCH_CHECK(THPUtils_checkLong(arg2), "argument 'num_inputs' must be an int");
+    int num_inputs = THPUtils_unpackLong(arg2);
+    return new DelayedError(msg, num_inputs);
   }
 };
 
 struct NoCtor {
-  Function* operator()(PyObject* args) {
+  Node* operator()(PyObject* args) {
     throw std::runtime_error("Cannot construct");
   }
 };
 
 template<typename C, typename T>
-static void addClass(PyObject* module, PyTypeObject& type, const char* name)
+static void addClass(PyObject* module, PyTypeObject& type, const char* name,
+  PyGetSetDef* function_properties=nullptr, PyMethodDef* function_methods=nullptr)
 {
-  createForwardFunctionPyTypeObject<T>(type, name);
+  createForwardFunctionPyTypeObject<T>(type, name, function_properties, function_methods);
   Py_INCREF(&type);
   PyModule_AddObject(module, name, (PyObject*)&type);
   registerCppFunction(typeid(C), &type);
 }
 
-bool THPAutograd_initFunctions(PyObject* _unused)
+template<typename T, typename ValueT, typename ParamsT, ValueT ParamsT::*ptr,
+         typename ConvertArgT, PyObject* (*Convert)(ConvertArgT)>
+PyObject* getTupleAttr(PyObject* obj, void* _unused)
 {
-  THPObjectPtr module = PyModule_New("torch._C._functions");
-  if (!module) return false;
+  HANDLE_TH_ERRORS
+  THPCppFunction* self = (THPCppFunction*)obj;
+  auto& arr = ((T*)(self->cdata.get()))->*ptr;
+  auto num_elems = arr.size();
+  THPObjectPtr py_tuple(PyTuple_New(num_elems));
+  if (!py_tuple) return nullptr;
+  for (size_t i = 0; i < num_elems; ++i) {
+    PyTuple_SET_ITEM(py_tuple.get(), i, Convert(arr[i]));
+  }
+  return py_tuple.release();
+  END_HANDLE_TH_ERRORS
+}
 
+template<typename T, typename ValueT, typename ParamsT, ValueT ParamsT::*ptr,
+         typename ConvertArgT, PyObject* (*Convert)(ConvertArgT)>
+PyObject* getValueAttr(PyObject* obj, void* _unused)
+{
+  HANDLE_TH_ERRORS
+  THPCppFunction* self = (THPCppFunction*)obj;
+  auto& val = ((T*)(self->cdata.get()))->*ptr;
+  return Convert(val);
+  END_HANDLE_TH_ERRORS
+}
 
-  static PyTypeObject BatchNormClass, BatchNormBackwardClass;
-  addClass<BatchNormForward, BatchNormCtor>(module, BatchNormClass, "BatchNorm");
-  addClass<BatchNormBackward, NoCtor>(module, BatchNormBackwardClass, "BatchNormBackward");
+static PyObject* accumulateGradVar(PyObject *_self, void* _unused)
+{
+  THPCppFunction* self = (THPCppFunction*)_self;
+  auto grad_acc = (AccumulateGrad*)self->cdata.get();
+  return THPVariable_Wrap(grad_acc->variable);
+}
 
-  static PyTypeObject ConvClass, ConvBackwardClass;
-  addClass<ConvForward, ConvCtor>(module, ConvClass, "ConvNd");
-  addClass<ConvBackward, NoCtor>(module, ConvBackwardClass, "ConvNdBackward");
+static struct PyGetSetDef accumulate_grad_properties[] = {
+  THP_FUNCTION_DEFAULT_PROPERTIES,
+  {(char*)"variable", accumulateGradVar, nullptr, nullptr, nullptr},
+  {nullptr}
+};
 
-  THPObjectPtr parent = PyImport_ImportModule("torch._C");
-  if (!parent) return false;
-  PyModule_AddObject(parent.get(), "_functions", module.release());
-  return true;
+void THPAutograd_initFunctions()
+{
+  THPObjectPtr module(PyModule_New("torch._C._functions"));
+  if (!module) throw python_error();
+
+  static PyTypeObject AccumulateGradClass;
+  addClass<AccumulateGrad, NoCtor>(module, AccumulateGradClass, "AccumulateGrad", accumulate_grad_properties);
+
+  static PyTypeObject ErrorClass;
+  addClass<Error, NoCtor>(module, ErrorClass, "Error");
+
+  static PyTypeObject NotImplementedClass;
+  addClass<NotImplemented, NoCtor>(module, NotImplementedClass, "NotImplemented");
+
+  static PyTypeObject DelayedErrorClass;
+  addClass<DelayedError, DelayedErrorCtor>(module, DelayedErrorClass, "DelayedError");
+
+  static PyTypeObject CopyBackwardsClass;
+  addClass<CopyBackwards, NoCtor>(module, CopyBackwardsClass, "CopyBackwards");
+
+#ifdef USE_DISTRIBUTED
+  static PyTypeObject SendRpcBackwardClass;
+  addClass<torch::distributed::autograd::SendRpcBackward, NoCtor>(
+      module, SendRpcBackwardClass, "SendRpcBackward");
+#endif
+
+  static PyTypeObject CopySlicesClass;
+  addClass<CopySlices, NoCtor>(module, CopySlicesClass, "CopySlices");
+
+  generated::initialize_autogenerated_functions();
+
+  auto c_module = THPObjectPtr(PyImport_ImportModule("torch._C"));
+  if (!c_module) throw python_error();
+
+  Py_INCREF(module);
+  if (PyModule_AddObject(c_module, "_functions", module) < 0) {
+    throw python_error();
+  }
 }

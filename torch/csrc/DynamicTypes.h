@@ -1,25 +1,35 @@
 #pragma once
 
-// Provides conversions between Python tensor objects and thpp::Tensors.
+// Provides conversions between Python tensor objects and at::Tensor.
+
+#include <torch/csrc/python_headers.h>
+
+#include <ATen/Device.h>
+#include <c10/core/ScalarType.h>
+#include <c10/core/Backend.h>
 
 #include <memory>
-#include <Python.h>
-#include <THPP/THPP.h>
+#include <string>
+
+struct THPDtype;
+struct THPLayout;
+
+namespace c10 {
+struct Storage;
+}
 
 namespace torch {
-
 // Register a PyTypeObject* with the given attributes
-void registerPyTypeObject(
-    PyTypeObject *pytype, const std::string& name,
-    bool is_cuda, bool is_sparse);
+void registerStoragePyTypeObject(
+    PyTypeObject *pytype, at::Backend backend, at::ScalarType scalarType);
 
-// Gets the PyTypeObject* corresponding to the Tensor
-PyTypeObject* getPyTypeObject(const thpp::Tensor& tensor);
+void registerDtypeObject(THPDtype *dtype, at::ScalarType scalarType);
+void registerLayoutObject(THPLayout *layout, at::Backend backend);
 
-// Creates a Tensor from a Python tensor object
-std::unique_ptr<thpp::Tensor> createTensor(PyObject *data);
+PyObject* createPyObject(const at::Storage& storage);
+at::Storage createStorage(PyObject* obj);
+bool isStorage(PyObject* obj);
 
-// Creates Python tensor object from a Tensor
-PyObject* createPyObject(const thpp::Tensor& tensor);
-
+THPDtype* getDtype(at::ScalarType scalarType);
+THPLayout* getLayout(at::Backend backend);
 }  // namespace torch

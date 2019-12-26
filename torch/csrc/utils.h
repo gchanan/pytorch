@@ -4,36 +4,24 @@
 #include <vector>
 #include <string>
 #include <type_traits>
+#include <ATen/ATen.h>
+#include <torch/csrc/utils/object_ptr.h>
+#include <torch/csrc/utils/python_numbers.h>
+#include <torch/csrc/utils/python_compat.h>
 
-#include "torch/csrc/utils/object_ptr.h"
+#ifdef USE_CUDA
+#include <THC/THC.h>
+#include <c10/cuda/CUDAStream.h>
+#endif
 
 #define THPUtils_(NAME) TH_CONCAT_4(THP,Real,Utils_,NAME)
 
 #define THPUtils_typename(obj) (Py_TYPE(obj)->tp_name)
 
-
-#if PY_MAJOR_VERSION == 2
-#define THPUtils_checkLong(obj) ((PyLong_Check(obj) || PyInt_Check(obj)) && !PyBool_Check(obj))
-#define THPUtils_unpackLong(obj)                                               \
-    (PyLong_Check(obj) ? PyLong_AsLong(obj) :                                  \
-    PyInt_Check(obj) ? PyInt_AsLong(obj) :                                     \
-    (throw std::runtime_error("Could not unpack long"), 0))
+#if defined(__GNUC__) || defined(__ICL) || defined(__clang__)
+#define THP_EXPECT(x, y) (__builtin_expect((x), (y)))
 #else
-#define THPUtils_checkLong(obj) (PyLong_Check(obj) && !PyBool_Check(obj))
-#define THPUtils_unpackLong(obj)                                               \
-    (PyLong_Check(obj) ? PyLong_AsLong(obj) :                                  \
-    (throw std::runtime_error("Could not unpack long"), 0))
-#endif
-
-
-#if PY_MAJOR_VERSION == 2
-#define THPUtils_bytesFromString(c_string)   PyString_FromString(c_string)
-#define THPUtils_checkBytes(obj)             PyString_Check(obj)
-#define THPUtils_bytesAsString(obj)          PyString_AS_STRING(obj)
-#else
-#define THPUtils_bytesFromString(c_string)   PyBytes_FromString(c_string)
-#define THPUtils_checkBytes(obj)             PyBytes_Check(obj)
-#define THPUtils_bytesAsString(obj)          PyBytes_AS_STRING(obj)
+#define THP_EXPECT(x, y) (x)
 #endif
 
 #if PY_MAJOR_VERSION == 2
@@ -70,74 +58,74 @@
     (throw std::runtime_error("Could not parse real"), 0))
 #endif
 
+#define THPUtils_unpackReal_BOOL(object)                                       \
+    (PyBool_Check(object) ? object :                                           \
+    (throw std::runtime_error("Could not parse real"), Py_False))
+
+#define THPUtils_checkReal_BOOL(object)                                        \
+    PyBool_Check(object)
+
 #define THPUtils_newReal_FLOAT(value) PyFloat_FromDouble(value)
 // TODO: handle int overflows for py2
 #define THPUtils_newReal_INT(value) PyInt_FromLong(value)
 
+#define THPUtils_newReal_BOOL(value) PyBool_FromLong(value)
+
 #define THPDoubleUtils_checkReal(object)      THPUtils_checkReal_FLOAT(object)
 #define THPDoubleUtils_unpackReal(object)     (double)THPUtils_unpackReal_FLOAT(object)
 #define THPDoubleUtils_newReal(value)         THPUtils_newReal_FLOAT(value)
-#define THPDoubleUtils_checkAccreal(object)   THPUtils_checkReal_FLOAT(object)
-#define THPDoubleUtils_unpackAccreal(object)  (double)THPUtils_unpackReal_FLOAT(object)
-#define THPDoubleUtils_newAccreal(value)      THPUtils_newReal_FLOAT(value)
 #define THPFloatUtils_checkReal(object)       THPUtils_checkReal_FLOAT(object)
 #define THPFloatUtils_unpackReal(object)      (float)THPUtils_unpackReal_FLOAT(object)
 #define THPFloatUtils_newReal(value)          THPUtils_newReal_FLOAT(value)
-#define THPFloatUtils_checkAccreal(object)    THPUtils_checkReal_FLOAT(object)
-#define THPFloatUtils_unpackAccreal(object)   (double)THPUtils_unpackReal_FLOAT(object)
-#define THPFloatUtils_newAccreal(value)       THPUtils_newReal_FLOAT(value)
 #define THPHalfUtils_checkReal(object)        THPUtils_checkReal_FLOAT(object)
-#ifndef THP_HOST_HALF
-#define THPHalfUtils_unpackReal(object)       (half)THC_float2half(THPUtils_unpackReal_FLOAT(object))
-#define THPHalfUtils_newReal(value)           PyFloat_FromDouble(THC_half2float(value))
-#else
-#define THPHalfUtils_unpackReal(object)       TH_float2half(THPUtils_unpackReal_FLOAT(object))
-#define THPHalfUtils_newReal(value)           PyFloat_FromDouble(TH_half2float(value))
-#endif
-#define THPHalfUtils_checkAccreal(object)     THPUtils_checkReal_FLOAT(object)
-#define THPHalfUtils_unpackAccreal(object)    (double)THPUtils_unpackReal_FLOAT(object)
+#define THPHalfUtils_unpackReal(object)       (at::Half)THPUtils_unpackReal_FLOAT(object)
+#define THPHalfUtils_newReal(value)           PyFloat_FromDouble(value)
 #define THPHalfUtils_newAccreal(value)        THPUtils_newReal_FLOAT(value)
+#define THPBFloat16Utils_checkReal(object)    THPUtils_checkReal_FLOAT(object)
+#define THPBFloat16Utils_unpackReal(object)   (at::BFloat16)THPUtils_unpackReal_FLOAT(object)
+#define THPBFloat16Utils_newReal(value)       PyFloat_FromDouble(value)
+#define THPBFloat16Utils_newAccreal(value)    THPUtils_newReal_FLOAT(value)
 
+#define THPBoolUtils_checkReal(object)        THPUtils_checkReal_BOOL(object)
+#define THPBoolUtils_unpackReal(object)       THPUtils_unpackReal_BOOL(object)
+#define THPBoolUtils_newReal(value)           THPUtils_newReal_BOOL(value)
+#define THPBoolUtils_checkAccreal(object)     THPUtils_checkReal_BOOL(object)
+#define THPBoolUtils_unpackAccreal(object)    (int64_t)THPUtils_unpackReal_BOOL(object)
+#define THPBoolUtils_newAccreal(value)        THPUtils_newReal_BOOL(value)
 #define THPLongUtils_checkReal(object)        THPUtils_checkReal_INT(object)
-#define THPLongUtils_unpackReal(object)       (long)THPUtils_unpackReal_INT(object)
+#define THPLongUtils_unpackReal(object)       (int64_t)THPUtils_unpackReal_INT(object)
 #define THPLongUtils_newReal(value)           THPUtils_newReal_INT(value)
-#define THPLongUtils_checkAccreal(object)     THPUtils_checkReal_INT(object)
-#define THPLongUtils_unpackAccreal(object)    (long)THPUtils_unpackReal_INT(object)
-#define THPLongUtils_newAccreal(value)        THPUtils_newReal_INT(value)
 #define THPIntUtils_checkReal(object)         THPUtils_checkReal_INT(object)
 #define THPIntUtils_unpackReal(object)        (int)THPUtils_unpackReal_INT(object)
 #define THPIntUtils_newReal(value)            THPUtils_newReal_INT(value)
-#define THPIntUtils_checkAccreal(object)      THPUtils_checkReal_INT(object)
-#define THPIntUtils_unpackAccreal(object)     (long)THPUtils_unpackReal_INT(object)
-#define THPIntUtils_newAccreal(value)         THPUtils_newReal_INT(value)
 #define THPShortUtils_checkReal(object)       THPUtils_checkReal_INT(object)
 #define THPShortUtils_unpackReal(object)      (short)THPUtils_unpackReal_INT(object)
 #define THPShortUtils_newReal(value)          THPUtils_newReal_INT(value)
-#define THPShortUtils_checkAccreal(object)    THPUtils_checkReal_INT(object)
-#define THPShortUtils_unpackAccreal(object)   (long)THPUtils_unpackReal_INT(object)
-#define THPShortUtils_newAccreal(value)       THPUtils_newReal_INT(value)
 #define THPCharUtils_checkReal(object)        THPUtils_checkReal_INT(object)
 #define THPCharUtils_unpackReal(object)       (char)THPUtils_unpackReal_INT(object)
 #define THPCharUtils_newReal(value)           THPUtils_newReal_INT(value)
-#define THPCharUtils_checkAccreal(object)     THPUtils_checkReal_INT(object)
-#define THPCharUtils_unpackAccreal(object)    (long)THPUtils_unpackReal_INT(object)
-#define THPCharUtils_newAccreal(value)        THPUtils_newReal_INT(value)
 #define THPByteUtils_checkReal(object)        THPUtils_checkReal_INT(object)
 #define THPByteUtils_unpackReal(object)       (unsigned char)THPUtils_unpackReal_INT(object)
 #define THPByteUtils_newReal(value)           THPUtils_newReal_INT(value)
-#define THPByteUtils_checkAccreal(object)     THPUtils_checkReal_INT(object)
-#define THPByteUtils_unpackAccreal(object)    (long)THPUtils_unpackReal_INT(object)
-#define THPByteUtils_newAccreal(value)        THPUtils_newReal_INT(value)
+// quantized types
+#define THPQUInt8Utils_checkReal(object)         THPUtils_checkReal_INT(object)
+#define THPQUInt8Utils_unpackReal(object)        (int)THPUtils_unpackReal_INT(object)
+#define THPQUInt8Utils_newReal(value)           THPUtils_newReal_INT(value)
+#define THPQInt8Utils_checkReal(object)         THPUtils_checkReal_INT(object)
+#define THPQInt8Utils_unpackReal(object)        (int)THPUtils_unpackReal_INT(object)
+#define THPQInt8Utils_newReal(value)           THPUtils_newReal_INT(value)
+#define THPQInt32Utils_checkReal(object)         THPUtils_checkReal_INT(object)
+#define THPQInt32Utils_unpackReal(object)        (int)THPUtils_unpackReal_INT(object)
+#define THPQInt32Utils_newReal(value)           THPUtils_newReal_INT(value)
 
-#define THPUtils_assert(cond, ...) THPUtils_assertRet(NULL, cond, __VA_ARGS__)
+
+#define THPUtils_assert(cond, ...) THPUtils_assertRet(nullptr, cond, __VA_ARGS__)
 #define THPUtils_assertRet(value, cond, ...)                                   \
-if (__builtin_expect(!(cond), 0)) { THPUtils_setError(__VA_ARGS__); return value; }
+if (THP_EXPECT(!(cond), 0)) { THPUtils_setError(__VA_ARGS__); return value; }
 THP_API void THPUtils_setError(const char *format, ...);
 THP_API void THPUtils_invalidArguments(
         PyObject *given_args, PyObject *given_kwargs,
         const char *function_name, size_t num_options, ...);
-
-#ifdef _THP_CORE
 
 bool THPUtils_checkIntTuple(PyObject *arg);
 std::vector<int> THPUtils_unpackIntTuple(PyObject *arg);
@@ -145,20 +133,11 @@ std::vector<int> THPUtils_unpackIntTuple(PyObject *arg);
 void THPUtils_addPyMethodDefs(std::vector<PyMethodDef>& vector, PyMethodDef* methods);
 
 int THPUtils_getCallable(PyObject *arg, PyObject **result);
-// https://bugsfiles.kde.org/attachment.cgi?id=61186
-#if PY_VERSION_HEX >= 0x03020000
-#define THPUtils_parseSlice(SLICE, LEN, START, STOP, LENGTH, STEP) \
-  (PySlice_GetIndicesEx(SLICE, LEN, START, STOP, LENGTH, STEP) == 0)
-#else
-#define THPUtils_parseSlice(SLICE, LEN, START, STOP, LENGTH, STEP) \
-  (PySlice_GetIndicesEx((PySliceObject*)SLICE, LEN, START, STOP, LENGTH, STEP) == 0)
-#endif
 
-#define THStoragePtr TH_CONCAT_3(TH,Real,StoragePtr)
-#define THTensorPtr  TH_CONCAT_3(TH,Real,TensorPtr)
+#define THWStoragePtr TH_CONCAT_3(TH,Real,StoragePtr)
+#define THWTensorPtr  TH_CONCAT_3(TH,Real,TensorPtr)
 #define THPStoragePtr TH_CONCAT_3(THP,Real,StoragePtr)
 #define THPTensorPtr  TH_CONCAT_3(THP,Real,TensorPtr)
-#define THSTensorPtr  TH_CONCAT_3(THS,Real,TensorPtr)
 #define THSPTensorPtr  TH_CONCAT_3(THSP,Real,TensorPtr)
 
 typedef THPPointer<THPGenerator> THPGeneratorPtr;
@@ -166,14 +145,24 @@ typedef THPPointer<THPGenerator> THPGeneratorPtr;
 template <typename T>
 struct THPUtils_typeTraits {};
 
-#include "generic/utils.h"
+#include <torch/csrc/generic/utils.h>
 #include <TH/THGenerateAllTypes.h>
 
-#include "generic/utils.h"
+#include <torch/csrc/generic/utils.h>
 #include <TH/THGenerateHalfType.h>
+
+#include <torch/csrc/generic/utils.h>
+#include <TH/THGenerateBFloat16Type.h>
+
+#include <torch/csrc/generic/utils.h>
+#include <TH/THGenerateBoolType.h>
+
+#include <torch/csrc/generic/utils.h>
+#include <TH/THGenerateQTypes.h>
 
 THLongStoragePtr THPUtils_unpackSize(PyObject *arg);
 bool THPUtils_tryUnpackLongs(PyObject *arg, THLongStoragePtr& result);
+std::vector<int64_t> THPUtils_unpackLongs(PyObject *arg);
 bool THPUtils_tryUnpackLongVarArgs(PyObject *args, int ignore_first, THLongStoragePtr& result);
 PyObject * THPUtils_dispatchStateless(PyObject *tensor, const char *name, PyObject *args, PyObject *kwargs);
 
@@ -190,7 +179,16 @@ struct mod_traits<_real, typename std::enable_if<std::is_integral<_real>::value>
   static _real mod(_real a, _real b) { return a % b; }
 };
 
+void setBackCompatBroadcastWarn(bool warn);
+bool getBackCompatBroadcastWarn();
 
-#endif /* _THP_CORE */
+void setBackCompatKeepdimWarn(bool warn);
+bool getBackCompatKeepdimWarn();
+bool maybeThrowBackCompatKeepdimWarn(char *func);
+
+// NB: This is in torch/csrc/cuda/utils.cpp, for whatever reason
+#ifdef USE_CUDA
+std::vector<c10::optional<at::cuda::CUDAStream>> THPUtils_PySequence_to_CUDAStreamList(PyObject *obj);
+#endif
 
 #endif
